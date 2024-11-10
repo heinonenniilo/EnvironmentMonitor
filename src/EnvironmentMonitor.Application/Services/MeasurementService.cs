@@ -25,7 +25,7 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogInformation($"Could not find device with device id '{measurent.DeviceId}'");
                 return;
             }
-            _logger.LogInformation($"Found device with ID: {device.Id}");
+            _logger.LogInformation($"Found device with ID: {device.Id} for device id '{measurent.DeviceId}'");
             var measurementsToAdd = new List<Measurement>();
             foreach (var row in measurent.Measurements)
             {
@@ -48,9 +48,14 @@ namespace EnvironmentMonitor.Application.Services
 
             if (measurementsToAdd.Any())
             {
+                _logger.LogInformation("Adding measurements");
                 await _measurementRepository.AddMeasurements(measurementsToAdd);
+                _logger.LogInformation("Measurements added");
             }
-            return;
+            else
+            {
+                _logger.LogWarning("No measurements to add");
+            }
         }
     }
 }

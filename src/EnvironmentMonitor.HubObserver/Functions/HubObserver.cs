@@ -23,10 +23,18 @@ namespace EnvironmentMonitor.HubObserver.Functions
         [Function(nameof(HubObserver))]
         public async Task Run([EventHubTrigger("$Default", Connection = "hubconnectionstring", ConsumerGroup = "%ConsumerGroup%")] EventData[] events)
         {
+            if (events?.Length > 0)
+            {
+                _logger.LogInformation($"Start processing {events.Length} messages");
+            }
+            else
+            {
+                _logger.LogWarning("No messages to process!");
+                return;
+            }
             foreach (EventData message in events)
             {
                 var bodyString = Encoding.UTF8.GetString(message.EventBody);
-
                 if (bodyString == null)
                 {
                     continue;
@@ -42,12 +50,13 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed");
+                    _logger.LogError(ex, "Failed to deserialize JSON");
                     throw;
                 }
 
                 if (objectToInsert == null)
                 {
+                    _logger.LogError("Null JSON object");
                     return;
                 }
 
@@ -61,7 +70,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error");
+                    _logger.LogError(ex, "Adding measurements failed");
                     throw;
                 }
             }
