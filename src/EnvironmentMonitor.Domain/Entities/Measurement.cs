@@ -8,10 +8,11 @@ namespace EnvironmentMonitor.Domain.Entities
 {
     public class Measurement
     {
-        public  long Id { get; set; }
+        public long Id { get; set; }
         public required int SensorId { get; set; }
         public Sensor Sensor { get; set; }
         public double Value { get; set; }
         public required DateTime Timestamp { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }
