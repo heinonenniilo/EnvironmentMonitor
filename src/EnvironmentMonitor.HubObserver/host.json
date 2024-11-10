@@ -1,0 +1,22 @@
+{
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "excludedTypes": "Request",
+        "isEnabled": true
+      },
+      "enableLiveMetricsFilters": true
+    },
+    "logLevel": {
+      "default": "Information"
+    }
+  },
+  "extensions": {
+    "eventHubs": {
+      "maxEventBatchSize": 20,
+      "minEventBatchSize": 2,
+      "prefetchCount": 100
+    }
+  }
+}
