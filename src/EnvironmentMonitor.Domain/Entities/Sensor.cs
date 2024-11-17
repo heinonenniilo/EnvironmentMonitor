@@ -12,11 +12,9 @@ namespace EnvironmentMonitor.Domain.Entities
         public int DeviceId { get; set; }
         public Device Device { get; set; }
         public int SensorId { get; set; }
-
         public string Name { get; set; }
-        public SensorType Type { get; set; }
-        public int TypeId { get; set; } 
-
+        public SensorType? Type { get; set; }
+        public int? TypeId { get; set; }
         public ICollection<Measurement> Measurements { get; set; }
     }    
 }

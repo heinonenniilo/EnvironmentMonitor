@@ -18,6 +18,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<Sensor> Sensors { get; set; }
         public DbSet<Device> Devices { get; set; }
         public DbSet<SensorType> SensorTypes { get; set; }
+        public DbSet<MeasurementType> MeasurementTypes { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeasurementDbContext).Assembly);
