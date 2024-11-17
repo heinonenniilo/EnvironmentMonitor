@@ -36,12 +36,13 @@ namespace EnvironmentMonitor.Application.Services
                     _logger.LogWarning($"Measurement type id ({row.TypeId}) not found. ");
                     continue;
                 }
+                _logger.LogInformation($"Found measurement type: {type.Id}. Name: '{type.Name}'");
                 if (sensor == null)
                 {
                     _logger.LogWarning($"Could not find a sensor with device id: '{device.Id}' and sensor id: '{row.SensorId}'");
                     continue;
                 }
-                _logger.LogInformation($"Found sensor with id '{sensor.Id}'. Name: '{sensor.Name}'");
+                _logger.LogInformation($"Found sensor: {sensor.Id}. Name: '{sensor.Name}'");
                 measurementsToAdd.Add(new Measurement()
                 {
                     SensorId = sensor.Id,
@@ -52,7 +53,7 @@ namespace EnvironmentMonitor.Application.Services
             }
             if (measurementsToAdd.Any())
             {
-                _logger.LogInformation("Adding measurements");
+                _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device: {device.Id} / '{device.Name}'");
                 await _measurementRepository.AddMeasurements(measurementsToAdd);
                 _logger.LogInformation("Measurements added");
             }
