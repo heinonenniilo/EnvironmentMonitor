@@ -37,6 +37,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 var bodyString = Encoding.UTF8.GetString(message.EventBody);
                 if (bodyString == null)
                 {
+                    _logger.LogError($"Body string NULL");
                     continue;
                 }
                 MeasurementDto? objectToInsert = null;

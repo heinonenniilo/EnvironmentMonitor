@@ -13,6 +13,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<IEnumerable<Measurement>> GetMeasurementsBySensorId(int sensorId);
         Task<Device?> GetDeviceByIdAsync(string deviceId);
         public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);
+        public Task<MeasurementType?> GetMeasurementType(int id);
         Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements);
     }
 }

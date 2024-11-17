@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Enums
 {
-    public enum SensorTypes
+    public enum MeasurementTypes
     {
         Undefined = 0,
         Temperature = 1,

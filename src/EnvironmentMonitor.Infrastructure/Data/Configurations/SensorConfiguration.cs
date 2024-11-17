@@ -13,17 +13,13 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<Sensor> builder)
         {
-            // builder.ToTable("Sensors");
-
-            // Primary Key
             builder.HasKey(s => s.Id);
 
-            // Properties
             builder.Property(s => s.Name)
                 .IsRequired()
                 .HasMaxLength(100);
 
-            builder.Property(s => s.TypeId).IsRequired();
+            builder.Property(s => s.TypeId);
 
             builder.HasMany(s => s.Measurements)
                 .WithOne(m => m.Sensor)

@@ -9,13 +9,16 @@
       "enableLiveMetricsFilters": true
     },
     "logLevel": {
-      "default": "Information"
+      "default": "Information",
+      "Function": "Information",
+      "Host.Result": "Information",
+      "Host.Aggregator": "Information"
     }
   },
   "extensions": {
     "eventHubs": {
       "maxEventBatchSize": 20,
-      "minEventBatchSize": 2,
+      "minEventBatchSize": 1,
       "prefetchCount": 100
     }
   }

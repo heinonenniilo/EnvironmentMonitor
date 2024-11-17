@@ -1,6 +1,7 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EnvironmentMonitor.Infrastructure.Data
 {
@@ -41,6 +42,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             await _context.Measurements.AddRangeAsync(measurements);
             await _context.SaveChangesAsync();
             return measurements;
+        }
+
+        public async Task<MeasurementType?> GetMeasurementType(int id)
+        {
+            var type = await _context.MeasurementTypes.FirstOrDefaultAsync(x => x.Id == id);
+            return type;
         }
     }
 }

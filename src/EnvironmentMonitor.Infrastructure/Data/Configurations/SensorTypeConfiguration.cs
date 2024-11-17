@@ -22,22 +22,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 
             builder.HasMany(x => x.Sensors)
                 .WithOne(x => x.Type)
-                .HasForeignKey(x => x.TypeId);
+                .HasForeignKey(x => x.TypeId)
+                .IsRequired(false);
 
-            builder.HasData(new List<SensorType>()
-            {
-                new SensorType()
-                {
-                    Id = (int)SensorTypes.Undefined, Name = "Undefined", Unit = "-"
-                },
-                new SensorType() {
-                    Id = (int)SensorTypes.Temperature, Name = "Temperature", Unit = "C"
-                },
-                new SensorType() {
-                    Id = (int)SensorTypes.Humidity, Name = "Humidity", Unit = "%"
-                }
-            }); 
-            
         }
     }
 }

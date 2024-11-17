@@ -30,22 +30,26 @@ namespace EnvironmentMonitor.Application.Services
             foreach (var row in measurent.Measurements)
             {
                 var sensor = await _measurementRepository.GetSensor(device.Id, row.SensorId);
-                if (sensor != null)
+                MeasurementType? type = await _measurementRepository.GetMeasurementType(row.TypeId);
+                if (type == null)
                 {
-                    _logger.LogInformation($"Found sensonr with id '{sensor.Id}'.");
-                    measurementsToAdd.Add(new Measurement()
-                    {
-                        SensorId = sensor.Id,
-                        Value = row.SensorValue,
-                        Timestamp = row.TimeStamp,
-                    });
+                    _logger.LogWarning($"Measurement type id ({row.TypeId}) not found. ");
+                    continue;
                 }
-                else
+                if (sensor == null)
                 {
                     _logger.LogWarning($"Could not find a sensor with device id: '{device.Id}' and sensor id: '{row.SensorId}'");
+                    continue;
                 }
+                _logger.LogInformation($"Found sensor with id '{sensor.Id}'. Name: '{sensor.Name}'");
+                measurementsToAdd.Add(new Measurement()
+                {
+                    SensorId = sensor.Id,
+                    Value = row.SensorValue,
+                    Timestamp = row.TimeStamp,
+                    TypeId = row.TypeId
+                });
             }
-
             if (measurementsToAdd.Any())
             {
                 _logger.LogInformation("Adding measurements");
