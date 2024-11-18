@@ -69,15 +69,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(450)");
-            /*
-            migrationBuilder.AddColumn<string>(
-                name: "DeviceIdentifier",
-                table: "Devices",
-                type: "nvarchar(256)",
-                maxLength: 256,
-                nullable: false,
-                defaultValue: "");
-            */
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sensors_DeviceId_SensorId",
@@ -159,15 +150,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(256)",
                 oldMaxLength: 256);
-
-            /*
-            migrationBuilder.AddColumn<string>(
-                name: "DeviceId",
-                table: "Devices",
-                type: "nvarchar(max)",
-                nullable: false,
-                defaultValue: "");
-            */
 
             migrationBuilder.CreateIndex(
                 name: "IX_Sensors_DeviceId",
