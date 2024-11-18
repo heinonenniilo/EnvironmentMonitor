@@ -23,7 +23,17 @@ static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider)
         {
             Console.WriteLine("Start running migrations");
             var context = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
-            await context.Database.MigrateAsync();
+            var connectionString = context.Database.GetConnectionString();
+
+            Console.WriteLine($"Apply migrations? Write y and press enter to start. ConnectionString: '{connectionString}'");
+
+            if (Console.ReadLine()?.ToLower() == "y")
+            {
+                await context.Database.MigrateAsync();
+            } else
+            {
+                Console.WriteLine("Migrations cancelled");
+            }
             Console.WriteLine("Database migrated successfully.");
         }
         catch (Exception ex)
