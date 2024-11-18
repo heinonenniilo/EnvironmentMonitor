@@ -9,7 +9,7 @@ namespace EnvironmentMonitor.Domain.Entities
     public class Device
     {
         public int Id { get; set; }
-        public required string DeviceId { get; set; }
+        public required string DeviceIdentifier { get; set; }
         public string Name { get; set; }
         public ICollection<Sensor> Sensors { get; set; }
     }

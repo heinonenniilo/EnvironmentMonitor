@@ -11,7 +11,7 @@
     "logLevel": {
       "default": "Information",
       "Function": "Information",
-      "Host.Result": "Information",
+      "Host.Results": "Information",
       "Host.Aggregator": "Information"
     }
   },

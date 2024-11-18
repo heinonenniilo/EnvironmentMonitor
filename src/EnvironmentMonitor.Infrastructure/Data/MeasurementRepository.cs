@@ -14,7 +14,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         }
         public async Task<Device?> GetDeviceByIdAsync(string deviceId)
         {
-            return await _context.Devices.FirstOrDefaultAsync(x => x.DeviceId == deviceId);
+            return await _context.Devices.FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
         }
 
         public async Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal)

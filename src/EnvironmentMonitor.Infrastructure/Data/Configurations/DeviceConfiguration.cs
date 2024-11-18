@@ -13,15 +13,17 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<Device> builder)
         {
-            builder.ToTable("Devices");
-            // Primary Key
             builder.HasKey(d => d.Id);
-            // Properties
+
             builder.Property(d => d.Name)
                 .IsRequired()
                 .HasMaxLength(512);
+
+            builder.Property(x => x.DeviceIdentifier).IsRequired();
+            builder.HasIndex(x => x.DeviceIdentifier).IsUnique();
+
             builder.HasIndex(d => d.Name).IsUnique();
-            // Relationships
+
             builder.HasMany(d => d.Sensors)
                 .WithOne(s => s.Device)
                 .HasForeignKey(s => s.DeviceId)

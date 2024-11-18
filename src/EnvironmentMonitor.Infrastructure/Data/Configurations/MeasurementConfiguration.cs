@@ -15,8 +15,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
         {
             builder.HasKey(m => m.Id);
 
-            builder.Property(m => m.Timestamp)
-                .IsRequired();
+            builder.Property(m => m.Timestamp).IsRequired();
             builder.Property(m => m.CreatedAt).IsRequired().HasDefaultValueSql("GETUTCDATE()");
 
             builder.Property(m => m.Value)

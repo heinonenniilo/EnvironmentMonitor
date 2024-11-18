@@ -14,13 +14,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<Sensor> builder)
         {
             builder.HasKey(s => s.Id);
-
             builder.Property(s => s.Name)
                 .IsRequired()
-                .HasMaxLength(100);
-
+                .HasMaxLength(512);
             builder.Property(s => s.TypeId);
-
+            builder.HasIndex(x => new { x.DeviceId, x.SensorId }).IsUnique();
             builder.HasMany(s => s.Measurements)
                 .WithOne(m => m.Sensor)
                 .HasForeignKey(m => m.SensorId)

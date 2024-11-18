@@ -14,6 +14,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             : base(options)
         {
         }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            configurationBuilder.Properties<string>().HaveMaxLength(256);
+        }
+
         public DbSet<Measurement> Measurements { get; set; }
         public DbSet<Sensor> Sensors { get; set; }
         public DbSet<Device> Devices { get; set; }
