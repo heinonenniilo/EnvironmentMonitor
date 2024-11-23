@@ -1,4 +1,5 @@
 using EnvironmentMonitor.Application.Extensions;
+using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
@@ -32,5 +33,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var roleDefiner = services.GetRequiredService<IRoleDefiner>();
+    await roleDefiner.SetRoles(); 
+}
 
 app.Run();

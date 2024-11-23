@@ -9,6 +9,6 @@ namespace EnvironmentMonitor.Infrastructure.Identity
 {
     public class ApplicationUserRole : IdentityRole
     {
-
+        public string Description { get; set; }
     }
 }

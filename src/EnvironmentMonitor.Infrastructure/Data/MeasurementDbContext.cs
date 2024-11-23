@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Infrastructure.Data
 {
-    public class MeasurementDbContext : IdentityDbContext<ApplicationUser, ApplicationUserRole, string>
+    public class MeasurementDbContext : DbContext
     {
         public MeasurementDbContext(DbContextOptions<MeasurementDbContext> options)
             : base(options)
@@ -29,7 +29,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<MeasurementType> MeasurementTypes { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeasurementDbContext).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeasurementDbContext).Assembly, type =>
+                type.Namespace == "EnvironmentMonitor.Infrastructure.Data.Configurations");
             base.OnModelCreating(modelBuilder);
         }
     }
