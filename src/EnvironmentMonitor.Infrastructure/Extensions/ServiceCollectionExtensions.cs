@@ -1,5 +1,7 @@
 ﻿using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Infrastructure.Data;
+using EnvironmentMonitor.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,11 +24,15 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 options.UseSqlServer(connectionStringToUse,
                     builder => builder.MigrationsAssembly(typeof(MeasurementDbContext).Assembly.FullName));
             });
+
             // Register the single repository
             services.AddScoped<IMeasurementRepository, MeasurementRepository>();
-
-            // Add other services as needed
-
+            
+            // Identity stuff
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<MeasurementDbContext>()
+                .AddDefaultTokenProviders();
+            
             return services;
         }
     }

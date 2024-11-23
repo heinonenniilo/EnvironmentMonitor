@@ -1,4 +1,5 @@
 ﻿using EnvironmentMonitor.Application.DTOs;
+using EnvironmentMonitor.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace EnvironmentMonitor.Application.Interfaces
 {
     public interface IMeasurementService
     {
-        public Task AddMeasurements(MeasurementDto measurent);
+        public Task AddMeasurements(SaveMeasurementsDto measurent);
+        public Task<List<MeasurementDto>> GetMeasurements(GetMeasurementsModel model);
     }
 }

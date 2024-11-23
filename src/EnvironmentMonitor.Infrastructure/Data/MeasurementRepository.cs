@@ -1,5 +1,6 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -23,10 +24,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return sensor;
         }
 
-        public async Task<IEnumerable<Measurement>> GetMeasurementsBySensorId(int sensorId)
+        public async Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model)
         {
             return await _context.Measurements
-                .Where(x => x.SensorId == sensorId)
+                .Where(x =>
+                x.SensorId == model.SensorId
+                && x.Timestamp >= model.From
+                && (model.To == null || x.Timestamp <= model.To))
                 .OrderByDescending(x => x.Timestamp)
                 .ToListAsync();
         }

@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class MeasurementDto
+    public class SaveMeasurementsDto
     {
         public string DeviceId { get; set; }
-        public List<MeasurementRow> Measurements { get; set; } = new List<MeasurementRow>();
+        public List<MeasurementDto> Measurements { get; set; } = new List<MeasurementDto>();
     }
 
-    public class MeasurementRow
+    public class MeasurementDto
     {
         public int SensorId { get; set; }
         public double SensorValue { get; set; }

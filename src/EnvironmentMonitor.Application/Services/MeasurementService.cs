@@ -2,6 +2,7 @@
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
 
 namespace EnvironmentMonitor.Application.Services
@@ -17,7 +18,7 @@ namespace EnvironmentMonitor.Application.Services
             _logger = logger;
         }
 
-        public async Task AddMeasurements(MeasurementDto measurent)
+        public async Task AddMeasurements(SaveMeasurementsDto measurent)
         {
             var device = await _measurementRepository.GetDeviceByIdAsync(measurent.DeviceId);
             if (device == null)
@@ -61,6 +62,17 @@ namespace EnvironmentMonitor.Application.Services
             {
                 _logger.LogWarning("No measurements to add");
             }
+        }
+        public async Task<List<MeasurementDto>> GetMeasurements(GetMeasurementsModel model)
+        {
+            var rows = await _measurementRepository.GetMeasurements(model);
+            return rows.Select(x => new MeasurementDto()
+            {
+                SensorId = x.SensorId,
+                SensorValue = x.Value,
+                TypeId = x.TypeId,
+                TimeStamp = x.Timestamp
+            }).ToList();
         }
     }
 }

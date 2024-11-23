@@ -1,4 +1,6 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Infrastructure.Data
 {
-    public class MeasurementDbContext : DbContext
+    public class MeasurementDbContext : IdentityDbContext<ApplicationUser, ApplicationUserRole, string>
     {
         public MeasurementDbContext(DbContextOptions<MeasurementDbContext> options)
             : base(options)
