@@ -7,15 +7,15 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { routes } from "./utilities/routes";
 import { HomeView } from "./containers/HomeView";
 import { App } from "./framework/App";
-import { appStore } from "./setup/appStore";
 import { MeasurementsView } from "./containers/MeasurementsView";
+import { store } from "./setup/appStore";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
 
 root.render(
-  <Provider store={appStore}>
+  <Provider store={store}>
     <React.StrictMode>
       <BrowserRouter>
         <App>

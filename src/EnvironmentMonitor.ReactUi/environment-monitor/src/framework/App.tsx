@@ -7,10 +7,13 @@ import { CookiesProvider, useCookies } from "react-cookie";
 import { routes } from "../utilities/routes";
 import { MenuBar } from "./MenuBar";
 import { User } from "../models/user";
-import { getIsLoggedIn, getUserInfo } from "../reducers/userReducer";
+import {
+  getIsLoggedIn,
+  getUserInfo,
+  storeUserInfo,
+} from "../reducers/userReducer";
 import LoginPage from "../components/LoginPage";
 import { useApiHook } from "../hooks/apiHook";
-import { userActions } from "../actions/userActions";
 import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -18,12 +21,11 @@ interface AppProps {
   children: React.ReactNode;
 }
 
-const userInfoCookieName = "userInfo";
-const useInfoExpiresInDays = 4;
+// const userInfoCookieName = "userInfo";
 
 export const App: React.FC<AppProps> = (props) => {
   const navigate = useNavigate();
-  const [cookies, setCookie] = useCookies([userInfoCookieName]);
+  // const [cookies, setCookie] = useCookies([userInfoCookieName]);
   const apiHook = useApiHook();
   const dispath = useDispatch();
   const user: User | undefined = useSelector(getUserInfo);
@@ -33,7 +35,7 @@ export const App: React.FC<AppProps> = (props) => {
   const handleLogOut = () => {
     console.info("Handling log out");
     apiHook.userHook.logOut().then(() => {
-      dispath(userActions.storeUserInfo(undefined));
+      dispath(storeUserInfo(undefined));
     });
   };
 
@@ -44,10 +46,10 @@ export const App: React.FC<AppProps> = (props) => {
     if (apiHook?.userHook && user === undefined) {
       apiHook.userHook.getUserInfo().then((res) => {
         console.info(res);
-        dispath(userActions.storeUserInfo(res));
+        dispath(storeUserInfo(res));
       });
     }
-  }, [apiHook.userHook, user]);
+  }, [apiHook.userHook, user, dispath]);
 
   return (
     <CookiesProvider>
@@ -77,7 +79,7 @@ export const App: React.FC<AppProps> = (props) => {
             <LoginPage
               onLogin={async () => {
                 let res = await apiHook.userHook.getUserInfo();
-                dispath(userActions.storeUserInfo(res));
+                dispath(storeUserInfo(res));
               }}
             />
           )}
