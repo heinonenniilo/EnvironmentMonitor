@@ -10,16 +10,19 @@ using Microsoft.Extensions.Options;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
-// Add services to the container.
-
 var isDevelopment = builder.Environment.IsDevelopment();
-builder.Services.AddAuthentication().AddGoogle(googleOptions =>
-{
-    var test = 5;
-    googleOptions.SaveTokens = true; 
-    googleOptions.ClientId = builder.Configuration["Google:ClientId"];
-    googleOptions.ClientSecret = builder.Configuration["Google:ClientSecret"];
-});
+
+var googleClientId = builder.Configuration["Google:ClientId"];
+var googleClientSecret = builder.Configuration["Google:ClientSecret"];
+if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret) {
+    builder.Services.AddAuthentication().AddGoogle(googleOptions =>
+    {
+        var test = 5;
+        googleOptions.SaveTokens = true;
+        googleOptions.ClientId = googleClientId;
+        googleOptions.ClientSecret = googleClientSecret;
+    });
+}
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
