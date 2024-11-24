@@ -24,7 +24,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet()]        
-        public async Task<List<MeasurementDto>> Register([FromQuery] GetMeasurementsModel model)
+        public async Task<List<MeasurementDto>> GetMeasurements([FromQuery] GetMeasurementsModel model)
         {
             var result = await _measurementService.GetMeasurements(model);
             return result;

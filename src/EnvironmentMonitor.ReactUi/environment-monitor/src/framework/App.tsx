@@ -1,5 +1,5 @@
-import { Box, Container } from "@mui/material";
-import React, { useEffect } from "react";
+import { Backdrop, Box, CircularProgress, Container } from "@mui/material";
+import React, { useEffect, useState } from "react";
 // import { getIsReLogging, getUserInfo, getUserVm } from "reducers/userReducer";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { LocalizationProvider } from "@mui/x-date-pickers";
@@ -21,8 +21,6 @@ interface AppProps {
   children: React.ReactNode;
 }
 
-// const userInfoCookieName = "userInfo";
-
 export const App: React.FC<AppProps> = (props) => {
   const navigate = useNavigate();
   // const [cookies, setCookie] = useCookies([userInfoCookieName]);
@@ -30,8 +28,8 @@ export const App: React.FC<AppProps> = (props) => {
   const dispath = useDispatch();
   const user: User | undefined = useSelector(getUserInfo);
   const isLoggedIn = useSelector(getIsLoggedIn);
+  const [isLoading, setIsLoading] = useState(false);
 
-  console.log(user);
   const handleLogOut = () => {
     console.info("Handling log out");
     apiHook.userHook.logOut().then(() => {
@@ -44,46 +42,60 @@ export const App: React.FC<AppProps> = (props) => {
   };
   useEffect(() => {
     if (apiHook?.userHook && user === undefined) {
-      apiHook.userHook.getUserInfo().then((res) => {
-        console.info(res);
-        dispath(storeUserInfo(res));
-      });
+      setIsLoading(true);
+      apiHook.userHook
+        .getUserInfo()
+        .then((res) => {
+          console.info(res);
+          dispath(storeUserInfo(res));
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     }
   }, [apiHook.userHook, user, dispath]);
 
   return (
     <CookiesProvider>
       <LocalizationProvider dateAdapter={AdapterMoment}>
-        {isLoggedIn ? (
-          <Container maxWidth={"xl"} sx={{ top: 0 }}>
-            <MenuBar
-              handleLogOut={handleLogOut}
-              handleNavigateTo={handleNavigate}
-              user={user}
-            />
-          </Container>
-        ) : null}
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-            height: "100%",
-            marginTop: "80px",
-          }}
-        >
+        <>
+          <Backdrop
+            sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+            open={isLoading}
+          >
+            <CircularProgress color="inherit" />
+          </Backdrop>
           {isLoggedIn ? (
-            props.children
-          ) : (
-            <LoginPage
-              onLogin={async () => {
-                let res = await apiHook.userHook.getUserInfo();
-                dispath(storeUserInfo(res));
-              }}
-            />
-          )}
-        </Box>
+            <Container maxWidth={"xl"} sx={{ top: 0 }}>
+              <MenuBar
+                handleLogOut={handleLogOut}
+                handleNavigateTo={handleNavigate}
+                user={user}
+              />
+            </Container>
+          ) : null}
+
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              width: "100%",
+              height: "100%",
+              marginTop: "80px",
+            }}
+          >
+            {isLoggedIn ? (
+              props.children
+            ) : (
+              <LoginPage
+                onLoggedIn={async () => {
+                  let res = await apiHook.userHook.getUserInfo();
+                  dispath(storeUserInfo(res));
+                }}
+              />
+            )}
+          </Box>
+        </>
       </LocalizationProvider>
     </CookiesProvider>
   );

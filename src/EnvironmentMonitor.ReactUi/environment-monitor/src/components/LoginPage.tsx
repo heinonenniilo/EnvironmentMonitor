@@ -3,10 +3,10 @@ import { TextField, Button, Box, Typography } from "@mui/material";
 import { useApiHook } from "../hooks/apiHook";
 
 export interface LoginPageProps {
-  onLogin: () => void;
+  onLoggedIn: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLoggedIn }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,11 +15,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setError("");
+
     try {
       let res = await apiHook.userHook.logIn(userId, password);
       console.info(res);
       if (res) {
-        onLogin();
+        onLoggedIn();
       } else {
         setError("Login failed.");
       }

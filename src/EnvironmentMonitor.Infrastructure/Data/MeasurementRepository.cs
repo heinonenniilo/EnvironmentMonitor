@@ -31,7 +31,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 x.SensorId == model.SensorId
                 && x.Timestamp >= model.From
                 && (model.To == null || x.Timestamp <= model.To))
-                .OrderByDescending(x => x.Timestamp)
+                .OrderBy(x => x.Timestamp)
                 .ToListAsync();
         }
 

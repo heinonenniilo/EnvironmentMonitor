@@ -5,31 +5,34 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  TextField,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import moment from "moment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
 
-export interface MeasurementsLeftView {
+export interface MeasurementsLeftViewProps {
   onSearch: (from: Date, to: Date, sensorId: number) => void;
   getSensors: (deviceId: string) => void;
   devices: Device[];
   sensors: Sensor[];
 }
 
-export const MeasurementsLeftView: React.FC<MeasurementsLeftView> = ({
+export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   onSearch,
   devices,
   sensors,
   getSensors,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
-    moment().add(-2, "day")
+    moment().utc(true).add(-2, "day").startOf("day")
   );
-  const [toDate, setToDate] = useState<moment.Moment>(moment());
+  const [toDate, setToDate] = useState<moment.Moment>(
+    moment().utc().endOf("day")
+  );
+
+  console.log(toDate);
 
   const [selectedSensor, setSelectedSensor] = useState<Sensor | undefined>(
     undefined

@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Infrastructure.Identity;
+using EnvironmentMonitor.WebApi.Attributes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +26,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpPost("register")]
+        [ApiKeyRequired]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             if (await _userManager.FindByEmailAsync(request.Email) != null)

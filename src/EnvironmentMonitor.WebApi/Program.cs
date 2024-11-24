@@ -3,6 +3,7 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
+using EnvironmentMonitor.WebApi.Services;
 using Microsoft.AspNetCore.Identity;
 using System;
 
@@ -40,6 +41,8 @@ builder.Services.ConfigureApplicationCookie(conf =>
     conf.Cookie.Name = "env-monitor";
 });
 var app = builder.Build();
+
+app.UseMiddleware<ApiKeyMiddleware>();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

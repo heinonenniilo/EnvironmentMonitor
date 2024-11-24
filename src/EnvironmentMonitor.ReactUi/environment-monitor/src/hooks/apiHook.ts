@@ -2,6 +2,7 @@ import axios, { AxiosResponse } from "axios";
 import { User } from "../models/user";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
+import { Measurement } from "../models/measurement";
 
 interface ApiHook {
   //getUserInfo: () => Promise<User | undefined>;
@@ -20,6 +21,11 @@ interface userHook {
 interface measureHook {
   getDevices: () => Promise<Device[] | undefined>;
   getSensors: (deviceId: string) => Promise<Sensor[]>;
+  getMeasurements: (
+    sensorId: number,
+    from: Date,
+    to: Date
+  ) => Promise<Measurement[]>;
 }
 
 // handleLogOut: () => void;
@@ -86,6 +92,24 @@ export const useApiHook = (): ApiHook => {
         try {
           let res = await apiClient.get<any, AxiosResponse<Sensor[]>>(
             `/Measurements/sensors/${deviceId}`
+          );
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          return [];
+        }
+      },
+      getMeasurements: async (sensorId: number, from: Date, to: Date) => {
+        try {
+          let res = await apiClient.get<any, AxiosResponse<Measurement[]>>(
+            "/Measurements",
+            {
+              params: {
+                sensorId: sensorId,
+                from: from,
+                to: to,
+              },
+            }
           );
           return res.data;
         } catch (ex: any) {

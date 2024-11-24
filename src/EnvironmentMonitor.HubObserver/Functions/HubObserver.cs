@@ -63,7 +63,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
 
                 foreach (var item in objectToInsert.Measurements)
                 {
-                    item.TimeStamp = message.EnqueuedTime.DateTime;
+                    item.TimestampUtc = message.EnqueuedTime.UtcDateTime;
                 }
                 try
                 {

@@ -1,7 +1,6 @@
 import { AppBar, useMediaQuery, useTheme } from "@mui/material";
-import React, { useEffect } from "react";
+import React from "react";
 
-import { useDispatch, useSelector } from "react-redux";
 import { DesktopMenu } from "./DesktopMenu";
 import { MobileMenu } from "./MobileMenu";
 import { User } from "../models/user";
@@ -11,8 +10,6 @@ export interface MenuBarProps {
   handleNavigateTo: (route: string) => void;
   user: User | undefined;
 }
-
-const selectedChannelLocalStorageKey = "selectedChannel";
 
 export const MenuBar: React.FC<MenuBarProps> = ({
   handleLogOut,

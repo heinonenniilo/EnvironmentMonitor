@@ -11,6 +11,7 @@ namespace EnvironmentMonitor.Application.Services
     {
         private readonly IMeasurementRepository _measurementRepository;
         private readonly ILogger<MeasurementService> _logger;
+        private const string TargetTimeZone = "FLE Standard Time";
 
         public MeasurementService(IMeasurementRepository measurement, ILogger<MeasurementService> logger)
         {
@@ -48,7 +49,10 @@ namespace EnvironmentMonitor.Application.Services
                 {
                     SensorId = sensor.Id,
                     Value = row.SensorValue,
-                    Timestamp = row.TimeStamp,
+                    Timestamp = UtcToLocalTime(row.TimestampUtc),
+                    CreatedAt = UtcToLocalTime(DateTime.UtcNow),
+                    CreatedAtUtc = DateTime.UtcNow,
+                    TimestampUtc = row.TimestampUtc,
                     TypeId = row.TypeId
                 });
             }
@@ -83,7 +87,8 @@ namespace EnvironmentMonitor.Application.Services
                 SensorId = x.SensorId,
                 SensorValue = x.Value,
                 TypeId = x.TypeId,
-                TimeStamp = x.Timestamp
+                TimestampUtc = x.TimestampUtc,
+                Timestamp = x.Timestamp,
             }).ToList();
         }
 
@@ -102,6 +107,12 @@ namespace EnvironmentMonitor.Application.Services
                 Name = x.Name,
                 SensorId = x.SensorId
             }).ToList();
+        }
+
+        private DateTime UtcToLocalTime(DateTime utcDateTime)
+        {
+            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(TargetTimeZone);
+            return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, targetTimeZone);
         }
     }
 }
