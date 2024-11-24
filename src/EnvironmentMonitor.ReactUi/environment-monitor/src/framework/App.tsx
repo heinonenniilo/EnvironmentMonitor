@@ -3,8 +3,7 @@ import React, { useEffect, useState } from "react";
 // import { getIsReLogging, getUserInfo, getUserVm } from "reducers/userReducer";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { LocalizationProvider } from "@mui/x-date-pickers";
-import { CookiesProvider, useCookies } from "react-cookie";
-import { routes } from "../utilities/routes";
+import { CookiesProvider } from "react-cookie";
 import { MenuBar } from "./MenuBar";
 import { User } from "../models/user";
 import {
@@ -36,6 +35,14 @@ export const App: React.FC<AppProps> = (props) => {
     apiHook.userHook.logOut().then(() => {
       dispath(storeUserInfo(undefined));
     });
+  };
+
+  const loginWithGoogleAuthCode = () => {
+    if (process.env.NODE_ENV === "production") {
+      window.location.href = "/authentication/google";
+    } else {
+      window.location.href = "https://localhost:7135/authentication/google";
+    }
   };
 
   const handleNavigate = (route: string) => {
@@ -98,6 +105,7 @@ export const App: React.FC<AppProps> = (props) => {
                   let res = await apiHook.userHook.getUserInfo();
                   dispath(storeUserInfo(res));
                 }}
+                onLogInWithGoogle={loginWithGoogleAuthCode}
               />
             )}
           </Box>

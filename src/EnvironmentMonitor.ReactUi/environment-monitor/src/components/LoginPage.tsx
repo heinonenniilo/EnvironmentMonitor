@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import { TextField, Button, Box, Typography } from "@mui/material";
 import { useApiHook } from "../hooks/apiHook";
+import { GoogleLogin } from "@react-oauth/google";
 
 export interface LoginPageProps {
   onLoggedIn: () => void;
+  onLogInWithGoogle: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLoggedIn }) => {
+const LoginPage: React.FC<LoginPageProps> = ({
+  onLoggedIn,
+  onLogInWithGoogle,
+}) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -75,6 +80,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoggedIn }) => {
           sx={{ marginTop: 2 }}
         >
           Login
+        </Button>
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ marginTop: 2 }}
+          onClick={() => {
+            onLogInWithGoogle();
+          }}
+        >
+          Google
         </Button>
       </form>
     </Box>

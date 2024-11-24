@@ -34,7 +34,6 @@ namespace EnvironmentMonitor.WebApi.Services
                     return;
                 }
             }
-
             await _next(context);
         }
     }

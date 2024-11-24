@@ -4,13 +4,22 @@ using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.WebApi.Services;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 var isDevelopment = builder.Environment.IsDevelopment();
+builder.Services.AddAuthentication().AddGoogle(googleOptions =>
+{
+    var test = 5;
+    googleOptions.SaveTokens = true; 
+    googleOptions.ClientId = builder.Configuration["Google:ClientId"];
+    googleOptions.ClientSecret = builder.Configuration["Google:ClientSecret"];
+});
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
@@ -42,7 +51,7 @@ builder.Services.ConfigureApplicationCookie(conf =>
 });
 var app = builder.Build();
 
-app.UseMiddleware<ApiKeyMiddleware>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -58,6 +67,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.UseMiddleware<ApiKeyMiddleware>();
 
 using (var scope = app.Services.CreateScope())
 {

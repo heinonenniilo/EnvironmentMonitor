@@ -5,6 +5,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { User } from "../models/user";
 import { routes } from "../utilities/routes";
 import { UserMenu } from "./UserMenu";
+import { AuthorizedComponent } from "../components/AuthorizedComponent";
+import { RoleNames } from "../enums/roleNames";
 
 export interface MobileMenuProps {
   onNavigate: (route: string) => void;
@@ -59,14 +61,16 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           >
             Home
           </MenuItem>
-          <MenuItem
-            selected={false}
-            onClick={(event) => {
-              handleClick(routes.main, event);
-            }}
-          >
-            Measurements
-          </MenuItem>
+          <AuthorizedComponent requiredRole={RoleNames.Viewer}>
+            <MenuItem
+              selected={false}
+              onClick={(event) => {
+                handleClick(routes.main, event);
+              }}
+            >
+              Measurements
+            </MenuItem>
+          </AuthorizedComponent>
         </Menu>
       );
     }

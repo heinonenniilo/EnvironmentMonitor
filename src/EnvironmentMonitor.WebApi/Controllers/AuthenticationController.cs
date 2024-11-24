@@ -1,6 +1,9 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.WebApi.Attributes;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -15,14 +18,17 @@ namespace EnvironmentMonitor.WebApi.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<AuthenticationController> _logger;
+        private readonly IHttpContextAccessor _contextAccessor;
 
         public AuthenticationController(ILogger<AuthenticationController> logger,
             UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+            SignInManager<ApplicationUser> signInManager,
+            IHttpContextAccessor contextAccessor)
         {
             _logger = logger;
             _userManager = userManager;
             _signInManager = signInManager;
+            _contextAccessor = contextAccessor;
         }
 
         [HttpPost("register")]
@@ -80,6 +86,51 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 Id = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Roles = roles.ToList(),
             });
+        }
+
+        [HttpGet("google")]
+        public IActionResult GoogleLogin()
+        {
+            var redirectUrl = Url.Action(nameof(GoogleCallback), "Authentication");
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties
+                (
+                GoogleDefaults.AuthenticationScheme, redirectUrl);
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("google-callback")]
+        public async Task<IActionResult> GoogleCallback(string returnUrl = "/")
+        {      
+            var authenticateResult = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+            if (!authenticateResult.Succeeded)
+            {
+                return Unauthorized(new { Message = "Authentication failed." });
+            }
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true);
+            if (signInResult.Succeeded)
+            {
+                return Redirect(returnUrl ?? "/");
+            }
+            else
+            {
+                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+                if (email != null)
+                {
+                    var user = new ApplicationUser { UserName = email, Email = email };
+                    var result = await _userManager.CreateAsync(user);
+                    if (result.Succeeded)
+                    {
+                        result = await _userManager.AddLoginAsync(user, info);
+                        if (result.Succeeded)
+                        {
+                            await _signInManager.SignInAsync(user, isPersistent: true);
+                            return Redirect(returnUrl ?? "/");
+                        }
+                    }
+                }
+                return BadRequest(new { message = "Failed to login with external provider." });
+            }
         }
     }
 }
