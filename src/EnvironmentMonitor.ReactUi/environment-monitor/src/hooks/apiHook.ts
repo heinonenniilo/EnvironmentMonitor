@@ -28,10 +28,11 @@ interface measureHook {
   ) => Promise<Measurement[]>;
 }
 
-// handleLogOut: () => void;
-
 const apiClient = axios.create({
-  baseURL: "https://localhost:7135",
+  baseURL: undefined,
+  //process.env.NODE_ENV === "production"
+  //  ? undefined
+  //  : "https://localhost:7135",
   withCredentials: true,
 });
 

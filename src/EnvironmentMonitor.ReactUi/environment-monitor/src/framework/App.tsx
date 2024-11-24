@@ -29,6 +29,7 @@ export const App: React.FC<AppProps> = (props) => {
   const user: User | undefined = useSelector(getUserInfo);
   const isLoggedIn = useSelector(getIsLoggedIn);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const handleLogOut = () => {
     console.info("Handling log out");
@@ -41,7 +42,7 @@ export const App: React.FC<AppProps> = (props) => {
     navigate(route);
   };
   useEffect(() => {
-    if (apiHook?.userHook && user === undefined) {
+    if (apiHook?.userHook && user === undefined && !hasFetched) {
       setIsLoading(true);
       apiHook.userHook
         .getUserInfo()
@@ -49,11 +50,16 @@ export const App: React.FC<AppProps> = (props) => {
           console.info(res);
           dispath(storeUserInfo(res));
         })
+        .catch((ex) => {
+          console.error("Failed to fetch user information");
+          dispath(storeUserInfo(undefined));
+        })
         .finally(() => {
+          setHasFetched(true);
           setIsLoading(false);
         });
     }
-  }, [apiHook.userHook, user, dispath]);
+  }, [apiHook.userHook, user, dispath, hasFetched]);
 
   return (
     <CookiesProvider>

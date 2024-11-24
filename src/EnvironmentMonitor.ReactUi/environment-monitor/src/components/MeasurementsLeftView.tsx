@@ -32,8 +32,6 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
     moment().utc().endOf("day")
   );
 
-  console.log(toDate);
-
   const [selectedSensor, setSelectedSensor] = useState<Sensor | undefined>(
     undefined
   );

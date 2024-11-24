@@ -50,6 +50,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
@@ -63,5 +65,10 @@ using (var scope = app.Services.CreateScope())
     var roleDefiner = services.GetRequiredService<IRoleManager>();
     await roleDefiner.SetRoles(); 
 }
+
+app.UseSpa(spa =>
+{
+    spa.Options.SourcePath = "wwwroot";
+});
 
 app.Run();
