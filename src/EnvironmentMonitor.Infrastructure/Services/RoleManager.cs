@@ -13,12 +13,12 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Infrastructure.Services
 {
-    public class RoleDefiner : IRoleDefiner
+    public class RoleManager : IRoleManager
     {
         private readonly RoleManager<ApplicationUserRole> _roleManager;
-        private readonly ILogger<RoleDefiner> _logger;
+        private readonly ILogger<RoleManager> _logger;
 
-        public RoleDefiner(ILogger<RoleDefiner> logger, RoleManager<ApplicationUserRole> roleManager)
+        public RoleManager(ILogger<RoleManager> logger, RoleManager<ApplicationUserRole> roleManager)
         {
             _roleManager = roleManager;
             _logger = logger;

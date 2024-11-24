@@ -53,5 +53,17 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var type = await _context.MeasurementTypes.FirstOrDefaultAsync(x => x.Id == id);
             return type;
         }
+
+        public async Task<List<Device>> GetDevices()
+        {
+            var devices = await _context.Devices.ToListAsync();
+            return devices;
+        }
+
+        public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdAsync(int deviceId)
+        {
+            var sensors = await _context.Sensors.Where(x => x.DeviceId == deviceId).ToListAsync();
+            return sensors;
+        }
     }
 }

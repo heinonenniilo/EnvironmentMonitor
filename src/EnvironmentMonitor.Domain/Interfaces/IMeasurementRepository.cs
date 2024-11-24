@@ -10,9 +10,10 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IMeasurementRepository
     {
-        Task<IEnumerable<Sensor>> GetSensorsByDeviceIdAsync(string deviceId);
+        Task<IEnumerable<Sensor>> GetSensorsByDeviceIdAsync(int deviceId);
         Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model);
         Task<Device?> GetDeviceByIdAsync(string deviceId);
+        Task<List<Device>> GetDevices();
         public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);
         public Task<MeasurementType?> GetMeasurementType(int id);
         Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements);

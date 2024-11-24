@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Interfaces
 {
-    public interface IRoleDefiner
+    public interface IRoleManager
     {
         public Task SetRoles();
     }

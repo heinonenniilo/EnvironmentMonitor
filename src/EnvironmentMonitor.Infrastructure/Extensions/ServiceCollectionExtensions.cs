@@ -37,7 +37,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 .AddDefaultTokenProviders()
                 .AddRoles<ApplicationUserRole>()
                 .AddRoleManager<RoleManager<ApplicationUserRole>>(); 
-            services.AddScoped<IRoleDefiner, RoleDefiner>();
+            services.AddScoped<IRoleManager, RoleManager>();
             return services;
         }
     }

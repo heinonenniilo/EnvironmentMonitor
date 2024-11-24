@@ -63,6 +63,18 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogWarning("No measurements to add");
             }
         }
+
+        public async Task<List<DeviceDto>> GetDevices()
+        {
+            var devices = await _measurementRepository.GetDevices();
+            return devices.Select(x => new DeviceDto()
+            {
+                Id = x.Id,
+                Name = x.Name,
+                DeviceIdentifier = x.DeviceIdentifier,
+            }).ToList();
+        }
+
         public async Task<List<MeasurementDto>> GetMeasurements(GetMeasurementsModel model)
         {
             var rows = await _measurementRepository.GetMeasurements(model);
@@ -72,6 +84,23 @@ namespace EnvironmentMonitor.Application.Services
                 SensorValue = x.Value,
                 TypeId = x.TypeId,
                 TimeStamp = x.Timestamp
+            }).ToList();
+        }
+
+        public async Task<List<SensorDto>> GetSensors(string DeviceIdentifier)
+        {
+            var device = await _measurementRepository.GetDeviceByIdAsync(DeviceIdentifier);
+            if (device == null)
+            {
+                throw new ArgumentException("Invalid device identifier");
+            }
+            var sensors = await _measurementRepository.GetSensorsByDeviceIdAsync(device.Id);
+            return sensors.Select(x => new SensorDto()
+            {
+                Id = x.Id,
+                DeviceId = device.Id,
+                Name = x.Name,
+                SensorId = x.SensorId
             }).ToList();
         }
     }

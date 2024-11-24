@@ -12,5 +12,7 @@ namespace EnvironmentMonitor.Application.Interfaces
     {
         public Task AddMeasurements(SaveMeasurementsDto measurent);
         public Task<List<MeasurementDto>> GetMeasurements(GetMeasurementsModel model);
+        public Task<List<DeviceDto>> GetDevices();
+        public Task<List<SensorDto>> GetSensors(string DeviceIdentifier);
     }
 }

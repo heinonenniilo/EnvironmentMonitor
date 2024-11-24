@@ -1,7 +1,9 @@
+using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EnvironmentMonitor.WebApi.Controllers
 {
@@ -46,7 +48,6 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var result = await _signInManager.PasswordSignInAsync(request.Email, request.Password, true, false); // Verify
-
             if (!result.Succeeded)
                 return Unauthorized(new { Message = "Invalid username or password." });
 
@@ -56,8 +57,27 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> LogOut()
         {
+            var u = User;
+            u.FindFirstValue(ClaimTypes.Email);
             await _signInManager.SignOutAsync();
             return Ok(new { Message = "Logged out successfully." });
+        }
+
+        [HttpGet("info")]
+        public ActionResult<UserDto> UserInfo()
+        {
+            if (User == null || User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                return NotFound();
+            }
+            var roles = User.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value);
+
+            return Ok(new UserDto()
+            {
+                Email = User.FindFirstValue(ClaimTypes.Email),
+                Id = User.FindFirstValue(ClaimTypes.NameIdentifier),
+                Roles = roles.ToList(),
+            });
         }
     }
 }
