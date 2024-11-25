@@ -10,9 +10,10 @@ import {
   setDevices,
   setSensors,
 } from "../reducers/measurementReducer";
-import { LineChart } from "@mui/x-charts";
 import { Measurement } from "../models/measurement";
-import { MeasurementTypes } from "../enums/temperatureTypes";
+import { MeasurementGraph } from "../components/MeasurementGraph";
+import { Box } from "@mui/material";
+import { Sensor } from "../models/sensor";
 
 export const MeasurementsView: React.FC = () => {
   // const user = useSelector(getUserInfo);
@@ -21,6 +22,9 @@ export const MeasurementsView: React.FC = () => {
   const isLoggedIn = useSelector(getIsLoggedIn);
   const measurementApiHook = useApiHook().measureHook;
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedSensor, setSelectedSensor] = useState<Sensor | undefined>(
+    undefined
+  );
 
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
 
@@ -35,28 +39,6 @@ export const MeasurementsView: React.FC = () => {
     }
   }, [isLoggedIn, measurementApiHook, devices, dispatch]);
 
-  const hasHumidity = measurements.some(
-    (d) => d.typeId === MeasurementTypes.Humidity
-  );
-
-  const getMeasurements = () => {
-    const temp = measurements
-      .filter((x) => x.typeId === MeasurementTypes.Temperature)
-      .map((x) => {
-        // Get humidity, assume same datetime
-        const humidityRow = measurements.find(
-          (m) =>
-            m.timestamp === x.timestamp &&
-            m.typeId === MeasurementTypes.Humidity
-        );
-        return {
-          timestamp: new Date(x.timestamp),
-          temperature: x.sensorValue,
-          humidity: humidityRow?.sensorValue,
-        };
-      });
-    return temp;
-  };
   return (
     <AppContentWrapper
       titleParts={[{ text: "Measurements" }]}
@@ -66,6 +48,9 @@ export const MeasurementsView: React.FC = () => {
           onSearch={(from: Date, to: Date, sensorId: number) => {
             console.log(to);
             setIsLoading(true);
+
+            const selectedSensor = sensors.find((s) => s.id === sensorId);
+            setSelectedSensor(selectedSensor);
             measurementApiHook
               .getMeasurements(sensorId, from, to)
               .then((res) => {
@@ -90,28 +75,24 @@ export const MeasurementsView: React.FC = () => {
         />
       }
     >
-      <LineChart
-        dataset={getMeasurements()}
-        xAxis={[{ dataKey: "timestamp", scaleType: "time" }]}
-        series={
-          hasHumidity
-            ? [
-                {
-                  dataKey: "temperature",
-                  label: "Temperature °C",
-                  showMark: false,
-                },
-                { dataKey: "humidity", label: "Humidity %", showMark: false },
-              ]
-            : [
-                {
-                  dataKey: "temperature",
-                  label: "Temperature °C",
-                  showMark: false,
-                },
-              ]
-        }
-      />
+      <Box
+        flexGrow={1}
+        flex={1}
+        width={"100%"}
+        height={"100%"}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          //flexGrow: {
+          //  xs: 1,
+          //},
+          //columnGap: {
+          //  xl: 3,
+          //},
+        }}
+      >
+        <MeasurementGraph sensor={selectedSensor} measurements={measurements} />
+      </Box>
     </AppContentWrapper>
   );
 };

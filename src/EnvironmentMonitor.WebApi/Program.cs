@@ -14,10 +14,9 @@ var isDevelopment = builder.Environment.IsDevelopment();
 
 var googleClientId = builder.Configuration["Google:ClientId"];
 var googleClientSecret = builder.Configuration["Google:ClientSecret"];
-if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret) {
+if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret)) {
     builder.Services.AddAuthentication().AddGoogle(googleOptions =>
     {
-        var test = 5;
         googleOptions.SaveTokens = true;
         googleOptions.ClientId = googleClientId;
         googleOptions.ClientSecret = googleClientSecret;

@@ -1,6 +1,8 @@
 export interface Sensor {
   id: number;
   name: string;
-  devideId: number;
+  deviceId: number;
   sensorid: number;
+  scaleMin?: number;
+  scaleMax?: number;
 }

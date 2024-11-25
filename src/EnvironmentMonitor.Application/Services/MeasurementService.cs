@@ -105,7 +105,9 @@ namespace EnvironmentMonitor.Application.Services
                 Id = x.Id,
                 DeviceId = device.Id,
                 Name = x.Name,
-                SensorId = x.SensorId
+                SensorId = x.SensorId,
+                ScaleMax = x.ScaleMax,
+                ScaleMin = x.ScaleMin,
             }).ToList();
         }
 

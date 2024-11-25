@@ -104,12 +104,14 @@ namespace EnvironmentMonitor.WebApi.Controllers
             var authenticateResult = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
             if (!authenticateResult.Succeeded)
             {
+                _logger.LogWarning($"Not authenticated at GoogleCallback");
                 return Unauthorized(new { Message = "Authentication failed." });
             }
             var info = await _signInManager.GetExternalLoginInfoAsync();
             var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true);
             if (signInResult.Succeeded)
             {
+                _logger.LogInformation($"Google Auth: SignIn completed.");
                 return Redirect(returnUrl ?? "/");
             }
             else
@@ -117,14 +119,18 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 var email = info.Principal.FindFirstValue(ClaimTypes.Email);
                 if (email != null)
                 {
+                    _logger.LogInformation($"Google Auth: Creating user for user with email '{email}'. ");
                     var user = new ApplicationUser { UserName = email, Email = email };
                     var result = await _userManager.CreateAsync(user);
                     if (result.Succeeded)
                     {
+                        _logger.LogInformation("User created");
                         result = await _userManager.AddLoginAsync(user, info);
                         if (result.Succeeded)
                         {
+                            _logger.LogInformation("Signing user in");
                             await _signInManager.SignInAsync(user, isPersistent: true);
+                            _logger.LogInformation("Signed in");
                             return Redirect(returnUrl ?? "/");
                         }
                     }
