@@ -6,9 +6,12 @@ import { Menu as MenuIcon } from "@mui/icons-material";
 import { routes } from "../utilities/routes";
 import { UserMenu } from "./UserMenu";
 import { User } from "../models/user";
-import { getIsLoggedIn } from "../reducers/userReducer";
 import { AuthorizedComponent } from "../components/AuthorizedComponent";
 import { RoleNames } from "../enums/roleNames";
+import {
+  getIsLeftMenuOpen,
+  toggleLeftMenuOpen,
+} from "../reducers/userInterfaceReducer";
 
 export interface DesktopMenuProps {
   onNavigate: (route: string) => void;
@@ -36,7 +39,8 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
   onLogOut,
   user,
 }) => {
-  const isLeftMenuOpen = false; //useSelector(getLeftMenuIsOpen);
+  const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
+  const dispath = useDispatch();
   // const user = useSelector(getUserInfo);
 
   return (
@@ -50,7 +54,7 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
             aria-label="menu"
             sx={{ mr: 2 }}
             onClick={() => {
-              // dispatch(appUiActions.toggleLeftMenu(!isLeftMenuOpen));
+              dispath(toggleLeftMenuOpen(!isLeftMenuOpen));
             }}
           >
             <MenuIcon />
@@ -62,6 +66,15 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
           >
             Home
           </MenuItem>
+          <AuthorizedComponent requiredRole={RoleNames.Viewer}>
+            <MenuItem
+              onClick={() => {
+                onNavigate(routes.dashboard);
+              }}
+            >
+              Dashboard
+            </MenuItem>
+          </AuthorizedComponent>
           <AuthorizedComponent requiredRole={RoleNames.Viewer}>
             <MenuItem
               onClick={() => {

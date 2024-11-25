@@ -12,12 +12,5 @@ namespace EnvironmentMonitor.Application.DTOs
         public List<MeasurementDto> Measurements { get; set; } = new List<MeasurementDto>();
     }
 
-    public class MeasurementDto
-    {
-        public int SensorId { get; set; }
-        public double SensorValue { get; set; }
-        public int TypeId { get; set; }
-        public DateTime TimestampUtc { get; set; }
-        public DateTime Timestamp { get; set; }
-    }
+
 }

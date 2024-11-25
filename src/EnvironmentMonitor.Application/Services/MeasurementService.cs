@@ -1,9 +1,12 @@
 ﻿using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace EnvironmentMonitor.Application.Services
 {
@@ -92,18 +95,13 @@ namespace EnvironmentMonitor.Application.Services
             }).ToList();
         }
 
-        public async Task<List<SensorDto>> GetSensors(string DeviceIdentifier)
+        public async Task<List<SensorDto>> GetSensors(List<string> DeviceIdentifier)
         {
-            var device = await _measurementRepository.GetDeviceByIdAsync(DeviceIdentifier);
-            if (device == null)
-            {
-                throw new ArgumentException("Invalid device identifier");
-            }
-            var sensors = await _measurementRepository.GetSensorsByDeviceIdAsync(device.Id);
+            var sensors = await _measurementRepository.GetSensorsByDeviceIdentifiers(DeviceIdentifier);
             return sensors.Select(x => new SensorDto()
             {
                 Id = x.Id,
-                DeviceId = device.Id,
+                DeviceId = x.DeviceId,
                 Name = x.Name,
                 SensorId = x.SensorId,
                 ScaleMax = x.ScaleMax,
@@ -115,6 +113,41 @@ namespace EnvironmentMonitor.Application.Services
         {
             var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(TargetTimeZone);
             return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, targetTimeZone);
+        }
+
+        public async Task<MeasurementsViewModel> GetMeasurementsBySensor(GetMeasurementsModel model)
+        {
+            var returnList = new List<MeasurementsBySensorDto>();
+            _logger.LogInformation("Getting measurements by sensor");
+            foreach (var sensorId in model.SensorIds)
+            {
+                var measurements = await GetMeasurements(new GetMeasurementsModel()
+                {
+                    SensorIds = [sensorId],
+                    To = model.To,
+                    From = model.From,
+                });
+                var rowToAdd = new MeasurementsBySensorDto()
+                {
+                    SensorId = sensorId,
+                    Measurements = measurements
+                };
+                if (measurements.Any(x => x.TypeId == (int)MeasurementTypes.Humidity))
+                {
+                    rowToAdd.MinValues[MeasurementTypes.Humidity] = measurements.Where(x => x.TypeId == (int)MeasurementTypes.Humidity).OrderBy(x => x.SensorValue).First();
+                    rowToAdd.MaxValues[MeasurementTypes.Humidity] = measurements.Where(x => x.TypeId == (int)MeasurementTypes.Humidity).OrderByDescending(x => x.SensorValue).First();
+                }
+                if (measurements.Any(x => x.TypeId == (int)MeasurementTypes.Temperature))
+                {
+                    rowToAdd.MinValues[MeasurementTypes.Temperature] = measurements.Where(x => x.TypeId == (int)MeasurementTypes.Temperature).OrderBy(x => x.SensorValue).First();
+                    rowToAdd.MaxValues[MeasurementTypes.Temperature] = measurements.Where(x => x.TypeId == (int)MeasurementTypes.Temperature).OrderByDescending(x => x.SensorValue).First();
+                }
+                returnList.Add(rowToAdd);
+            }
+            return new MeasurementsViewModel()
+            {
+                Measurements = returnList
+            };
         }
     }
 }

@@ -15,6 +15,11 @@ import LoginPage from "../components/LoginPage";
 import { useApiHook } from "../hooks/apiHook";
 import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  getDevices,
+  setDevices,
+  setSensors,
+} from "../reducers/measurementReducer";
 
 interface AppProps {
   children: React.ReactNode;
@@ -24,11 +29,15 @@ export const App: React.FC<AppProps> = (props) => {
   const navigate = useNavigate();
   // const [cookies, setCookie] = useCookies([userInfoCookieName]);
   const apiHook = useApiHook();
+  const measurementApiHook = useApiHook().measureHook;
   const dispath = useDispatch();
   const user: User | undefined = useSelector(getUserInfo);
   const isLoggedIn = useSelector(getIsLoggedIn);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+
+  //
+  const devices = useSelector(getDevices);
 
   const handleLogOut = () => {
     console.info("Handling log out");
@@ -67,6 +76,29 @@ export const App: React.FC<AppProps> = (props) => {
         });
     }
   }, [apiHook.userHook, user, dispath, hasFetched]);
+
+  // Devices & sensors
+  useEffect(() => {
+    if (isLoggedIn && measurementApiHook && devices.length === 0) {
+      measurementApiHook.getDevices().then((res) => {
+        dispath(setDevices(res ?? []));
+      });
+    }
+  }, [isLoggedIn, measurementApiHook, devices, dispath]);
+
+  useEffect(() => {
+    if (devices.length === 0) {
+      dispath(setSensors([]));
+    } else {
+      console.info("Fetching sensors");
+      measurementApiHook
+        .getSensors(devices.map((x) => x.deviceIdentifier))
+        .then((res) => {
+          dispath(setSensors(res));
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [devices, dispath]);
 
   return (
     <CookiesProvider>

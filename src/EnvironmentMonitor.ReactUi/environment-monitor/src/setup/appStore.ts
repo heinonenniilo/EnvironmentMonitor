@@ -1,11 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import measurementReducer from "../reducers/measurementReducer";
 import userReducer from "../reducers/userReducer";
+import userInterfaceReducer from "../reducers/userInterfaceReducer";
 
 export const store = configureStore({
   reducer: {
     measurementInfo: measurementReducer,
     userInfo: userReducer,
+    userInterfaceInfo: userInterfaceReducer,
   },
 });
 

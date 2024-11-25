@@ -14,7 +14,7 @@ import { Sensor } from "../models/sensor";
 
 export interface MeasurementsLeftViewProps {
   onSearch: (from: Date, to: Date, sensorId: number) => void;
-  getSensors: (deviceId: string) => void;
+  onSelectDevice: (deviceId: string) => void;
   devices: Device[];
   sensors: Sensor[];
 }
@@ -23,7 +23,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   onSearch,
   devices,
   sensors,
-  getSensors,
+  onSelectDevice,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
     moment().utc(true).add(-2, "day").startOf("day")
@@ -96,7 +96,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                   const device = devices.find((d) => d.id === y.id);
                   if (device) {
                     setSelectedDevice(device);
-                    getSensors(device.deviceIdentifier);
+                    onSelectDevice(device.deviceIdentifier);
                   }
                 }}
               >

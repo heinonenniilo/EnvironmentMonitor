@@ -7,6 +7,10 @@ import { routes } from "../utilities/routes";
 import { UserMenu } from "./UserMenu";
 import { AuthorizedComponent } from "../components/AuthorizedComponent";
 import { RoleNames } from "../enums/roleNames";
+import {
+  getIsLeftMenuOpen,
+  toggleLeftMenuOpen,
+} from "../reducers/userInterfaceReducer";
 
 export interface MobileMenuProps {
   onNavigate: (route: string) => void;
@@ -21,8 +25,9 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   onLogOut,
   user,
 }) => {
+  const dispath = useDispatch();
+  const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-
   const open = Boolean(anchorEl);
   const handleClose = () => {
     setAnchorEl(null);
@@ -65,12 +70,31 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             <MenuItem
               selected={false}
               onClick={(event) => {
-                handleClick(routes.main, event);
+                handleClick(routes.dashboard, event);
+              }}
+            >
+              Dashboard
+            </MenuItem>
+          </AuthorizedComponent>
+          <AuthorizedComponent requiredRole={RoleNames.Viewer}>
+            <MenuItem
+              selected={false}
+              onClick={(event) => {
+                handleClick(routes.measurements, event);
               }}
             >
               Measurements
             </MenuItem>
           </AuthorizedComponent>
+          <MenuItem
+            selected={false}
+            onClick={() => {
+              dispath(toggleLeftMenuOpen(!isLeftMenuOpen));
+              handleClose();
+            }}
+          >
+            {isLeftMenuOpen ? "Hide filters" : "Show filters"}
+          </MenuItem>
         </Menu>
       );
     }

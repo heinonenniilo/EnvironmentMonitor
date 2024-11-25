@@ -1,28 +1,22 @@
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useEffect, useState } from "react";
-import { getIsLoggedIn } from "../reducers/userReducer";
+import React, { useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
 import { MeasurementsLeftView } from "../components/MeasurementsLeftView";
-import {
-  getDevices,
-  getSensors,
-  setDevices,
-  setSensors,
-} from "../reducers/measurementReducer";
+import { getDevices, getSensors } from "../reducers/measurementReducer";
 import { Measurement } from "../models/measurement";
 import { MeasurementGraph } from "../components/MeasurementGraph";
 import { Box } from "@mui/material";
 import { Sensor } from "../models/sensor";
+import { Device } from "../models/device";
 
 export const MeasurementsView: React.FC = () => {
-  // const user = useSelector(getUserInfo);
-
-  const dispatch = useDispatch();
-  const isLoggedIn = useSelector(getIsLoggedIn);
   const measurementApiHook = useApiHook().measureHook;
   const [isLoading, setIsLoading] = useState(false);
   const [selectedSensor, setSelectedSensor] = useState<Sensor | undefined>(
+    undefined
+  );
+  const [selectedDevice, setSelectedDevice] = useState<Device | undefined>(
     undefined
   );
 
@@ -30,14 +24,6 @@ export const MeasurementsView: React.FC = () => {
 
   const devices = useSelector(getDevices);
   const sensors = useSelector(getSensors);
-
-  useEffect(() => {
-    if (isLoggedIn && measurementApiHook && devices.length === 0) {
-      measurementApiHook.getDevices().then((res) => {
-        dispatch(setDevices(res ?? []));
-      });
-    }
-  }, [isLoggedIn, measurementApiHook, devices, dispatch]);
 
   return (
     <AppContentWrapper
@@ -52,7 +38,7 @@ export const MeasurementsView: React.FC = () => {
             const selectedSensor = sensors.find((s) => s.id === sensorId);
             setSelectedSensor(selectedSensor);
             measurementApiHook
-              .getMeasurements(sensorId, from, to)
+              .getMeasurements([sensorId], from, to)
               .then((res) => {
                 setMeasurements(res);
               })
@@ -60,18 +46,20 @@ export const MeasurementsView: React.FC = () => {
                 setIsLoading(false);
               });
           }}
-          getSensors={(deviceId: string) => {
-            measurementApiHook
-              .getSensors(deviceId)
-              .then((res) => {
-                dispatch(setSensors(res));
-              })
-              .finally(() => {
-                setIsLoading(false);
-              });
+          onSelectDevice={(deviceId: string) => {
+            const matchingDevice = devices.find(
+              (d) => d.deviceIdentifier === deviceId
+            );
+            if (matchingDevice) {
+              setSelectedDevice(matchingDevice);
+            }
           }}
           devices={devices}
-          sensors={sensors}
+          sensors={
+            selectedDevice
+              ? sensors.filter((s) => s.deviceId === selectedDevice.id)
+              : []
+          }
         />
       }
     >

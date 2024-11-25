@@ -71,8 +71,13 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
       alignItems="center"
       flex={1}
       flexGrow={1}
-      sx={{ height: "100%", width: "100%", maxHeight: "800px" }}
+      sx={{ height: "100%", width: "100%", maxHeight: "1000px" }}
     >
+      <Box width="100%" mt={0} flexGrow={0}>
+        <Typography variant="h6" align="left" gutterBottom>
+          {`${sensor?.name} (${sensor?.sensorId})`}
+        </Typography>
+      </Box>
       <Box
         flex={1}
         flexGrow={1}
@@ -81,6 +86,7 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
         display={"flex"}
         flexDirection={"column"}
         maxHeight={"800px"}
+        minHeight={"400px"}
       >
         <LineChart
           dataset={getMeasurements()}
@@ -113,9 +119,9 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
           }
         />
       </Box>
-      <Box width="100%" mt={2}>
-        <Typography variant="h6" align="left" gutterBottom>
-          Min/Max Values
+      <Box width="100%">
+        <Typography align="left" gutterBottom>
+          Min/Max
         </Typography>
         <TableContainer>
           <Table>
@@ -143,6 +149,7 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
           </Table>
         </TableContainer>
       </Box>
+      <div></div>
     </Box>
   );
 };

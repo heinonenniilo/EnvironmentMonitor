@@ -9,6 +9,7 @@ import { HomeView } from "./containers/HomeView";
 import { App } from "./framework/App";
 import { MeasurementsView } from "./containers/MeasurementsView";
 import { store } from "./setup/appStore";
+import { DashboardView } from "./containers/DashboardView";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -21,6 +22,7 @@ root.render(
         <App>
           <Routes>
             <Route path={routes.main} element={<HomeView />} />
+            <Route path={routes.dashboard} element={<DashboardView />} />
             <Route path={routes.measurements} element={<MeasurementsView />} />
           </Routes>
         </App>

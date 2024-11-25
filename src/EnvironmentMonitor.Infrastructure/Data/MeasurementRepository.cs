@@ -28,7 +28,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             return await _context.Measurements
                 .Where(x =>
-                x.SensorId == model.SensorId
+                model.SensorIds.Contains(x.SensorId)
                 && x.Timestamp >= model.From
                 && (model.To == null || x.Timestamp <= model.To))
                 .OrderBy(x => x.Timestamp)
@@ -63,6 +63,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdAsync(int deviceId)
         {
             var sensors = await _context.Sensors.Where(x => x.DeviceId == deviceId).ToListAsync();
+            return sensors;
+        }
+
+        public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers)
+        {
+            var sensors = await _context.Sensors.Where(x => deviceIdentifiers.Contains(x.Device.DeviceIdentifier)).ToListAsync();
             return sensors;
         }
     }

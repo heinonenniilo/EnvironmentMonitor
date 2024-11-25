@@ -10,6 +10,12 @@ import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { LeftMenu } from "./LefMenu";
+import {
+  getHasLeftMenu,
+  getIsLeftMenuOpen,
+  toggleHasLeftMenu,
+  toggleLeftMenuOpen,
+} from "../reducers/userInterfaceReducer";
 
 export interface TitlePart {
   text: string;
@@ -35,14 +41,22 @@ const PageContent = styled.div`
 
 export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
   const isLoggingIn = false; //useSelector(getIsLoggingIn);
+  const dispatch = useDispatch();
   const [menuWidth, setMenuWidth] = useState<number | undefined>(undefined);
 
-  const hasLeftMenu = props.leftMenu !== undefined;
+  const hasLeftMenu = useSelector(getHasLeftMenu);
+  const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
 
   const handleMenuClose = () => {
-    // dispatch(appUiActions.toggleLeftMenu(false));
+    dispatch(toggleLeftMenuOpen(false));
   };
-
+  useEffect(() => {
+    if (!hasLeftMenu && props.leftMenu) {
+      dispatch(toggleHasLeftMenu(true));
+    } else if (!props.leftMenu && hasLeftMenu) {
+      dispatch(toggleHasLeftMenu(false));
+    }
+  }, [props.leftMenu, dispatch, hasLeftMenu]);
   const drawTitle = () => {
     const count = props.titleParts.length;
 
@@ -89,7 +103,7 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
           flexGrow: 1,
           flexDirection: "column",
           minHeight: "calc(100vh - 100px)", // TODO Could be made dynamic
-          marginLeft: hasLeftMenu ? `${menuWidth}px` : "0px",
+          marginLeft: hasLeftMenu && isLeftMenuOpen ? `${menuWidth}px` : "0px",
           display: "flex",
           paddingLeft: 1,
           paddingRight: 1,
@@ -108,7 +122,7 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
                 setMenuWidth(width);
               }
             }}
-            isOpen={props.leftMenu !== undefined}
+            isOpen={props.leftMenu !== undefined && isLeftMenuOpen}
             onClose={handleMenuClose}
           >
             {props.leftMenu ?? <div></div>}

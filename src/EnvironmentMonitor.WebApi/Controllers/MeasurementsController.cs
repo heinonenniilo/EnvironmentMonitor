@@ -30,6 +30,12 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return result;
         }
 
+        [HttpGet("bysensor")]
+        public async Task<MeasurementsViewModel> GetMeasurementsBySensor([FromQuery] GetMeasurementsModel model)
+        {
+            return await _measurementService.GetMeasurementsBySensor(model);
+        }
+
         [HttpGet("devices")]
         public async Task<List<DeviceDto>> GetDevices()
         {
@@ -37,10 +43,10 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return result;
         }
 
-        [HttpGet("sensors/{deviceId}")]
-        public async Task<List<SensorDto>> GetSensors([FromRoute] string deviceId)
+        [HttpGet("sensors")]
+        public async Task<List<SensorDto>> GetSensors([FromQuery] List<string> deviceIds)
         {
-            var result = await _measurementService.GetSensors(deviceId);
+            var result = await _measurementService.GetSensors(deviceIds);
             return result;
         }
     }

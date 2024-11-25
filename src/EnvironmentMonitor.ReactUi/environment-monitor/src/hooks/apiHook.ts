@@ -3,6 +3,8 @@ import { User } from "../models/user";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
 import { Measurement } from "../models/measurement";
+import qs from "qs";
+import { MeasurementsViewModel } from "../models/measurementsBySensor";
 
 interface ApiHook {
   //getUserInfo: () => Promise<User | undefined>;
@@ -20,12 +22,17 @@ interface userHook {
 
 interface measureHook {
   getDevices: () => Promise<Device[] | undefined>;
-  getSensors: (deviceId: string) => Promise<Sensor[]>;
+  getSensors: (deviceId: string[]) => Promise<Sensor[]>;
   getMeasurements: (
-    sensorId: number,
+    sensorIds: number[],
     from: Date,
     to: Date
   ) => Promise<Measurement[]>;
+  getMeasurementsBySensor: (
+    sensorIds: number[],
+    from: Date,
+    to: Date
+  ) => Promise<MeasurementsViewModel | undefined>;
 }
 
 const apiClient = axios.create({
@@ -34,6 +41,9 @@ const apiClient = axios.create({
   //  ? undefined
   //  : "https://localhost:7135",
   withCredentials: true,
+  paramsSerializer: (params) => {
+    return qs.stringify(params, { arrayFormat: "repeat" }); // or "comma" if backend expects "1,2,3"
+  },
 });
 
 export const useApiHook = (): ApiHook => {
@@ -89,10 +99,15 @@ export const useApiHook = (): ApiHook => {
           return undefined;
         }
       },
-      getSensors: async (deviceId: string) => {
+      getSensors: async (deviceIds: string[]) => {
         try {
           let res = await apiClient.get<any, AxiosResponse<Sensor[]>>(
-            `/Measurements/sensors/${deviceId}`
+            `/Measurements/sensors/`,
+            {
+              params: {
+                deviceIds: deviceIds,
+              },
+            }
           );
           return res.data;
         } catch (ex: any) {
@@ -100,13 +115,13 @@ export const useApiHook = (): ApiHook => {
           return [];
         }
       },
-      getMeasurements: async (sensorId: number, from: Date, to: Date) => {
+      getMeasurements: async (sensorIds: number[], from: Date, to: Date) => {
         try {
           let res = await apiClient.get<any, AxiosResponse<Measurement[]>>(
             "/Measurements",
             {
               params: {
-                sensorId: sensorId,
+                SensorIds: sensorIds,
                 from: from,
                 to: to,
               },
@@ -118,6 +133,30 @@ export const useApiHook = (): ApiHook => {
           return [];
         }
       },
+      getMeasurementsBySensor: async (
+        sensorIds: number[],
+        from: Date,
+        to: Date
+      ) => {
+        try {
+          let res = await apiClient.get<
+            any,
+            AxiosResponse<MeasurementsViewModel>
+          >("/Measurements/bysensor", {
+            params: {
+              SensorIds: sensorIds,
+              from: from,
+              to: to,
+            },
+          });
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          return undefined;
+        }
+      },
     },
   };
 };
+
+// https://localhost:7135/Measurements/bysensor?SensorIds=1&SensorIds=2&From=2024-11-24
