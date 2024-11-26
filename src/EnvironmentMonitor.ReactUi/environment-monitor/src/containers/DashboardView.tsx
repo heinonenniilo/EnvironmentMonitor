@@ -20,23 +20,28 @@ export const DashboardView: React.FC = () => {
 
   useEffect(() => {
     if (sensors.length > 0 && !viewModel) {
-      const momentStart = moment().local().add(-1, "day");
-      const momentEnd = moment().local();
+      const momentStart = moment().local(true).add(-1, "day").utc();
+      const momentEnd = moment().local(true).utc();
+      // TODO implement a better way
       const start = new Date(
-        momentStart.year(),
-        momentStart.month(),
-        momentStart.date(),
-        0,
-        0,
-        0
+        Date.UTC(
+          momentStart.year(),
+          momentStart.month(),
+          momentStart.date(),
+          0,
+          0,
+          0
+        )
       );
       const end = new Date(
-        momentEnd.year(),
-        momentEnd.month(),
-        momentEnd.date(),
-        23,
-        59,
-        59
+        Date.UTC(
+          momentEnd.year(),
+          momentEnd.month(),
+          momentEnd.date(),
+          23,
+          59,
+          59
+        )
       );
       setIsLoading(true);
       measurementApiHook
