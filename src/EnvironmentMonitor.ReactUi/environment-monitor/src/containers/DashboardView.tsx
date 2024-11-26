@@ -74,8 +74,8 @@ export const DashboardView: React.FC = () => {
             // sm: "1fr 1fr", // Two columns for small and larger screens
             md: "1fr 1fr",
           },
-          gap: 2, // Space between grid items
-          padding: 2, // Padding around the grid container
+          gap: 1, // Space between grid items
+          padding: 1, // Padding around the grid container
         }}
       >
         {orderedSensors.map((sensor, idx) => (
@@ -84,7 +84,7 @@ export const DashboardView: React.FC = () => {
             sx={{
               border: "1px solid #ccc",
               borderRadius: 2,
-              padding: 2,
+              padding: 1,
               boxSizing: "border-box",
               backgroundColor: "#f9f9f9",
               // height: "800px", // Fixed height for graphs
