@@ -13,15 +13,18 @@ import {
 } from "@mui/material";
 import { MeasurementsBySensor } from "../models/measurementsBySensor";
 import { formatMeasurement } from "../utilities/measurementUtils";
+import { Device } from "../models/device";
 
 export interface MeasurementGraphProps {
   sensor: Sensor | undefined;
+  device?: Device;
   model: MeasurementsBySensor | undefined;
 }
 
 export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
   sensor,
   model,
+  device,
 }) => {
   const getMeasurements = () => {
     if (!model) {
@@ -73,6 +76,14 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
     return "-";
   };
 
+  const getTitle = () => {
+    let sensorInfo = `${sensor?.name} (${sensor?.sensorId})`;
+    if (device) {
+      sensorInfo += ` / ${device.name}`;
+    }
+    return sensorInfo;
+  };
+
   return (
     <Box
       display="flex"
@@ -84,8 +95,8 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
     >
       <Box width="100%" mt={0} flexGrow={0}>
         {sensor ? (
-          <Typography variant="h6" align="left" gutterBottom>
-            {`${sensor?.name} (${sensor?.sensorId})`}
+          <Typography align="left" gutterBottom>
+            {getTitle()}
           </Typography>
         ) : null}
       </Box>

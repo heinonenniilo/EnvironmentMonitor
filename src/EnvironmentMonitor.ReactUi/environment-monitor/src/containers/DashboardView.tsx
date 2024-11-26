@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
-import { getSensors } from "../reducers/measurementReducer";
+import { getDevices, getSensors } from "../reducers/measurementReducer";
 import { useApiHook } from "../hooks/apiHook";
 import { Box } from "@mui/material";
 import { MeasurementGraph } from "../components/MeasurementGraph";
@@ -16,6 +16,7 @@ export const DashboardView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const sensors = useSelector(getSensors);
+  const devices = useSelector(getDevices);
 
   useEffect(() => {
     if (sensors.length > 0 && !viewModel) {
@@ -61,7 +62,10 @@ export const DashboardView: React.FC = () => {
   const orderedSensors = [...sensors].sort((a, b) => a.deviceId - b.deviceId);
 
   return (
-    <AppContentWrapper titleParts={[{ text: "Home" }]} isLoading={isLoading}>
+    <AppContentWrapper
+      titleParts={[{ text: "Dashboard" }]}
+      isLoading={isLoading}
+    >
       <Box
         sx={{
           display: "grid",
@@ -93,6 +97,7 @@ export const DashboardView: React.FC = () => {
           >
             <MeasurementGraph
               sensor={sensor}
+              device={devices?.find((d) => d.id === sensor.deviceId)}
               model={viewModel?.measurements.find(
                 (d) => d.sensorId === sensor.id
               )}

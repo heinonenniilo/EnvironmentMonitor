@@ -27,6 +27,7 @@ export interface AppContentWrapperProps {
   isLoading?: boolean;
   leftMenu?: JSX.Element;
   titleParts: TitlePart[];
+  useSmallTitle?: boolean;
 }
 
 const PageContent = styled.div`
@@ -61,7 +62,8 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
     const count = props.titleParts.length;
 
     const shouldUseSmallTitle =
-      props.titleParts.length > 1 && props.titleParts.some((t) => t.to);
+      props.useSmallTitle ||
+      (props.titleParts.length > 1 && props.titleParts.some((t) => t.to));
     return (
       <Typography variant={shouldUseSmallTitle ? "h6" : "h5"}>
         {props.titleParts.map((r, idx) => {
