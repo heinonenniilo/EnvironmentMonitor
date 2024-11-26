@@ -4,11 +4,11 @@ import React, { useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
 import { MeasurementsLeftView } from "../components/MeasurementsLeftView";
 import { getDevices, getSensors } from "../reducers/measurementReducer";
-import { Measurement } from "../models/measurement";
 import { MeasurementGraph } from "../components/MeasurementGraph";
 import { Box } from "@mui/material";
 import { Sensor } from "../models/sensor";
 import { Device } from "../models/device";
+import { MeasurementsBySensor } from "../models/measurementsBySensor";
 
 export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
@@ -20,7 +20,9 @@ export const MeasurementsView: React.FC = () => {
     undefined
   );
 
-  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [measurementsModel, setMeasurementsModel] = useState<
+    MeasurementsBySensor | undefined
+  >(undefined);
 
   const devices = useSelector(getDevices);
   const sensors = useSelector(getSensors);
@@ -38,9 +40,13 @@ export const MeasurementsView: React.FC = () => {
             const selectedSensor = sensors.find((s) => s.id === sensorId);
             setSelectedSensor(selectedSensor);
             measurementApiHook
-              .getMeasurements([sensorId], from, to)
+              .getMeasurementsBySensor([sensorId], from, to)
               .then((res) => {
-                setMeasurements(res);
+                setMeasurementsModel(
+                  res?.measurements.find(
+                    (d) => d.sensorId === selectedSensor?.id
+                  )
+                );
               })
               .finally(() => {
                 setIsLoading(false);
@@ -79,7 +85,7 @@ export const MeasurementsView: React.FC = () => {
           //},
         }}
       >
-        <MeasurementGraph sensor={selectedSensor} measurements={measurements} />
+        <MeasurementGraph sensor={selectedSensor} model={measurementsModel} />
       </Box>
     </AppContentWrapper>
   );

@@ -8,6 +8,7 @@ export interface MeasurementsViewModel {
 export interface MeasurementsBySensor {
   sensorId: number;
   measurements: Measurement[];
-  MinValues: Record<MeasurementTypes, Measurement>;
-  MaxValues: Record<MeasurementTypes, Measurement>;
+  minValues: Record<MeasurementTypes, Measurement>;
+  maxValues: Record<MeasurementTypes, Measurement>;
+  latestValues: Record<MeasurementTypes, Measurement>;
 }

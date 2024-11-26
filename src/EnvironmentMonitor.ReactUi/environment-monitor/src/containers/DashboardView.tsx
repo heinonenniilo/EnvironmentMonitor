@@ -13,11 +13,12 @@ export const DashboardView: React.FC = () => {
   const [viewModel, setViewModel] = useState<MeasurementsViewModel | undefined>(
     undefined
   );
+  const [isLoading, setIsLoading] = useState(false);
 
   const sensors = useSelector(getSensors);
 
   useEffect(() => {
-    if (sensors.length > 0) {
+    if (sensors.length > 0 && !viewModel) {
       const momentStart = moment().local().add(-1, "day");
       const momentEnd = moment().local();
       const start = new Date(
@@ -36,7 +37,7 @@ export const DashboardView: React.FC = () => {
         59,
         59
       );
-
+      setIsLoading(true);
       measurementApiHook
         .getMeasurementsBySensor(
           sensors.map((x) => x.id),
@@ -49,13 +50,18 @@ export const DashboardView: React.FC = () => {
         .catch((er) => {
           console.error(er);
           setViewModel(undefined);
+        })
+        .finally(() => {
+          setIsLoading(false);
         });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sensors]);
+  }, [sensors, viewModel]);
+
+  const orderedSensors = [...sensors].sort((a, b) => a.deviceId - b.deviceId);
 
   return (
-    <AppContentWrapper titleParts={[{ text: "Home" }]}>
+    <AppContentWrapper titleParts={[{ text: "Home" }]} isLoading={isLoading}>
       <Box
         sx={{
           display: "grid",
@@ -68,7 +74,7 @@ export const DashboardView: React.FC = () => {
           padding: 2, // Padding around the grid container
         }}
       >
-        {sensors.map((sensor) => (
+        {orderedSensors.map((sensor, idx) => (
           <Box
             key={sensor.id}
             sx={{
@@ -87,13 +93,9 @@ export const DashboardView: React.FC = () => {
           >
             <MeasurementGraph
               sensor={sensor}
-              measurements={
-                viewModel
-                  ? viewModel.measurements?.find(
-                      (d) => d.sensorId === sensor.id
-                    )?.measurements ?? []
-                  : []
-              }
+              model={viewModel?.measurements.find(
+                (d) => d.sensorId === sensor.id
+              )}
             />
           </Box>
         ))}

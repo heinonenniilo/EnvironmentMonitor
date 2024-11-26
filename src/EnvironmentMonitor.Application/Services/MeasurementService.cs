@@ -132,15 +132,14 @@ namespace EnvironmentMonitor.Application.Services
                     SensorId = sensorId,
                     Measurements = measurements
                 };
-                if (measurements.Any(x => x.TypeId == (int)MeasurementTypes.Humidity))
+                foreach (MeasurementTypes type in Enum.GetValues(typeof(MeasurementTypes)))
                 {
-                    rowToAdd.MinValues[MeasurementTypes.Humidity] = measurements.Where(x => x.TypeId == (int)MeasurementTypes.Humidity).OrderBy(x => x.SensorValue).First();
-                    rowToAdd.MaxValues[MeasurementTypes.Humidity] = measurements.Where(x => x.TypeId == (int)MeasurementTypes.Humidity).OrderByDescending(x => x.SensorValue).First();
-                }
-                if (measurements.Any(x => x.TypeId == (int)MeasurementTypes.Temperature))
-                {
-                    rowToAdd.MinValues[MeasurementTypes.Temperature] = measurements.Where(x => x.TypeId == (int)MeasurementTypes.Temperature).OrderBy(x => x.SensorValue).First();
-                    rowToAdd.MaxValues[MeasurementTypes.Temperature] = measurements.Where(x => x.TypeId == (int)MeasurementTypes.Temperature).OrderByDescending(x => x.SensorValue).First();
+                    if (measurements.Any(x => x.TypeId == (int)type))
+                    {
+                        rowToAdd.MinValues[(int)type] = measurements.Where(x => x.TypeId == (int)type).OrderBy(x => x.SensorValue).First();
+                        rowToAdd.MaxValues[(int)type] = measurements.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.SensorValue).First();
+                        rowToAdd.LatestValues[(int)type] = measurements.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.Timestamp).First();
+                    }
                 }
                 returnList.Add(rowToAdd);
             }

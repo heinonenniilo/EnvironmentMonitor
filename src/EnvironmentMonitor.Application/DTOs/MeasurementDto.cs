@@ -20,8 +20,9 @@ namespace EnvironmentMonitor.Application.DTOs
     {
         public int SensorId { get; set; }
         public List<MeasurementDto> Measurements { get; set; } = new List<MeasurementDto>();
-        public Dictionary<MeasurementTypes, MeasurementDto> MinValues { get; set; } = new Dictionary<MeasurementTypes, MeasurementDto>();
-        public Dictionary<MeasurementTypes, MeasurementDto> MaxValues { get; set; } = new Dictionary<MeasurementTypes, MeasurementDto>();
+        public Dictionary<int, MeasurementDto> MinValues { get; set; } = new Dictionary<int, MeasurementDto>();
+        public Dictionary<int, MeasurementDto> MaxValues { get; set; } = new Dictionary<int, MeasurementDto>();
+        public Dictionary<int, MeasurementDto> LatestValues { get; set; } = new Dictionary<int, MeasurementDto>();
     }
 
     public class MeasurementsViewModel

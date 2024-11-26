@@ -1,6 +1,5 @@
 import { LineChart } from "@mui/x-charts";
 import { MeasurementTypes } from "../enums/temperatureTypes";
-import { Measurement } from "../models/measurement";
 import { Sensor } from "../models/sensor";
 import {
   Box,
@@ -12,23 +11,27 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { MeasurementsBySensor } from "../models/measurementsBySensor";
+import { formatMeasurement } from "../utilities/measurementUtils";
 
 export interface MeasurementGraphProps {
-  // devices: Device[];
   sensor: Sensor | undefined;
-  measurements: Measurement[];
+  model: MeasurementsBySensor | undefined;
 }
 
 export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
   sensor,
-  measurements,
+  model,
 }) => {
   const getMeasurements = () => {
-    const temp = measurements
+    if (!model) {
+      return [];
+    }
+    const temp = model.measurements
       .filter((x) => x.typeId === MeasurementTypes.Temperature)
       .map((x) => {
         // Get humidity, assume same datetime
-        const humidityRow = measurements.find(
+        const humidityRow = model.measurements.find(
           (m) =>
             m.timestamp === x.timestamp &&
             m.typeId === MeasurementTypes.Humidity
@@ -42,27 +45,33 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
     return temp;
   };
 
-  const hasHumidity = measurements.some(
+  const hasHumidity = model?.measurements.some(
     (d) => d.typeId === MeasurementTypes.Humidity
   );
 
-  const temperatures = measurements
-    .filter((d) => d.typeId === MeasurementTypes.Temperature)
-    .map((x) => x.sensorValue);
+  const getMinMeasurement = (type: MeasurementTypes) => {
+    if (model?.minValues !== undefined && model.minValues[type] !== undefined) {
+      return formatMeasurement(model.minValues[type]);
+    }
+    return "-";
+  };
 
-  const humidityValues = measurements
-    .filter((d) => d.typeId === MeasurementTypes.Humidity)
-    .map((x) => x.sensorValue);
+  const getMaxMeasurement = (type: MeasurementTypes) => {
+    if (model?.maxValues !== undefined && model.maxValues[type] !== undefined) {
+      return formatMeasurement(model.maxValues[type]);
+    }
+    return "-";
+  };
 
-  const minTemperature =
-    temperatures.length > 0 ? Math.min(...temperatures) : undefined;
-  const maxTemperature =
-    temperatures.length > 0 ? Math.max(...temperatures) : undefined;
-
-  const minHumidity =
-    humidityValues.length > 0 ? Math.min(...humidityValues) : undefined;
-  const maxHumidity =
-    humidityValues.length > 0 ? Math.max(...humidityValues) : undefined;
+  const getLatestMeasurement = (type: MeasurementTypes) => {
+    if (
+      model?.latestValues !== undefined &&
+      model.latestValues[type] !== undefined
+    ) {
+      return formatMeasurement(model.latestValues[type]);
+    }
+    return "-";
+  };
 
   return (
     <Box
@@ -122,29 +131,38 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
         />
       </Box>
       <Box width="100%">
-        <Typography align="left" gutterBottom>
-          Min/Max
-        </Typography>
         <TableContainer>
-          <Table>
+          <Table size="small" sx={{ fontSize: 1 }}>
             <TableHead>
               <TableRow>
-                <TableCell>Measurement</TableCell>
-                <TableCell align="center">Minimum</TableCell>
-                <TableCell align="center">Maximum</TableCell>
+                <TableCell align="center">Min</TableCell>
+                <TableCell align="center">Max</TableCell>
+                <TableCell align="center">Latest</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               <TableRow>
-                <TableCell>Temperature (°C)</TableCell>
-                <TableCell align="center">{minTemperature}</TableCell>
-                <TableCell align="center">{maxTemperature}</TableCell>
+                <TableCell align="center">
+                  {getMinMeasurement(MeasurementTypes.Temperature)}
+                </TableCell>
+                <TableCell align="center">
+                  {getMaxMeasurement(MeasurementTypes.Temperature)}
+                </TableCell>
+                <TableCell align="center">
+                  {getLatestMeasurement(MeasurementTypes.Temperature)}
+                </TableCell>
               </TableRow>
               {hasHumidity && (
                 <TableRow>
-                  <TableCell>Humidity (%)</TableCell>
-                  <TableCell align="center">{minHumidity}</TableCell>
-                  <TableCell align="center">{maxHumidity}</TableCell>
+                  <TableCell align="center">
+                    {getMinMeasurement(MeasurementTypes.Humidity)}
+                  </TableCell>
+                  <TableCell align="center">
+                    {getMaxMeasurement(MeasurementTypes.Humidity)}
+                  </TableCell>
+                  <TableCell align="center">
+                    {getLatestMeasurement(MeasurementTypes.Humidity)}
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>
