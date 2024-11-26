@@ -82,16 +82,14 @@ const LoginPage: React.FC<LoginPageProps> = ({
           Login
         </Button>
         <Button
-          type="submit"
+          type="button"
           variant="contained"
           color="primary"
           fullWidth
           sx={{ marginTop: 2 }}
-          onClick={() => {
-            onLogInWithGoogle();
-          }}
+          onClick={onLogInWithGoogle}
         >
-          Google
+          Google login
         </Button>
       </form>
     </Box>
