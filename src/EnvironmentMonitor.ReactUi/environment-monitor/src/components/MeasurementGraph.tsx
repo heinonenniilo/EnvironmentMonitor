@@ -74,9 +74,11 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
       sx={{ height: "100%", width: "100%", maxHeight: "1000px" }}
     >
       <Box width="100%" mt={0} flexGrow={0}>
-        <Typography variant="h6" align="left" gutterBottom>
-          {`${sensor?.name} (${sensor?.sensorId})`}
-        </Typography>
+        {sensor ? (
+          <Typography variant="h6" align="left" gutterBottom>
+            {`${sensor?.name} (${sensor?.sensorId})`}
+          </Typography>
+        ) : null}
       </Box>
       <Box
         flex={1}

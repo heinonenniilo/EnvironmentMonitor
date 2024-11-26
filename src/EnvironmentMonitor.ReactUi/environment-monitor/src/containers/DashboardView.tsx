@@ -18,13 +18,30 @@ export const DashboardView: React.FC = () => {
 
   useEffect(() => {
     if (sensors.length > 0) {
-      console.log("Fetching");
+      const momentStart = moment().local().add(-1, "day");
+      const momentEnd = moment().local();
+      const start = new Date(
+        momentStart.year(),
+        momentStart.month(),
+        momentStart.date(),
+        0,
+        0,
+        0
+      );
+      const end = new Date(
+        momentEnd.year(),
+        momentEnd.month(),
+        momentEnd.date(),
+        23,
+        59,
+        59
+      );
 
       measurementApiHook
         .getMeasurementsBySensor(
           sensors.map((x) => x.id),
-          moment().utc().startOf("day").toDate(),
-          moment().utc().endOf("day").toDate()
+          start,
+          end
         )
         .then((res) => {
           setViewModel(res);
