@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { TextField, Button, Box, Typography } from "@mui/material";
 import { useApiHook } from "../hooks/apiHook";
-import { GoogleLogin } from "@react-oauth/google";
 
 export interface LoginPageProps {
   onLoggedIn: () => void;
