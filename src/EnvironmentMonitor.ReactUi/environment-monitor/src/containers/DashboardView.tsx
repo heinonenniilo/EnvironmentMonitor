@@ -91,7 +91,6 @@ export const DashboardView: React.FC = () => {
               padding: 1,
               boxSizing: "border-box",
               backgroundColor: "#f9f9f9",
-              // height: "800px", // Fixed height for graphs
               height: "100%",
               display: "flex",
               flexDirection: "column",

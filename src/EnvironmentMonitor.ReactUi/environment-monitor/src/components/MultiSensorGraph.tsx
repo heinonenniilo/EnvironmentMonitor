@@ -185,10 +185,22 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                 type: "time",
                 time: {
                   //tooltipFormat: "DD T",
+                  unit: "hour",
+                  displayFormats: {
+                    hour: "HH:mm",
+                  },
                 },
-                title: {
-                  display: true,
-                  text: "Date",
+                ticks: {
+                  major: {
+                    enabled: true,
+                  },
+                  font: (context) => {
+                    if (context.tick && context.tick.major) {
+                      return {
+                        weight: "bold",
+                      };
+                    }
+                  },
                 },
               },
               y: {
@@ -212,7 +224,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             }}
           >
             <Box flex={1} textAlign="center">
-              Censor
+              Sensor
             </Box>
             <Box flex={1} textAlign="center">
               Min

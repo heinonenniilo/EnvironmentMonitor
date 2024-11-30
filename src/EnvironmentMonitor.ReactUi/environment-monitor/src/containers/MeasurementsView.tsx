@@ -4,24 +4,21 @@ import React, { useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
 import { MeasurementsLeftView } from "../components/MeasurementsLeftView";
 import { getDevices, getSensors } from "../reducers/measurementReducer";
-import { MeasurementGraph } from "../components/MeasurementGraph";
 import { Box } from "@mui/material";
-import { Sensor } from "../models/sensor";
 import { Device } from "../models/device";
-import { MeasurementsBySensor } from "../models/measurementsBySensor";
+import { MeasurementsViewModel } from "../models/measurementsBySensor";
+import { MultiSensorGraph } from "../components/MultiSensorGraph";
 
 export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedSensor, setSelectedSensor] = useState<Sensor | undefined>(
-    undefined
-  );
+
   const [selectedDevice, setSelectedDevice] = useState<Device | undefined>(
     undefined
   );
 
   const [measurementsModel, setMeasurementsModel] = useState<
-    MeasurementsBySensor | undefined
+    MeasurementsViewModel | undefined
   >(undefined);
 
   const devices = useSelector(getDevices);
@@ -33,20 +30,12 @@ export const MeasurementsView: React.FC = () => {
       isLoading={isLoading}
       leftMenu={
         <MeasurementsLeftView
-          onSearch={(from: Date, to: Date, sensorId: number) => {
-            console.log(to);
+          onSearch={(from: Date, to: Date, sensorIds: number[]) => {
             setIsLoading(true);
-
-            const selectedSensor = sensors.find((s) => s.id === sensorId);
-            setSelectedSensor(selectedSensor);
             measurementApiHook
-              .getMeasurementsBySensor([sensorId], from, to)
+              .getMeasurementsBySensor(sensorIds, from, to)
               .then((res) => {
-                setMeasurementsModel(
-                  res?.measurements.find(
-                    (d) => d.sensorId === selectedSensor?.id
-                  )
-                );
+                setMeasurementsModel(res);
               })
               .finally(() => {
                 setIsLoading(false);
@@ -85,7 +74,11 @@ export const MeasurementsView: React.FC = () => {
           //},
         }}
       >
-        <MeasurementGraph sensor={selectedSensor} model={measurementsModel} />
+        <MultiSensorGraph
+          sensors={sensors}
+          model={measurementsModel}
+          device={selectedDevice}
+        />
       </Box>
     </AppContentWrapper>
   );

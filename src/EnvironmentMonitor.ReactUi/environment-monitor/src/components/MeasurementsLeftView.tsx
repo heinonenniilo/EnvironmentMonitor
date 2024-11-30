@@ -13,7 +13,7 @@ import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
 
 export interface MeasurementsLeftViewProps {
-  onSearch: (from: Date, to: Date, sensorId: number) => void;
+  onSearch: (from: Date, to: Date, sensorIds: number[]) => void;
   onSelectDevice: (deviceId: string) => void;
   devices: Device[];
   sensors: Sensor[];
@@ -32,15 +32,23 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
     moment().utc().endOf("day")
   );
 
-  const [selectedSensor, setSelectedSensor] = useState<Sensor | undefined>(
-    undefined
-  );
+  const [selectedSensors, setSelectedSensors] = useState<number[]>([]);
 
   const [selectedDevice, setSelectedDevice] = useState<Device>({
     id: 0,
     deviceIdentifier: "",
     name: "",
   });
+
+  const toggleSensorSelection = (sensorId: number) => {
+    if (selectedSensors.some((s) => s === sensorId)) {
+      setSelectedSensors([...selectedSensors.filter((s) => s !== sensorId)]);
+    } else {
+      const t = [...selectedSensors];
+      t.push(sensorId);
+      setSelectedSensors(t);
+    }
+  };
 
   return (
     <Box
@@ -97,6 +105,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                   if (device) {
                     setSelectedDevice(device);
                     onSelectDevice(device.deviceIdentifier);
+                    setSelectedSensors([]);
                   }
                 }}
               >
@@ -112,22 +121,16 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
           <Select
             labelId="sensor-select-label"
             id="sensor-select"
-            value={
-              selectedSensor?.id ?? {
-                id: 0,
-              }
-            }
-            label="Device"
+            value={selectedSensors}
+            multiple
+            label="Sensor"
           >
             {sensors.map((y) => (
               <MenuItem
                 value={y.id}
                 key={`sensor-${y.id}`}
                 onClick={() => {
-                  const sensor = sensors.find((d) => d.id === y.id);
-                  if (sensor) {
-                    setSelectedSensor(sensor);
-                  }
+                  toggleSensorSelection(y.id);
                 }}
               >
                 {y.name}
@@ -141,8 +144,8 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
         <Button
           variant="outlined"
           onClick={() => {
-            if (selectedSensor && selectedSensor.id) {
-              onSearch(fromDate.toDate(), toDate.toDate(), selectedSensor.id);
+            if (selectedSensors.length > 0) {
+              onSearch(fromDate.toDate(), toDate.toDate(), selectedSensors);
             }
           }}
         >
