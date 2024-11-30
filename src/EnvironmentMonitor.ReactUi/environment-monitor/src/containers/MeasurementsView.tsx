@@ -70,7 +70,6 @@ export const MeasurementsView: React.FC = () => {
         flexGrow={1}
         flex={1}
         width={"100%"}
-        height={"100%"}
         sx={{
           display: "flex",
           flexDirection: "column",

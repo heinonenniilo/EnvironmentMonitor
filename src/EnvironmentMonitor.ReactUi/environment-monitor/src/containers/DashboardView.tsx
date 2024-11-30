@@ -75,11 +75,13 @@ export const DashboardView: React.FC = () => {
           display: "grid",
           gridTemplateColumns: {
             xs: "1fr", // Single column for extra-small screens
-            // sm: "1fr 1fr", // Two columns for small and larger screens
-            md: "1fr 1fr",
+            sm: "1fr 1fr", // Two columns for small and larger screens
+            // md: "1fr 1fr",
           },
           gap: 1, // Space between grid items
           padding: 1, // Padding around the grid container
+          flexGrow: 1,
+          height: "100%",
         }}
       >
         {devices.map((device, idx) => (

@@ -104,7 +104,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
 
   const getTitle = () => {
     if (!device) {
-      return "";
+      return "Select a device";
     }
     return `${device?.name} / (${device?.id})`;
   };
@@ -147,7 +147,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       alignItems="center"
       flex={1}
       flexGrow={1}
-      sx={{ height: "100%", width: "100%" }}
+      sx={{ maxHeight: "100%", width: "100%" }}
     >
       <Box width="100%" mt={0} flexGrow={0}>
         <Typography align="left" gutterBottom>
@@ -157,64 +157,79 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       <Box
         flex={1}
         flexGrow={1}
-        height={"100%"}
         width={"100%"}
         display={"flex"}
         flexDirection={"column"}
         maxWidth={"100%"}
+        maxHeight={"100%"}
       >
-        <Line
-          data={getDatasets()}
-          height={"auto"}
-          options={{
-            maintainAspectRatio: false,
-            plugins: {
-              title: {
-                text: "Chart.js Time Scale",
-                display: true,
-              },
-              colors: {
-                forceOverride: true,
-              },
-            },
-            elements: {
-              point: {
-                radius: 0,
-              },
-            },
-            responsive: true,
-            scales: {
-              x: {
-                type: "time",
-                time: {
-                  //tooltipFormat: "DD T",
-                  unit: "hour",
-                  displayFormats: {
-                    hour: "HH:mm",
-                  },
-                },
-                ticks: {
-                  major: {
-                    enabled: true,
-                  },
-                  font: (context) => {
-                    if (context.tick && context.tick.major) {
-                      return {
-                        weight: "bold",
-                      };
-                    }
-                  },
-                },
-              },
-              y: {
-                max: getMaxScale(),
-                min: getMinScale(),
-              },
-            },
+        <div
+          style={{
+            position: "relative",
+            margin: "auto",
+            width: "100%",
+            height: "100%",
+            // minHeight: "400px",
+            flexGrow: 1,
           }}
-        />
+        >
+          <Line
+            data={getDatasets()}
+            height={"auto"}
+            options={{
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  text: "Chart.js Time Scale",
+                  display: true,
+                },
+                colors: {
+                  forceOverride: true,
+                },
+              },
+              elements: {
+                point: {
+                  radius: 0,
+                },
+              },
+              responsive: true,
+              scales: {
+                x: {
+                  type: "time",
+                  time: {
+                    //tooltipFormat: "DD T",
+                    unit: "hour",
+                    displayFormats: {
+                      hour: "HH:mm",
+                    },
+                  },
+                  ticks: {
+                    major: {
+                      enabled: true,
+                    },
+                    font: (context) => {
+                      if (context.tick && context.tick.major) {
+                        return {
+                          weight: "bold",
+                        };
+                      }
+                    },
+                  },
+                },
+                y: {
+                  max: getMaxScale(),
+                  min: getMinScale(),
+                },
+              },
+            }}
+          />
+        </div>
       </Box>
-      {!hideInfo ? <MeasurementsInfoTable infoRows={getInfoValues()} /> : null}
+      {!hideInfo ? (
+        <Box width={"100%"} maxHeight={"300px"} overflow={"auto"}>
+          <MeasurementsInfoTable infoRows={getInfoValues()} />
+        </Box>
+      ) : null}
     </Box>
   );
 };
