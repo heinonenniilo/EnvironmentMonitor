@@ -8,7 +8,7 @@ export interface UserInterfaceState {
 }
 
 const initialState: UserInterfaceState = {
-  leftMenuOpen: false,
+  leftMenuOpen: true,
   hasLeftMenu: false,
 };
 

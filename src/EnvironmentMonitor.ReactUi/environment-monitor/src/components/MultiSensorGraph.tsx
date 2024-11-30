@@ -15,10 +15,11 @@ import {
   Tooltip,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import { getMeasurementUnit } from "../utilities/measurementUtils";
 import {
-  formatMeasurement,
-  getMeasurementUnit,
-} from "../utilities/measurementUtils";
+  MeasurementInfo,
+  MeasurementsInfoTable,
+} from "./MeasurementsInfoTable";
 
 Chart.register(
   TimeScale,
@@ -82,7 +83,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   };
 
   const getInfoValues = () => {
-    let returnArray: any[] = [];
+    let returnArray: MeasurementInfo[] = [];
     model?.measurements
       .filter((m) => isSensorValid(m.sensorId))
       .forEach((m) => {
@@ -90,9 +91,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           let val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
           if (m.minValues[val] !== undefined) {
             returnArray.push({
-              minValues: m.minValues[val],
-              maxValues: m.maxValues[val],
-              latestValues: m.latestValues[val],
+              min: m.minValues[val],
+              max: m.maxValues[val],
+              latest: m.latestValues[val],
               label: getSensorLabel(m.sensorId, val),
             });
           }
@@ -102,6 +103,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   };
 
   const getTitle = () => {
+    if (!device) {
+      return "";
+    }
     return `${device?.name} / (${device?.id})`;
   };
 
@@ -143,7 +147,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       alignItems="center"
       flex={1}
       flexGrow={1}
-      sx={{ height: "100%", width: "100%", maxHeight: "1000px" }}
+      sx={{ height: "100%", width: "100%" }}
     >
       <Box width="100%" mt={0} flexGrow={0}>
         <Typography align="left" gutterBottom>
@@ -157,7 +161,6 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         width={"100%"}
         display={"flex"}
         flexDirection={"column"}
-        maxHeight={"800px"}
         maxWidth={"100%"}
       >
         <Line
@@ -211,61 +214,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           }}
         />
       </Box>
-      {!hideInfo ? (
-        <Box width="100%">
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{
-              fontWeight: "bold",
-              borderBottom: "1px solid #ddd",
-              padding: "4px 0",
-            }}
-          >
-            <Box flex={1} textAlign="center">
-              Sensor
-            </Box>
-            <Box flex={1} textAlign="center">
-              Min
-            </Box>
-            <Box flex={1} textAlign="center">
-              Max
-            </Box>
-            <Box flex={1} textAlign="center">
-              Latest
-            </Box>
-          </Box>
-          {getInfoValues()?.map(
-            ({ label, minValues, maxValues, latestValues }) => (
-              <Box
-                key={label}
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{
-                  borderBottom: "1px solid #ddd",
-                  padding: "4px 0",
-                  fontSize: 14,
-                }}
-              >
-                <Box flex={1} textAlign="center">
-                  {label}
-                </Box>
-                <Box flex={1} textAlign="center">
-                  {formatMeasurement(minValues)}
-                </Box>
-                <Box flex={1} textAlign="center">
-                  {formatMeasurement(maxValues)}
-                </Box>
-                <Box flex={1} textAlign="center">
-                  {formatMeasurement(latestValues)}
-                </Box>
-              </Box>
-            )
-          )}
-        </Box>
-      ) : null}
+      {!hideInfo ? <MeasurementsInfoTable infoRows={getInfoValues()} /> : null}
     </Box>
   );
 };

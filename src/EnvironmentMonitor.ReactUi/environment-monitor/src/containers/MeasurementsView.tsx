@@ -8,6 +8,7 @@ import { Box } from "@mui/material";
 import { Device } from "../models/device";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
 import { MultiSensorGraph } from "../components/MultiSensorGraph";
+import { Sensor } from "../models/sensor";
 
 export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
@@ -24,6 +25,8 @@ export const MeasurementsView: React.FC = () => {
   const devices = useSelector(getDevices);
   const sensors = useSelector(getSensors);
 
+  const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
+
   return (
     <AppContentWrapper
       titleParts={[{ text: "Measurements" }]}
@@ -35,6 +38,11 @@ export const MeasurementsView: React.FC = () => {
             measurementApiHook
               .getMeasurementsBySensor(sensorIds, from, to)
               .then((res) => {
+                setSelectedSensors(
+                  sensors.filter((sensor) =>
+                    sensorIds.some((s) => sensor.id === s)
+                  )
+                );
                 setMeasurementsModel(res);
               })
               .finally(() => {
@@ -75,7 +83,7 @@ export const MeasurementsView: React.FC = () => {
         }}
       >
         <MultiSensorGraph
-          sensors={sensors}
+          sensors={selectedSensors}
           model={measurementsModel}
           device={selectedDevice}
         />
