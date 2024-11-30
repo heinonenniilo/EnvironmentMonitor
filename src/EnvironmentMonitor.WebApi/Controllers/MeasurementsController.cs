@@ -24,14 +24,14 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet()]        
-        public async Task<List<MeasurementDto>> GetMeasurements([FromQuery] GetMeasurementsModel model)
+        public async Task<MeasurementsModel> GetMeasurements([FromQuery] GetMeasurementsModel model)
         {
             var result = await _measurementService.GetMeasurements(model);
             return result;
         }
 
         [HttpGet("bysensor")]
-        public async Task<MeasurementsViewModel> GetMeasurementsBySensor([FromQuery] GetMeasurementsModel model)
+        public async Task<MeasurementsBySensorModel> GetMeasurementsBySensor([FromQuery] GetMeasurementsModel model)
         {
             return await _measurementService.GetMeasurementsBySensor(model);
         }

@@ -3,6 +3,8 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace EnvironmentMonitor.Infrastructure.Data
 {
@@ -13,7 +15,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             _context = context;
         }
-        public async Task<Device?> GetDeviceByIdAsync(string deviceId)
+        public async Task<Device?> GetDeviceByIdentifier(string deviceId)
         {
             return await _context.Devices.FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
         }
@@ -33,12 +35,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 && (model.To == null || x.Timestamp <= model.To))
                 .OrderBy(x => x.Timestamp)
                 .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdAsync(string deviceId)
-        {
-            var device = await GetDeviceByIdAsync(deviceId);
-            return await _context.Sensors.Where(x => x.DeviceId == device.Id).ToListAsync();
         }
 
         public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements)
@@ -70,6 +66,34 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             var sensors = await _context.Sensors.Where(x => deviceIdentifiers.Contains(x.Device.DeviceIdentifier)).ToListAsync();
             return sensors;
+        }
+
+        public async Task<IEnumerable<Measurement>> Get(
+            Expression<Func<Measurement, bool>> filter = null,
+            Func<IQueryable<Measurement>, IOrderedQueryable<Measurement>> orderBy = null,
+            string includeProperties = "")
+        {
+            IQueryable<Measurement> query = _context.Measurements;
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            foreach (var includeProperty in includeProperties.Split
+                (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty);
+            }
+
+            if (orderBy != null)
+            {
+                return await orderBy(query).ToListAsync();
+            }
+            else
+            {
+                return await query.ToListAsync();
+            }
         }
     }
 }

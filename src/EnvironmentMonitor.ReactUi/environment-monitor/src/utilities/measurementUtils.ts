@@ -4,12 +4,12 @@ import { getFormattedDate } from "./datetimeUtils";
 
 export const formatMeasurement = (measurement: Measurement) => {
   const formattedDate = getFormattedDate(measurement.timestamp);
-  return `${measurement.sensorValue.toFixed(2)} ${getUnit(
+  return `${measurement.sensorValue.toFixed(2)} ${getMeasurementUnit(
     measurement.typeId
   )} (${formattedDate})`;
 };
 
-const getUnit = (type: MeasurementTypes) => {
+export const getMeasurementUnit = (type: MeasurementTypes) => {
   switch (type) {
     case MeasurementTypes.Humidity:
       return "%";

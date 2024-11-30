@@ -7,6 +7,7 @@ using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace EnvironmentMonitor.Application.Services
 {
@@ -24,7 +25,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task AddMeasurements(SaveMeasurementsDto measurent)
         {
-            var device = await _measurementRepository.GetDeviceByIdAsync(measurent.DeviceId);
+            var device = await _measurementRepository.GetDeviceByIdentifier(measurent.DeviceId);
             if (device == null)
             {
                 _logger.LogInformation($"Could not find device with device id '{measurent.DeviceId}'");
@@ -82,10 +83,9 @@ namespace EnvironmentMonitor.Application.Services
             }).ToList();
         }
 
-        public async Task<List<MeasurementDto>> GetMeasurements(GetMeasurementsModel model)
+        public async Task<MeasurementsModel> GetMeasurements(GetMeasurementsModel model)
         {
-            var rows = await _measurementRepository.GetMeasurements(model);
-            return rows.Select(x => new MeasurementDto()
+            var rows = (await _measurementRepository.GetMeasurements(model)).Select(x => new MeasurementDto()
             {
                 SensorId = x.SensorId,
                 SensorValue = x.Value,
@@ -93,6 +93,11 @@ namespace EnvironmentMonitor.Application.Services
                 TimestampUtc = x.TimestampUtc,
                 Timestamp = x.Timestamp,
             }).ToList();
+            return new MeasurementsModel()
+            {
+                Measurements = rows,
+                MeasurementsInfo = GetMeasurementInfo(rows, model.SensorIds)
+            };
         }
 
         public async Task<List<SensorDto>> GetSensors(List<string> DeviceIdentifier)
@@ -109,13 +114,7 @@ namespace EnvironmentMonitor.Application.Services
             }).ToList();
         }
 
-        private DateTime UtcToLocalTime(DateTime utcDateTime)
-        {
-            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(TargetTimeZone);
-            return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, targetTimeZone);
-        }
-
-        public async Task<MeasurementsViewModel> GetMeasurementsBySensor(GetMeasurementsModel model)
+        public async Task<MeasurementsBySensorModel> GetMeasurementsBySensor(GetMeasurementsModel model)
         {
             var returnList = new List<MeasurementsBySensorDto>();
             _logger.LogInformation("Getting measurements by sensor");
@@ -130,23 +129,46 @@ namespace EnvironmentMonitor.Application.Services
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
                     SensorId = sensorId,
-                    Measurements = measurements
+                    Measurements = measurements.Measurements,
+                    LatestValues = measurements.MeasurementsInfo?.FirstOrDefault().LatestValues ?? [],
+                    MaxValues = measurements.MeasurementsInfo?.FirstOrDefault().MaxValues ?? [],
+                    MinValues = measurements.MeasurementsInfo?.FirstOrDefault().MinValues ?? []
                 };
+                returnList.Add(rowToAdd);
+            }
+            return new MeasurementsBySensorModel()
+            {
+                Measurements = returnList
+            };
+        }
+
+        private DateTime UtcToLocalTime(DateTime utcDateTime)
+        {
+            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(TargetTimeZone);
+            return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, targetTimeZone);
+        }
+
+        private List<MeasurementsInfoDto> GetMeasurementInfo(List<MeasurementDto> measurements, List<int> sensorIds)
+        {
+            var returnList = new List<MeasurementsInfoDto>();
+            foreach (var sensorId in sensorIds)
+            {
+                var measurementsToCheck = measurements.Where(x => x.SensorId == sensorId).ToList();
+                if (!measurementsToCheck.Any())
+                    continue;
+                var rowToAdd = new MeasurementsInfoDto() { SensorId = sensorId };
                 foreach (MeasurementTypes type in Enum.GetValues(typeof(MeasurementTypes)))
                 {
-                    if (measurements.Any(x => x.TypeId == (int)type))
+                    if (measurementsToCheck.Any(x => x.TypeId == (int)type && x.SensorId == sensorId))
                     {
-                        rowToAdd.MinValues[(int)type] = measurements.Where(x => x.TypeId == (int)type).OrderBy(x => x.SensorValue).First();
-                        rowToAdd.MaxValues[(int)type] = measurements.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.SensorValue).First();
-                        rowToAdd.LatestValues[(int)type] = measurements.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.Timestamp).First();
+                        rowToAdd.MinValues[(int)type] = measurementsToCheck.Where(x => x.TypeId == (int)type).OrderBy(x => x.SensorValue).First();
+                        rowToAdd.MaxValues[(int)type] = measurementsToCheck.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.SensorValue).First();
+                        rowToAdd.LatestValues[(int)type] = measurementsToCheck.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.Timestamp).First();
                     }
                 }
                 returnList.Add(rowToAdd);
             }
-            return new MeasurementsViewModel()
-            {
-                Measurements = returnList
-            };
+            return returnList;
         }
     }
 }

@@ -2,14 +2,13 @@ import axios, { AxiosResponse } from "axios";
 import { User } from "../models/user";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
-import { Measurement } from "../models/measurement";
 import qs from "qs";
-import { MeasurementsViewModel } from "../models/measurementsBySensor";
+import {
+  MeasurementsModel,
+  MeasurementsViewModel,
+} from "../models/measurementsBySensor";
 
 interface ApiHook {
-  //getUserInfo: () => Promise<User | undefined>;
-  //logIn: (userId: string, password: string) => Promise<boolean>;
-  // logOut: () => Promise<boolean>;
   userHook: userHook;
   measureHook: measureHook;
 }
@@ -27,7 +26,7 @@ interface measureHook {
     sensorIds: number[],
     from: Date,
     to: Date
-  ) => Promise<Measurement[]>;
+  ) => Promise<MeasurementsModel | undefined>;
   getMeasurementsBySensor: (
     sensorIds: number[],
     from: Date,
@@ -117,7 +116,7 @@ export const useApiHook = (): ApiHook => {
       },
       getMeasurements: async (sensorIds: number[], from: Date, to: Date) => {
         try {
-          let res = await apiClient.get<any, AxiosResponse<Measurement[]>>(
+          let res = await apiClient.get<any, AxiosResponse<MeasurementsModel>>(
             "/Measurements",
             {
               params: {
@@ -130,7 +129,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          return [];
+          return undefined;
         }
       },
       getMeasurementsBySensor: async (

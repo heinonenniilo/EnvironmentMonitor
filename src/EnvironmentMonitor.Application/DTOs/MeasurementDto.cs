@@ -16,17 +16,27 @@ namespace EnvironmentMonitor.Application.DTOs
         public DateTime Timestamp { get; set; }
     }
 
-    public class MeasurementsBySensorDto
-    {
-        public int SensorId { get; set; }
-        public List<MeasurementDto> Measurements { get; set; } = new List<MeasurementDto>();
-        public Dictionary<int, MeasurementDto> MinValues { get; set; } = new Dictionary<int, MeasurementDto>();
-        public Dictionary<int, MeasurementDto> MaxValues { get; set; } = new Dictionary<int, MeasurementDto>();
-        public Dictionary<int, MeasurementDto> LatestValues { get; set; } = new Dictionary<int, MeasurementDto>();
-    }
-
-    public class MeasurementsViewModel
+    public class MeasurementsBySensorModel
     {
         public List<MeasurementsBySensorDto> Measurements { get; set; } = new List<MeasurementsBySensorDto> { };
+    }
+
+    public class MeasurementsModel
+    {
+        public List<MeasurementDto> Measurements { get; set; } = [];
+        public List<MeasurementsInfoDto> MeasurementsInfo { get; set; } = [];
+    }
+
+    public class MeasurementsInfoDto
+    {
+        public int SensorId { get; set; }
+        public Dictionary<int, MeasurementDto> MinValues { get; set; } = [];
+        public Dictionary<int, MeasurementDto> MaxValues { get; set; } = [];
+        public Dictionary<int, MeasurementDto> LatestValues { get; set; } = [];
+    }
+
+    public class MeasurementsBySensorDto : MeasurementsInfoDto
+    {
+        public List<MeasurementDto> Measurements { get; set; } = [];
     }
 }
