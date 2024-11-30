@@ -59,17 +59,11 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     model.measurements
       .filter((m) => isSensorValid(m.sensorId))
       .forEach((m) => {
-        let label = "";
-        const sensor = validSensors?.find((s) => s.id === m.sensorId);
         for (let item in MeasurementTypes) {
           let val = parseInt(MeasurementTypes[item]);
-          console.log(val);
           if (m.measurements.some((m) => m.typeId === val)) {
-            label = `${sensor?.name ?? m.sensorId} ${getMeasurementUnit(
-              val as MeasurementTypes
-            )}`;
             returnValues.push({
-              label: label,
+              label: getSensorLabel(m.sensorId, val as MeasurementTypes),
               data: m.measurements
                 .filter((d) => d.typeId === val)
                 .map((d) => {
@@ -89,24 +83,21 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
 
   const getInfoValues = () => {
     let returnArray: any[] = [];
-
-    model?.measurements.forEach((m) => {
-      for (let item in MeasurementTypes) {
-        if (!validSensors?.some((s) => s.id === m.sensorId)) {
-          continue;
+    model?.measurements
+      .filter((m) => isSensorValid(m.sensorId))
+      .forEach((m) => {
+        for (let item in MeasurementTypes) {
+          let val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
+          if (m.minValues[val] !== undefined) {
+            returnArray.push({
+              minValues: m.minValues[val],
+              maxValues: m.maxValues[val],
+              latestValues: m.latestValues[val],
+              label: getSensorLabel(m.sensorId, val),
+            });
+          }
         }
-        let val = MeasurementTypes[item];
-        let g = parseInt(val);
-        if (m.minValues[g as MeasurementTypes] !== undefined) {
-          returnArray.push({
-            minValues: m.minValues[g as MeasurementTypes],
-            maxValues: m.maxValues[g as MeasurementTypes],
-            latestValues: m.latestValues[g as MeasurementTypes],
-            label: getSensorLabel(m.sensorId),
-          });
-        }
-      }
-    });
+      });
     return returnArray;
   };
 
@@ -114,8 +105,15 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     return `${device?.name} / (${device?.id})`;
   };
 
-  const getSensorLabel = (sensorId: number) => {
-    return sensors?.find((s) => s.id === sensorId)?.name ?? `${sensorId}`;
+  const getSensorLabel = (sensorId: number, typeId?: MeasurementTypes) => {
+    const sensorName =
+      sensors?.find((s) => s.id === sensorId)?.name ?? `${sensorId}`;
+
+    if (!typeId) {
+      return sensorName;
+    } else {
+      return `${sensorName} ${getMeasurementUnit(typeId)}`;
+    }
   };
 
   const getMinScale = () => {
