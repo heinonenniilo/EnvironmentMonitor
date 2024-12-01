@@ -36,6 +36,7 @@ export interface MultiSensorGraphProps {
   device?: Device;
   model: MeasurementsViewModel | undefined;
   hideInfo?: boolean;
+  minHeight?: number;
 }
 
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
@@ -43,6 +44,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   model,
   device,
   hideInfo,
+  minHeight,
 }) => {
   const validSensors = device
     ? sensors?.filter((s) => s.deviceId === device.id)
@@ -162,6 +164,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         flexDirection={"column"}
         maxWidth={"100%"}
         maxHeight={"100%"}
+        minHeight={minHeight}
       >
         <div
           style={{
@@ -226,7 +229,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         </div>
       </Box>
       {!hideInfo ? (
-        <Box width={"100%"} maxHeight={"300px"} overflow={"auto"}>
+        <Box width={"100%"} maxHeight={"200px"} overflow={"auto"}>
           <MeasurementsInfoTable infoRows={getInfoValues()} />
         </Box>
       ) : null}

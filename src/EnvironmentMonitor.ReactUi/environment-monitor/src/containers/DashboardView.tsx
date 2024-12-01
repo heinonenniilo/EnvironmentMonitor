@@ -72,7 +72,6 @@ export const DashboardView: React.FC = () => {
           padding: 1, // Padding around the grid container
           flexGrow: 1,
           height: "100%",
-          minHeight: "1000px",
         }}
       >
         {devices.map((device, idx) => (
@@ -95,6 +94,7 @@ export const DashboardView: React.FC = () => {
               sensors={sensors}
               device={device}
               model={viewModel}
+              minHeight={400}
             />
           </Box>
         ))}
