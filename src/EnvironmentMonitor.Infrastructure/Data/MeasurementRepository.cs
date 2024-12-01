@@ -1,7 +1,10 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace EnvironmentMonitor.Infrastructure.Data
 {
@@ -12,7 +15,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             _context = context;
         }
-        public async Task<Device?> GetDeviceByIdAsync(string deviceId)
+        public async Task<Device?> GetDeviceByIdentifier(string deviceId)
         {
             return await _context.Devices.FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
         }
@@ -23,18 +26,27 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return sensor;
         }
 
-        public async Task<IEnumerable<Measurement>> GetMeasurementsBySensorId(int sensorId)
+        public async Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model)
         {
-            return await _context.Measurements
-                .Where(x => x.SensorId == sensorId)
-                .OrderByDescending(x => x.Timestamp)
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdAsync(string deviceId)
-        {
-            var device = await GetDeviceByIdAsync(deviceId);
-            return await _context.Sensors.Where(x => x.DeviceId == device.Id).ToListAsync();
+            var query = _context.Measurements
+                .Where(x =>
+                model.SensorIds.Contains(x.SensorId));
+            if (model.LatestOnly == true)
+            {
+                var grouped = await query.GroupBy(x => new { x.SensorId, x.TypeId }).Select(d => new
+                {
+                    Id = d.Max(x => x.Id),
+                }).ToListAsync();
+                var latestMeasurements = _context.Measurements.Where(x => grouped.Select(g => g.Id).Contains(x.Id)).OrderByDescending(x => x.Timestamp);
+                return await latestMeasurements.ToListAsync();
+            }
+            else
+            {
+                query = query
+                    .Where(x => x.Timestamp >= model.From && (model.To == null || x.Timestamp <= model.To))
+                    .OrderBy(x => x.Timestamp);
+            }
+            return await query.ToListAsync();
         }
 
         public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements)
@@ -48,6 +60,52 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             var type = await _context.MeasurementTypes.FirstOrDefaultAsync(x => x.Id == id);
             return type;
+        }
+
+        public async Task<List<Device>> GetDevices()
+        {
+            var devices = await _context.Devices.ToListAsync();
+            return devices;
+        }
+
+        public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdAsync(int deviceId)
+        {
+            var sensors = await _context.Sensors.Where(x => x.DeviceId == deviceId).ToListAsync();
+            return sensors;
+        }
+
+        public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers)
+        {
+            var sensors = await _context.Sensors.Where(x => deviceIdentifiers.Contains(x.Device.DeviceIdentifier)).ToListAsync();
+            return sensors;
+        }
+
+        public async Task<IEnumerable<Measurement>> Get(
+            Expression<Func<Measurement, bool>> filter = null,
+            Func<IQueryable<Measurement>, IOrderedQueryable<Measurement>> orderBy = null,
+            string includeProperties = "")
+        {
+            IQueryable<Measurement> query = _context.Measurements;
+
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+
+            foreach (var includeProperty in includeProperties.Split
+                (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty);
+            }
+
+            if (orderBy != null)
+            {
+                return await orderBy(query).ToListAsync();
+            }
+            else
+            {
+                return await query.ToListAsync();
+            }
         }
     }
 }

@@ -16,5 +16,7 @@ namespace EnvironmentMonitor.Domain.Entities
         public SensorType? Type { get; set; }
         public int? TypeId { get; set; }
         public ICollection<Measurement> Measurements { get; set; }
+        public double? ScaleMin { get; set; }
+        public double? ScaleMax { get; set; }
     }    
 }

@@ -15,6 +15,8 @@ namespace EnvironmentMonitor.Domain.Entities
         public MeasurementType Type { get; set; }
         public double Value { get; set; }
         public required DateTime Timestamp { get; set; }
+        public required DateTime TimestampUtc { get; set; }
         public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAtUtc { get; set; }
     }
 }

@@ -40,14 +40,14 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     _logger.LogError($"Body string NULL");
                     continue;
                 }
-                MeasurementDto? objectToInsert = null;
+                SaveMeasurementsDto? objectToInsert = null;
                 try
                 {
                     var options = new JsonSerializerOptions
                     {
                         PropertyNameCaseInsensitive = true
                     };
-                    objectToInsert = JsonSerializer.Deserialize<MeasurementDto>(bodyString, options);
+                    objectToInsert = JsonSerializer.Deserialize<SaveMeasurementsDto>(bodyString, options);
                 }
                 catch (Exception ex)
                 {
@@ -63,7 +63,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
 
                 foreach (var item in objectToInsert.Measurements)
                 {
-                    item.TimeStamp = message.EnqueuedTime.DateTime;
+                    item.TimestampUtc = message.EnqueuedTime.UtcDateTime;
                 }
                 try
                 {

@@ -1,4 +1,6 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -27,7 +29,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<MeasurementType> MeasurementTypes { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeasurementDbContext).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeasurementDbContext).Assembly, type =>
+                type.Namespace == "EnvironmentMonitor.Infrastructure.Data.Configurations");
             base.OnModelCreating(modelBuilder);
         }
     }

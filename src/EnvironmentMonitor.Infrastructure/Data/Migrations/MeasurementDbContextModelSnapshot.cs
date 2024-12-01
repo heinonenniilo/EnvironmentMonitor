@@ -17,7 +17,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.10")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -62,12 +62,20 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<int>("SensorId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("TimestampUtc")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("TypeId")
@@ -80,7 +88,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasIndex("SensorId");
 
+                    b.HasIndex("Timestamp");
+
                     b.HasIndex("TypeId");
+
+                    b.HasIndex("SensorId", "Timestamp");
 
                     b.ToTable("Measurements");
                 });
@@ -143,6 +155,12 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
+
+                    b.Property<double?>("ScaleMax")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("ScaleMin")
+                        .HasColumnType("float");
 
                     b.Property<int>("SensorId")
                         .HasColumnType("int");

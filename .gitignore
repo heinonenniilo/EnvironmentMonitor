@@ -398,3 +398,4 @@ FodyWeavers.xsd
 *.sln.iml
 /src/EnvironmentMonitor.HubObserver/Properties/ServiceDependencies
 /src/EnvironmentMonitor.HubObserver/Properties/serviceDependencies.EnvironmentMonitorHubObserver*.json
+/src/EnvironmentMonitor.WebApi/wwwroot
