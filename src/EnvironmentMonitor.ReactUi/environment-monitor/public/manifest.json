@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Env Monitor",
+  "name": "Environment Monitor",
   "icons": [
     {
       "src": "favicon.ico",
