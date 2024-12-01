@@ -21,7 +21,6 @@ export const DashboardView: React.FC = () => {
   useEffect(() => {
     if (sensors.length > 0 && !viewModel) {
       const momentStart = moment().local(true).add(-1, "day").utc();
-      const momentEnd = moment().local(true).utc();
       // TODO implement a better way
       const start = new Date(
         Date.UTC(
@@ -33,22 +32,13 @@ export const DashboardView: React.FC = () => {
           0
         )
       );
-      const end = new Date(
-        Date.UTC(
-          momentEnd.year(),
-          momentEnd.month(),
-          momentEnd.date(),
-          23,
-          59,
-          59
-        )
-      );
+
       setIsLoading(true);
       measurementApiHook
         .getMeasurementsBySensor(
           sensors.map((x) => x.id),
           start,
-          end
+          undefined
         )
         .then((res) => {
           console.info(res);
@@ -75,13 +65,14 @@ export const DashboardView: React.FC = () => {
           display: "grid",
           gridTemplateColumns: {
             xs: "1fr", // Single column for extra-small screens
-            sm: "1fr 1fr", // Two columns for small and larger screens
-            // md: "1fr 1fr",
+            //sm: "1fr 1fr", // Two columns for small and larger screens
+            lg: "1fr 1fr",
           },
           gap: 1, // Space between grid items
           padding: 1, // Padding around the grid container
           flexGrow: 1,
           height: "100%",
+          minHeight: "1000px",
         }}
       >
         {devices.map((device, idx) => (

@@ -125,6 +125,7 @@ namespace EnvironmentMonitor.Application.Services
                     SensorIds = [sensorId],
                     To = model.To,
                     From = model.From,
+                    LatestOnly = model.LatestOnly
                 });
                 var rowToAdd = new MeasurementsBySensorDto()
                 {

@@ -41,7 +41,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         {
             var result = await _measurementService.GetDevices();
             return result;
-        }
+        } 
 
         [HttpGet("sensors")]
         public async Task<List<SensorDto>> GetSensors([FromQuery] List<string> deviceIds)

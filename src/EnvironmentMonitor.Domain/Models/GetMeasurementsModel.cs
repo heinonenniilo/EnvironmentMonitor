@@ -11,5 +11,6 @@ namespace EnvironmentMonitor.Domain.Models
         public List<int> SensorIds { get; set; } = new List<int>();
         public DateTime From { get; set; }
         public DateTime? To { get; set; }
+        public bool? LatestOnly { get; set; }
     }
 }

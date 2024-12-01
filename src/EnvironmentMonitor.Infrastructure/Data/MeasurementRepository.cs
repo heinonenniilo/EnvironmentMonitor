@@ -28,13 +28,25 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model)
         {
-            return await _context.Measurements
+            var query = _context.Measurements
                 .Where(x =>
-                model.SensorIds.Contains(x.SensorId)
-                && x.Timestamp >= model.From
-                && (model.To == null || x.Timestamp <= model.To))
-                .OrderBy(x => x.Timestamp)
-                .ToListAsync();
+                model.SensorIds.Contains(x.SensorId));
+            if (model.LatestOnly == true)
+            {
+                var grouped = await query.GroupBy(x => new { x.SensorId, x.TypeId }).Select(d => new
+                {
+                    Id = d.Max(x => x.Id),
+                }).ToListAsync();
+                var latestMeasurements = _context.Measurements.Where(x => grouped.Select(g => g.Id).Contains(x.Id)).OrderByDescending(x => x.Timestamp);
+                return await latestMeasurements.ToListAsync();
+            }
+            else
+            {
+                query = query
+                    .Where(x => x.Timestamp >= model.From && (model.To == null || x.Timestamp <= model.To))
+                    .OrderBy(x => x.Timestamp);
+            }
+            return await query.ToListAsync();
         }
 
         public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements)
