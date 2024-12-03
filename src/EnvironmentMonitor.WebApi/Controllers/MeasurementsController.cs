@@ -11,7 +11,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    [Authorize(Roles = "Admin, Viewer")]
+    [Authorize(Roles = "Admin, Viewer, User")]
     public class MeasurementsController : ControllerBase
     {
         private readonly IMeasurementService _measurementService;
@@ -33,6 +33,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet("bysensor")]
         public async Task<MeasurementsBySensorModel> GetMeasurementsBySensor([FromQuery] GetMeasurementsModel model)
         {
+            var user = User;
             return await _measurementService.GetMeasurementsBySensor(model);
         }
 

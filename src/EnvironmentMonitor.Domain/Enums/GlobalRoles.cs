@@ -13,5 +13,7 @@ namespace EnvironmentMonitor.Domain.Enums
         Viewer = 0,
         [Description("Admin access")]
         Admin = 1,
+        [Description("User")]
+        User = 2
     }
 }

@@ -66,7 +66,7 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
           >
             Home
           </MenuItem>
-          <AuthorizedComponent requiredRole={RoleNames.Viewer}>
+          <AuthorizedComponent requiredRole={RoleNames.User}>
             <MenuItem
               onClick={() => {
                 onNavigate(routes.dashboard);
@@ -75,7 +75,7 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               Dashboard
             </MenuItem>
           </AuthorizedComponent>
-          <AuthorizedComponent requiredRole={RoleNames.Viewer}>
+          <AuthorizedComponent requiredRole={RoleNames.User}>
             <MenuItem
               onClick={() => {
                 onNavigate(routes.measurements);

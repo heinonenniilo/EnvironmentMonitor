@@ -66,7 +66,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           >
             Home
           </MenuItem>
-          <AuthorizedComponent requiredRole={RoleNames.Viewer}>
+          <AuthorizedComponent requiredRole={RoleNames.User}>
             <MenuItem
               selected={false}
               onClick={(event) => {
@@ -76,7 +76,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
               Dashboard
             </MenuItem>
           </AuthorizedComponent>
-          <AuthorizedComponent requiredRole={RoleNames.Viewer}>
+          <AuthorizedComponent requiredRole={RoleNames.User}>
             <MenuItem
               selected={false}
               onClick={(event) => {

@@ -42,6 +42,8 @@ export const App: React.FC<AppProps> = (props) => {
   const handleLogOut = () => {
     console.info("Handling log out");
     apiHook.userHook.logOut().then(() => {
+      dispath(setSensors([]));
+      dispath(setDevices([]));
       dispath(storeUserInfo(undefined));
     });
   };
