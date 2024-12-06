@@ -4,6 +4,7 @@ using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.WebApi.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -50,10 +51,15 @@ builder.Services.ConfigureApplicationCookie(conf =>
         conf.Cookie.SameSite = SameSiteMode.None;
     }
     conf.Cookie.Name = "env-monitor";
+    conf.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+    };
 });
+builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+// builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, CustomClaimsPrincipalFactory>();
 var app = builder.Build();
-
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

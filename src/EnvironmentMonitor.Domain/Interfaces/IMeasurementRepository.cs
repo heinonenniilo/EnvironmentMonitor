@@ -15,7 +15,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers);
         Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model);
         Task<Device?> GetDeviceByIdentifier(string deviceId);
-        Task<List<Device>> GetDevices();
+        Task<List<Device>> GetDevices(List<int>? ids = null);
         public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);
         public Task<MeasurementType?> GetMeasurementType(int id);
         Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements);

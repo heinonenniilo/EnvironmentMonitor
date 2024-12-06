@@ -16,11 +16,16 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IMeasurementRepository _measurementRepository;
         private readonly ILogger<MeasurementService> _logger;
         private const string TargetTimeZone = "FLE Standard Time";
+        private readonly IUserService _userService;
 
-        public MeasurementService(IMeasurementRepository measurement, ILogger<MeasurementService> logger)
+        public MeasurementService(
+            IMeasurementRepository measurement,
+            ILogger<MeasurementService> logger,
+            IUserService userService)
         {
             _measurementRepository = measurement;
             _logger = logger;
+            _userService = userService;
         }
 
         public async Task AddMeasurements(SaveMeasurementsDto measurent)
@@ -30,6 +35,10 @@ namespace EnvironmentMonitor.Application.Services
             {
                 _logger.LogInformation($"Could not find device with device id '{measurent.DeviceId}'");
                 return;
+            }
+            if (!_userService.HasAccessToDevice(device.Id, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException("No Access");
             }
             _logger.LogInformation($"Found device with ID: {device.Id} for device id '{measurent.DeviceId}'");
             var measurementsToAdd = new List<Measurement>();
@@ -75,6 +84,7 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<List<DeviceDto>> GetDevices()
         {
             var devices = await _measurementRepository.GetDevices();
+            devices = devices.Where(x => _userService.HasAccessToDevice(x.Id, AccessLevels.Read)).ToList();
             return devices.Select(x => new DeviceDto()
             {
                 Id = x.Id,
@@ -85,6 +95,10 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<MeasurementsModel> GetMeasurements(GetMeasurementsModel model)
         {
+            if (model.SensorIds.Any(s => !_userService.HasAccessToSensor(s, AccessLevels.Read)))
+            {
+                throw new UnauthorizedAccessException();
+            }
             var rows = (await _measurementRepository.GetMeasurements(model)).Select(x => new MeasurementDto()
             {
                 SensorId = x.SensorId,
@@ -103,6 +117,7 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<List<SensorDto>> GetSensors(List<string> DeviceIdentifier)
         {
             var sensors = await _measurementRepository.GetSensorsByDeviceIdentifiers(DeviceIdentifier);
+            sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Id, AccessLevels.Read));
             return sensors.Select(x => new SensorDto()
             {
                 Id = x.Id,
@@ -112,6 +127,25 @@ namespace EnvironmentMonitor.Application.Services
                 ScaleMax = x.ScaleMax,
                 ScaleMin = x.ScaleMin,
             }).ToList();
+        }
+
+        public async Task<List<SensorDto>> GetSensors(List<int> DeviceIds)
+        {
+            var sensors = new List<SensorDto>();
+            foreach (var deviceId in DeviceIds)
+            {
+                var res = await _measurementRepository.GetSensorsByDeviceIdAsync(0);
+                sensors.AddRange(res.Select(x => new SensorDto()
+                {
+                    Id = x.Id,
+                    DeviceId = x.DeviceId,
+                    Name = x.Name,
+                    SensorId = x.SensorId,
+                    ScaleMax = x.ScaleMax,
+                    ScaleMin = x.ScaleMin,
+                }));
+            }
+            return sensors;
         }
 
         public async Task<MeasurementsBySensorModel> GetMeasurementsBySensor(GetMeasurementsModel model)

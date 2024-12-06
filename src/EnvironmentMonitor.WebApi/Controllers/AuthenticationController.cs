@@ -1,9 +1,14 @@
 using EnvironmentMonitor.Application.DTOs;
+using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Infrastructure.Data.Migrations.Application;
 using EnvironmentMonitor.Infrastructure.Identity;
+using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.WebApi.Attributes;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -15,50 +20,37 @@ namespace EnvironmentMonitor.WebApi.Controllers
     [Route("[controller]")]
     public class AuthenticationController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<AuthenticationController> _logger;
-        private readonly IHttpContextAccessor _contextAccessor;
+        private readonly IUserService _userService;
 
-        public AuthenticationController(ILogger<AuthenticationController> logger,
-            UserManager<ApplicationUser> userManager,
+        public AuthenticationController(
+            ILogger<AuthenticationController> logger,
             SignInManager<ApplicationUser> signInManager,
-            IHttpContextAccessor contextAccessor)
+            IUserService userService)
         {
             _logger = logger;
-            _userManager = userManager;
             _signInManager = signInManager;
-            _contextAccessor = contextAccessor;
+            _userService = userService;
         }
 
         [HttpPost("register")]
         [ApiKeyRequired]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            if (await _userManager.FindByEmailAsync(request.Email) != null)
-                return BadRequest(new { Message = "Email already exists." });
-
-            var user = new ApplicationUser
-            {
-                UserName = request.Email,
-                Email = request.Email,
-            };
-
-            var result = await _userManager.CreateAsync(user, request.Password);
-
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-            _logger.LogInformation($"User with email {request.Email} created.");
-            return Ok(new { Message = "User registered successfully!" });
+            await _userService.RegisterUser(new RegisterUserModel() { Email = request.Email, Password = request.Password });
+            return Ok(new { Message = "User registered successfully" });
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var result = await _signInManager.PasswordSignInAsync(request.Email, request.Password, true, false); // Verify
-            if (!result.Succeeded)
-                return Unauthorized(new { Message = "Invalid username or password." });
-
+            await _userService.Login(new Domain.Models.LoginModel()
+            {
+                UserName = request.Email,
+                Password = request.Password,
+                Persistent = true
+            });
             return Ok(new { Message = "Login successful!" });
         }
 
@@ -92,51 +84,24 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public IActionResult GoogleLogin()
         {
             var redirectUrl = Url.Action(nameof(GoogleCallback), "Authentication");
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties
-                (
-                GoogleDefaults.AuthenticationScheme, redirectUrl);
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(GoogleDefaults.AuthenticationScheme, redirectUrl);
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
         [HttpGet("google-callback")]
         public async Task<IActionResult> GoogleCallback(string returnUrl = "/")
-        {      
+        {
             var authenticateResult = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
             if (!authenticateResult.Succeeded)
             {
                 _logger.LogWarning($"Not authenticated at GoogleCallback");
                 return Unauthorized(new { Message = "Authentication failed." });
             }
-            var info = await _signInManager.GetExternalLoginInfoAsync();
-            var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true);
-            if (signInResult.Succeeded)
+            await _userService.ExternalLogin(new ExternalLoginModel()
             {
-                _logger.LogInformation($"Google Auth: SignIn completed.");
-                return Redirect(returnUrl ?? "/");
-            }
-            else
-            {
-                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                if (email != null)
-                {
-                    _logger.LogInformation($"Google Auth: Creating user for user with email '{email}'. ");
-                    var user = new ApplicationUser { UserName = email, Email = email };
-                    var result = await _userManager.CreateAsync(user);
-                    if (result.Succeeded)
-                    {
-                        _logger.LogInformation("User created");
-                        result = await _userManager.AddLoginAsync(user, info);
-                        if (result.Succeeded)
-                        {
-                            _logger.LogInformation("Signing user in");
-                            await _signInManager.SignInAsync(user, isPersistent: true);
-                            _logger.LogInformation("Signed in");
-                            return Redirect(returnUrl ?? "/");
-                        }
-                    }
-                }
-                return BadRequest(new { message = "Failed to login with external provider." });
-            }
+                Persistent = true
+            });
+            return Redirect(returnUrl ?? "/");
         }
     }
 }

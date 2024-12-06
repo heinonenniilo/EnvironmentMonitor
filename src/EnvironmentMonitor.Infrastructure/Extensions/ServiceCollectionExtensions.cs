@@ -36,8 +36,9 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders()
                 .AddRoles<ApplicationUserRole>()
-                .AddRoleManager<RoleManager<ApplicationUserRole>>(); 
+                .AddRoleManager<RoleManager<ApplicationUserRole>>();
             services.AddScoped<IRoleManager, RoleManager>();
+            services.AddScoped<IUserAuthService, UserAuthService>();
             return services;
         }
     }

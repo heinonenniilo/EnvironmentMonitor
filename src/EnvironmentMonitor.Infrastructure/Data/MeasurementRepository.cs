@@ -62,9 +62,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return type;
         }
 
-        public async Task<List<Device>> GetDevices()
+        public async Task<List<Device>> GetDevices(List<int>? ids = null)
         {
-            var devices = await _context.Devices.ToListAsync();
+            var devices = await _context.Devices.Where(d => ids == null || ids.Contains(d.Id)).ToListAsync();
             return devices;
         }
 
