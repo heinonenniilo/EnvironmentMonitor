@@ -15,8 +15,11 @@ import { Sensor } from "../models/sensor";
 export interface MeasurementsLeftViewProps {
   onSearch: (from: Date, to: Date, sensorIds: number[]) => void;
   onSelectDevice: (deviceId: string) => void;
+  toggleSensorSelection: (sensorId: number) => void;
   devices: Device[];
   sensors: Sensor[];
+  selectedSensors: number[];
+  selectedDevice: Device | undefined;
 }
 
 export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
@@ -24,6 +27,9 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   devices,
   sensors,
   onSelectDevice,
+  toggleSensorSelection,
+  selectedSensors,
+  selectedDevice,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
     moment().utc(true).add(-2, "day").startOf("day")
@@ -31,24 +37,6 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   const [toDate, setToDate] = useState<moment.Moment>(
     moment().utc().endOf("day")
   );
-
-  const [selectedSensors, setSelectedSensors] = useState<number[]>([]);
-
-  const [selectedDevice, setSelectedDevice] = useState<Device>({
-    id: 0,
-    deviceIdentifier: "",
-    name: "",
-  });
-
-  const toggleSensorSelection = (sensorId: number) => {
-    if (selectedSensors.some((s) => s === sensorId)) {
-      setSelectedSensors([...selectedSensors.filter((s) => s !== sensorId)]);
-    } else {
-      const t = [...selectedSensors];
-      t.push(sensorId);
-      setSelectedSensors(t);
-    }
-  };
 
   return (
     <Box
@@ -101,12 +89,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                 value={y.deviceIdentifier}
                 key={`device-${y.deviceIdentifier}`}
                 onClick={() => {
-                  const device = devices.find((d) => d.id === y.id);
-                  if (device) {
-                    setSelectedDevice(device);
-                    onSelectDevice(device.deviceIdentifier);
-                    setSelectedSensors([]);
-                  }
+                  onSelectDevice(y.deviceIdentifier);
                 }}
               >
                 {y.name}

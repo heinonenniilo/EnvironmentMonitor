@@ -1,7 +1,7 @@
 import "chartjs-adapter-moment";
 import { MeasurementTypes } from "../enums/temperatureTypes";
 import { Sensor } from "../models/sensor";
-import { Box, Typography } from "@mui/material";
+import { Box, Checkbox, FormControlLabel, Typography } from "@mui/material";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
 import { Device } from "../models/device";
 import {
@@ -20,6 +20,9 @@ import {
   MeasurementInfo,
   MeasurementsInfoTable,
 } from "./MeasurementsInfoTable";
+import { Link } from "react-router";
+import { routes } from "../utilities/routes";
+import { useEffect, useState } from "react";
 
 Chart.register(
   TimeScale,
@@ -37,6 +40,9 @@ export interface MultiSensorGraphProps {
   model: MeasurementsViewModel | undefined;
   hideInfo?: boolean;
   minHeight?: number;
+  titleAsLink?: boolean;
+  useAutoScale?: boolean;
+  onSetAutoScale?: (state: boolean) => void;
 }
 
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
@@ -45,6 +51,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   device,
   hideInfo,
   minHeight,
+  titleAsLink,
+  useAutoScale,
+  onSetAutoScale,
 }) => {
   const validSensors = device
     ? sensors?.filter((s) => s.deviceId === device.id)
@@ -53,6 +62,14 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const isSensorValid = (sensorId: number) => {
     return validSensors?.some((s) => s.id === sensorId);
   };
+
+  const [autoScale, setAutoScale] = useState(false);
+
+  useEffect(() => {
+    if (useAutoScale !== undefined) {
+      setAutoScale(useAutoScale);
+    }
+  }, [useAutoScale]);
 
   const getDatasets = () => {
     const returnValues: any[] = [];
@@ -123,6 +140,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   };
 
   const getMinScale = () => {
+    if (autoScale) {
+      return undefined;
+    }
     let minScales =
       validSensors
         ?.filter((d) => d.scaleMin !== undefined)
@@ -133,6 +153,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   };
 
   const getMaxScale = () => {
+    if (autoScale) {
+      return undefined;
+    }
     let maxScales =
       validSensors
         ?.filter((d) => d.scaleMax !== undefined)
@@ -151,10 +174,44 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       flexGrow={1}
       sx={{ maxHeight: "100%", width: "100%" }}
     >
-      <Box width="100%" mt={0} flexGrow={0}>
-        <Typography align="left" gutterBottom>
-          {getTitle()}
-        </Typography>
+      <Box
+        width="100%"
+        mt={0}
+        flexGrow={0}
+        flexDirection="row"
+        display="flex"
+        alignItems="center" // Align children vertically
+      >
+        {titleAsLink ? (
+          <Link to={`${routes.measurements}/${device?.deviceIdentifier}`}>
+            <Typography align="left" gutterBottom>
+              {getTitle()}
+            </Typography>
+          </Link>
+        ) : (
+          <Typography align="left" gutterBottom>
+            {getTitle()}
+          </Typography>
+        )}
+        <FormControlLabel
+          sx={{ marginLeft: 2 }}
+          control={
+            <Checkbox
+              checked={autoScale}
+              onChange={(e, c) => {
+                setAutoScale(c);
+                if (onSetAutoScale) {
+                  onSetAutoScale(c);
+                }
+              }}
+              inputProps={{ "aria-label": "controlled checkbox" }}
+            />
+          }
+          label="Auto scale"
+          componentsProps={{
+            typography: { fontSize: "14px" }, // Adjust font size
+          }}
+        />
       </Box>
       <Box
         flex={1}

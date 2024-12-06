@@ -26,6 +26,7 @@ export interface AppContentWrapperProps {
   children: React.ReactNode;
   isLoading?: boolean;
   leftMenu?: JSX.Element;
+  titleComponent?: JSX.Element;
   titleParts: TitlePart[];
   useSmallTitle?: boolean;
 }
@@ -65,31 +66,43 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
       props.useSmallTitle ||
       (props.titleParts.length > 1 && props.titleParts.some((t) => t.to));
     return (
-      <Typography variant={shouldUseSmallTitle ? "h6" : "h5"}>
-        {props.titleParts.map((r, idx) => {
-          let el: JSX.Element;
-          if (r.to) {
-            el = (
-              <Link key={`title_${idx}`} to={r.to}>
-                {r.text}
-              </Link>
-            );
-          } else {
-            el = <>{r.text}</>;
-          }
+      <Box
+        sx={{
+          display: "flex",
+          gap: 1, // Space between grid items
+          padding: 1, // Padding around the grid container
+          // flexGrow: 1,
+          height: "100%",
+          flexDirection: "row",
+        }}
+      >
+        <Typography variant={shouldUseSmallTitle ? "h6" : "h5"}>
+          {props.titleParts.map((r, idx) => {
+            let el: JSX.Element;
+            if (r.to) {
+              el = (
+                <Link key={`title_${idx}`} to={r.to}>
+                  {r.text}
+                </Link>
+              );
+            } else {
+              el = <>{r.text}</>;
+            }
 
-          if (idx < count - 1) {
-            return (
-              <span key={`el_${idx}`}>
-                {el}
-                {">"}
-              </span>
-            );
-          } else {
-            return <span key={`el_${idx}`}>{el}</span>;
-          }
-        })}
-      </Typography>
+            if (idx < count - 1) {
+              return (
+                <span key={`el_${idx}`}>
+                  {el}
+                  {">"}
+                </span>
+              );
+            } else {
+              return <span key={`el_${idx}`}>{el}</span>;
+            }
+          })}
+        </Typography>
+        {props.titleComponent ? props.titleComponent : null}
+      </Box>
     );
   };
   return (

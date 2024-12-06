@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace EnvironmentMonitor.WebApi.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     [Authorize(Roles = "Admin, Viewer, User")]
     public class MeasurementsController : ControllerBase
     {
