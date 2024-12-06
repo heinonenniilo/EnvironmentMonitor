@@ -1,4 +1,5 @@
-﻿using EnvironmentMonitor.Application.Interfaces;
+﻿using EnvironmentMonitor.Application.DTOs;
+using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
@@ -16,6 +17,7 @@ namespace EnvironmentMonitor.Application.Services
     {
         private readonly ICurrentUser _currentUser;
         private readonly IUserAuthService _userAuthService;
+
         public UserService(
             ICurrentUser currentUser,
             IUserAuthService userAuthService)
@@ -93,6 +95,19 @@ namespace EnvironmentMonitor.Application.Services
         public async Task RegisterUser(RegisterUserModel model)
         {
             await _userAuthService.RegisterUser(model);
+        }
+
+        public List<int> GetDevices()
+        {
+            return _currentUser.Claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(d => int.Parse(d.Value)).ToList();
+        }
+
+        public bool IsAdmin
+        {
+            get
+            {
+                return _currentUser.Roles.Any(r => r.Equals(GlobalRoles.Admin.ToString()));
+            }
         }
     }
 }

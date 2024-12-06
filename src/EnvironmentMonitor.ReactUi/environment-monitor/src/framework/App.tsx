@@ -35,8 +35,8 @@ export const App: React.FC<AppProps> = (props) => {
   const isLoggedIn = useSelector(getIsLoggedIn);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+  const [devicesFetched, setDevicesFetched] = useState(false);
 
-  //
   const devices = useSelector(getDevices);
 
   const handleLogOut = () => {
@@ -81,18 +81,18 @@ export const App: React.FC<AppProps> = (props) => {
 
   // Devices & sensors
   useEffect(() => {
-    if (isLoggedIn && measurementApiHook && devices.length === 0) {
+    if (isLoggedIn && measurementApiHook && !devicesFetched) {
+      setDevicesFetched(true);
       measurementApiHook.getDevices().then((res) => {
         dispath(setDevices(res ?? []));
       });
     }
-  }, [isLoggedIn, measurementApiHook, devices, dispath]);
+  }, [isLoggedIn, dispath, devicesFetched]);
 
   useEffect(() => {
     if (devices.length === 0) {
       dispath(setSensors([]));
     } else {
-      console.info("Fetching sensors");
       measurementApiHook
         .getSensors(devices.map((x) => x.deviceIdentifier))
         .then((res) => {

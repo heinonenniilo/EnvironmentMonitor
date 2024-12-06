@@ -1,4 +1,5 @@
-﻿using EnvironmentMonitor.Domain.Enums;
+﻿using EnvironmentMonitor.Application.DTOs;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models;
 using System;
 using System.Collections.Generic;
@@ -18,5 +19,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         bool HasAccessToSensor(int id, AccessLevels accessLevel);
         bool HasAccessToSensors(List<int> ids, AccessLevels accessLevel);
         bool HasAccessToDevices(List<int> ids, AccessLevels accessLevel);
+        public List<int> GetDevices();
+        public bool IsAdmin { get; }
     }
 }
