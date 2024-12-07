@@ -47,7 +47,7 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
     return infoRows?.some((r) => r.device !== undefined);
   };
   return (
-    <TableContainer component={Paper}>
+    <TableContainer component={Paper} sx={{ backgroundColor: "inherit" }}>
       <Table size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>

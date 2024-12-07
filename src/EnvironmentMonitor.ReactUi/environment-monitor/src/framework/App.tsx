@@ -128,7 +128,7 @@ export const App: React.FC<AppProps> = (props) => {
               flexDirection: "column",
               width: "100%",
               height: "100%",
-              marginTop: "80px",
+              marginTop: "60px",
             }}
           >
             {isLoggedIn ? (

@@ -163,7 +163,6 @@ export const DashboardView: React.FC = () => {
         sx={{
           display: "flex",
           gap: 1, // Space between grid items
-          padding: 1, // Padding around the grid container
           flexGrow: 1,
           height: "100%",
           flexDirection: "column",
