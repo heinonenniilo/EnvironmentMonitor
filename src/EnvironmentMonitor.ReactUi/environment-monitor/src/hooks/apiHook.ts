@@ -29,8 +29,8 @@ interface measureHook {
   ) => Promise<MeasurementsModel | undefined>;
   getMeasurementsBySensor: (
     sensorIds: number[],
-    from: Date,
-    to: Date | undefined,
+    from: string,
+    to: string | undefined,
     latestOnly?: boolean
   ) => Promise<MeasurementsViewModel | undefined>;
 }
@@ -135,8 +135,8 @@ export const useApiHook = (): ApiHook => {
       },
       getMeasurementsBySensor: async (
         sensorIds: number[],
-        from: Date,
-        to: Date | undefined,
+        from: string,
+        to: string | undefined,
         latestOnly?: boolean
       ) => {
         try {

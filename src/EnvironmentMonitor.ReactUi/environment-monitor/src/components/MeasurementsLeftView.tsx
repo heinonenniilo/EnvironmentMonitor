@@ -13,7 +13,7 @@ import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
 
 export interface MeasurementsLeftViewProps {
-  onSearch: (from: Date, to: Date, sensorIds: number[]) => void;
+  onSearch: (from: string, to: string, sensorIds: number[]) => void;
   onSelectDevice: (deviceId: string) => void;
   toggleSensorSelection: (sensorId: number) => void;
   devices: Device[];
@@ -128,7 +128,11 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
           variant="outlined"
           onClick={() => {
             if (selectedSensors.length > 0) {
-              onSearch(fromDate.toDate(), toDate.toDate(), selectedSensors);
+              onSearch(
+                fromDate.toISOString(),
+                toDate.toISOString(),
+                selectedSensors
+              );
             }
           }}
         >

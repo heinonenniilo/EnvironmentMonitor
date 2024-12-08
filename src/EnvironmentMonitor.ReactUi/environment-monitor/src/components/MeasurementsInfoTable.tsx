@@ -11,6 +11,7 @@ import { Measurement } from "../models/measurement";
 import { formatMeasurement } from "../utilities/measurementUtils";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
+import { getFormattedDate } from "../utilities/datetimeUtils";
 
 export interface MeasurementsInfoTableProps {
   infoRows: MeasurementInfo[];
@@ -46,6 +47,8 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
   const hasDevices = () => {
     return infoRows?.some((r) => r.device !== undefined);
   };
+
+  const showOnlyLatest = hideMin && hideMax;
   return (
     <TableContainer component={Paper} sx={{ backgroundColor: "inherit" }}>
       <Table size="small" aria-label="a dense table">
@@ -54,16 +57,17 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
             {hasDevices() ? <TableCell>Device</TableCell> : null}
             <TableCell>Sensor</TableCell>
             {hideMin ? null : <TableCell>Min</TableCell>}
-
             {hideMax ? null : <TableCell>Max</TableCell>}
             <TableCell>Latest</TableCell>
+            {showOnlyLatest ? <TableCell>Timestamp</TableCell> : null}
           </TableRow>
         </TableHead>
         <TableBody>
-          {infoRows.map((r) => {
+          {infoRows.map((r, idx) => {
             return (
               <TableRow
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                key={`tablerow_${idx}`}
               >
                 {getDeviceLabel(r)}
                 {getLabel(r)}
@@ -74,7 +78,12 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
                   <TableCell>{formatMeasurement(r.max)}</TableCell>
                 )}
 
-                <TableCell>{formatMeasurement(r.latest)}</TableCell>
+                <TableCell>
+                  {formatMeasurement(r.latest, showOnlyLatest)}
+                </TableCell>
+                {showOnlyLatest ? (
+                  <TableCell>{getFormattedDate(r.latest.timestamp)} </TableCell>
+                ) : null}
               </TableRow>
             );
           })}

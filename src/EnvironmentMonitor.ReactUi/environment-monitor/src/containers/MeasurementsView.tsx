@@ -3,7 +3,11 @@ import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
 import { MeasurementsLeftView } from "../components/MeasurementsLeftView";
-import { getDevices, getSensors } from "../reducers/measurementReducer";
+import {
+  getDashboardTimeRange,
+  getDevices,
+  getSensors,
+} from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
 import { Device } from "../models/device";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
@@ -28,6 +32,7 @@ export const MeasurementsView: React.FC = () => {
 
   const devices = useSelector(getDevices);
   const sensors = useSelector(getSensors);
+  const dashboardTimeRange = useSelector(getDashboardTimeRange);
   const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
 
   const toggleSensorSelection = (sensorId: number) => {
@@ -57,7 +62,11 @@ export const MeasurementsView: React.FC = () => {
         measurementApiHook
           .getMeasurementsBySensor(
             sensorIds,
-            moment().utc(true).add(-2, "day").startOf("day").toDate(),
+            moment()
+              .utc(true)
+              .add(-1 * dashboardTimeRange, "hour")
+              .startOf("day")
+              .toISOString(),
             undefined
           )
           .then((res) => {
@@ -71,6 +80,7 @@ export const MeasurementsView: React.FC = () => {
           });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId, devices]);
 
   return (
@@ -79,7 +89,7 @@ export const MeasurementsView: React.FC = () => {
       isLoading={isLoading}
       leftMenu={
         <MeasurementsLeftView
-          onSearch={(from: Date, to: Date, sensorIds: number[]) => {
+          onSearch={(from: string, to: string, sensorIds: number[]) => {
             setIsLoading(true);
             measurementApiHook
               .getMeasurementsBySensor(sensorIds, from, to)
