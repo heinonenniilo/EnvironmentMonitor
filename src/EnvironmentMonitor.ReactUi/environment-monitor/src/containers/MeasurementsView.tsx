@@ -31,7 +31,6 @@ export const MeasurementsView: React.FC = () => {
   const [timeFrom, setTimeFrom] = useState<moment.Moment | undefined>(
     undefined
   );
-  const [timeTo, setTimeTo] = useState<moment.Moment | undefined>(undefined);
 
   const devices = useSelector(getDevices);
   const sensors = useSelector(getSensors);
