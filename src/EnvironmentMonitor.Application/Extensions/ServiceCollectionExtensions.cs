@@ -11,6 +11,7 @@ namespace EnvironmentMonitor.Application.Extensions
         {
             services.AddScoped<IMeasurementService, MeasurementService>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IDeviceService, DeviceService>();
             return services;
         }
     }

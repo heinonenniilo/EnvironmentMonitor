@@ -1,4 +1,5 @@
 ﻿using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.Infrastructure.Services;
@@ -39,6 +40,11 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 .AddRoleManager<RoleManager<ApplicationUserRole>>();
             services.AddScoped<IRoleManager, RoleManager>();
             services.AddScoped<IUserAuthService, UserAuthService>();
+
+            var defaultSettings = new IotHubSettings();
+            configuration.GetSection("IotHubSettings").Bind(defaultSettings);
+            services.AddSingleton(defaultSettings);
+            services.AddScoped<IHubMessageService, HubMessageService>();
             return services;
         }
     }
