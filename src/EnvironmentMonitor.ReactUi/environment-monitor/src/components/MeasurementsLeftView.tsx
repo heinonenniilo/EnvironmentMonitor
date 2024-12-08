@@ -6,20 +6,26 @@ import {
   MenuItem,
   Select,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import moment from "moment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
 
 export interface MeasurementsLeftViewProps {
-  onSearch: (from: string, to: string, sensorIds: number[]) => void;
+  onSearch: (
+    from: moment.Moment,
+    to: moment.Moment | undefined,
+    sensorIds: number[]
+  ) => void;
   onSelectDevice: (deviceId: string) => void;
   toggleSensorSelection: (sensorId: number) => void;
   devices: Device[];
   sensors: Sensor[];
   selectedSensors: number[];
   selectedDevice: Device | undefined;
+  timeFrom?: moment.Moment;
+  timeTo?: moment.Moment;
 }
 
 export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
@@ -30,13 +36,23 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   toggleSensorSelection,
   selectedSensors,
   selectedDevice,
+  timeFrom,
+  timeTo,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
     moment().utc(true).add(-2, "day").startOf("day")
   );
-  const [toDate, setToDate] = useState<moment.Moment>(
-    moment().utc().endOf("day")
-  );
+  const [toDate, setToDate] = useState<moment.Moment | undefined>(undefined);
+
+  useEffect(() => {
+    if (timeFrom) {
+      setFromDate(timeFrom);
+    }
+  }, [timeFrom]);
+
+  useEffect(() => {
+    setToDate(timeTo);
+  }, [timeTo]);
 
   return (
     <Box
@@ -52,7 +68,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
           value={fromDate}
           onChange={(value) => {
             if (value) {
-              setFromDate((value as moment.Moment).utc(true).startOf("day"));
+              setFromDate(value.utc(true).startOf("day"));
             }
           }}
         ></DesktopDatePicker>
@@ -63,9 +79,12 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
           label="To"
           format="DD.MM.YYYY"
           value={toDate}
+          slotProps={{ field: { clearable: true } }}
           onChange={(value) => {
             if (value) {
-              setToDate((value as moment.Moment).utc(true).endOf("day"));
+              setToDate(value.utc(true).endOf("day"));
+            } else {
+              setToDate(undefined);
             }
           }}
         />
@@ -128,11 +147,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
           variant="outlined"
           onClick={() => {
             if (selectedSensors.length > 0) {
-              onSearch(
-                fromDate.toISOString(),
-                toDate.toISOString(),
-                selectedSensors
-              );
+              onSearch(fromDate, toDate, selectedSensors);
             }
           }}
         >

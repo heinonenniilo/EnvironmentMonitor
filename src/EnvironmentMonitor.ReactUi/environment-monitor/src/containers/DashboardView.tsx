@@ -6,7 +6,7 @@ import {
   getDashboardTimeRange,
   getDevices,
   getSensors,
-  setTimeRange,
+  setDashboardTimeRange,
   toggleAutoScale,
 } from "../reducers/measurementReducer";
 import { useApiHook } from "../hooks/apiHook";
@@ -32,7 +32,7 @@ export const DashboardView: React.FC = () => {
   const timeRange = useSelector(getDashboardTimeRange);
 
   const handleTimeRangeChange = (selection: TimeSelections) => {
-    dispatch(setTimeRange(selection));
+    dispatch(setDashboardTimeRange(selection));
   };
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export const DashboardView: React.FC = () => {
     measurementApiHook
       .getMeasurementsBySensor(
         sensors.map((x) => x.id),
-        momentStart.toISOString(),
+        momentStart,
         undefined
       )
       .then((res) => {

@@ -79,7 +79,7 @@ export const HomeView: React.FC = () => {
       hook
         .getMeasurementsBySensor(
           sensors.map((s) => s.id),
-          moment().toDate().toISOString(),
+          moment(),
           undefined,
           true
         )

@@ -19,9 +19,7 @@ import moment from "moment";
 export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const [isLoading, setIsLoading] = useState(false);
-
   const { deviceId } = useParams<{ deviceId?: string }>();
-
   const [selectedDevice, setSelectedDevice] = useState<Device | undefined>(
     undefined
   );
@@ -29,6 +27,11 @@ export const MeasurementsView: React.FC = () => {
   const [measurementsModel, setMeasurementsModel] = useState<
     MeasurementsViewModel | undefined
   >(undefined);
+
+  const [timeFrom, setTimeFrom] = useState<moment.Moment | undefined>(
+    undefined
+  );
+  const [timeTo, setTimeTo] = useState<moment.Moment | undefined>(undefined);
 
   const devices = useSelector(getDevices);
   const sensors = useSelector(getSensors);
@@ -59,16 +62,15 @@ export const MeasurementsView: React.FC = () => {
           .filter((s) => s.deviceId === matchingDevice.id)
           .map((s) => s.id);
         setIsLoading(true);
+
+        const fromDate = moment()
+          .utc(true)
+          .add(-1 * dashboardTimeRange, "hour")
+          .startOf("day");
+
+        setTimeFrom(fromDate);
         measurementApiHook
-          .getMeasurementsBySensor(
-            sensorIds,
-            moment()
-              .utc(true)
-              .add(-1 * dashboardTimeRange, "hour")
-              .startOf("day")
-              .toISOString(),
-            undefined
-          )
+          .getMeasurementsBySensor(sensorIds, fromDate, undefined)
           .then((res) => {
             setSelectedSensors(
               sensors.filter((sensor) => sensorIds.some((s) => sensor.id === s))
@@ -89,7 +91,11 @@ export const MeasurementsView: React.FC = () => {
       isLoading={isLoading}
       leftMenu={
         <MeasurementsLeftView
-          onSearch={(from: string, to: string, sensorIds: number[]) => {
+          onSearch={(
+            from: moment.Moment,
+            to: moment.Moment | undefined,
+            sensorIds: number[]
+          ) => {
             setIsLoading(true);
             measurementApiHook
               .getMeasurementsBySensor(sensorIds, from, to)
@@ -122,6 +128,7 @@ export const MeasurementsView: React.FC = () => {
               ? sensors.filter((s) => s.deviceId === selectedDevice.id)
               : []
           }
+          timeFrom={timeFrom}
         />
       }
     >
@@ -132,12 +139,6 @@ export const MeasurementsView: React.FC = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          //flexGrow: {
-          //  xs: 1,
-          //},
-          //columnGap: {
-          //  xl: 3,
-          //},
         }}
       >
         <MultiSensorGraph
@@ -145,6 +146,7 @@ export const MeasurementsView: React.FC = () => {
           model={measurementsModel}
           device={selectedDevice}
           key={"graph_01"}
+          minHeight={500}
         />
       </Box>
     </AppContentWrapper>

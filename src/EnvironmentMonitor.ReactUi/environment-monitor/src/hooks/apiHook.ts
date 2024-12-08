@@ -7,6 +7,7 @@ import {
   MeasurementsModel,
   MeasurementsViewModel,
 } from "../models/measurementsBySensor";
+import moment from "moment";
 
 interface ApiHook {
   userHook: userHook;
@@ -24,13 +25,13 @@ interface measureHook {
   getSensors: (deviceId: string[]) => Promise<Sensor[]>;
   getMeasurements: (
     sensorIds: number[],
-    from: Date,
-    to: Date
+    from: moment.Moment,
+    to?: moment.Moment
   ) => Promise<MeasurementsModel | undefined>;
   getMeasurementsBySensor: (
     sensorIds: number[],
-    from: string,
-    to: string | undefined,
+    from: moment.Moment,
+    to?: moment.Moment,
     latestOnly?: boolean
   ) => Promise<MeasurementsViewModel | undefined>;
 }
@@ -115,15 +116,19 @@ export const useApiHook = (): ApiHook => {
           return [];
         }
       },
-      getMeasurements: async (sensorIds: number[], from: Date, to: Date) => {
+      getMeasurements: async (
+        sensorIds: number[],
+        from: moment.Moment,
+        to?: moment.Moment
+      ) => {
         try {
           let res = await apiClient.get<any, AxiosResponse<MeasurementsModel>>(
             "/api/Measurements",
             {
               params: {
                 SensorIds: sensorIds,
-                from: from,
-                to: to,
+                from: from.toISOString(),
+                to: to ? to.toISOString() : undefined,
               },
             }
           );
@@ -135,8 +140,8 @@ export const useApiHook = (): ApiHook => {
       },
       getMeasurementsBySensor: async (
         sensorIds: number[],
-        from: string,
-        to: string | undefined,
+        from: moment.Moment,
+        to?: moment.Moment,
         latestOnly?: boolean
       ) => {
         try {
@@ -146,8 +151,8 @@ export const useApiHook = (): ApiHook => {
           >("/api/Measurements/bysensor", {
             params: {
               SensorIds: sensorIds,
-              from: from,
-              to: to,
+              from: from.toISOString(),
+              to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,
             },
           });

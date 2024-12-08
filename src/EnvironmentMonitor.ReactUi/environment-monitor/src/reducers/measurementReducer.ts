@@ -47,14 +47,18 @@ export const measurementSlice = createSlice({
         );
       }
     },
-    setTimeRange: (state, action: PayloadAction<TimeSelections>) => {
+    setDashboardTimeRange: (state, action: PayloadAction<TimeSelections>) => {
       state.timeRange = action.payload;
     },
   },
 });
 
-export const { setDevices, setSensors, toggleAutoScale, setTimeRange } =
-  measurementSlice.actions;
+export const {
+  setDevices,
+  setSensors,
+  toggleAutoScale,
+  setDashboardTimeRange,
+} = measurementSlice.actions;
 
 export const getDevices = (state: RootState): Device[] =>
   state.measurementInfo.devices;
