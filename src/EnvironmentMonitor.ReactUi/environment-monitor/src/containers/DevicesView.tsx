@@ -17,7 +17,7 @@ export const DevicesView: React.FC = () => {
   const deviceHook = useApiHook().deviceHook;
 
   const getDialogTitle = () => {
-    return "Reboot device?";
+    return `Reboot ${selectedDevice?.name}?`;
   };
 
   const getDialogBody = () => {
@@ -25,7 +25,7 @@ export const DevicesView: React.FC = () => {
       return "";
     }
 
-    return `Reboot device: ${selectedDevice.name}/${selectedDevice?.deviceIdentifier} (${selectedDevice.id})?`;
+    return `Name: ${selectedDevice.name}, Identifier: ${selectedDevice?.deviceIdentifier}, Id: ${selectedDevice.id}?`;
   };
 
   const rebootDevice = () => {

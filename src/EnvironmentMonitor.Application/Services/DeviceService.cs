@@ -20,6 +20,7 @@ namespace EnvironmentMonitor.Application.Services
         {
             _messageService = messageService;
             _logger = logger;
+            _userService = userService;
         }
         public async Task Reboot(string deviceIdentifier)
         {
