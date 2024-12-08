@@ -17,7 +17,7 @@ using System.Security.Claims;
 namespace EnvironmentMonitor.WebApi.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class AuthenticationController : ControllerBase
     {
         private readonly SignInManager<ApplicationUser> _signInManager;

@@ -24,6 +24,10 @@ root.render(
             <Route path={routes.main} element={<HomeView />} />
             <Route path={routes.dashboard} element={<DashboardView />} />
             <Route path={routes.measurements} element={<MeasurementsView />} />
+            <Route
+              path={routes.measurementsByDevice}
+              element={<MeasurementsView />}
+            />
           </Routes>
         </App>
       </BrowserRouter>

@@ -7,6 +7,7 @@ import {
   MeasurementsModel,
   MeasurementsViewModel,
 } from "../models/measurementsBySensor";
+import moment from "moment";
 
 interface ApiHook {
   userHook: userHook;
@@ -24,13 +25,13 @@ interface measureHook {
   getSensors: (deviceId: string[]) => Promise<Sensor[]>;
   getMeasurements: (
     sensorIds: number[],
-    from: Date,
-    to: Date
+    from: moment.Moment,
+    to?: moment.Moment
   ) => Promise<MeasurementsModel | undefined>;
   getMeasurementsBySensor: (
     sensorIds: number[],
-    from: Date,
-    to: Date | undefined,
+    from: moment.Moment,
+    to?: moment.Moment,
     latestOnly?: boolean
   ) => Promise<MeasurementsViewModel | undefined>;
 }
@@ -52,7 +53,7 @@ export const useApiHook = (): ApiHook => {
       getUserInfo: async () => {
         try {
           const response = await apiClient.get<any, AxiosResponse<User>>(
-            "/authentication/info"
+            "/api/authentication/info"
           );
           return response.data;
         } catch (ex: any) {
@@ -63,7 +64,7 @@ export const useApiHook = (): ApiHook => {
       logIn: async (userId, password) => {
         try {
           const response = await apiClient.post<any, AxiosResponse<boolean>>(
-            "/authentication/login",
+            "/api/authentication/login",
             {
               email: userId,
               password: password,
@@ -78,7 +79,7 @@ export const useApiHook = (): ApiHook => {
       logOut: async () => {
         try {
           await apiClient.post<any, AxiosResponse<User>>(
-            "/authentication/logout"
+            "/api/authentication/logout"
           );
           return true;
         } catch (ex: any) {
@@ -91,7 +92,7 @@ export const useApiHook = (): ApiHook => {
       getDevices: async () => {
         try {
           let res = await apiClient.get<any, AxiosResponse<Device[]>>(
-            "/Measurements/devices"
+            "/api/Measurements/devices"
           );
           return res.data;
         } catch (ex: any) {
@@ -102,7 +103,7 @@ export const useApiHook = (): ApiHook => {
       getSensors: async (deviceIds: string[]) => {
         try {
           let res = await apiClient.get<any, AxiosResponse<Sensor[]>>(
-            `/Measurements/sensors/`,
+            `/api/Measurements/sensors/`,
             {
               params: {
                 deviceIds: deviceIds,
@@ -115,15 +116,19 @@ export const useApiHook = (): ApiHook => {
           return [];
         }
       },
-      getMeasurements: async (sensorIds: number[], from: Date, to: Date) => {
+      getMeasurements: async (
+        sensorIds: number[],
+        from: moment.Moment,
+        to?: moment.Moment
+      ) => {
         try {
           let res = await apiClient.get<any, AxiosResponse<MeasurementsModel>>(
-            "/Measurements",
+            "/api/Measurements",
             {
               params: {
                 SensorIds: sensorIds,
-                from: from,
-                to: to,
+                from: from.toISOString(),
+                to: to ? to.toISOString() : undefined,
               },
             }
           );
@@ -135,19 +140,19 @@ export const useApiHook = (): ApiHook => {
       },
       getMeasurementsBySensor: async (
         sensorIds: number[],
-        from: Date,
-        to: Date | undefined,
+        from: moment.Moment,
+        to?: moment.Moment,
         latestOnly?: boolean
       ) => {
         try {
           let res = await apiClient.get<
             any,
             AxiosResponse<MeasurementsViewModel>
-          >("/Measurements/bysensor", {
+          >("/api/Measurements/bysensor", {
             params: {
               SensorIds: sensorIds,
-              from: from,
-              to: to,
+              from: from.toISOString(),
+              to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,
             },
           });
@@ -160,5 +165,3 @@ export const useApiHook = (): ApiHook => {
     },
   };
 };
-
-// https://localhost:7135/Measurements/bysensor?SensorIds=1&SensorIds=2&From=2024-11-24

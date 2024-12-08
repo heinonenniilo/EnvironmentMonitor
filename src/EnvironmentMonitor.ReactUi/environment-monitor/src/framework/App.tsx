@@ -50,9 +50,9 @@ export const App: React.FC<AppProps> = (props) => {
 
   const loginWithGoogleAuthCode = () => {
     if (process.env.NODE_ENV === "production") {
-      window.location.href = "/authentication/google";
+      window.location.href = "api/authentication/google";
     } else {
-      window.location.href = "https://localhost:7135/authentication/google";
+      window.location.href = "https://localhost:7135/api/authentication/google";
     }
   };
 
@@ -128,7 +128,7 @@ export const App: React.FC<AppProps> = (props) => {
               flexDirection: "column",
               width: "100%",
               height: "100%",
-              marginTop: "80px",
+              marginTop: "60px",
             }}
           >
             {isLoggedIn ? (

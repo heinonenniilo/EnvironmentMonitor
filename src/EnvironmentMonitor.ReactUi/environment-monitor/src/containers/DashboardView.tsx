@@ -1,15 +1,25 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
-import { getDevices, getSensors } from "../reducers/measurementReducer";
+import {
+  getDashboardAutoScale,
+  getDashboardTimeRange,
+  getDevices,
+  getSensors,
+  setDashboardTimeRange,
+  toggleAutoScale,
+} from "../reducers/measurementReducer";
 import { useApiHook } from "../hooks/apiHook";
 import { Box } from "@mui/material";
 import moment from "moment";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
 import { MultiSensorGraph } from "../components/MultiSensorGraph";
+import { TimeSelections } from "../enums/timeSelections";
+import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 
 export const DashboardView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
+  const dispatch = useDispatch();
   const [viewModel, setViewModel] = useState<MeasurementsViewModel | undefined>(
     undefined
   );
@@ -17,87 +27,107 @@ export const DashboardView: React.FC = () => {
 
   const sensors = useSelector(getSensors);
   const devices = useSelector(getDevices);
+  const autoScaleIds = useSelector(getDashboardAutoScale);
+
+  const timeRange = useSelector(getDashboardTimeRange);
+
+  const handleTimeRangeChange = (selection: TimeSelections) => {
+    dispatch(setDashboardTimeRange(selection));
+  };
 
   useEffect(() => {
-    if (sensors.length > 0 && !viewModel) {
-      const momentStart = moment().local(true).add(-1, "day").utc();
-      // TODO implement a better way
-      const start = new Date(
-        Date.UTC(
-          momentStart.year(),
-          momentStart.month(),
-          momentStart.date(),
-          0,
-          0,
-          0
-        )
-      );
-
-      setIsLoading(true);
-      measurementApiHook
-        .getMeasurementsBySensor(
-          sensors.map((x) => x.id),
-          start,
-          undefined
-        )
-        .then((res) => {
-          console.info(res);
-          setViewModel(res);
-        })
-        .catch((er) => {
-          console.error(er);
-          setViewModel(undefined);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+    if (!sensors || sensors.length === 0) {
+      return;
     }
+    const momentStart = moment()
+      .local(true)
+      .add(-1 * timeRange, "hour")
+      .utc(true);
+    setIsLoading(true);
+    measurementApiHook
+      .getMeasurementsBySensor(
+        sensors.map((x) => x.id),
+        momentStart,
+        undefined
+      )
+      .then((res) => {
+        setViewModel(res);
+      })
+      .catch((er) => {
+        console.error(er);
+        setViewModel(undefined);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sensors, viewModel]);
+  }, [timeRange]);
 
   return (
     <AppContentWrapper
       titleParts={[{ text: "Dashboard" }]}
       isLoading={isLoading}
+      titleComponent={
+        <TimeRangeSelectorComponent
+          timeRange={timeRange}
+          onSelectTimeRange={handleTimeRangeChange}
+        />
+      }
     >
       <Box
         sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "1fr", // Single column for extra-small screens
-            //sm: "1fr 1fr", // Two columns for small and larger screens
-            lg: "1fr 1fr",
-          },
+          display: "flex",
           gap: 1, // Space between grid items
-          padding: 1, // Padding around the grid container
           flexGrow: 1,
           height: "100%",
+          flexDirection: "column",
         }}
       >
-        {devices.map((device, idx) => (
-          <Box
-            key={device.id}
-            sx={{
-              border: "1px solid #ccc",
-              borderRadius: 2,
-              padding: 1,
-              boxSizing: "border-box",
-              backgroundColor: "#f9f9f9",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            <MultiSensorGraph
-              sensors={sensors}
-              device={device}
-              model={viewModel}
-              minHeight={400}
-            />
-          </Box>
-        ))}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr", // Single column for extra-small screens
+              lg: "1fr 1fr", // Two columns for large screens
+            },
+            gap: 1, // Space between grid items
+            padding: 1, // Padding around the grid container
+            flexGrow: 1,
+            height: "100%",
+          }}
+        >
+          {devices.map((device) => (
+            <Box
+              key={device.id}
+              sx={{
+                border: "1px solid #ccc",
+                borderRadius: 2,
+                padding: 1,
+                boxSizing: "border-box",
+                backgroundColor: "#f9f9f9",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <MultiSensorGraph
+                sensors={sensors}
+                device={device}
+                model={viewModel}
+                minHeight={400}
+                titleAsLink
+                useAutoScale={autoScaleIds.some((s) => s === device.id)}
+                onSetAutoScale={(state) => {
+                  dispatch(
+                    toggleAutoScale({ deviceId: device.id, state: state })
+                  );
+                }}
+              />
+            </Box>
+          ))}
+        </Box>
       </Box>
     </AppContentWrapper>
   );
