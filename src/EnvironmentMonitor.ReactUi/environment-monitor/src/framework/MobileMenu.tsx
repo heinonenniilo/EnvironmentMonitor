@@ -86,6 +86,15 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
               Measurements
             </MenuItem>
           </AuthorizedComponent>
+          <AuthorizedComponent requiredRole={RoleNames.Admin}>
+            <MenuItem
+              onClick={() => {
+                onNavigate(routes.devices);
+              }}
+            >
+              Devices
+            </MenuItem>
+          </AuthorizedComponent>
           <MenuItem
             selected={false}
             onClick={() => {

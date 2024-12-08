@@ -12,6 +12,7 @@ import moment from "moment";
 interface ApiHook {
   userHook: userHook;
   measureHook: measureHook;
+  deviceHook: deviceHook;
 }
 
 interface userHook {
@@ -34,6 +35,10 @@ interface measureHook {
     to?: moment.Moment,
     latestOnly?: boolean
   ) => Promise<MeasurementsViewModel | undefined>;
+}
+
+interface deviceHook {
+  rebootDevice: (deviceIdentifier: string) => Promise<boolean>;
 }
 
 const apiClient = axios.create({
@@ -160,6 +165,24 @@ export const useApiHook = (): ApiHook => {
         } catch (ex: any) {
           console.error(ex);
           return undefined;
+        }
+      },
+    },
+    deviceHook: {
+      rebootDevice: async (deviceIdentifier: string) => {
+        try {
+          let res = await apiClient.post("/api/device/reboot", {
+            deviceIdentifier: deviceIdentifier,
+          });
+
+          if (res.status === 200) {
+            return true;
+          } else {
+            return false;
+          }
+        } catch (ex: any) {
+          console.log(ex);
+          return false;
         }
       },
     },

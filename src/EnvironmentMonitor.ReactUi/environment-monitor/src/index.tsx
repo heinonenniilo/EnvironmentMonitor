@@ -10,6 +10,7 @@ import { App } from "./framework/App";
 import { MeasurementsView } from "./containers/MeasurementsView";
 import { store } from "./setup/appStore";
 import { DashboardView } from "./containers/DashboardView";
+import { DevicesView } from "./containers/DevicesView";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -28,6 +29,7 @@ root.render(
               path={routes.measurementsByDevice}
               element={<MeasurementsView />}
             />
+            <Route path={routes.devices} element={<DevicesView />} />
           </Routes>
         </App>
       </BrowserRouter>
