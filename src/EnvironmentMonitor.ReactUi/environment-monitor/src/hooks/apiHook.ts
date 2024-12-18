@@ -97,7 +97,7 @@ export const useApiHook = (): ApiHook => {
       getDevices: async () => {
         try {
           let res = await apiClient.get<any, AxiosResponse<Device[]>>(
-            "/api/Measurements/devices"
+            "/api/devices"
           );
           return res.data;
         } catch (ex: any) {
@@ -108,7 +108,7 @@ export const useApiHook = (): ApiHook => {
       getSensors: async (deviceIds: string[]) => {
         try {
           let res = await apiClient.get<any, AxiosResponse<Sensor[]>>(
-            `/api/Measurements/sensors/`,
+            `/api/devices/sensors/`,
             {
               params: {
                 deviceIds: deviceIds,
@@ -171,7 +171,7 @@ export const useApiHook = (): ApiHook => {
     deviceHook: {
       rebootDevice: async (deviceIdentifier: string) => {
         try {
-          let res = await apiClient.post("/api/device/reboot", {
+          let res = await apiClient.post("/api/devices/reboot", {
             deviceIdentifier: deviceIdentifier,
           });
 

@@ -1,4 +1,5 @@
-﻿using EnvironmentMonitor.Application.DTOs;
+﻿using AutoMapper;
+using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
@@ -17,15 +18,18 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILogger<MeasurementService> _logger;
         private const string TargetTimeZone = "FLE Standard Time";
         private readonly IUserService _userService;
+        private readonly IMapper _mapper;
 
         public MeasurementService(
             IMeasurementRepository measurement,
             ILogger<MeasurementService> logger,
-            IUserService userService)
+            IUserService userService,
+            IMapper mapper)
         {
             _measurementRepository = measurement;
             _logger = logger;
             _userService = userService;
+            _mapper = mapper;
         }
 
         public async Task AddMeasurements(SaveMeasurementsDto measurent)
@@ -87,14 +91,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var rows = (await _measurementRepository.GetMeasurements(model)).Select(x => new MeasurementDto()
-            {
-                SensorId = x.SensorId,
-                SensorValue = x.Value,
-                TypeId = x.TypeId,
-                TimestampUtc = x.TimestampUtc,
-                Timestamp = x.Timestamp,
-            }).ToList();
+            var rows = _mapper.Map<List<MeasurementDto>>(await _measurementRepository.GetMeasurements(model));
             return new MeasurementsModel()
             {
                 Measurements = rows,
@@ -106,22 +103,27 @@ namespace EnvironmentMonitor.Application.Services
         {
             var returnList = new List<MeasurementsBySensorDto>();
             _logger.LogInformation("Getting measurements by sensor");
+            var accessibleSensorIds = model.SensorIds.Where(d => _userService.HasAccessToSensor(d, AccessLevels.Read)).ToList();
+
+            var result = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
+            {
+                SensorIds = accessibleSensorIds,
+                To = model.To,
+                From = model.From,
+                LatestOnly = model.LatestOnly,
+            });
+
+            var measurements = _mapper.Map<List<MeasurementDto>>(result);
+            var info = GetMeasurementInfo(measurements, accessibleSensorIds);
             foreach (var sensorId in model.SensorIds)
             {
-                var measurements = await GetMeasurements(new GetMeasurementsModel()
-                {
-                    SensorIds = [sensorId],
-                    To = model.To,
-                    From = model.From,
-                    LatestOnly = model.LatestOnly
-                });
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
                     SensorId = sensorId,
-                    Measurements = measurements.Measurements,
-                    LatestValues = measurements.MeasurementsInfo?.FirstOrDefault().LatestValues ?? [],
-                    MaxValues = measurements.MeasurementsInfo?.FirstOrDefault().MaxValues ?? [],
-                    MinValues = measurements.MeasurementsInfo?.FirstOrDefault().MinValues ?? []
+                    Measurements = measurements.Where(x => x.SensorId == sensorId).ToList(),
+                    LatestValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.LatestValues ?? [],
+                    MaxValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MaxValues ?? [],
+                    MinValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MinValues ?? []
                 };
                 returnList.Add(rowToAdd);
             }

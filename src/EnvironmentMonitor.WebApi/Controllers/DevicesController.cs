@@ -19,11 +19,11 @@ namespace EnvironmentMonitor.WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class DeviceController : ControllerBase
+    public class DevicesController : ControllerBase
     {
 
         private readonly IDeviceService _deviceService;
-        public DeviceController(IDeviceService deviceService)
+        public DevicesController(IDeviceService deviceService)
         {
             _deviceService = deviceService;
         }

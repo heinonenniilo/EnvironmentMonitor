@@ -1,4 +1,7 @@
-﻿using EnvironmentMonitor.Domain.Enums;
+﻿using AutoMapper;
+using EnvironmentMonitor.Application.Mappings;
+using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,13 +10,18 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class MeasurementDto
+    public class MeasurementDto : IMapFrom<Measurement>
     {
         public int SensorId { get; set; }
         public double SensorValue { get; set; }
         public int TypeId { get; set; }
         public DateTime TimestampUtc { get; set; }
         public DateTime Timestamp { get; set; }
+
+        public void Mapping(Profile profile)
+        {
+            profile.CreateMap<Measurement, MeasurementDto>().ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value)).ReverseMap();
+        }
     }
 
     public class MeasurementsBySensorModel
