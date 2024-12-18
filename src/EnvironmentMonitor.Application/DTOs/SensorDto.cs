@@ -1,4 +1,7 @@
-﻿using System;
+﻿using AutoMapper;
+using EnvironmentMonitor.Application.Mappings;
+using EnvironmentMonitor.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class SensorDto
+    public class SensorDto: IMapFrom<Sensor>
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -14,5 +17,10 @@ namespace EnvironmentMonitor.Application.DTOs
         public int DeviceId { get; set; }
         public double? ScaleMin { get; set; }
         public double? ScaleMax { get; set; }
+
+        public void Mapping(Profile profile)
+        {
+            profile.CreateMap<Sensor, SensorDto>().ReverseMap();
+        }
     }
 }

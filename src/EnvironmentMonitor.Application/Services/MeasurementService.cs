@@ -81,18 +81,6 @@ namespace EnvironmentMonitor.Application.Services
             }
         }
 
-        public async Task<List<DeviceDto>> GetDevices()
-        {
-            var devices = await _measurementRepository.GetDevices();
-            devices = devices.Where(x => _userService.HasAccessToDevice(x.Id, AccessLevels.Read)).ToList();
-            return devices.Select(x => new DeviceDto()
-            {
-                Id = x.Id,
-                Name = x.Name,
-                DeviceIdentifier = x.DeviceIdentifier,
-            }).ToList();
-        }
-
         public async Task<MeasurementsModel> GetMeasurements(GetMeasurementsModel model)
         {
             if (model.SensorIds.Any(s => !_userService.HasAccessToSensor(s, AccessLevels.Read)))
@@ -112,40 +100,6 @@ namespace EnvironmentMonitor.Application.Services
                 Measurements = rows,
                 MeasurementsInfo = GetMeasurementInfo(rows, model.SensorIds)
             };
-        }
-
-        public async Task<List<SensorDto>> GetSensors(List<string> DeviceIdentifier)
-        {
-            var sensors = await _measurementRepository.GetSensorsByDeviceIdentifiers(DeviceIdentifier);
-            sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Id, AccessLevels.Read));
-            return sensors.Select(x => new SensorDto()
-            {
-                Id = x.Id,
-                DeviceId = x.DeviceId,
-                Name = x.Name,
-                SensorId = x.SensorId,
-                ScaleMax = x.ScaleMax,
-                ScaleMin = x.ScaleMin,
-            }).ToList();
-        }
-
-        public async Task<List<SensorDto>> GetSensors(List<int> DeviceIds)
-        {
-            var sensors = new List<SensorDto>();
-            foreach (var deviceId in DeviceIds)
-            {
-                var res = await _measurementRepository.GetSensorsByDeviceIdAsync(0);
-                sensors.AddRange(res.Select(x => new SensorDto()
-                {
-                    Id = x.Id,
-                    DeviceId = x.DeviceId,
-                    Name = x.Name,
-                    SensorId = x.SensorId,
-                    ScaleMax = x.ScaleMax,
-                    ScaleMin = x.ScaleMin,
-                }));
-            }
-            return sensors;
         }
 
         public async Task<MeasurementsBySensorModel> GetMeasurementsBySensor(GetMeasurementsModel model)
