@@ -39,10 +39,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return await query.ToListAsync();
         }
 
-        public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements)
+        public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true)
         {
             await _context.Measurements.AddRangeAsync(measurements);
-            await _context.SaveChangesAsync();
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
             return measurements;
         }
 

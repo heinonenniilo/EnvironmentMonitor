@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
@@ -16,7 +17,6 @@ namespace EnvironmentMonitor.Application.Services
     {
         private readonly IMeasurementRepository _measurementRepository;
         private readonly ILogger<MeasurementService> _logger;
-        private const string TargetTimeZone = "FLE Standard Time";
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly IDeviceService _deviceService;
@@ -79,6 +79,10 @@ namespace EnvironmentMonitor.Application.Services
             if (measurementsToAdd.Any())
             {
                 _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device: {device.Id} / '{device.Name}'");
+                if (measurent.FirstMessage)
+                {
+                    await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false);
+                }
                 await _measurementRepository.AddMeasurements(measurementsToAdd);
                 _logger.LogInformation("Measurements added");
             }
@@ -138,7 +142,7 @@ namespace EnvironmentMonitor.Application.Services
 
         private DateTime UtcToLocalTime(DateTime utcDateTime)
         {
-            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(TargetTimeZone);
+            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone);
             return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, targetTimeZone);
         }
 

@@ -28,6 +28,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 .WithOne(s => s.Device)
                 .HasForeignKey(s => s.DeviceId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(x => x.Events).WithOne(x => x.Device).HasForeignKey(x => x.DeviceId).OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

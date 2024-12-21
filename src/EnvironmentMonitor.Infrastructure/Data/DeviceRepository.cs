@@ -1,4 +1,6 @@
-﻿using EnvironmentMonitor.Domain.Entities;
+﻿using EnvironmentMonitor.Domain;
+using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -49,6 +51,31 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             var sensors = await _context.Sensors.Where(x => deviceIdentifiers.Contains(x.Device.DeviceIdentifier)).ToListAsync();
             return sensors;
+        }
+
+        public async Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges = true)
+        {
+            var device = await _context.Devices.FindAsync(deviceId);
+            if (device == null)
+            {
+                throw new ArgumentException("Not found");
+            }
+            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone);
+            var utcNow = DateTime.UtcNow;
+            var toAdd = new DeviceEvent()
+            {
+                DeviceId = device.Id,
+                TypeId = (int)type,
+                Message = message,
+                TimeStampUtc = utcNow,
+                TimeStamp = TimeZoneInfo.ConvertTimeFromUtc(utcNow, TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone)),
+            };
+            await _context.DeviceEvents.AddAsync(toAdd);
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+            return toAdd;
         }
     }
 }
