@@ -32,6 +32,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                     builder => builder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
             });
             services.AddScoped<IMeasurementRepository, MeasurementRepository>();
+            services.AddScoped<IDeviceRepository, DeviceRepository>();
             // Identity stuff
             services.AddIdentity<ApplicationUser, ApplicationUserRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

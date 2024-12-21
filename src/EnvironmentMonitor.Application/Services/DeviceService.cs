@@ -17,16 +17,16 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IHubMessageService _messageService;
         private readonly ILogger<DeviceService> _logger;
         private readonly IUserService _userService;
-        private readonly IMeasurementRepository _measurementRepository;
+        private readonly IDeviceRepository _deviceRepository;
         private readonly IMapper _mapper;
 
         public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService, 
-            IMeasurementRepository measurementRepository, IMapper mapper)
+            IDeviceRepository deviceRepository, IMapper mapper)
         {
             _messageService = messageService;
             _logger = logger;
             _userService = userService;
-            _measurementRepository = measurementRepository;
+            _deviceRepository = deviceRepository;
             _mapper = mapper;
         }
         public async Task Reboot(string deviceIdentifier)
@@ -41,18 +41,13 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<List<DeviceDto>> GetDevices()
         {
-            var devices = await _measurementRepository.GetDevices(_userService.IsAdmin ? null : _userService.GetDevices());
-            return devices.Select(x => new DeviceDto()
-            {
-                Id = x.Id,
-                Name = x.Name,
-                DeviceIdentifier = x.DeviceIdentifier,
-            }).ToList();
+            var devices = await _deviceRepository.GetDevices(_userService.IsAdmin ? null : _userService.GetDevices());
+            return _mapper.Map<List<DeviceDto>>(devices);
         }
 
         public async Task<List<SensorDto>> GetSensors(List<string> DeviceIdentifier)
         {
-            var sensors = await _measurementRepository.GetSensorsByDeviceIdentifiers(DeviceIdentifier);
+            var sensors = await _deviceRepository.GetSensorsByDeviceIdentifiers(DeviceIdentifier);
             sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Id, AccessLevels.Read));
             return _mapper.Map<List<SensorDto>>(sensors);
         }
@@ -60,23 +55,30 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<List<SensorDto>> GetSensors(List<int> DeviceIds)
         {
             var sensors = new List<SensorDto>();
-            foreach (var deviceId in DeviceIds.Where(d => _userService.HasAccessToDevice(d, AccessLevels.Read)))
-            {
-                var res = await _measurementRepository.GetSensorsByDeviceIdAsync(deviceId);
-                sensors.AddRange(_mapper.Map<List<SensorDto>>(res));
-            }
-            return sensors;
+            var res = await _deviceRepository.GetSensorsByDeviceIdsAsync(DeviceIds.Where(d => _userService.HasAccessToDevice(d, AccessLevels.Read)).ToList());
+            return _mapper.Map<List<SensorDto>>(res);
         }
 
-        public async Task<DeviceDto> GetDevice(string deviceIdentifier)
+        public async Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel)
         {
-            var device = await _measurementRepository.GetDeviceByIdentifier(deviceIdentifier);
-            if (device == null || !_userService.HasAccessToDevice(device.Id, AccessLevels.Read))
+            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
+            if (device == null || !_userService.HasAccessToDevice(device.Id, accessLevel))
             {
                 throw new UnauthorizedAccessException();
             }
             var mapped = _mapper.Map<DeviceDto>(device);
             return mapped;
+        }
+
+        public async Task<SensorDto> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel)
+        {
+            var sensor = await _deviceRepository.GetSensor(deviceId, sensorIdInternal);
+
+            if (sensor == null || !_userService.HasAccessToSensor(sensor.Id, accessLevel))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            return _mapper.Map<SensorDto>(sensor);
         }
     }
 }

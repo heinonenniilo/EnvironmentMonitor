@@ -46,7 +46,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet(template: "{deviceIdentifier}")]
         public async Task<DeviceDto> GetDevice([FromRoute] string deviceIdentifier)
         {
-            return await _deviceService.GetDevice(deviceIdentifier);
+            return await _deviceService.GetDevice(deviceIdentifier, AccessLevels.Read);
         }
 
         [HttpGet("sensors")]

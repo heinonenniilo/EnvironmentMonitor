@@ -19,22 +19,25 @@ namespace EnvironmentMonitor.Application.Services
         private const string TargetTimeZone = "FLE Standard Time";
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
+        private readonly IDeviceService _deviceService;
 
         public MeasurementService(
             IMeasurementRepository measurement,
             ILogger<MeasurementService> logger,
             IUserService userService,
-            IMapper mapper)
+            IMapper mapper,
+            IDeviceService deviceService)
         {
             _measurementRepository = measurement;
             _logger = logger;
             _userService = userService;
             _mapper = mapper;
+            _deviceService = deviceService;
         }
 
         public async Task AddMeasurements(SaveMeasurementsDto measurent)
         {
-            var device = await _measurementRepository.GetDeviceByIdentifier(measurent.DeviceId);
+            var device = await _deviceService.GetDevice(measurent.DeviceId, AccessLevels.Write);
             if (device == null)
             {
                 _logger.LogInformation($"Could not find device with device id '{measurent.DeviceId}'");
@@ -48,7 +51,7 @@ namespace EnvironmentMonitor.Application.Services
             var measurementsToAdd = new List<Measurement>();
             foreach (var row in measurent.Measurements)
             {
-                var sensor = await _measurementRepository.GetSensor(device.Id, row.SensorId);
+                var sensor = await _deviceService.GetSensor(device.Id, row.SensorId, AccessLevels.Write);
                 MeasurementType? type = await _measurementRepository.GetMeasurementType(row.TypeId);
                 if (type == null)
                 {

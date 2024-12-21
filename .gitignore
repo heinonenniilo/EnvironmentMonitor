@@ -397,5 +397,6 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /src/EnvironmentMonitor.HubObserver/Properties/ServiceDependencies
-/src/EnvironmentMonitor.HubObserver/Properties/serviceDependencies.EnvironmentMonitorHubObserver*.json
 /src/EnvironmentMonitor.WebApi/wwwroot
+/src/EnvironmentMonitor.WebApi/Properties/serviceDependencies*
+/src/EnvironmentMonitor.HubObserver/Properties/serviceDependencies*
