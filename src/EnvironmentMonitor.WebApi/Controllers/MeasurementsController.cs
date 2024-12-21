@@ -36,19 +36,5 @@ namespace EnvironmentMonitor.WebApi.Controllers
             var user = User;
             return await _measurementService.GetMeasurementsBySensor(model);
         }
-
-        [HttpGet("devices")]
-        public async Task<List<DeviceDto>> GetDevices()
-        {
-            var result = await _measurementService.GetDevices();
-            return result;
-        } 
-
-        [HttpGet("sensors")]
-        public async Task<List<SensorDto>> GetSensors([FromQuery] List<string> deviceIds)
-        {
-            var result = await _measurementService.GetSensors(deviceIds);
-            return result;
-        }
     }
 }

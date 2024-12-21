@@ -1,4 +1,5 @@
-﻿using EnvironmentMonitor.Application.DTOs;
+﻿using AutoMapper;
+using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
@@ -17,20 +18,26 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILogger<MeasurementService> _logger;
         private const string TargetTimeZone = "FLE Standard Time";
         private readonly IUserService _userService;
+        private readonly IMapper _mapper;
+        private readonly IDeviceService _deviceService;
 
         public MeasurementService(
             IMeasurementRepository measurement,
             ILogger<MeasurementService> logger,
-            IUserService userService)
+            IUserService userService,
+            IMapper mapper,
+            IDeviceService deviceService)
         {
             _measurementRepository = measurement;
             _logger = logger;
             _userService = userService;
+            _mapper = mapper;
+            _deviceService = deviceService;
         }
 
         public async Task AddMeasurements(SaveMeasurementsDto measurent)
         {
-            var device = await _measurementRepository.GetDeviceByIdentifier(measurent.DeviceId);
+            var device = await _deviceService.GetDevice(measurent.DeviceId, AccessLevels.Write);
             if (device == null)
             {
                 _logger.LogInformation($"Could not find device with device id '{measurent.DeviceId}'");
@@ -44,7 +51,7 @@ namespace EnvironmentMonitor.Application.Services
             var measurementsToAdd = new List<Measurement>();
             foreach (var row in measurent.Measurements)
             {
-                var sensor = await _measurementRepository.GetSensor(device.Id, row.SensorId);
+                var sensor = await _deviceService.GetSensor(device.Id, row.SensorId, AccessLevels.Write);
                 MeasurementType? type = await _measurementRepository.GetMeasurementType(row.TypeId);
                 if (type == null)
                 {
@@ -81,32 +88,13 @@ namespace EnvironmentMonitor.Application.Services
             }
         }
 
-        public async Task<List<DeviceDto>> GetDevices()
-        {
-            var devices = await _measurementRepository.GetDevices();
-            devices = devices.Where(x => _userService.HasAccessToDevice(x.Id, AccessLevels.Read)).ToList();
-            return devices.Select(x => new DeviceDto()
-            {
-                Id = x.Id,
-                Name = x.Name,
-                DeviceIdentifier = x.DeviceIdentifier,
-            }).ToList();
-        }
-
         public async Task<MeasurementsModel> GetMeasurements(GetMeasurementsModel model)
         {
             if (model.SensorIds.Any(s => !_userService.HasAccessToSensor(s, AccessLevels.Read)))
             {
                 throw new UnauthorizedAccessException();
             }
-            var rows = (await _measurementRepository.GetMeasurements(model)).Select(x => new MeasurementDto()
-            {
-                SensorId = x.SensorId,
-                SensorValue = x.Value,
-                TypeId = x.TypeId,
-                TimestampUtc = x.TimestampUtc,
-                Timestamp = x.Timestamp,
-            }).ToList();
+            var rows = _mapper.Map<List<MeasurementDto>>(await _measurementRepository.GetMeasurements(model));
             return new MeasurementsModel()
             {
                 Measurements = rows,
@@ -114,60 +102,31 @@ namespace EnvironmentMonitor.Application.Services
             };
         }
 
-        public async Task<List<SensorDto>> GetSensors(List<string> DeviceIdentifier)
-        {
-            var sensors = await _measurementRepository.GetSensorsByDeviceIdentifiers(DeviceIdentifier);
-            sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Id, AccessLevels.Read));
-            return sensors.Select(x => new SensorDto()
-            {
-                Id = x.Id,
-                DeviceId = x.DeviceId,
-                Name = x.Name,
-                SensorId = x.SensorId,
-                ScaleMax = x.ScaleMax,
-                ScaleMin = x.ScaleMin,
-            }).ToList();
-        }
-
-        public async Task<List<SensorDto>> GetSensors(List<int> DeviceIds)
-        {
-            var sensors = new List<SensorDto>();
-            foreach (var deviceId in DeviceIds)
-            {
-                var res = await _measurementRepository.GetSensorsByDeviceIdAsync(0);
-                sensors.AddRange(res.Select(x => new SensorDto()
-                {
-                    Id = x.Id,
-                    DeviceId = x.DeviceId,
-                    Name = x.Name,
-                    SensorId = x.SensorId,
-                    ScaleMax = x.ScaleMax,
-                    ScaleMin = x.ScaleMin,
-                }));
-            }
-            return sensors;
-        }
-
         public async Task<MeasurementsBySensorModel> GetMeasurementsBySensor(GetMeasurementsModel model)
         {
             var returnList = new List<MeasurementsBySensorDto>();
             _logger.LogInformation("Getting measurements by sensor");
+            var accessibleSensorIds = model.SensorIds.Where(d => _userService.HasAccessToSensor(d, AccessLevels.Read)).ToList();
+
+            var result = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
+            {
+                SensorIds = accessibleSensorIds,
+                To = model.To,
+                From = model.From,
+                LatestOnly = model.LatestOnly,
+            });
+
+            var measurements = _mapper.Map<List<MeasurementDto>>(result);
+            var info = GetMeasurementInfo(measurements, accessibleSensorIds);
             foreach (var sensorId in model.SensorIds)
             {
-                var measurements = await GetMeasurements(new GetMeasurementsModel()
-                {
-                    SensorIds = [sensorId],
-                    To = model.To,
-                    From = model.From,
-                    LatestOnly = model.LatestOnly
-                });
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
                     SensorId = sensorId,
-                    Measurements = measurements.Measurements,
-                    LatestValues = measurements.MeasurementsInfo?.FirstOrDefault().LatestValues ?? [],
-                    MaxValues = measurements.MeasurementsInfo?.FirstOrDefault().MaxValues ?? [],
-                    MinValues = measurements.MeasurementsInfo?.FirstOrDefault().MinValues ?? []
+                    Measurements = measurements.Where(x => x.SensorId == sensorId).ToList(),
+                    LatestValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.LatestValues ?? [],
+                    MaxValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MaxValues ?? [],
+                    MinValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MinValues ?? []
                 };
                 returnList.Add(rowToAdd);
             }

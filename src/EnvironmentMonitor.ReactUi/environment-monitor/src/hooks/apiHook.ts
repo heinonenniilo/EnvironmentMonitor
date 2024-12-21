@@ -12,6 +12,7 @@ import moment from "moment";
 interface ApiHook {
   userHook: userHook;
   measureHook: measureHook;
+  deviceHook: deviceHook;
 }
 
 interface userHook {
@@ -34,6 +35,10 @@ interface measureHook {
     to?: moment.Moment,
     latestOnly?: boolean
   ) => Promise<MeasurementsViewModel | undefined>;
+}
+
+interface deviceHook {
+  rebootDevice: (deviceIdentifier: string) => Promise<boolean>;
 }
 
 const apiClient = axios.create({
@@ -92,7 +97,7 @@ export const useApiHook = (): ApiHook => {
       getDevices: async () => {
         try {
           let res = await apiClient.get<any, AxiosResponse<Device[]>>(
-            "/api/Measurements/devices"
+            "/api/devices"
           );
           return res.data;
         } catch (ex: any) {
@@ -103,7 +108,7 @@ export const useApiHook = (): ApiHook => {
       getSensors: async (deviceIds: string[]) => {
         try {
           let res = await apiClient.get<any, AxiosResponse<Sensor[]>>(
-            `/api/Measurements/sensors/`,
+            `/api/devices/sensors/`,
             {
               params: {
                 deviceIds: deviceIds,
@@ -160,6 +165,24 @@ export const useApiHook = (): ApiHook => {
         } catch (ex: any) {
           console.error(ex);
           return undefined;
+        }
+      },
+    },
+    deviceHook: {
+      rebootDevice: async (deviceIdentifier: string) => {
+        try {
+          let res = await apiClient.post("/api/devices/reboot", {
+            deviceIdentifier: deviceIdentifier,
+          });
+
+          if (res.status === 200) {
+            return true;
+          } else {
+            return false;
+          }
+        } catch (ex: any) {
+          console.log(ex);
+          return false;
         }
       },
     },

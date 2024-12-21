@@ -84,6 +84,15 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               Measurements
             </MenuItem>
           </AuthorizedComponent>
+          <AuthorizedComponent requiredRole={RoleNames.Admin}>
+            <MenuItem
+              onClick={() => {
+                onNavigate(routes.devices);
+              }}
+            >
+              Devices
+            </MenuItem>
+          </AuthorizedComponent>
         </MenuArea>
         <Box>
           <MenuArea>

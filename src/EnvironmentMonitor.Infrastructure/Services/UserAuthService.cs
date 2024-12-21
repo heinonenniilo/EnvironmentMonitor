@@ -21,15 +21,15 @@ namespace EnvironmentMonitor.Infrastructure.Services
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IMeasurementRepository _measurementRepository;
+        private readonly IDeviceRepository _deviceRepository;
         private readonly ILogger<UserAuthService> _logger;
 
         public UserAuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, 
-            IMeasurementRepository measurementRepository, ILogger<UserAuthService> logger)
+            IDeviceRepository deviceRepository, ILogger<UserAuthService> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _measurementRepository = measurementRepository;
+            _deviceRepository = deviceRepository;
             _logger = logger;
         }
         public async Task Login(LoginModel model)
@@ -131,13 +131,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private async Task<List<Claim>> GetSensorClaims(ApplicationUser user)
         {
             var claims = await _userManager.GetClaimsAsync(user);
-            var deviceIds = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => int.Parse (x.Value));
-            var matchingSensors = new List<Sensor>();
-            foreach (var deviceId in deviceIds)
-            {
-                var sensors = await _measurementRepository.GetSensorsByDeviceIdAsync(deviceId);
-                matchingSensors.AddRange(sensors);
-            }
+            var deviceIds = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => int.Parse(x.Value));
+            var matchingSensors = await _deviceRepository.GetSensorsByDeviceIdsAsync(deviceIds.ToList());
             return matchingSensors.Select(x => new Claim(EntityRoles.Sensor.ToString(), x.Id.ToString())).ToList();
         }
     }
