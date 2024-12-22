@@ -1,20 +1,31 @@
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import { useSelector } from "react-redux";
-import { getDevices } from "../reducers/measurementReducer";
-import { Button, List, ListItem, ListItemText } from "@mui/material";
+import {
+  Button,
+  Checkbox,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from "@mui/material";
 import { ConfirmationDialog } from "../framework/ConfirmationDialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Device } from "../models/device";
 import { useApiHook } from "../hooks/apiHook";
+import { DeviceInfo } from "../models/deviceInfo";
+import { getFormattedDate } from "../utilities/datetimeUtils";
 
 export const DevicesView: React.FC = () => {
-  const devices = useSelector(getDevices);
   const [selectedDevice, setSelectedDevice] = useState<Device | undefined>(
     undefined
   );
 
   const [isLoading, setIsLoading] = useState(false);
   const deviceHook = useApiHook().deviceHook;
+
+  const [deviceInfos, setDeviceInfos] = useState<DeviceInfo[]>([]);
 
   const getDialogTitle = () => {
     return `Reboot ${selectedDevice?.name}?`;
@@ -26,6 +37,30 @@ export const DevicesView: React.FC = () => {
     }
 
     return `Name: ${selectedDevice.name}, Identifier: ${selectedDevice?.deviceIdentifier}, Id: ${selectedDevice.id}?`;
+  };
+
+  useEffect(() => {
+    if (deviceInfos.length === 0 && deviceHook) {
+      getDevices();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceInfos]);
+
+  const getDevices = () => {
+    setIsLoading(true);
+    deviceHook
+      .getDeviceInfos()
+      .then((res) => {
+        if (res) {
+          setDeviceInfos(res);
+        }
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const rebootDevice = () => {
@@ -41,6 +76,7 @@ export const DevicesView: React.FC = () => {
       .then((r) => {
         if (r) {
           alert("Message sent to device");
+          getDevices();
         } else {
           alert("Sending the message failed!");
         }
@@ -65,29 +101,57 @@ export const DevicesView: React.FC = () => {
         title={getDialogTitle()}
         body={getDialogBody()}
       />
-      <List>
-        {devices.map((device) => (
-          <ListItem
-            key={device.id}
-            sx={{ display: "flex", flexDirection: "row", maxWidth: "400px" }}
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-          >
-            <ListItemText primary={device.name} />
-            <Button
-              variant="contained"
-              onClick={() => {
-                setSelectedDevice(device);
-              }}
-            >
-              Reboot
-            </Button>
-          </ListItem>
-        ))}
-      </List>
+      <TableContainer component={Paper}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Reboot</TableCell>
+              <TableCell>Visible</TableCell>
+              <TableCell>Online Since</TableCell>
+              <TableCell>Rebooted On</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {deviceInfos.map((info) => (
+              <TableRow
+                key={info.device.id}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+              >
+                <TableCell>{info.device.name}</TableCell>
+                <TableCell>
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      setSelectedDevice(info.device);
+                    }}
+                  >
+                    Reboot
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <Checkbox
+                    checked={info.device.visible}
+                    size="small"
+                    disabled
+                    sx={{ padding: "0px" }}
+                  />
+                </TableCell>
+                <TableCell>
+                  {info.onlineSince
+                    ? getFormattedDate(info.onlineSince, true)
+                    : ""}
+                </TableCell>
+                <TableCell>
+                  {info.rebootedOn
+                    ? getFormattedDate(info.rebootedOn, true)
+                    : ""}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </AppContentWrapper>
   );
 };

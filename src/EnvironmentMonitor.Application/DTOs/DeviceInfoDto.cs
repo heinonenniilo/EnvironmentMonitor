@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EnvironmentMonitor.Application.Mappings;
 using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,17 +10,15 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class DeviceDto : IMapFrom<Device>
+    public class DeviceInfoDto : IMapFrom<Device>
     {
-        public int Id { get; set; }
-        public string DeviceIdentifier { get; set; }
-        public string Name { get; set; }
-
-        public bool Visible { get; set; }
+        public DeviceDto Device { get; set; }
+        public DateTime? OnlineSince { get; set; }
+        public DateTime? RebootedOn { get; set; }
 
         public void Mapping(Profile profile)
         {
-            profile.CreateMap<Device, DeviceDto>().ReverseMap();
+            profile.CreateMap<DeviceInfo, DeviceInfoDto>().ReverseMap();
         }
     }
 }

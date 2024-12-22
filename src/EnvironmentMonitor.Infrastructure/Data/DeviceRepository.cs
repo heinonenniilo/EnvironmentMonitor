@@ -2,6 +2,7 @@
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -76,6 +77,36 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 await _context.SaveChangesAsync();
             }
             return toAdd;
+        }
+
+        public async Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible)
+        {
+            var devices = await GetDevices(ids, onlyVisible);
+            return await GetDeviceInfos(devices);
+        }
+
+        public async Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible)
+        {
+            var devices = await GetDevices(identifiers, onlyVisible);
+            return await GetDeviceInfos(devices);   
+        }
+
+        private async Task<List<DeviceInfo>> GetDeviceInfos(IEnumerable<Device> devices)
+        {
+            var returnList = new List<DeviceInfo>();
+            var deviceIds = devices.Select(x => x.Id).ToList();
+            var query = await _context.DeviceEvents.Where(x => deviceIds.Contains(x.DeviceId)).GroupBy(x => new { x.DeviceId, x.TypeId }).Select(x => new
+            {
+                x.Key.DeviceId,
+                x.Key.TypeId,
+                TimeStamp = x.Max(d => d.TimeStamp)
+            }).ToListAsync();
+            return devices.Select(device => new DeviceInfo()
+            {
+                Device = device,
+                OnlineSince = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.Online)?.TimeStamp,
+                RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp
+            }).ToList();
         }
     }
 }

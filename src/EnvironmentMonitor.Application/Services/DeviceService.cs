@@ -104,5 +104,11 @@ namespace EnvironmentMonitor.Application.Services
 
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
+
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible)
+        {
+            var infos = await _deviceRepository.GetDeviceInfo(_userService.IsAdmin ? null : _userService.GetDevices(), onlyVisible);
+            return _mapper.Map<List<DeviceInfoDto>>(infos);
+        }
     }
 }

@@ -43,6 +43,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return result;
         }
 
+        [HttpGet(template: "info")]
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos()
+        {
+            var result = await _deviceService.GetDeviceInfos(false); // Also the ones marked as non-visible
+            return result;
+        }
+
         [HttpGet(template: "{deviceIdentifier}")]
         public async Task<DeviceDto> GetDevice([FromRoute] string deviceIdentifier)
         {
