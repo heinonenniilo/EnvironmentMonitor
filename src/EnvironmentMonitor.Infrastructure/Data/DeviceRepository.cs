@@ -53,7 +53,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return sensors;
         }
 
-        public async Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges = true)
+        public async Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? dateTimeUtc)
         {
             var device = await _context.Devices.FindAsync(deviceId);
             if (device == null)
@@ -61,14 +61,14 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 throw new ArgumentException("Not found");
             }
             var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone);
-            var utcNow = DateTime.UtcNow;
+            var utcDate = dateTimeUtc ?? DateTime.UtcNow;
             var toAdd = new DeviceEvent()
             {
                 DeviceId = device.Id,
                 TypeId = (int)type,
                 Message = message,
-                TimeStampUtc = utcNow,
-                TimeStamp = TimeZoneInfo.ConvertTimeFromUtc(utcNow, TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone)),
+                TimeStampUtc = utcDate,
+                TimeStamp = TimeZoneInfo.ConvertTimeFromUtc(utcDate, TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone)),
             };
             await _context.DeviceEvents.AddAsync(toAdd);
             if (saveChanges)

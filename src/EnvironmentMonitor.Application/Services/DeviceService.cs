@@ -88,7 +88,7 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<SensorDto>(sensor);
         }
 
-        public async Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges)
+        public async Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null)
         {
             if (!_userService.HasAccessToDevice(deviceId, AccessLevels.Write))
             {
@@ -102,7 +102,7 @@ namespace EnvironmentMonitor.Application.Services
                 throw new ArgumentException("Not found");
             }
 
-            await _deviceRepository.AddEvent(deviceId, type, message, saveChanges);
+            await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
     }
 }
