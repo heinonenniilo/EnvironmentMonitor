@@ -94,7 +94,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var devices = await _deviceRepository.GetDevices([deviceId]);
+            var devices = await _deviceRepository.GetDevices([deviceId], false);
             var device = devices.FirstOrDefault();
             if (device == null)
             {

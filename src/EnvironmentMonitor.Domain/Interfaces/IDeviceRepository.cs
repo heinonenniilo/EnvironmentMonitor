@@ -11,8 +11,8 @@ namespace EnvironmentMonitor.Domain.Interfaces
     public interface IDeviceRepository
     {
         Task<Device?> GetDeviceByIdentifier(string deviceId);
-        Task<List<Device>> GetDevices(List<int>? ids = null);
-        Task<List<Device>> GetDevices(List<string>? identifiers = null);
+        Task<List<Device>> GetDevices(List<int>? ids = null, bool onlyVisible = true);
+        Task<List<Device>> GetDevices(List<string>? identifiers = null, bool onlyVisible = true);
 
         Task<IEnumerable<Sensor>> GetSensorsByDeviceIdsAsync(List<int> deviceId);
         Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers);

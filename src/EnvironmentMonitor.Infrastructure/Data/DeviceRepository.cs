@@ -23,15 +23,15 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return await _context.Devices.FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
         }
 
-        public async Task<List<Device>> GetDevices(List<int>? ids = null)
+        public async Task<List<Device>> GetDevices(List<int>? ids = null, bool onlyVisible = true)
         {
-            var devices = await _context.Devices.Where(d => (ids == null || ids.Contains(d.Id)) && d.Visible).ToListAsync();
+            var devices = await _context.Devices.Where(d => (ids == null || ids.Contains(d.Id)) && (!onlyVisible || d.Visible)).ToListAsync();
             return devices;
         }
 
-        public async Task<List<Device>> GetDevices(List<string>? identifiers = null)
+        public async Task<List<Device>> GetDevices(List<string>? identifiers = null, bool onlyVisible = true)
         {
-            var devices = await _context.Devices.Where(d => (identifiers == null || identifiers.Contains(d.DeviceIdentifier)) && d.Visible).ToListAsync();
+            var devices = await _context.Devices.Where(d => (identifiers == null || identifiers.Contains(d.DeviceIdentifier)) && (!onlyVisible || d.Visible)).ToListAsync();
             return devices;
         }
 
