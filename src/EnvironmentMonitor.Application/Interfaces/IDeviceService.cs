@@ -13,8 +13,10 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task Reboot(string deviceIdentifier);
         public Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel);
         public Task<List<DeviceDto>> GetDevices();
+        public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible);
         public Task<List<SensorDto>> GetSensors(List<string> deviceIdentifiers);
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
         public Task<SensorDto> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
+        public Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null);
     }
 }

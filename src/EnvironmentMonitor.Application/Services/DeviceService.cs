@@ -35,8 +35,15 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
+            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
+            if (device == null)
+            {
+                throw new ArgumentException($"Device with identifier: '{deviceIdentifier}' not found.");
+            }
+
             _logger.LogInformation($"Trying to reboot device with identifier '{deviceIdentifier}'");
             await _messageService.SendMessageToDevice(deviceIdentifier, "REBOOT");
+            await AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true);
         }
 
         public async Task<List<DeviceDto>> GetDevices()
@@ -79,6 +86,29 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
             return _mapper.Map<SensorDto>(sensor);
+        }
+
+        public async Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null)
+        {
+            if (!_userService.HasAccessToDevice(deviceId, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var devices = await _deviceRepository.GetDevices([deviceId], false);
+            var device = devices.FirstOrDefault();
+            if (device == null)
+            {
+                _logger.LogError($"Could not find device with id: {deviceId}");
+                throw new ArgumentException("Not found");
+            }
+
+            await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
+        }
+
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible)
+        {
+            var infos = await _deviceRepository.GetDeviceInfo(_userService.IsAdmin ? null : _userService.GetDevices(), onlyVisible);
+            return _mapper.Map<List<DeviceInfoDto>>(infos);
         }
     }
 }

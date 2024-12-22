@@ -6,13 +6,11 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Entities
 {
-    public class Device
+    public class DeviceEventType
     {
         public int Id { get; set; }
-        public required string DeviceIdentifier { get; set; }
         public string Name { get; set; }
-        public ICollection<Sensor> Sensors { get; set; }
-        public ICollection<DeviceEvent> Events { get; set; }
-        public bool Visible { get; set; }
+        public string Description { get; set; }
+        public List<DeviceEvent> Events { get; set; } = new List<DeviceEvent>();
     }
 }

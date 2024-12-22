@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
@@ -16,7 +17,6 @@ namespace EnvironmentMonitor.Application.Services
     {
         private readonly IMeasurementRepository _measurementRepository;
         private readonly ILogger<MeasurementService> _logger;
-        private const string TargetTimeZone = "FLE Standard Time";
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly IDeviceService _deviceService;
@@ -35,21 +35,21 @@ namespace EnvironmentMonitor.Application.Services
             _deviceService = deviceService;
         }
 
-        public async Task AddMeasurements(SaveMeasurementsDto measurent)
+        public async Task AddMeasurements(SaveMeasurementsDto measurement)
         {
-            var device = await _deviceService.GetDevice(measurent.DeviceId, AccessLevels.Write);
+            var device = await _deviceService.GetDevice(measurement.DeviceId, AccessLevels.Write);
             if (device == null)
             {
-                _logger.LogInformation($"Could not find device with device id '{measurent.DeviceId}'");
+                _logger.LogInformation($"Could not find device with device id '{measurement.DeviceId}'");
                 return;
             }
             if (!_userService.HasAccessToDevice(device.Id, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException("No Access");
             }
-            _logger.LogInformation($"Found device with ID: {device.Id} for device id '{measurent.DeviceId}'");
+            _logger.LogInformation($"Found device with ID: {device.Id} for device id '{measurement.DeviceId}'");
             var measurementsToAdd = new List<Measurement>();
-            foreach (var row in measurent.Measurements)
+            foreach (var row in measurement.Measurements)
             {
                 var sensor = await _deviceService.GetSensor(device.Id, row.SensorId, AccessLevels.Write);
                 MeasurementType? type = await _measurementRepository.GetMeasurementType(row.TypeId);
@@ -79,6 +79,10 @@ namespace EnvironmentMonitor.Application.Services
             if (measurementsToAdd.Any())
             {
                 _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device: {device.Id} / '{device.Name}'");
+                if (measurement.FirstMessage)
+                {
+                    await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
+                }
                 await _measurementRepository.AddMeasurements(measurementsToAdd);
                 _logger.LogInformation("Measurements added");
             }
@@ -138,7 +142,7 @@ namespace EnvironmentMonitor.Application.Services
 
         private DateTime UtcToLocalTime(DateTime utcDateTime)
         {
-            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(TargetTimeZone);
+            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone);
             return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, targetTimeZone);
         }
 

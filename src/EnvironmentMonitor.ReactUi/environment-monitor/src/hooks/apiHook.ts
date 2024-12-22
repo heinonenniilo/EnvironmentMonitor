@@ -8,6 +8,7 @@ import {
   MeasurementsViewModel,
 } from "../models/measurementsBySensor";
 import moment from "moment";
+import { DeviceInfo } from "../models/deviceInfo";
 
 interface ApiHook {
   userHook: userHook;
@@ -39,6 +40,7 @@ interface measureHook {
 
 interface deviceHook {
   rebootDevice: (deviceIdentifier: string) => Promise<boolean>;
+  getDeviceInfos: () => Promise<DeviceInfo[] | undefined>;
 }
 
 const apiClient = axios.create({
@@ -183,6 +185,17 @@ export const useApiHook = (): ApiHook => {
         } catch (ex: any) {
           console.log(ex);
           return false;
+        }
+      },
+      getDeviceInfos: async () => {
+        try {
+          let res = await apiClient.get<any, AxiosResponse<DeviceInfo[]>>(
+            "/api/devices/info"
+          );
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          return undefined;
         }
       },
     },
