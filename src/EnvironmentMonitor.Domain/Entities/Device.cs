@@ -12,7 +12,7 @@ namespace EnvironmentMonitor.Domain.Entities
         public required string DeviceIdentifier { get; set; }
         public string Name { get; set; }
         public ICollection<Sensor> Sensors { get; set; }
-
         public ICollection<DeviceEvent> Events { get; set; }
+        public bool Visible { get; set; }
     }
 }

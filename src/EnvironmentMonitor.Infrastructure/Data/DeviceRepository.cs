@@ -25,13 +25,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<List<Device>> GetDevices(List<int>? ids = null)
         {
-            var devices = await _context.Devices.Where(d => ids == null || ids.Contains(d.Id)).ToListAsync();
+            var devices = await _context.Devices.Where(d => (ids == null || ids.Contains(d.Id)) && d.Visible).ToListAsync();
             return devices;
         }
 
         public async Task<List<Device>> GetDevices(List<string>? identifiers = null)
         {
-            var devices = await _context.Devices.Where(d => identifiers == null || identifiers.Contains(d.DeviceIdentifier)).ToListAsync();
+            var devices = await _context.Devices.Where(d => (identifiers == null || identifiers.Contains(d.DeviceIdentifier)) && d.Visible).ToListAsync();
             return devices;
         }
 

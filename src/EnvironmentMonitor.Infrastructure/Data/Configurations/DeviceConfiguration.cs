@@ -24,6 +24,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 
             builder.HasIndex(d => d.Name).IsUnique();
 
+            builder.Property(x => x.Visible).HasDefaultValue(true);
+
             builder.HasMany(d => d.Sensors)
                 .WithOne(s => s.Device)
                 .HasForeignKey(s => s.DeviceId)
