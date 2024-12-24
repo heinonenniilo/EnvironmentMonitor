@@ -3,6 +3,7 @@ using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDeviceRepository _deviceRepository;
         private readonly IMapper _mapper;
 
-        public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService, 
+        public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService,
             IDeviceRepository deviceRepository, IMapper mapper)
         {
             _messageService = messageService;
@@ -44,6 +45,40 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Trying to reboot device with identifier '{deviceIdentifier}'");
             await _messageService.SendMessageToDevice(deviceIdentifier, "REBOOT");
             await AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true);
+        }
+
+        public async Task SetMotionControlStatus(string deviceIdentifier, MotionControlStatus status)
+        {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
+            if (device == null)
+            {
+                throw new ArgumentException($"Device with identifier: '{deviceIdentifier}' not found.");
+            }
+            var message = $"MOTIONCONTROLSTATUS:{(int)status}";
+            _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
+            await _messageService.SendMessageToDevice(deviceIdentifier, message);
+            await AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control status set to: {(int)status} ({status.ToString()})", true);
+        }
+
+        public async Task SetMotionControlDelay(string deviceIdentifier, long delayMs)
+        {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
+            if (device == null)
+            {
+                throw new ArgumentException($"Device with identifier: '{deviceIdentifier}' not found.");
+            }
+            var message = $"MOTIONCONTROLDELAY:{delayMs}";
+            _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
+            await _messageService.SendMessageToDevice(deviceIdentifier, message);
+            await AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control delay set to: {(int)delayMs} ms", true);
         }
 
         public async Task<List<DeviceDto>> GetDevices()
@@ -105,9 +140,18 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
 
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible)
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<string>? identifiers)
         {
-            var infos = await _deviceRepository.GetDeviceInfo(_userService.IsAdmin ? null : _userService.GetDevices(), onlyVisible);
+            _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
+            var infos = new List<DeviceInfo>();
+            if (identifiers?.Any() == true)
+            {
+                infos = (await _deviceRepository.GetDeviceInfo(identifiers, onlyVisible)).Where(d => _userService.HasAccessToDevice(d.Device.Id, AccessLevels.Read)).ToList();
+            }
+            else
+            {
+                infos = await _deviceRepository.GetDeviceInfo(_userService.IsAdmin ? null : _userService.GetDevices(), onlyVisible);
+            }
             return _mapper.Map<List<DeviceInfoDto>>(infos);
         }
     }

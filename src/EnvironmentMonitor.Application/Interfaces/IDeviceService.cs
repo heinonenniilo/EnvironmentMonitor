@@ -11,9 +11,11 @@ namespace EnvironmentMonitor.Application.Interfaces
     public interface IDeviceService
     {
         public Task Reboot(string deviceIdentifier);
+        public Task SetMotionControlStatus(string deviceIdentifier, MotionControlStatus status);
+        public Task SetMotionControlDelay(string deviceIdentifier, long delayMs);
         public Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel);
         public Task<List<DeviceDto>> GetDevices();
-        public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible);
+        public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<string>? identifiers);
         public Task<List<SensorDto>> GetSensors(List<string> deviceIdentifiers);
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
         public Task<SensorDto> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);

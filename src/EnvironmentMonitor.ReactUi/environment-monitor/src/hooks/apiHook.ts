@@ -41,6 +41,15 @@ interface measureHook {
 interface deviceHook {
   rebootDevice: (deviceIdentifier: string) => Promise<boolean>;
   getDeviceInfos: () => Promise<DeviceInfo[] | undefined>;
+  getDeviceInfo: (identifier: string) => Promise<DeviceInfo>;
+  setMotionControlState: (
+    identifier: string,
+    state: number
+  ) => Promise<boolean>;
+  setMotionControlDelay: (
+    identifier: string,
+    delay: number
+  ) => Promise<boolean>;
 }
 
 const apiClient = axios.create({
@@ -196,6 +205,34 @@ export const useApiHook = (): ApiHook => {
         } catch (ex: any) {
           console.error(ex);
           return undefined;
+        }
+      },
+      getDeviceInfo: async (identifier: string) => {
+        let res = await apiClient.get<any, AxiosResponse<DeviceInfo>>(
+          `/api/devices/info/${identifier}`
+        );
+        return res.data;
+      },
+      setMotionControlState: async (identifier: string, state: number) => {
+        let res = await apiClient.post("/api/devices/motion-control-status", {
+          deviceIdentifier: identifier,
+          mode: state,
+        });
+        if (res.status === 200) {
+          return true;
+        } else {
+          return false;
+        }
+      },
+      setMotionControlDelay: async (identifier: string, delay: number) => {
+        let res = await apiClient.post("/api/devices/motion-control-delay", {
+          deviceIdentifier: identifier,
+          DelayMs: delay,
+        });
+        if (res.status === 200) {
+          return true;
+        } else {
+          return false;
         }
       },
     },

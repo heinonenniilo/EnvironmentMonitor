@@ -10,4 +10,14 @@ namespace EnvironmentMonitor.Domain.Models
     {
         public required string DeviceIdentifier { get; set; }
     }
+
+    public class SetMotionControlStatusMessage : MessageDeviceModel
+    {
+        public int Mode { get; set; }
+    }
+
+    public class SetMotionControlDelayMessag : MessageDeviceModel
+    {
+        public long DelayMs { get; set; }
+    }
 }

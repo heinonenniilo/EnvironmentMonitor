@@ -4,4 +4,5 @@ export const routes = {
   measurementsByDevice: "/measurements/:deviceId",
   dashboard: "/dashboard",
   devices: "/devices",
+  deviceView: "/devices/:deviceId",
 };
