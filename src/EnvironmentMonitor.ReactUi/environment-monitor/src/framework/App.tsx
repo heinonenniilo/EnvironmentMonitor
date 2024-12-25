@@ -20,6 +20,11 @@ import {
   setDevices,
   setSensors,
 } from "../reducers/measurementReducer";
+import {
+  getConfirmationDialog,
+  setConfirmDialog,
+} from "../reducers/userInterfaceReducer";
+import { ConfirmationDialog } from "./ConfirmationDialog";
 
 interface AppProps {
   children: React.ReactNode;
@@ -38,6 +43,7 @@ export const App: React.FC<AppProps> = (props) => {
   const [devicesFetched, setDevicesFetched] = useState(false);
 
   const devices = useSelector(getDevices);
+  const confirmationDialogProps = useSelector(getConfirmationDialog);
 
   const handleLogOut = () => {
     console.info("Handling log out");
@@ -112,6 +118,20 @@ export const App: React.FC<AppProps> = (props) => {
           >
             <CircularProgress color="inherit" />
           </Backdrop>
+          <ConfirmationDialog
+            isOpen={confirmationDialogProps !== undefined}
+            body={confirmationDialogProps?.body ?? ""}
+            title={confirmationDialogProps?.title ?? ""}
+            onConfirm={() => {
+              if (confirmationDialogProps?.onConfirm) {
+                confirmationDialogProps.onConfirm();
+              }
+              dispath(setConfirmDialog(undefined));
+            }}
+            onClose={() => {
+              dispath(setConfirmDialog(undefined));
+            }}
+          />
           {isLoggedIn ? (
             <Container maxWidth={"xl"} sx={{ top: 0 }}>
               <MenuBar

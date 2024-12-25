@@ -1,6 +1,4 @@
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-
-import { ConfirmationDialog } from "../framework/ConfirmationDialog";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useApiHook } from "../hooks/apiHook";
@@ -8,24 +6,17 @@ import { DeviceInfo } from "../models/deviceInfo";
 import { SensorTable } from "../components/SensorTable";
 import { DeviceTable } from "../components/DeviceTable";
 import { DeviceControlComponent } from "../components/DeviceCommandButtons";
+import { useDispatch } from "react-redux";
+import { setConfirmDialog } from "../reducers/userInterfaceReducer";
 
 export const DeviceView: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | undefined>(
     undefined
   );
 
-  const [motionControlStateToSet, setMotionControlStateToSet] = useState<
-    number | undefined
-  >(undefined);
-
-  const [motionControlDelayToSet, setMotionControlDelayToSet] = useState<
-    number | undefined
-  >(undefined);
-
-  const [dialogIsOpen, setDialogIsOpen] = useState(false);
-
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+  const dispatch = useDispatch();
 
   const { deviceId } = useParams<{ deviceId?: string }>();
   const deviceHook = useApiHook().deviceHook;
@@ -36,7 +27,6 @@ export const DeviceView: React.FC = () => {
       deviceHook
         .getDeviceInfo(deviceId)
         .then((res) => {
-          console.log(res);
           setSelectedDevice(res);
         })
         .catch((er) => {})
@@ -77,42 +67,11 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const sendCommand = () => {
-    if (motionControlDelayToSet !== undefined) {
-      setMotionControlDelay(motionControlDelayToSet);
-    } else if (motionControlStateToSet !== undefined) {
-      setMotionControlState(motionControlStateToSet);
-    }
-  };
-
-  const getTitle = () => {
-    if (motionControlStateToSet !== undefined) {
-      return `Set motion control mode? (${motionControlStateToSet})`;
-    } else if (motionControlDelayToSet !== undefined) {
-      return `Set delay to ${motionControlDelayToSet} ms?`;
-    }
-    return "Confirm";
-  };
-
   return (
     <AppContentWrapper
       titleParts={[{ text: `${selectedDevice?.device?.name ?? ""}` }]}
       isLoading={isLoading}
     >
-      <ConfirmationDialog
-        isOpen={dialogIsOpen}
-        onClose={() => {
-          setMotionControlDelayToSet(undefined);
-          setMotionControlStateToSet(undefined);
-          setDialogIsOpen(false);
-        }}
-        onConfirm={() => {
-          sendCommand();
-          setDialogIsOpen(false);
-        }}
-        title={getTitle()}
-        body={"Confirm?"}
-      />
       <DeviceTable
         title="Info"
         hideName
@@ -126,19 +85,37 @@ export const DeviceView: React.FC = () => {
         device={selectedDevice}
         reboot={() => {}}
         onSetOutStatic={(mode: boolean) => {
-          setMotionControlStateToSet(mode ? 1 : 0);
-          setMotionControlDelayToSet(undefined);
-          setDialogIsOpen(true);
+          dispatch(
+            setConfirmDialog({
+              onConfirm: () => {
+                setMotionControlState(mode ? 1 : 0);
+              },
+              title: `Set output as ${mode}`,
+              body: `Output pins will be set as ${mode}. Motion sensor trigger will be disabled`,
+            })
+          );
         }}
         onSetOutOnMotionControl={() => {
-          setMotionControlStateToSet(2);
-          setMotionControlDelayToSet(undefined);
-          setDialogIsOpen(true);
+          dispatch(
+            setConfirmDialog({
+              onConfirm: () => {
+                setMotionControlState(2);
+              },
+              title: `Enable motion control`,
+              body: "Output pins will be controlled by motion sensor",
+            })
+          );
         }}
         onSetMotionControlDelay={(delay: number) => {
-          setMotionControlStateToSet(undefined);
-          setMotionControlDelayToSet(delay);
-          setDialogIsOpen(true);
+          dispatch(
+            setConfirmDialog({
+              onConfirm: () => {
+                setMotionControlDelay(delay);
+              },
+              title: `Set motion control delay`,
+              body: `Motion control delay will be set to ${delay / 1000} s`,
+            })
+          );
         }}
       />
     </AppContentWrapper>
