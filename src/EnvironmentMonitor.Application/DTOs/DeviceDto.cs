@@ -17,6 +17,8 @@ namespace EnvironmentMonitor.Application.DTOs
         public List<SensorDto> Sensors { get; set; } = [];
         public bool Visible { get; set; }
 
+        public bool HasMotionSensor { get; set; }
+
         public void Mapping(Profile profile)
         {
             profile.CreateMap<Device, DeviceDto>().ReverseMap();

@@ -5,5 +5,6 @@ export interface Device {
   id: number;
   name: string;
   visible: boolean;
+  hasMotionSensor: boolean;
   sensors: Sensor[];
 }
