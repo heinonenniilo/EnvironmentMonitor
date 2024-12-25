@@ -13,6 +13,7 @@ export interface DeviceControlComponentProps {
   onSetOutOnMotionControl: () => void;
   onSetMotionControlDelay: (delay: number) => void;
   device: DeviceInfo | undefined;
+  title?: string;
 }
 
 export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
@@ -21,13 +22,17 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
   onSetMotionControlDelay,
   device,
   reboot,
+  title,
 }) => {
-  const title = `${device?.device.name} - commands`;
   const theme = useTheme();
   const drawDesktop = useMediaQuery(theme.breakpoints.up("lg"));
   return (
     <Box marginTop={2}>
-      <Typography variant="h6">{title}</Typography>
+      {title !== undefined ? (
+        <Typography variant="h6" marginBottom={2}>
+          {title}
+        </Typography>
+      ) : null}
       <Box
         display="flex"
         justifyContent="start"

@@ -4,6 +4,7 @@ import {
   CircularProgress,
   Container,
   Typography,
+  useMediaQuery,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -29,9 +30,10 @@ export interface AppContentWrapperProps {
   titleComponent?: JSX.Element;
   titleParts: TitlePart[];
   useSmallTitle?: boolean;
+  noMaxHeight?: boolean;
 }
 
-const PageContent = styled.div`
+const PageContent = styled.div<{ max?: number }>`
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -40,7 +42,6 @@ const PageContent = styled.div`
   max-width: 100%;
   overflow: scroll;
 `;
-// // min-height: ${uiConfig.pageContentMinHeight}; // TODO CHECK
 
 export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
   const isLoggingIn = false; //useSelector(getIsLoggingIn);
@@ -49,6 +50,9 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
 
   const hasLeftMenu = useSelector(getHasLeftMenu);
   const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
+
+  const isTallViewport = useMediaQuery("(min-height: 800px)");
+  console.log(isTallViewport);
 
   const handleMenuClose = () => {
     dispatch(toggleLeftMenuOpen(false));
@@ -119,6 +123,8 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
           flexGrow: 1,
           flexDirection: "column",
           minHeight: "calc(100vh - 300px)", // TODO Could be made dynamic
+          maxHeight: isTallViewport ? "calc(100vh - 100px)" : undefined,
+          overflow: "scroll",
           marginLeft: hasLeftMenu && isLeftMenuOpen ? `${menuWidth}px` : "0px",
           display: "flex",
           paddingLeft: 1,

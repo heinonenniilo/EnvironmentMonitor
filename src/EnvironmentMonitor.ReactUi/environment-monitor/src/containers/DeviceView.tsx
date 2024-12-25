@@ -10,6 +10,7 @@ import { useDispatch } from "react-redux";
 import { setConfirmDialog } from "../reducers/userInterfaceReducer";
 import { DeviceEventTable } from "../components/DeviceEventTable";
 import { DeviceEvent } from "../models/deviceEvent";
+import { Box } from "@mui/material";
 
 interface PromiseInfo {
   type: string;
@@ -138,58 +139,96 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const reboot = () => {
+    if (!selectedDevice) {
+      return;
+    }
+    setIsLoading(true);
+    deviceHook
+      .rebootDevice(selectedDevice?.device.deviceIdentifier)
+      .then((res) => {
+        getDeviceEvents(selectedDevice?.device.deviceIdentifier);
+      })
+      .catch((er) => {
+        console.error(er);
+        setIsLoading(false);
+      });
+  };
+
   return (
     <AppContentWrapper
       titleParts={[{ text: `${selectedDevice?.device?.name ?? ""}` }]}
       isLoading={isLoading}
     >
-      <DeviceTable
-        title="Info"
-        hideName
-        devices={selectedDevice ? [selectedDevice] : []}
-      />
-      <SensorTable
-        title="Sensors"
-        sensors={selectedDevice?.device?.sensors ?? []}
-      />
-      <DeviceControlComponent
-        device={selectedDevice}
-        reboot={() => {}}
-        onSetOutStatic={(mode: boolean) => {
-          dispatch(
-            setConfirmDialog({
-              onConfirm: () => {
-                setMotionControlState(mode ? 1 : 0);
-              },
-              title: `Set output as ${mode}`,
-              body: `Output pins will be set as ${mode}. Motion sensor trigger will be disabled`,
-            })
-          );
-        }}
-        onSetOutOnMotionControl={() => {
-          dispatch(
-            setConfirmDialog({
-              onConfirm: () => {
-                setMotionControlState(2);
-              },
-              title: `Enable motion control`,
-              body: "Output pins will be controlled by motion sensor",
-            })
-          );
-        }}
-        onSetMotionControlDelay={(delay: number) => {
-          dispatch(
-            setConfirmDialog({
-              onConfirm: () => {
-                setMotionControlDelay(delay);
-              },
-              title: `Set motion control delay`,
-              body: `Motion control delay will be set to ${delay / 1000} s`,
-            })
-          );
-        }}
-      />
-      <DeviceEventTable events={deviceEvents} title="Events" />
+      <Box
+        display={"flex"}
+        flexGrow={"1"}
+        flexDirection={"column"}
+        height={"100%"}
+      >
+        <DeviceTable
+          title="Info"
+          hideName
+          devices={selectedDevice ? [selectedDevice] : []}
+        />
+        <SensorTable
+          title="Sensors"
+          sensors={selectedDevice?.device?.sensors ?? []}
+        />
+        <DeviceControlComponent
+          device={selectedDevice}
+          title="Commands"
+          reboot={() => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  reboot();
+                },
+                title: `Reboot device?`,
+                body: `${selectedDevice?.device.name} will be rebooted`,
+              })
+            );
+          }}
+          onSetOutStatic={(mode: boolean) => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  setMotionControlState(mode ? 1 : 0);
+                },
+                title: `Set output as ${mode}`,
+                body: `Output pins will be set as ${mode}. Motion sensor trigger will be disabled`,
+              })
+            );
+          }}
+          onSetOutOnMotionControl={() => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  setMotionControlState(2);
+                },
+                title: `Enable motion control`,
+                body: "Output pins will be controlled by motion sensor",
+              })
+            );
+          }}
+          onSetMotionControlDelay={(delay: number) => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  setMotionControlDelay(delay);
+                },
+                title: `Set motion control delay`,
+                body: `Motion control delay will be set to ${delay / 1000} s`,
+              })
+            );
+          }}
+        />
+        <DeviceEventTable
+          events={deviceEvents}
+          title="Events"
+          maxHeight={"500px"}
+        />
+      </Box>
     </AppContentWrapper>
   );
 };

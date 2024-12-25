@@ -15,14 +15,16 @@ import { getFormattedDate } from "../utilities/datetimeUtils";
 export interface DeviceEventTableProps {
   events: DeviceEvent[];
   title?: string;
+  maxHeight?: string;
 }
 
 export const DeviceEventTable: React.FC<DeviceEventTableProps> = ({
   events,
   title,
+  maxHeight,
 }) => {
   return (
-    <Box marginTop={2}>
+    <Box marginTop={2} maxHeight={maxHeight} overflow={"auto"}>
       {title !== undefined ? (
         <Typography variant="h6" marginBottom={2}>
           {title}
