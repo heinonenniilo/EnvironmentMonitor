@@ -40,7 +40,6 @@ const PageContent = styled.div<{ max?: number }>`
   // margin-top: 16px;
   flex-grow: 1;
   max-width: 100%;
-  overflow: scroll;
 `;
 
 export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
@@ -50,9 +49,7 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
 
   const hasLeftMenu = useSelector(getHasLeftMenu);
   const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
-
   const isTallViewport = useMediaQuery("(min-height: 800px)");
-  console.log(isTallViewport);
 
   const handleMenuClose = () => {
     dispatch(toggleLeftMenuOpen(false));
@@ -124,7 +121,7 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
           flexDirection: "column",
           minHeight: "calc(100vh - 300px)", // TODO Could be made dynamic
           maxHeight: isTallViewport ? "calc(100vh - 100px)" : undefined,
-          overflow: "scroll",
+          overflow: "auto",
           marginLeft: hasLeftMenu && isLeftMenuOpen ? `${menuWidth}px` : "0px",
           display: "flex",
           paddingLeft: 1,

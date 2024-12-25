@@ -15,7 +15,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public DeviceDto Device { get; set; }
         public DateTime? OnlineSince { get; set; }
         public DateTime? RebootedOn { get; set; }
-
+        public DateTime? LastMessage {  get; set; }
         public void Mapping(Profile profile)
         {
             profile.CreateMap<DeviceInfo, DeviceInfoDto>().ReverseMap();

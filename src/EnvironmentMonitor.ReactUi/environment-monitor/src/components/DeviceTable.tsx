@@ -47,6 +47,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
               <TableCell>Visible</TableCell>
               <TableCell>Online Since</TableCell>
               <TableCell>Rebooted On</TableCell>
+              <TableCell>Last Message</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -98,6 +99,11 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
                 <TableCell>
                   {info.rebootedOn
                     ? getFormattedDate(info.rebootedOn, true)
+                    : ""}
+                </TableCell>
+                <TableCell>
+                  {info.lastMessage
+                    ? getFormattedDate(info.lastMessage, true)
                     : ""}
                 </TableCell>
               </TableRow>
