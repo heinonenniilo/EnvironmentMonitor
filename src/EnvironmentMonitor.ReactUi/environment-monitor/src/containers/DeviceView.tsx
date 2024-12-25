@@ -8,11 +8,19 @@ import { DeviceTable } from "../components/DeviceTable";
 import { DeviceControlComponent } from "../components/DeviceCommandButtons";
 import { useDispatch } from "react-redux";
 import { setConfirmDialog } from "../reducers/userInterfaceReducer";
+import { DeviceEventTable } from "../components/DeviceEventTable";
+import { DeviceEvent } from "../models/deviceEvent";
+
+interface PromiseInfo {
+  type: string;
+  data: any | undefined;
+}
 
 export const DeviceView: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | undefined>(
     undefined
   );
+  const [deviceEvents, setDeviceEvents] = useState<DeviceEvent[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
@@ -23,19 +31,71 @@ export const DeviceView: React.FC = () => {
 
   useEffect(() => {
     if (deviceId && !hasFetched) {
+      const promises = [
+        deviceHook
+          .getDeviceInfo(deviceId)
+          .then((res) => ({
+            type: "deviceInfo",
+            data: res,
+            error: null,
+          }))
+          .catch((error) => ({
+            type: "deviceInfo",
+            data: null,
+            error,
+          })),
+        deviceHook
+          .getDeviceEvents(deviceId)
+          .then((res) => ({
+            type: "deviceEvents",
+            data: res,
+            error: null,
+          }))
+          .catch((er) => {
+            console.log(er);
+          }),
+      ];
+
       setIsLoading(true);
-      deviceHook
-        .getDeviceInfo(deviceId)
-        .then((res) => {
-          setSelectedDevice(res);
+      Promise.allSettled(promises)
+        .then((results) => {
+          results.forEach((result) => {
+            if (result.status === "fulfilled") {
+              const value = result.value as PromiseInfo;
+              if (value.type === "deviceInfo") {
+                setSelectedDevice(value.data as DeviceInfo);
+              } else if (value.type === "deviceEvents") {
+                setDeviceEvents(value.data as DeviceEvent[]);
+              }
+            } else if (result.status === "rejected") {
+              console.error(
+                `Error in ${result.reason.type}:`,
+                result.reason.error
+              );
+            }
+          });
         })
-        .catch((er) => {})
         .finally(() => {
           setHasFetched(true);
           setIsLoading(false);
         });
     }
   }, [deviceId, hasFetched]);
+
+  const getDeviceEvents = (id: string) => {
+    setIsLoading(true);
+    deviceHook
+      .getDeviceEvents(id)
+      .then((res) => {
+        setDeviceEvents(res);
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
 
   const setMotionControlState = (state: number) => {
     if (!selectedDevice) {
@@ -44,8 +104,14 @@ export const DeviceView: React.FC = () => {
     setIsLoading(true);
     deviceHook
       .setMotionControlState(selectedDevice.device.deviceIdentifier, state)
+      .then((res) => {
+        if (res) {
+          getDeviceEvents(selectedDevice.device.deviceIdentifier);
+        }
+      })
       .catch((er) => {
         console.error(er);
+        setIsLoading(false);
       })
       .finally(() => {
         setIsLoading(false);
@@ -59,6 +125,11 @@ export const DeviceView: React.FC = () => {
     setIsLoading(true);
     deviceHook
       .setMotionControlDelay(selectedDevice.device.deviceIdentifier, delay)
+      .then((res) => {
+        if (res) {
+          getDeviceEvents(selectedDevice.device.deviceIdentifier);
+        }
+      })
       .catch((er) => {
         console.error(er);
       })
@@ -118,6 +189,7 @@ export const DeviceView: React.FC = () => {
           );
         }}
       />
+      <DeviceEventTable events={deviceEvents} title="Events" />
     </AppContentWrapper>
   );
 };

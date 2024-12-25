@@ -9,6 +9,7 @@ import {
 } from "../models/measurementsBySensor";
 import moment from "moment";
 import { DeviceInfo } from "../models/deviceInfo";
+import { DeviceEvent } from "../models/deviceEvent";
 
 interface ApiHook {
   userHook: userHook;
@@ -50,6 +51,7 @@ interface deviceHook {
     identifier: string,
     delay: number
   ) => Promise<boolean>;
+  getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
 }
 
 const apiClient = axios.create({
@@ -235,6 +237,14 @@ export const useApiHook = (): ApiHook => {
           return false;
         }
       },
+      getDeviceEvents: async (identifier: string) => {
+        let res = await apiClient.get<any, AxiosResponse<DeviceEvent[]>>(
+          `/api/devices/events/${identifier}`
+        );
+        return res.data;
+      },
     },
   };
 };
+
+// getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;

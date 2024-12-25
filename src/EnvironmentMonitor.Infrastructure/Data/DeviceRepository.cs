@@ -108,5 +108,22 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp
             }).ToList();
         }
+
+        public async Task<List<DeviceEvent>> GetDeviceEvents(int id)
+        {
+            var query = _context.DeviceEvents.Where(x => x.DeviceId == id).OrderByDescending(x => x.TimeStamp).Take(100);
+            return await query.ToListAsync();
+        }
+
+        public async Task<List<DeviceEvent>> GetDeviceEvents(string deviceIdentifier)
+        {
+            var device = await GetDeviceByIdentifier(deviceIdentifier);
+            if (device == null)
+            {
+                return [];
+            }
+            var query = _context.DeviceEvents.Include(x => x.Type).Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).Take(100);
+            return await query.ToListAsync();
+        }
     }
 }

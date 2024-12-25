@@ -38,6 +38,7 @@ const PageContent = styled.div`
   // margin-top: 16px;
   flex-grow: 1;
   max-width: 100%;
+  overflow: scroll;
 `;
 // // min-height: ${uiConfig.pageContentMinHeight}; // TODO CHECK
 

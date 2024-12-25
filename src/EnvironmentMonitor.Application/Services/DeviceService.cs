@@ -154,5 +154,16 @@ namespace EnvironmentMonitor.Application.Services
             }
             return _mapper.Map<List<DeviceInfoDto>>(infos);
         }
+
+        public async Task<List<DeviceEventDto>> GetDeviceEvents(string identifier)
+        {
+            var device = await GetDevice(identifier, AccessLevels.Read);
+            if (device == null)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var events = await _deviceRepository.GetDeviceEvents(identifier);
+            return _mapper.Map<List<DeviceEventDto>>(events);
+        }
     }
 }
