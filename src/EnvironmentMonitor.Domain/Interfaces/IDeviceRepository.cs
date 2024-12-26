@@ -17,6 +17,9 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible);
         Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible);
 
+        Task<List<DeviceEvent>> GetDeviceEvents(int id);
+        Task<List<DeviceEvent>> GetDeviceEvents(string deviceIdentifier);
+
         Task<IEnumerable<Sensor>> GetSensorsByDeviceIdsAsync(List<int> deviceId);
         Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers);
         public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);

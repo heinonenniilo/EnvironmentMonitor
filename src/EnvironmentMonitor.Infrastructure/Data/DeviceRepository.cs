@@ -21,7 +21,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         }
         public async Task<Device?> GetDeviceByIdentifier(string deviceId)
         {
-            return await _context.Devices.FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
+            return await _context.Devices.Include(x => x.Sensors).FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
         }
 
         public async Task<List<Device>> GetDevices(List<int>? ids = null, bool onlyVisible = true)
@@ -81,14 +81,14 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible)
         {
-            var devices = await GetDevices(ids, onlyVisible);
+            var devices = _context.Devices.Include(x => x.Sensors).Where(x => ids == null || ids.Contains(x.Id));
             return await GetDeviceInfos(devices);
         }
 
         public async Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible)
         {
-            var devices = await GetDevices(identifiers, onlyVisible);
-            return await GetDeviceInfos(devices);   
+            var devices = _context.Devices.Include(x => x.Sensors).Where(x => identifiers == null || identifiers.Contains(x.DeviceIdentifier));
+            return await GetDeviceInfos(devices);
         }
 
         private async Task<List<DeviceInfo>> GetDeviceInfos(IEnumerable<Device> devices)
@@ -101,12 +101,32 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 x.Key.TypeId,
                 TimeStamp = x.Max(d => d.TimeStamp)
             }).ToListAsync();
+
+            var latestMessages =  await _context.Measurements.Where(x => deviceIds.Contains(x.Sensor.DeviceId)).GroupBy(x => x.Sensor.DeviceId).Select(d => new { DeviceId = d.Key, Latest = d.Max(x => x.Timestamp) }).ToListAsync();
             return devices.Select(device => new DeviceInfo()
             {
                 Device = device,
                 OnlineSince = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.Online)?.TimeStamp,
-                RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp
+                RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
+                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest
             }).ToList();
+        }
+
+        public async Task<List<DeviceEvent>> GetDeviceEvents(int id)
+        {
+            var query = _context.DeviceEvents.Where(x => x.DeviceId == id).OrderByDescending(x => x.TimeStamp).Take(100);
+            return await query.ToListAsync();
+        }
+
+        public async Task<List<DeviceEvent>> GetDeviceEvents(string deviceIdentifier)
+        {
+            var device = await GetDeviceByIdentifier(deviceIdentifier);
+            if (device == null)
+            {
+                return [];
+            }
+            var query = _context.DeviceEvents.Include(x => x.Type).Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).Take(100);
+            return await query.ToListAsync();
         }
     }
 }

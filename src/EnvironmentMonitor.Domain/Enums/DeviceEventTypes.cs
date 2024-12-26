@@ -12,6 +12,10 @@ namespace EnvironmentMonitor.Domain.Enums
         [Description("Reboot command")]
         RebootCommand = 0,
         [Description("First message after boot / online since")]
-        Online = 1
+        Online = 1,
+        [Description("Set motion control status")]
+        SetMotionControlStatus = 2,
+        [Description("Set motion control delays")]
+        SetMotionControlDelay = 3
     }
 }

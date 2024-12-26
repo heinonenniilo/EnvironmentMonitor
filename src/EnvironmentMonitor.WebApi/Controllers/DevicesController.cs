@@ -19,6 +19,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "User, Viewer, Admin")]
     public class DevicesController : ControllerBase
     {
 
@@ -36,6 +37,20 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return Ok(new { Message = "Message sent" });
         }
 
+        [HttpPost("motion-control-status")]
+        [Authorize(Roles = "Admin")]
+        public async Task SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model)
+        {
+            await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode);
+        }
+
+        [HttpPost("motion-control-delay")]
+        [Authorize(Roles = "Admin")]
+        public async Task SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model)
+        {
+            await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs);
+        }
+
         [HttpGet]
         public async Task<List<DeviceDto>> GetDevices()
         {
@@ -44,16 +59,31 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet(template: "info")]
+        [Authorize(Roles = "Admin")]
         public async Task<List<DeviceInfoDto>> GetDeviceInfos()
         {
-            var result = await _deviceService.GetDeviceInfos(false); // Also the ones marked as non-visible
+            var result = await _deviceService.GetDeviceInfos(false, null); // Also the ones marked as non-visible
             return result;
         }
 
-        [HttpGet(template: "{deviceIdentifier}")]
-        public async Task<DeviceDto> GetDevice([FromRoute] string deviceIdentifier)
+        [HttpGet(template: "info/{identifier}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<DeviceInfoDto> GetDeviceInfo(string identifier)
         {
-            return await _deviceService.GetDevice(deviceIdentifier, AccessLevels.Read);
+            var result = await _deviceService.GetDeviceInfos(false, [identifier]); // Also the ones marked as non-visible
+            return result.First();
+        }
+
+        [HttpGet(template: "{identifier}")]
+        public async Task<DeviceDto> GetDevice([FromRoute] string identifier)
+        {
+            return await _deviceService.GetDevice(identifier, AccessLevels.Read);
+        }
+
+        [HttpGet(template: "events/{identifier}")]
+        public async Task<List<DeviceEventDto>> GetDeviceEvents([FromRoute] string identifier)
+        {
+            return await _deviceService.GetDeviceEvents(identifier);
         }
 
         [HttpGet("sensors")]

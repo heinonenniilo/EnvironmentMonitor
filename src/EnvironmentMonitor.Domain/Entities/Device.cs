@@ -16,5 +16,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public bool Visible { get; set; }
         public int? TypeId { get; set; }
         public DeviceType? Type { get; set; }
+        public bool HasMotionSensor { get; set; }
     }
 }
