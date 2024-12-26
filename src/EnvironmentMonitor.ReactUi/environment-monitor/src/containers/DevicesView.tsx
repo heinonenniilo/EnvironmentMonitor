@@ -5,6 +5,7 @@ import { Device } from "../models/device";
 import { useApiHook } from "../hooks/apiHook";
 import { DeviceInfo } from "../models/deviceInfo";
 import { DeviceTable } from "../components/DeviceTable";
+import { dateTimeSort } from "../utilities/datetimeUtils";
 
 export const DevicesView: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<Device | undefined>(
@@ -79,6 +80,15 @@ export const DevicesView: React.FC = () => {
       });
     //
   };
+  /*
+    const sorted = [...returnRows].sort((a, b) =>
+      dateTimeSort(a.latest.timestamp, b.latest.timestamp)
+    );
+  */
+
+  const sorted = [...deviceInfos].sort((a, b) =>
+    dateTimeSort(a.lastMessage ?? new Date(), b.lastMessage ?? new Date())
+  );
   return (
     <AppContentWrapper titleParts={[{ text: "Devices" }]} isLoading={isLoading}>
       <ConfirmationDialog
@@ -91,7 +101,7 @@ export const DevicesView: React.FC = () => {
         body={getDialogBody()}
       />
       <DeviceTable
-        devices={deviceInfos ?? []}
+        devices={sorted}
         showLink
         onReboot={(device) => {
           setSelectedDevice(device.device);

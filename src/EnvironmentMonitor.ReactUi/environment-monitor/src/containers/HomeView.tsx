@@ -12,6 +12,7 @@ import {
 import { MeasurementTypes } from "../enums/temperatureTypes";
 import { getMeasurementUnit } from "../utilities/measurementUtils";
 import { getUserInfo } from "../reducers/userReducer";
+import { dateTimeSort } from "../utilities/datetimeUtils";
 
 export const HomeView: React.FC = () => {
   const sensors = useSelector(getSensors);
@@ -60,12 +61,9 @@ export const HomeView: React.FC = () => {
         }
       }
     });
-    const sorted = [...returnRows].sort((a, b) => {
-      let res =
-        new Date(b.latest.timestamp).getTime() -
-        new Date(a.latest.timestamp).getTime();
-      return res;
-    });
+    const sorted = [...returnRows].sort((a, b) =>
+      dateTimeSort(a.latest.timestamp, b.latest.timestamp)
+    );
     return sorted;
   };
 
