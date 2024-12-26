@@ -24,13 +24,16 @@ export const DeviceEventTable: React.FC<DeviceEventTableProps> = ({
   maxHeight,
 }) => {
   return (
-    <Box marginTop={2} maxHeight={maxHeight} overflow={"auto"}>
+    <Box marginTop={2} display={"flex"} flexDirection={"column"} flexGrow={"1"}>
       {title !== undefined ? (
         <Typography variant="h6" marginBottom={2}>
           {title}
         </Typography>
       ) : null}
-      <TableContainer component={Paper}>
+      <TableContainer
+        component={Paper}
+        sx={{ overflow: "auto", maxHeight: "400px" }}
+      >
         <Table size="small">
           <TableHead>
             <TableRow>

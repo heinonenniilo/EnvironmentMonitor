@@ -19,6 +19,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "User, Viewer, Admin")]
     public class DevicesController : ControllerBase
     {
 
@@ -73,16 +74,16 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return result.First();
         }
 
-        [HttpGet(template: "{deviceIdentifier}")]
-        public async Task<DeviceDto> GetDevice([FromRoute] string deviceIdentifier)
+        [HttpGet(template: "{identifier}")]
+        public async Task<DeviceDto> GetDevice([FromRoute] string identifier)
         {
-            return await _deviceService.GetDevice(deviceIdentifier, AccessLevels.Read);
+            return await _deviceService.GetDevice(identifier, AccessLevels.Read);
         }
 
-        [HttpGet(template: "events/{deviceIdentifier}")]
-        public async Task<List<DeviceEventDto>> GetDeviceEvents([FromRoute] string deviceIdentifier)
+        [HttpGet(template: "events/{identifier}")]
+        public async Task<List<DeviceEventDto>> GetDeviceEvents([FromRoute] string identifier)
         {
-            return await _deviceService.GetDeviceEvents(deviceIdentifier);
+            return await _deviceService.GetDeviceEvents(identifier);
         }
 
         [HttpGet("sensors")]

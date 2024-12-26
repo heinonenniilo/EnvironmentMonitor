@@ -41,7 +41,6 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new ArgumentException($"Device with identifier: '{deviceIdentifier}' not found.");
             }
-
             _logger.LogInformation($"Trying to reboot device with identifier '{deviceIdentifier}'");
             await _messageService.SendMessageToDevice(deviceIdentifier, "REBOOT");
             await AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true);
@@ -157,11 +156,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<List<DeviceEventDto>> GetDeviceEvents(string identifier)
         {
-            var device = await GetDevice(identifier, AccessLevels.Read);
-            if (device == null)
-            {
-                throw new UnauthorizedAccessException();
-            }
+            var device = await GetDevice(identifier, AccessLevels.Read) ?? throw new UnauthorizedAccessException();
             var events = await _deviceRepository.GetDeviceEvents(identifier);
             return _mapper.Map<List<DeviceEventDto>>(events);
         }
