@@ -62,7 +62,6 @@ export const DevicesView: React.FC = () => {
             })
           );
         } else {
-          alert("Sending the message failed!");
           dispatch(
             addNotification({
               title: `Sending message failed`,
@@ -73,7 +72,6 @@ export const DevicesView: React.FC = () => {
         }
       })
       .catch((er) => {
-        alert("Sending message failed");
         dispatch(
           addNotification({
             title: `Sending message failed`,
