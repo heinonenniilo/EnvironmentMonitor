@@ -1,3 +1,4 @@
+import { NotificationMessage } from "./../framework/NotificationsComponent";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { RootState } from "../setup/appStore";
@@ -12,12 +13,14 @@ export interface UserInterfaceState {
   leftMenuOpen: boolean;
   hasLeftMenu: boolean;
   confirmationDialog: SetConfirmationDialogActionPayload | undefined;
+  notifications: NotificationMessage[];
 }
 
 const initialState: UserInterfaceState = {
   leftMenuOpen: true,
   hasLeftMenu: false,
   confirmationDialog: undefined,
+  notifications: [],
 };
 
 export const userInterfaceSlice = createSlice({
@@ -36,11 +39,34 @@ export const userInterfaceSlice = createSlice({
     ) => {
       state.confirmationDialog = action.payload;
     },
+    addNotification: (state, action: PayloadAction<NotificationMessage>) => {
+      const count = state.notifications.length;
+      let messageToAdd = action.payload;
+      messageToAdd.id = count;
+      state.notifications.push(messageToAdd);
+    },
+    removeNotification: (state, action: PayloadAction<number | undefined>) => {
+      if (action.payload === undefined) {
+        state.notifications = [];
+      } else {
+        const id = state.notifications.findIndex(
+          (x) => x.id === action.payload
+        );
+        if (id !== -1) {
+          state.notifications.splice(id, 1);
+        }
+      }
+    },
   },
 });
 
-export const { toggleLeftMenuOpen, toggleHasLeftMenu, setConfirmDialog } =
-  userInterfaceSlice.actions;
+export const {
+  toggleLeftMenuOpen,
+  toggleHasLeftMenu,
+  setConfirmDialog,
+  addNotification,
+  removeNotification,
+} = userInterfaceSlice.actions;
 
 export const getIsLeftMenuOpen = (state: RootState): boolean =>
   state.userInterfaceInfo.leftMenuOpen;
@@ -52,5 +78,8 @@ export const getConfirmationDialog = (
   state: RootState
 ): SetConfirmationDialogActionPayload | undefined =>
   state.userInterfaceInfo.confirmationDialog;
+
+export const getNotifications = (state: RootState): NotificationMessage[] =>
+  state.userInterfaceInfo.notifications;
 
 export default userInterfaceSlice.reducer;
