@@ -1,5 +1,4 @@
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import { ConfirmationDialog } from "../framework/ConfirmationDialog";
 import { useEffect, useState } from "react";
 import { Device } from "../models/device";
 import { useApiHook } from "../hooks/apiHook";
@@ -13,27 +12,11 @@ import {
 } from "../reducers/userInterfaceReducer";
 
 export const DevicesView: React.FC = () => {
-  const [selectedDevice, setSelectedDevice] = useState<Device | undefined>(
-    undefined
-  );
-
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
   const deviceHook = useApiHook().deviceHook;
 
   const [deviceInfos, setDeviceInfos] = useState<DeviceInfo[]>([]);
-
-  const getDialogTitle = () => {
-    return `Reboot ${selectedDevice?.name}?`;
-  };
-
-  const getDialogBody = () => {
-    if (!selectedDevice) {
-      return "";
-    }
-
-    return `Name: ${selectedDevice.name}, Identifier: ${selectedDevice?.deviceIdentifier}, Id: ${selectedDevice.id}?`;
-  };
 
   useEffect(() => {
     if (deviceInfos.length === 0 && deviceHook) {
@@ -101,15 +84,8 @@ export const DevicesView: React.FC = () => {
       })
       .finally(() => {
         setIsLoading(false);
-        setSelectedDevice(undefined);
       });
-    //
   };
-  /*
-    const sorted = [...returnRows].sort((a, b) =>
-      dateTimeSort(a.latest.timestamp, b.latest.timestamp)
-    );
-  */
 
   const sorted = [...deviceInfos].sort((a, b) =>
     dateTimeSort(a.lastMessage ?? new Date(), b.lastMessage ?? new Date())
