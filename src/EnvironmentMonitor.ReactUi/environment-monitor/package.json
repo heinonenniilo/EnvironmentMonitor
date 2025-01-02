@@ -12,6 +12,7 @@
     "@mui/x-charts": "^7.22.3",
     "@mui/x-date-pickers": "^7.22.3",
     "@react-oauth/google": "^0.12.1",
+    "@reduxjs/toolkit": "^2.5.0",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
     "@testing-library/user-event": "^13.2.1",
