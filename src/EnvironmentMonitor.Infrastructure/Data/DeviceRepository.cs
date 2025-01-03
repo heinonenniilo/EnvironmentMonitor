@@ -15,9 +15,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
     public class DeviceRepository : IDeviceRepository
     {
         private readonly MeasurementDbContext _context;
-        public DeviceRepository(MeasurementDbContext context)
+        private readonly IDateService _dateService;
+        public DeviceRepository(MeasurementDbContext context, IDateService dateService)
         {
             _context = context;
+            _dateService = dateService;
         }
         public async Task<Device?> GetDeviceByIdentifier(string deviceId)
         {
@@ -61,7 +63,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 throw new ArgumentException("Not found");
             }
-            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone);
             var utcDate = dateTimeUtc ?? DateTime.UtcNow;
             var toAdd = new DeviceEvent()
             {
@@ -69,7 +70,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 TypeId = (int)type,
                 Message = message,
                 TimeStampUtc = utcDate,
-                TimeStamp = TimeZoneInfo.ConvertTimeFromUtc(utcDate, TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone)),
+                TimeStamp = _dateService.UtcToLocal(utcDate),
             };
             await _context.DeviceEvents.AddAsync(toAdd);
             if (saveChanges)

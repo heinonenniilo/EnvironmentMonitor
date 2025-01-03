@@ -45,6 +45,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             var defaultSettings = new IotHubSettings();
             configuration.GetSection("IotHubSettings").Bind(defaultSettings);
             services.AddSingleton(defaultSettings);
+            services.AddSingleton<IDateService, DateService>();
             services.AddScoped<IHubMessageService, HubMessageService>();
             return services;
         }

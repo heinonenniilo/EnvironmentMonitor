@@ -20,19 +20,23 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly IDeviceService _deviceService;
+        private readonly IDateService _dateService;
+        
 
         public MeasurementService(
             IMeasurementRepository measurement,
             ILogger<MeasurementService> logger,
             IUserService userService,
             IMapper mapper,
-            IDeviceService deviceService)
+            IDeviceService deviceService,
+            IDateService dateService)
         {
             _measurementRepository = measurement;
             _logger = logger;
             _userService = userService;
             _mapper = mapper;
             _deviceService = deviceService;
+            _dateService = dateService;
         }
 
         public async Task AddMeasurements(SaveMeasurementsDto measurement)
@@ -69,8 +73,8 @@ namespace EnvironmentMonitor.Application.Services
                 {
                     SensorId = sensor.Id,
                     Value = row.SensorValue,
-                    Timestamp = UtcToLocalTime(row.TimestampUtc),
-                    CreatedAt = UtcToLocalTime(DateTime.UtcNow),
+                    Timestamp = _dateService.UtcToLocal(row.TimestampUtc),
+                    CreatedAt = _dateService.UtcToLocal(DateTime.UtcNow),
                     CreatedAtUtc = DateTime.UtcNow,
                     TimestampUtc = row.TimestampUtc,
                     TypeId = row.TypeId
@@ -138,12 +142,6 @@ namespace EnvironmentMonitor.Application.Services
             {
                 Measurements = returnList
             };
-        }
-
-        private DateTime UtcToLocalTime(DateTime utcDateTime)
-        {
-            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone);
-            return TimeZoneInfo.ConvertTimeFromUtc(utcDateTime, targetTimeZone);
         }
 
         private List<MeasurementsInfoDto> GetMeasurementInfo(List<MeasurementDto> measurements, List<int> sensorIds)
