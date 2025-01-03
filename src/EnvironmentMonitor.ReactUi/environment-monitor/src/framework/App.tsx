@@ -22,9 +22,11 @@ import {
 } from "../reducers/measurementReducer";
 import {
   getConfirmationDialog,
+  getNotifications,
   setConfirmDialog,
 } from "../reducers/userInterfaceReducer";
 import { ConfirmationDialog } from "./ConfirmationDialog";
+import { NotificationsComponent } from "./NotificationsComponent";
 
 interface AppProps {
   children: React.ReactNode;
@@ -41,6 +43,7 @@ export const App: React.FC<AppProps> = (props) => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const [devicesFetched, setDevicesFetched] = useState(false);
+  const notifications = useSelector(getNotifications);
 
   const devices = useSelector(getDevices);
   const confirmationDialogProps = useSelector(getConfirmationDialog);
@@ -93,6 +96,7 @@ export const App: React.FC<AppProps> = (props) => {
         dispath(setDevices(res ?? []));
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, dispath, devicesFetched]);
 
   useEffect(() => {
@@ -132,6 +136,7 @@ export const App: React.FC<AppProps> = (props) => {
               dispath(setConfirmDialog(undefined));
             }}
           />
+          <NotificationsComponent messages={notifications} />
           {isLoggedIn ? (
             <Container maxWidth={"xl"} sx={{ top: 0 }}>
               <MenuBar

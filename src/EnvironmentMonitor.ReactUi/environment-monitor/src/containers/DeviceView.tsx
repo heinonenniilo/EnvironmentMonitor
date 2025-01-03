@@ -7,7 +7,10 @@ import { SensorTable } from "../components/SensorTable";
 import { DeviceTable } from "../components/DeviceTable";
 import { DeviceControlComponent } from "../components/DeviceCommandButtons";
 import { useDispatch } from "react-redux";
-import { setConfirmDialog } from "../reducers/userInterfaceReducer";
+import {
+  addNotification,
+  setConfirmDialog,
+} from "../reducers/userInterfaceReducer";
 import { DeviceEventTable } from "../components/DeviceEventTable";
 import { DeviceEvent } from "../models/deviceEvent";
 import { Box } from "@mui/material";
@@ -98,7 +101,7 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const setMotionControlState = (state: number) => {
+  const setMotionControlState = (state: number, message?: string) => {
     if (!selectedDevice) {
       return;
     }
@@ -108,18 +111,33 @@ export const DeviceView: React.FC = () => {
       .then((res) => {
         if (res) {
           getDeviceEvents(selectedDevice.device.deviceIdentifier);
+          dispatch(
+            addNotification({
+              title: message ?? "Message sent to device",
+              body: "",
+              id: 0,
+              severity: "success",
+            })
+          );
         }
       })
       .catch((er) => {
         console.error(er);
         setIsLoading(false);
+        dispatch(
+          addNotification({
+            title: "Failed to send message",
+            body: "",
+            severity: "error",
+          })
+        );
       })
       .finally(() => {
         setIsLoading(false);
       });
   };
 
-  const setMotionControlDelay = (delay: number) => {
+  const setMotionControlDelay = (delay: number, message?: string) => {
     if (!selectedDevice) {
       return;
     }
@@ -129,17 +147,31 @@ export const DeviceView: React.FC = () => {
       .then((res) => {
         if (res) {
           getDeviceEvents(selectedDevice.device.deviceIdentifier);
+          dispatch(
+            addNotification({
+              title: message ?? "Message sent to device",
+              body: "",
+              severity: "success",
+            })
+          );
         }
       })
       .catch((er) => {
         console.error(er);
+        dispatch(
+          addNotification({
+            title: "Sending message failed",
+            body: "",
+            severity: "error",
+          })
+        );
       })
       .finally(() => {
         setIsLoading(false);
       });
   };
 
-  const reboot = () => {
+  const reboot = (message?: string) => {
     if (!selectedDevice) {
       return;
     }
@@ -148,9 +180,23 @@ export const DeviceView: React.FC = () => {
       .rebootDevice(selectedDevice?.device.deviceIdentifier)
       .then((res) => {
         getDeviceEvents(selectedDevice?.device.deviceIdentifier);
+        dispatch(
+          addNotification({
+            title: message ?? "Message sent to device",
+            body: "",
+            severity: "success",
+          })
+        );
       })
       .catch((er) => {
         console.error(er);
+        dispatch(
+          addNotification({
+            title: "Failed to send the message",
+            body: "",
+            severity: "error",
+          })
+        );
         setIsLoading(false);
       });
   };
@@ -182,7 +228,7 @@ export const DeviceView: React.FC = () => {
             dispatch(
               setConfirmDialog({
                 onConfirm: () => {
-                  reboot();
+                  reboot(`Boot command sent to ${selectedDevice?.device.name}`);
                 },
                 title: `Reboot device?`,
                 body: `${selectedDevice?.device.name} will be rebooted`,
@@ -193,7 +239,10 @@ export const DeviceView: React.FC = () => {
             dispatch(
               setConfirmDialog({
                 onConfirm: () => {
-                  setMotionControlState(mode ? 1 : 0);
+                  setMotionControlState(
+                    mode ? 1 : 0,
+                    `Outputs set to ${mode} for ${selectedDevice?.device.name}`
+                  );
                 },
                 title: `Set output as ${mode}`,
                 body: `Output pins will be set as ${mode}. Motion sensor trigger will be disabled`,
@@ -204,7 +253,7 @@ export const DeviceView: React.FC = () => {
             dispatch(
               setConfirmDialog({
                 onConfirm: () => {
-                  setMotionControlState(2);
+                  setMotionControlState(2, "Motion control enabled");
                 },
                 title: `Enable motion control`,
                 body: "Output pins will be controlled by motion sensor",
@@ -215,7 +264,10 @@ export const DeviceView: React.FC = () => {
             dispatch(
               setConfirmDialog({
                 onConfirm: () => {
-                  setMotionControlDelay(delay);
+                  setMotionControlDelay(
+                    delay,
+                    `Motioncontrol delay set to ${delay / 1000} s`
+                  );
                 },
                 title: `Set motion control delay`,
                 body: `Motion control delay will be set to ${delay / 1000} s`,
