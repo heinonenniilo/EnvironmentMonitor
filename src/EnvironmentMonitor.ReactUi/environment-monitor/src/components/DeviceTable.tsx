@@ -51,7 +51,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
     {
       field: "visible",
       headerName: "Visible",
-      flex: 1,
+      width: 60,
       valueGetter: (value, row) => {
         if (!row) {
           return false;
@@ -147,6 +147,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         }}
         pagination={undefined}
         pageSizeOptions={[]}
+        disableColumnSorting={disableSort}
         hideFooter
         initialState={{
           columns: {
