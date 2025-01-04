@@ -13,10 +13,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
     {
         private readonly MeasurementDbContext _context;
         private readonly IDateService _dateService;
-        public MeasurementRepository(MeasurementDbContext context, IDateService dateService)
+        private readonly ILogger<MeasurementRepository> _logger;
+        public MeasurementRepository(MeasurementDbContext context, IDateService dateService, ILogger<MeasurementRepository> logger)
         {
             _context = context;
             _dateService = dateService;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model)
@@ -39,6 +41,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => x.Timestamp >= model.From && (model.To == null || x.Timestamp <= model.To));
                 if (dateDiff > ApplicationConstants.MeasurementGroupByLimitInDays)
                 {
+                    _logger.LogInformation($"Applying measurement grouping, date diff: {dateDiff}, limit : {ApplicationConstants.MeasurementGroupByLimitInDays}");
                     query = query.GroupBy(x => new
                     {
                         x.TypeId,
@@ -55,7 +58,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
                         Value = x.Average(d => d.Value),
                         SensorId = x.Key.SensorId
                     }).OrderBy(x => x.Timestamp);
-
                     var rows = await query.ToListAsync();
                     foreach (var item in rows)
                     {
@@ -73,6 +75,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             await _context.Measurements.AddRangeAsync(measurements);
             if (saveChanges)
             {
+                _logger.LogInformation("Saving changes (AddMeasurements)");
                 await _context.SaveChangesAsync();
             }
             return measurements;
