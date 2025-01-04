@@ -12,14 +12,6 @@ export interface DeviceTableProps {
   disableSort?: boolean;
   hideName?: boolean;
 }
-/*
-                  <Checkbox
-                    checked={info.device.visible}
-                    size="small"
-                    disabled
-                    sx={{ padding: "0px" }}
-                  />
-*/
 
 export const DeviceTable: React.FC<DeviceTableProps> = ({
   devices,
@@ -169,8 +161,8 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
             : {
                 sortModel: [
                   {
-                    field: "name",
-                    sort: "asc",
+                    field: "onlineSince",
+                    sort: "desc",
                   },
                 ],
               },
