@@ -1,4 +1,5 @@
-﻿using EnvironmentMonitor.Domain.Entities;
+﻿using EnvironmentMonitor.Domain;
+using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
     public class MeasurementRepository : IMeasurementRepository
     {
         private readonly MeasurementDbContext _context;
-        public MeasurementRepository(MeasurementDbContext context)
+        private readonly IDateService _dateService;
+        private readonly ILogger<MeasurementRepository> _logger;
+        public MeasurementRepository(MeasurementDbContext context, IDateService dateService, ILogger<MeasurementRepository> logger)
         {
             _context = context;
+            _dateService = dateService;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model)
@@ -32,9 +37,35 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
             else
             {
-                query = query
-                    .Where(x => x.Timestamp >= model.From && (model.To == null || x.Timestamp <= model.To))
-                    .OrderBy(x => x.Timestamp);
+                var dateDiff = ((model.To ?? _dateService.CurrentTime() ) - model.From).TotalDays;
+                query = query.Where(x => x.Timestamp >= model.From && (model.To == null || x.Timestamp <= model.To));
+                if (dateDiff > ApplicationConstants.MeasurementGroupByLimitInDays)
+                {
+                    _logger.LogInformation($"Applying measurement grouping, date diff: {dateDiff}, limit : {ApplicationConstants.MeasurementGroupByLimitInDays}");
+                    query = query.GroupBy(x => new
+                    {
+                        x.TypeId,
+                        x.SensorId,
+                        x.Timestamp.Year,
+                        x.Timestamp.Month,
+                        x.Timestamp.Day,
+                        x.Timestamp.Hour
+                    }).Select(x => new Measurement()
+                    {
+                        TypeId = x.Key.TypeId,
+                        TimestampUtc = DateTime.UtcNow,
+                        Timestamp = x.Max(d => d.Timestamp),
+                        Value = x.Average(d => d.Value),
+                        SensorId = x.Key.SensorId
+                    }).OrderBy(x => x.Timestamp);
+                    var rows = await query.ToListAsync();
+                    foreach (var item in rows)
+                    {
+                        item.TimestampUtc = _dateService.LocalToUtc(item.Timestamp);
+                    }
+                    return rows;
+                }
+                query = query.OrderBy(x => x.Timestamp);
             }
             return await query.ToListAsync();
         }
@@ -44,6 +75,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             await _context.Measurements.AddRangeAsync(measurements);
             if (saveChanges)
             {
+                _logger.LogInformation("Saving changes (AddMeasurements)");
                 await _context.SaveChangesAsync();
             }
             return measurements;
