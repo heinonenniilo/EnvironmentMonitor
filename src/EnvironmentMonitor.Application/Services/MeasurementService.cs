@@ -69,13 +69,15 @@ namespace EnvironmentMonitor.Application.Services
                     continue;
                 }
                 _logger.LogInformation($"Found sensor: {sensor.Id}. Name: '{sensor.Name}'");
+
+                var createdAt = _dateService.CurrentTime();
                 measurementsToAdd.Add(new Measurement()
                 {
                     SensorId = sensor.Id,
                     Value = row.SensorValue,
                     Timestamp = _dateService.UtcToLocal(row.TimestampUtc),
-                    CreatedAt = _dateService.UtcToLocal(DateTime.UtcNow),
-                    CreatedAtUtc = DateTime.UtcNow,
+                    CreatedAt = createdAt,
+                    CreatedAtUtc = _dateService.LocalToUtc(createdAt),
                     TimestampUtc = row.TimestampUtc,
                     TypeId = row.TypeId
                 });
