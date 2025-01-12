@@ -216,6 +216,7 @@ export const DeviceView: React.FC = () => {
           title="Info"
           hideName
           devices={selectedDevice ? [selectedDevice] : []}
+          disableSort
         />
         <SensorTable
           title="Sensors"
