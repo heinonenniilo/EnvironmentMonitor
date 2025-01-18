@@ -142,7 +142,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       devices.length > 1 &&
       devices.find((d) => d.id === matchingSensor?.deviceId);
     if (device) {
-      sensorName = `${sensorName}/${device.name}`;
+      sensorName = `${device.name}: ${sensorName}`;
     }
 
     if (!typeId) {

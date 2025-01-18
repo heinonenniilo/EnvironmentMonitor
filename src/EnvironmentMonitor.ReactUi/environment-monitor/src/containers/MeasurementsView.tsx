@@ -55,7 +55,6 @@ export const MeasurementsView: React.FC = () => {
       );
       if (matchingDevice) {
         setSelectedDevices([matchingDevice]);
-        // setSelectedDevices(matchingDevice);
         const sensorIds = sensors
           .filter((s) => s.deviceId === matchingDevice.id)
           .map((s) => s.id);

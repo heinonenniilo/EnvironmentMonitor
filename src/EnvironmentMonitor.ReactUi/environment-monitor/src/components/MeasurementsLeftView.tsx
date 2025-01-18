@@ -57,7 +57,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   const getSensorText = (sensor: Sensor) => {
     if (selectedDevices && selectedDevices.length > 1) {
       const matchingDevice = devices.find((d) => d.id === sensor.deviceId);
-      return `${sensor.name} - ${matchingDevice?.name}`;
+      return `${matchingDevice?.name}: ${sensor.name}`;
     }
     return sensor.name;
   };
