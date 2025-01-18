@@ -23,7 +23,7 @@ export interface MeasurementsLeftViewProps {
   devices: Device[];
   sensors: Sensor[];
   selectedSensors: number[];
-  selectedDevice: Device | undefined;
+  selectedDevices: Device[] | undefined;
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
 }
@@ -35,7 +35,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   onSelectDevice,
   toggleSensorSelection,
   selectedSensors,
-  selectedDevice,
+  selectedDevices,
   timeFrom,
   timeTo,
 }) => {
@@ -53,6 +53,14 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   useEffect(() => {
     setToDate(timeTo);
   }, [timeTo]);
+
+  const getSensorText = (sensor: Sensor) => {
+    if (selectedDevices && selectedDevices.length > 1) {
+      const matchingDevice = devices.find((d) => d.id === sensor.deviceId);
+      return `${sensor.name} - ${matchingDevice?.name}`;
+    }
+    return sensor.name;
+  };
 
   return (
     <Box
@@ -96,12 +104,14 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
             labelId="device-select-label"
             id="device-select"
             value={
-              selectedDevice?.deviceIdentifier ?? {
-                id: 0,
-                deviceIdentifier: "",
-              }
+              selectedDevices
+                ? selectedDevices.map((s) => {
+                    return s.deviceIdentifier;
+                  })
+                : []
             }
             label="Device"
+            multiple
           >
             {devices.map((y) => (
               <MenuItem
@@ -135,7 +145,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                   toggleSensorSelection(y.id);
                 }}
               >
-                {y.name}
+                {getSensorText(y)}
               </MenuItem>
             ))}
           </Select>

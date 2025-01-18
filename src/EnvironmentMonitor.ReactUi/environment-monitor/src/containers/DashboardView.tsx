@@ -114,7 +114,7 @@ export const DashboardView: React.FC = () => {
             >
               <MultiSensorGraph
                 sensors={sensors}
-                device={device}
+                devices={[device]}
                 model={viewModel}
                 minHeight={400}
                 titleAsLink

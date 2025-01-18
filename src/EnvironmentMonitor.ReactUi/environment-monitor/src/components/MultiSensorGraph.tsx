@@ -36,7 +36,7 @@ Chart.register(
 
 export interface MultiSensorGraphProps {
   sensors: Sensor[] | undefined;
-  device?: Device;
+  devices?: Device[];
   model: MeasurementsViewModel | undefined;
   hideInfo?: boolean;
   minHeight?: number;
@@ -48,13 +48,15 @@ export interface MultiSensorGraphProps {
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   sensors,
   model,
-  device,
+  devices,
   hideInfo,
   minHeight,
   titleAsLink,
   useAutoScale,
   onSetAutoScale,
 }) => {
+  const device = devices && devices.length === 1 ? devices[0] : undefined;
+
   const validSensors = device
     ? sensors?.filter((s) => s.deviceId === device.id)
     : sensors;
@@ -123,14 +125,25 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
 
   const getTitle = () => {
     if (!device) {
-      return "Select a device";
+      if (!devices || devices.length === 0) {
+        return "Select a device";
+      } else {
+        return "";
+      }
     }
     return `${device?.name} / (${device?.id})`;
   };
 
   const getSensorLabel = (sensorId: number, typeId?: MeasurementTypes) => {
-    const sensorName =
-      sensors?.find((s) => s.id === sensorId)?.name ?? `${sensorId}`;
+    const matchingSensor = sensors?.find((s) => s.id === sensorId);
+    let sensorName = matchingSensor?.name ?? `${sensorId}`;
+    const device =
+      devices &&
+      devices.length > 1 &&
+      devices.find((d) => d.id === matchingSensor?.deviceId);
+    if (device) {
+      sensorName = `${sensorName}/${device.name}`;
+    }
 
     if (!typeId) {
       return sensorName;

@@ -20,9 +20,7 @@ export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const [isLoading, setIsLoading] = useState(false);
   const { deviceId } = useParams<{ deviceId?: string }>();
-  const [selectedDevice, setSelectedDevice] = useState<Device | undefined>(
-    undefined
-  );
+  const [selectedDevices, setSelectedDevices] = useState<Device[]>([]);
 
   const [measurementsModel, setMeasurementsModel] = useState<
     MeasurementsViewModel | undefined
@@ -56,7 +54,8 @@ export const MeasurementsView: React.FC = () => {
         (d) => d.deviceIdentifier === deviceId
       );
       if (matchingDevice) {
-        setSelectedDevice(matchingDevice);
+        setSelectedDevices([matchingDevice]);
+        // setSelectedDevices(matchingDevice);
         const sensorIds = sensors
           .filter((s) => s.deviceId === matchingDevice.id)
           .map((s) => s.id);
@@ -114,17 +113,31 @@ export const MeasurementsView: React.FC = () => {
             const matchingDevice = devices.find(
               (d) => d.deviceIdentifier === deviceId
             );
-            if (matchingDevice) {
-              setSelectedDevice(matchingDevice);
+
+            if (!selectedDevices.some((s) => s.deviceIdentifier === deviceId)) {
+              if (matchingDevice) {
+                setSelectedDevices([...selectedDevices, matchingDevice]);
+              }
+            } else {
+              setSelectedSensors(
+                selectedSensors.filter((s) => s.deviceId !== matchingDevice?.id)
+              );
+              setSelectedDevices(
+                selectedDevices.filter((s) => s.deviceIdentifier !== deviceId)
+              );
             }
           }}
           toggleSensorSelection={toggleSensorSelection}
-          selectedDevice={selectedDevice}
+          selectedDevices={selectedDevices}
           selectedSensors={selectedSensors.map((s) => s.id)}
           devices={devices}
           sensors={
-            selectedDevice
-              ? sensors.filter((s) => s.deviceId === selectedDevice.id)
+            selectedDevices
+              ? sensors.filter(
+                  (s) =>
+                    selectedDevices &&
+                    selectedDevices.some((d) => d.id === s.deviceId)
+                )
               : []
           }
           timeFrom={timeFrom}
@@ -143,7 +156,7 @@ export const MeasurementsView: React.FC = () => {
         <MultiSensorGraph
           sensors={selectedSensors}
           model={measurementsModel}
-          device={selectedDevice}
+          devices={selectedDevices}
           key={"graph_01"}
           minHeight={500}
         />
