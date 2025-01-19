@@ -20,9 +20,7 @@ export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const [isLoading, setIsLoading] = useState(false);
   const { deviceId } = useParams<{ deviceId?: string }>();
-  const [selectedDevice, setSelectedDevice] = useState<Device | undefined>(
-    undefined
-  );
+  const [selectedDevices, setSelectedDevices] = useState<Device[]>([]);
 
   const [measurementsModel, setMeasurementsModel] = useState<
     MeasurementsViewModel | undefined
@@ -41,12 +39,27 @@ export const MeasurementsView: React.FC = () => {
     if (selectedSensors.some((s) => s.id === sensorId)) {
       setSelectedSensors([...selectedSensors.filter((s) => s.id !== sensorId)]);
     } else {
-      const t = [...selectedSensors];
       const matchingSensor = sensors.find((s) => s.id === sensorId);
       if (matchingSensor) {
-        t.push(matchingSensor);
-        setSelectedSensors(t);
+        setSelectedSensors([...selectedSensors, matchingSensor]);
       }
+    }
+  };
+
+  const toggleDeviceSelection = (deviceId: string) => {
+    const matchingDevice = devices.find((d) => d.deviceIdentifier === deviceId);
+
+    if (!selectedDevices.some((s) => s.deviceIdentifier === deviceId)) {
+      if (matchingDevice) {
+        setSelectedDevices([...selectedDevices, matchingDevice]);
+      }
+    } else {
+      setSelectedSensors(
+        selectedSensors.filter((s) => s.deviceId !== matchingDevice?.id)
+      );
+      setSelectedDevices(
+        selectedDevices.filter((s) => s.deviceIdentifier !== deviceId)
+      );
     }
   };
 
@@ -56,7 +69,7 @@ export const MeasurementsView: React.FC = () => {
         (d) => d.deviceIdentifier === deviceId
       );
       if (matchingDevice) {
-        setSelectedDevice(matchingDevice);
+        setSelectedDevices([matchingDevice]);
         const sensorIds = sensors
           .filter((s) => s.deviceId === matchingDevice.id)
           .map((s) => s.id);
@@ -110,21 +123,18 @@ export const MeasurementsView: React.FC = () => {
                 setIsLoading(false);
               });
           }}
-          onSelectDevice={(deviceId: string) => {
-            const matchingDevice = devices.find(
-              (d) => d.deviceIdentifier === deviceId
-            );
-            if (matchingDevice) {
-              setSelectedDevice(matchingDevice);
-            }
-          }}
+          onSelectDevice={toggleDeviceSelection}
           toggleSensorSelection={toggleSensorSelection}
-          selectedDevice={selectedDevice}
+          selectedDevices={selectedDevices}
           selectedSensors={selectedSensors.map((s) => s.id)}
           devices={devices}
           sensors={
-            selectedDevice
-              ? sensors.filter((s) => s.deviceId === selectedDevice.id)
+            selectedDevices
+              ? sensors.filter(
+                  (s) =>
+                    selectedDevices &&
+                    selectedDevices.some((d) => d.id === s.deviceId)
+                )
               : []
           }
           timeFrom={timeFrom}
@@ -142,8 +152,16 @@ export const MeasurementsView: React.FC = () => {
       >
         <MultiSensorGraph
           sensors={selectedSensors}
-          model={measurementsModel}
-          device={selectedDevice}
+          model={
+            measurementsModel
+              ? {
+                  measurements: measurementsModel.measurements.filter((m) =>
+                    selectedSensors.some((s) => s.id === m.sensorId)
+                  ),
+                }
+              : undefined
+          }
+          devices={selectedDevices}
           key={"graph_01"}
           minHeight={500}
         />

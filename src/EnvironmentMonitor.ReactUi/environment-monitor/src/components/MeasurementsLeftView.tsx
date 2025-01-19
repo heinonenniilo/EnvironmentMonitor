@@ -11,6 +11,7 @@ import moment from "moment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
+import { stringSort } from "../utilities/stringUtils";
 
 export interface MeasurementsLeftViewProps {
   onSearch: (
@@ -23,7 +24,7 @@ export interface MeasurementsLeftViewProps {
   devices: Device[];
   sensors: Sensor[];
   selectedSensors: number[];
-  selectedDevice: Device | undefined;
+  selectedDevices: Device[] | undefined;
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
 }
@@ -35,7 +36,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   onSelectDevice,
   toggleSensorSelection,
   selectedSensors,
-  selectedDevice,
+  selectedDevices,
   timeFrom,
   timeTo,
 }) => {
@@ -53,6 +54,14 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   useEffect(() => {
     setToDate(timeTo);
   }, [timeTo]);
+
+  const getSensorText = (sensor: Sensor) => {
+    if (selectedDevices && selectedDevices.length > 1) {
+      const matchingDevice = devices.find((d) => d.id === sensor.deviceId);
+      return `${matchingDevice?.name}: ${sensor.name}`;
+    }
+    return sensor.name;
+  };
 
   return (
     <Box
@@ -96,12 +105,14 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
             labelId="device-select-label"
             id="device-select"
             value={
-              selectedDevice?.deviceIdentifier ?? {
-                id: 0,
-                deviceIdentifier: "",
-              }
+              selectedDevices
+                ? selectedDevices.map((s) => {
+                    return s.deviceIdentifier;
+                  })
+                : []
             }
             label="Device"
+            multiple
           >
             {devices.map((y) => (
               <MenuItem
@@ -127,17 +138,19 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
             multiple
             label="Sensor"
           >
-            {sensors.map((y) => (
-              <MenuItem
-                value={y.id}
-                key={`sensor-${y.id}`}
-                onClick={() => {
-                  toggleSensorSelection(y.id);
-                }}
-              >
-                {y.name}
-              </MenuItem>
-            ))}
+            {[...sensors]
+              .sort((a, b) => stringSort(getSensorText(a), getSensorText(b)))
+              .map((y) => (
+                <MenuItem
+                  value={y.id}
+                  key={`sensor-${y.id}`}
+                  onClick={() => {
+                    toggleSensorSelection(y.id);
+                  }}
+                >
+                  {getSensorText(y)}
+                </MenuItem>
+              ))}
           </Select>
         </FormControl>
       </Box>
