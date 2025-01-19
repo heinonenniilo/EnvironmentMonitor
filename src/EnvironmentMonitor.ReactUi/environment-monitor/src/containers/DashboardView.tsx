@@ -96,37 +96,50 @@ export const DashboardView: React.FC = () => {
             height: "100%",
           }}
         >
-          {devices.map((device) => (
-            <Box
-              key={device.id}
-              sx={{
-                border: "1px solid #ccc",
-                borderRadius: 2,
-                padding: 1,
-                boxSizing: "border-box",
-                backgroundColor: "#f9f9f9",
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <MultiSensorGraph
-                sensors={sensors}
-                device={device}
-                model={viewModel}
-                minHeight={400}
-                titleAsLink
-                useAutoScale={autoScaleIds.some((s) => s === device.id)}
-                onSetAutoScale={(state) => {
-                  dispatch(
-                    toggleAutoScale({ deviceId: device.id, state: state })
-                  );
+          {devices.map((device) => {
+            const deviceSensors = sensors.filter(
+              (s) => s.deviceId === device.id
+            );
+            const measurementsModel: MeasurementsViewModel | undefined =
+              viewModel
+                ? {
+                    measurements: viewModel.measurements.filter((m) =>
+                      deviceSensors.some((s) => s.id === m.sensorId)
+                    ),
+                  }
+                : undefined;
+            return (
+              <Box
+                key={device.id}
+                sx={{
+                  border: "1px solid #ccc",
+                  borderRadius: 2,
+                  padding: 1,
+                  boxSizing: "border-box",
+                  backgroundColor: "#f9f9f9",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
-              />
-            </Box>
-          ))}
+              >
+                <MultiSensorGraph
+                  sensors={deviceSensors}
+                  devices={[device]}
+                  model={measurementsModel}
+                  minHeight={400}
+                  titleAsLink
+                  useAutoScale={autoScaleIds.some((s) => s === device.id)}
+                  onSetAutoScale={(state) => {
+                    dispatch(
+                      toggleAutoScale({ deviceId: device.id, state: state })
+                    );
+                  }}
+                />
+              </Box>
+            );
+          })}
         </Box>
       </Box>
     </AppContentWrapper>
