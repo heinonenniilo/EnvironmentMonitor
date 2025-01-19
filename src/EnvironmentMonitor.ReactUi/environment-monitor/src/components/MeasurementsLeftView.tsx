@@ -11,6 +11,7 @@ import moment from "moment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
+import { stringSort } from "../utilities/stringUtils";
 
 export interface MeasurementsLeftViewProps {
   onSearch: (
@@ -137,17 +138,19 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
             multiple
             label="Sensor"
           >
-            {sensors.map((y) => (
-              <MenuItem
-                value={y.id}
-                key={`sensor-${y.id}`}
-                onClick={() => {
-                  toggleSensorSelection(y.id);
-                }}
-              >
-                {getSensorText(y)}
-              </MenuItem>
-            ))}
+            {[...sensors]
+              .sort((a, b) => stringSort(getSensorText(a), getSensorText(b)))
+              .map((y) => (
+                <MenuItem
+                  value={y.id}
+                  key={`sensor-${y.id}`}
+                  onClick={() => {
+                    toggleSensorSelection(y.id);
+                  }}
+                >
+                  {getSensorText(y)}
+                </MenuItem>
+              ))}
           </Select>
         </FormControl>
       </Box>

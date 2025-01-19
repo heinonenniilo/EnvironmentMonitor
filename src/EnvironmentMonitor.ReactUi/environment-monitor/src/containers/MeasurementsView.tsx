@@ -152,7 +152,15 @@ export const MeasurementsView: React.FC = () => {
       >
         <MultiSensorGraph
           sensors={selectedSensors}
-          model={measurementsModel}
+          model={
+            measurementsModel
+              ? {
+                  measurements: measurementsModel.measurements.filter((m) =>
+                    selectedSensors.some((s) => s.id === m.sensorId)
+                  ),
+                }
+              : undefined
+          }
           devices={selectedDevices}
           key={"graph_01"}
           minHeight={500}
