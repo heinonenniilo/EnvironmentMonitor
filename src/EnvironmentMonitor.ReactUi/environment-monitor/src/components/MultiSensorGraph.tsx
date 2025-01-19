@@ -55,15 +55,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   useAutoScale,
   onSetAutoScale,
 }) => {
-  const device = devices && devices.length === 1 ? devices[0] : undefined;
-
-  const validSensors = device
-    ? sensors?.filter((s) => s.deviceId === device.id)
-    : sensors;
-
-  const isSensorValid = (sensorId: number) => {
-    return validSensors?.some((s) => s.id === sensorId);
-  };
+  const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
   const [autoScale, setAutoScale] = useState(false);
 
@@ -78,26 +70,27 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     if (!model || model.measurements.length === 0) {
       return { datasets: returnValues };
     }
-    model.measurements
-      .filter((m) => isSensorValid(m.sensorId))
-      .forEach((m) => {
-        for (let item in MeasurementTypes) {
-          let val = parseInt(MeasurementTypes[item]);
-          if (m.measurements.some((m) => m.typeId === val)) {
-            returnValues.push({
-              label: getSensorLabel(m.sensorId, val as MeasurementTypes),
-              data: m.measurements
-                .filter((d) => d.typeId === val)
-                .map((d) => {
-                  return {
-                    x: d.timestamp,
-                    y: d.sensorValue,
-                  };
-                }),
-            });
-          }
+    model.measurements.forEach((measurementsBySensor) => {
+      for (let item in MeasurementTypes) {
+        let val = parseInt(MeasurementTypes[item]);
+        if (measurementsBySensor.measurements.some((m) => m.typeId === val)) {
+          returnValues.push({
+            label: getSensorLabel(
+              measurementsBySensor.sensorId,
+              val as MeasurementTypes
+            ),
+            data: measurementsBySensor.measurements
+              .filter((d) => d.typeId === val)
+              .map((d) => {
+                return {
+                  x: d.timestamp,
+                  y: d.sensorValue,
+                };
+              }),
+          });
         }
-      });
+      }
+    });
     return {
       datasets: returnValues,
     };
@@ -105,33 +98,31 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
 
   const getInfoValues = () => {
     let returnArray: MeasurementInfo[] = [];
-    model?.measurements
-      .filter((m) => isSensorValid(m.sensorId))
-      .forEach((m) => {
-        for (let item in MeasurementTypes) {
-          let val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
-          if (m.minValues[val] !== undefined) {
-            returnArray.push({
-              min: m.minValues[val],
-              max: m.maxValues[val],
-              latest: m.latestValues[val],
-              label: getSensorLabel(m.sensorId, val),
-            });
-          }
+    model?.measurements.forEach((m) => {
+      for (let item in MeasurementTypes) {
+        let val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
+        if (m.minValues[val] !== undefined) {
+          returnArray.push({
+            min: m.minValues[val],
+            max: m.maxValues[val],
+            latest: m.latestValues[val],
+            label: getSensorLabel(m.sensorId, val),
+          });
         }
-      });
+      }
+    });
     return returnArray;
   };
 
   const getTitle = () => {
-    if (!device) {
+    if (!singleDevice) {
       if (!devices || devices.length === 0) {
         return "Select a device";
       } else {
         return "";
       }
     }
-    return `${device?.name} / (${device?.id})`;
+    return `${singleDevice?.name} / (${singleDevice?.id})`;
   };
 
   const getSensorLabel = (sensorId: number, typeId?: MeasurementTypes) => {
@@ -157,10 +148,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       return undefined;
     }
     let minScales =
-      validSensors
+      sensors
         ?.filter((d) => d.scaleMin !== undefined)
         .map((d) => d.scaleMin ?? 0) ?? [];
-    return validSensors?.some((d) => d.scaleMin !== undefined)
+    return sensors?.some((d) => d.scaleMin !== undefined)
       ? Math.min(...minScales)
       : undefined;
   };
@@ -170,10 +161,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       return undefined;
     }
     let maxScales =
-      validSensors
+      sensors
         ?.filter((d) => d.scaleMax !== undefined)
         .map((d) => d.scaleMax ?? 0) ?? [];
-    return validSensors?.some((d) => d.scaleMax !== undefined)
+    return sensors?.some((d) => d.scaleMax !== undefined)
       ? Math.max(...maxScales)
       : undefined;
   };
@@ -196,7 +187,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         alignItems="center" // Align children vertically
       >
         {titleAsLink ? (
-          <Link to={`${routes.measurements}/${device?.deviceIdentifier}`}>
+          <Link to={`${routes.measurements}/${singleDevice?.deviceIdentifier}`}>
             <Typography align="left" gutterBottom>
               {getTitle()}
             </Typography>

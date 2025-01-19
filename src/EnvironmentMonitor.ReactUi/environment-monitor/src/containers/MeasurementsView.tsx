@@ -39,12 +39,27 @@ export const MeasurementsView: React.FC = () => {
     if (selectedSensors.some((s) => s.id === sensorId)) {
       setSelectedSensors([...selectedSensors.filter((s) => s.id !== sensorId)]);
     } else {
-      const t = [...selectedSensors];
       const matchingSensor = sensors.find((s) => s.id === sensorId);
       if (matchingSensor) {
-        t.push(matchingSensor);
-        setSelectedSensors(t);
+        setSelectedSensors([...selectedSensors, matchingSensor]);
       }
+    }
+  };
+
+  const toggleDeviceSelection = (deviceId: string) => {
+    const matchingDevice = devices.find((d) => d.deviceIdentifier === deviceId);
+
+    if (!selectedDevices.some((s) => s.deviceIdentifier === deviceId)) {
+      if (matchingDevice) {
+        setSelectedDevices([...selectedDevices, matchingDevice]);
+      }
+    } else {
+      setSelectedSensors(
+        selectedSensors.filter((s) => s.deviceId !== matchingDevice?.id)
+      );
+      setSelectedDevices(
+        selectedDevices.filter((s) => s.deviceIdentifier !== deviceId)
+      );
     }
   };
 
@@ -108,24 +123,7 @@ export const MeasurementsView: React.FC = () => {
                 setIsLoading(false);
               });
           }}
-          onSelectDevice={(deviceId: string) => {
-            const matchingDevice = devices.find(
-              (d) => d.deviceIdentifier === deviceId
-            );
-
-            if (!selectedDevices.some((s) => s.deviceIdentifier === deviceId)) {
-              if (matchingDevice) {
-                setSelectedDevices([...selectedDevices, matchingDevice]);
-              }
-            } else {
-              setSelectedSensors(
-                selectedSensors.filter((s) => s.deviceId !== matchingDevice?.id)
-              );
-              setSelectedDevices(
-                selectedDevices.filter((s) => s.deviceIdentifier !== deviceId)
-              );
-            }
-          }}
+          onSelectDevice={toggleDeviceSelection}
           toggleSensorSelection={toggleSensorSelection}
           selectedDevices={selectedDevices}
           selectedSensors={selectedSensors.map((s) => s.id)}
