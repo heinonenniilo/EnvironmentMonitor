@@ -64,8 +64,6 @@ builder.Services.ConfigureApplicationCookie(conf =>
 // Could look into other options?
 builder.Services.Configure<SecurityStampValidatorOptions>((options) =>
 {
-    options.ValidationInterval = TimeSpan.FromMinutes(10); // Default interval is 30 minutes
-
     options.OnRefreshingPrincipal = refreshingPrincipal =>
     {
         ClaimsIdentity? newIdentity = refreshingPrincipal.NewPrincipal?.Identities.First();
