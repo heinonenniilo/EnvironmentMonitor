@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using System;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 var isDevelopment = builder.Environment.IsDevelopment();
@@ -57,6 +58,28 @@ builder.Services.ConfigureApplicationCookie(conf =>
         return Task.CompletedTask;
     };
 });
+
+// This fixes the issue with additional claims being lost, apparently.
+// https://github.com/dotnet/aspnetcore/issues/49610
+// Could look into other options?
+builder.Services.Configure<SecurityStampValidatorOptions>((options) =>
+{
+    options.OnRefreshingPrincipal = refreshingPrincipal =>
+    {
+        ClaimsIdentity? newIdentity = refreshingPrincipal.NewPrincipal?.Identities.First();
+        ClaimsIdentity? currentIdentity = refreshingPrincipal.CurrentPrincipal?.Identities.First();
+        if (currentIdentity is not null && newIdentity is not null)
+        {
+            var currentClaimsNotInNewIdentity = currentIdentity.Claims.Where(c => !newIdentity.HasClaim(c.Type, c.Value));
+            foreach (Claim claim in currentClaimsNotInNewIdentity)
+            {
+                newIdentity.AddClaim(claim);
+            }
+        }
+        return Task.CompletedTask;
+    };
+});
+
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 // builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, CustomClaimsPrincipalFactory>();
 var app = builder.Build();

@@ -68,7 +68,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 providerKey = model.ProviderKey;
             }
             else
-            {           
+            {
                 loginProvider = info.LoginProvider;
                 providerKey = info.ProviderKey;
             }
@@ -77,20 +77,16 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 throw new InvalidOperationException();
             }
-          
-            var signInResult = await _signInManager.ExternalLoginSignInAsync(loginProvider, providerKey, model.Persistent);
-            if (signInResult.Succeeded)
+
+            var user = await _userManager.FindByLoginAsync(loginProvider, providerKey);
+            if (user != null)
             {
-                var user = await _userManager.FindByLoginAsync(loginProvider, providerKey);
-                if (user != null)
-                {
-                    var additionalClaims = await GetSensorClaims(user);
-                    await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
-                }
+                var additionalClaims = await GetSensorClaims(user);
+                await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
             else
             {
-                var user = new ApplicationUser { UserName = model.UserName ?? email, Email = email };
+                user = new ApplicationUser { UserName = model.UserName ?? email, Email = email };
                 var createResult = await _userManager.CreateAsync(user);
                 if (!createResult.Succeeded)
                 {
