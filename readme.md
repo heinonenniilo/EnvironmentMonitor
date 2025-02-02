@@ -1,11 +1,11 @@
 # Environment Monitor
 
-Purpose of the solution is to display measurement data, humidity + temperature for now, from different devices.
+Purpose of the solution is to display measurement data, humidity + temperature for now, from different devices. In addition, this solution can be used for communicating to IotHub devices.
 
 This solution includes:
  -  DB model for measurements
  -  Authentication / authorization using ASP.NET identity
- -  WebApi for fetching measurement data.
+ -  WebApi for fetching measurement data / communicating with devices.
  -  React UI for showing measurement data.
  -  Azure function for listening/processing measurement messages sent to Azure IoT hub.
 
