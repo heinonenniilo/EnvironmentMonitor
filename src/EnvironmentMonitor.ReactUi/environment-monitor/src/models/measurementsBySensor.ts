@@ -1,4 +1,4 @@
-import { MeasurementTypes } from "../enums/temperatureTypes";
+import { MeasurementTypes } from "../enums/measurementTypes";
 import { Measurement } from "./measurement";
 
 export interface MeasurementsViewModel {
