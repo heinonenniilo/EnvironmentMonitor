@@ -142,7 +142,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     if (!typeId) {
       return sensorName;
     } else {
-      return `${sensorName} ${getMeasurementUnit(typeId)}`;
+      return `${sensorName} (${getMeasurementUnit(typeId)})`;
     }
   };
 
