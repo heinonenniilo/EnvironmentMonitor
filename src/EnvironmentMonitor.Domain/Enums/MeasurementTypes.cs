@@ -11,5 +11,6 @@ namespace EnvironmentMonitor.Domain.Enums
         Undefined = 0,
         Temperature = 1,
         Humidity = 2,
+        Light = 3
     }
 }

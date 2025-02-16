@@ -111,13 +111,20 @@ namespace EnvironmentMonitor.Application.Services
             return mapped;
         }
 
-        public async Task<SensorDto> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel)
+        public async Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel)
         {
             var sensor = await _deviceRepository.GetSensor(deviceId, sensorIdInternal);
-
             if (sensor == null || !_userService.HasAccessToSensor(sensor.Id, accessLevel))
             {
-                throw new UnauthorizedAccessException();
+                if (sensor == null)
+                {
+                    _logger.LogError($"Could not find sensor with internal id: {sensorIdInternal} / Device Id: {deviceId}");
+                }
+                else
+                {
+                    _logger.LogError($"Not authorized to access sensor with id {sensor.Id}");
+                }
+                return null;
             }
             return _mapper.Map<SensorDto>(sensor);
         }

@@ -1,5 +1,5 @@
 import { LineChart } from "@mui/x-charts";
-import { MeasurementTypes } from "../enums/temperatureTypes";
+import { MeasurementTypes } from "../enums/measurementTypes";
 import { Sensor } from "../models/sensor";
 import {
   Box,

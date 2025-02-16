@@ -9,7 +9,7 @@ import {
   MeasurementInfo,
   MeasurementsInfoTable,
 } from "../components/MeasurementsInfoTable";
-import { MeasurementTypes } from "../enums/temperatureTypes";
+import { MeasurementTypes } from "../enums/measurementTypes";
 import { getMeasurementUnit } from "../utilities/measurementUtils";
 import { getUserInfo } from "../reducers/userReducer";
 import { dateTimeSort } from "../utilities/datetimeUtils";

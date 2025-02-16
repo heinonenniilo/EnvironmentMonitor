@@ -1,4 +1,4 @@
-import { MeasurementTypes } from "../enums/temperatureTypes";
+import { MeasurementTypes } from "../enums/measurementTypes";
 import { Measurement } from "../models/measurement";
 import { getFormattedDate } from "./datetimeUtils";
 
@@ -23,6 +23,8 @@ export const getMeasurementUnit = (type: MeasurementTypes) => {
       return "%";
     case MeasurementTypes.Temperature:
       return "°C";
+    case MeasurementTypes.Light:
+      return "lx";
     default:
       return "";
   }

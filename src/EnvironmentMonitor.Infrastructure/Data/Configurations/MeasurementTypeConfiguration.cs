@@ -33,9 +33,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 },
                 new MeasurementType() {
                     Id = (int)MeasurementTypes.Humidity, Name = "Humidity", Unit = "%"
-                }
+                },
+                new MeasurementType() {
+                    Id = (int)MeasurementTypes.Light, Name = "Light", Unit = "Lux"
+                },
             });
-
         }
     }
 }

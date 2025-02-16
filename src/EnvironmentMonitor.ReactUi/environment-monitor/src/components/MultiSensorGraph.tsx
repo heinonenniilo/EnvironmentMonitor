@@ -1,5 +1,5 @@
 import "chartjs-adapter-moment";
-import { MeasurementTypes } from "../enums/temperatureTypes";
+import { MeasurementTypes } from "../enums/measurementTypes";
 import { Sensor } from "../models/sensor";
 import { Box, Checkbox, FormControlLabel, Typography } from "@mui/material";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
