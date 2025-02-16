@@ -301,6 +301,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                       ticks: {
                         callback: (value) => `${value} lx`,
                       },
+                      grid: {
+                        drawOnChartArea: false,
+                      },
                     }
                   : undefined,
               },
