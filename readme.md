@@ -1,6 +1,6 @@
 # Environment Monitor
 
-Purpose of the solution is to display measurement data, humidity + temperature for now, from different devices. In addition, this solution can be used for communicating to IotHub devices.
+Purpose of the solution is to display measurement data (temperature, ambient light, humidity at this point) from different devices. In addition, this solution can be used for communicating to IotHub devices.
 
 This solution includes:
  -  DB model for measurements
