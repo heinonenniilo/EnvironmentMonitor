@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP.Net Core app to Azure Web App - env-monitor
+name: Build and deploy environment-monitor
 
 on:
   push:
@@ -17,29 +17,46 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Version Spec of the version to use in SemVer notation.
+          # It also admits such aliases as lts/*, latest, nightly and canary builds
+          # Examples: 12.x, 10.15.1, >=10.15.0, lts/Hydrogen, 16-nightly, latest, node
+          node-version: ">=20.0.0"
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '3.1'
+          dotnet-version: "8.0.x"
+
+      - name: Install dependencies for React UI
+        run: yarn install --cwd src/EnvironmentMonitor.ReactUi/environment-monitor --network-timeout 500000
+
+      - name: Build React UI
+        run: |
+          cd src/EnvironmentMonitor.ReactUi/environment-monitor
+          yarn build
+
+      - name: Copy React build to .NET wwwroot
+        run: |
+          cp -r src/EnvironmentMonitor.ReactUi/environment-monitor/build/ src/EnvironmentMonitor.WebApi/wwwroot/
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -o "${{env.DOTNET_ROOT}}/env-monitor"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
-
+          name: .env-monitor
+          path: ${{env.DOTNET_ROOT}}/env-monitor
   deploy:
     runs-on: windows-latest
     needs: build
     environment:
-      name: 'Production'
+      name: "Production"
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
       id-token: write #This is required for requesting the JWT
@@ -49,8 +66,8 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
+          name: .env-monitor
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -62,7 +79,6 @@ jobs:
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'env-monitor'
-          slot-name: 'Production'
+          app-name: "env-monitor"
+          slot-name: "Production"
           package: .
-          

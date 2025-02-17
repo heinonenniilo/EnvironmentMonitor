@@ -84,6 +84,7 @@ export const DeviceView: React.FC = () => {
           setIsLoading(false);
         });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId, hasFetched]);
 
   const getDeviceEvents = (id: string) => {
