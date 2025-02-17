@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy ASP.Net Core app to Azure Web App - env-monitor
+name: Build and deploy environment-monitor
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: Install dependencies for React UI
-        run: yarn install --cwd src/EnvironmentMonitor.ReactUi/environment-monitor
+        run: yarn install --cwd src/EnvironmentMonitor.ReactUi/environment-monitor --network-timeout 500000
 
       - name: Build React UI
         run: |
