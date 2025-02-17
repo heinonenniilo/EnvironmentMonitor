@@ -74,11 +74,14 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       for (let item in MeasurementTypes) {
         let val = parseInt(MeasurementTypes[item]);
         if (measurementsBySensor.measurements.some((m) => m.typeId === val)) {
+          const yAxisId =
+            (val as MeasurementTypes) === MeasurementTypes.Light ? "y1" : "y";
           returnValues.push({
             label: getSensorLabel(
               measurementsBySensor.sensorId,
               val as MeasurementTypes
             ),
+            yAxisID: yAxisId,
             data: measurementsBySensor.measurements
               .filter((d) => d.typeId === val)
               .map((d) => {
@@ -139,7 +142,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     if (!typeId) {
       return sensorName;
     } else {
-      return `${sensorName} ${getMeasurementUnit(typeId)}`;
+      return `${sensorName} (${getMeasurementUnit(typeId)})`;
     }
   };
 
@@ -167,6 +170,12 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     return sensors?.some((d) => d.scaleMax !== undefined)
       ? Math.max(...maxScales)
       : undefined;
+  };
+
+  const hasLightAxis = () => {
+    return model?.measurements.some((s) =>
+      s.measurements.some((s2) => s2.typeId === MeasurementTypes.Light)
+    );
   };
 
   return (
@@ -284,6 +293,19 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                   max: getMaxScale(),
                   min: getMinScale(),
                 },
+                y1: hasLightAxis()
+                  ? {
+                      max: undefined,
+                      min: undefined,
+                      position: "right",
+                      ticks: {
+                        callback: (value) => `${value} lx`,
+                      },
+                      grid: {
+                        drawOnChartArea: false,
+                      },
+                    }
+                  : undefined,
               },
             }}
           />
