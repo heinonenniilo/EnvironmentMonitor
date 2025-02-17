@@ -39,7 +39,7 @@ jobs:
 
       - name: Copy React build to .NET wwwroot
         run: |
-          cp -r src/EnvironmentMonitor.ReactUi/environment-monitor/build/* src/EnvironmentMonitor.WebApi/wwwroot/
+          cp -r src/EnvironmentMonitor.ReactUi/environment-monitor/build/ src/EnvironmentMonitor.WebApi/wwwroot/
 
       - name: Build with dotnet
         run: dotnet build --configuration Release
