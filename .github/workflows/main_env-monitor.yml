@@ -74,7 +74,7 @@ jobs:
   deploy:
     runs-on: windows-latest
     needs: build
-    if: inputs.deploy == 'true' # Run only if the checkbox is checked
+    if: github.event_name == 'push' || inputs.deploy == 'true'
     environment:
       name: "Production"
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
