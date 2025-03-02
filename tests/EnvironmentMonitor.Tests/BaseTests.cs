@@ -31,8 +31,6 @@ namespace EnvironmentMonitor.Tests
         private const string ViewerPassword = "viewerPw#09#22";
         private const string ViewerUserName = "Viewer@Viewer.com";
 
-        private CookieContainer _cookieContainer;
-
         [OneTimeSetUp]
         public async Task SetUp()
         {
@@ -55,8 +53,6 @@ namespace EnvironmentMonitor.Tests
             _factory = new CustomWebApplicationFactory<Program>();
 
             await PrepareDatabase();
-            _cookieContainer = new CookieContainer();
-            var handler = new HttpClientHandler { CookieContainer = _cookieContainer, AllowAutoRedirect = true };
             _client = _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
         }
 
@@ -89,6 +85,13 @@ namespace EnvironmentMonitor.Tests
             Assert.That(resp.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
         }
 
+        [Test]
+        public async Task LoginFailsIfIncorrectPassword()
+        {
+            var result = await LoginAsync(ViewerUserName, "Wrong#1Pw");
+            Assert.That(result, Is.False);
+        }
+
         private async Task<bool> LoginAsync(string email, string password)
         {
             var loginData = new
@@ -99,7 +102,6 @@ namespace EnvironmentMonitor.Tests
             };
 
             var content = new StringContent(JsonConvert.SerializeObject(loginData), Encoding.UTF8, "application/json");
-            // Act: Perform login (cookies will be auto-managed)
             var loginResponse = await _client.PostAsync("/api/Authentication/login", content);
             return loginResponse.IsSuccessStatusCode;
         }
