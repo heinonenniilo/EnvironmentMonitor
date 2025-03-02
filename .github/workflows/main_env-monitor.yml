@@ -8,6 +8,15 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Run Deploy Job?"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 jobs:
   build:
@@ -29,6 +38,19 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      # Install LocalDB
+      - name: Install LocalDB
+        uses: potatoqualitee/mssqlsuite@v1.8
+        with:
+          install: localdb
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      - name: Test with the dotnet CLI
+        run: |
+          dotnet test tests/EnvironmentMonitor.Tests/EnvironmentMonitor.Tests.csproj
+
       - name: Install dependencies for React UI
         run: yarn install --cwd src/EnvironmentMonitor.ReactUi/environment-monitor --network-timeout 500000
 
@@ -41,9 +63,6 @@ jobs:
         run: |
           cp -r src/EnvironmentMonitor.ReactUi/environment-monitor/build/ src/EnvironmentMonitor.WebApi/wwwroot/
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
-
       - name: dotnet publish
         run: dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -o "${{env.DOTNET_ROOT}}/env-monitor"
 
@@ -55,12 +74,13 @@ jobs:
   deploy:
     runs-on: windows-latest
     needs: build
+    if: inputs.deploy == 'true' # Run only if the checkbox is checked
     environment:
       name: "Production"
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job

@@ -114,3 +114,5 @@ app.UseSpa(spa =>
 });
 
 app.Run();
+
+public partial class Program { }
