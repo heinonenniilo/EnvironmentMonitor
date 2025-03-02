@@ -26,16 +26,12 @@ namespace EnvironmentMonitor.Tests
     {
         private CustomWebApplicationFactory<Program> _factory;
         private HttpClient _client;
-
         private const string AdminPassword = "adminPassword#1#55";
         private const string AdminUserName = "Admin@admin.com";
-
         private const string ViewerPassword = "viewerPw#09#22";
         private const string ViewerUserName = "Viewer@Viewer.com";
 
-
         private CookieContainer _cookieContainer;
-
 
         [OneTimeSetUp]
         public async Task SetUp()
