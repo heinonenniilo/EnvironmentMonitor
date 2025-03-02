@@ -400,3 +400,4 @@ FodyWeavers.xsd
 /src/EnvironmentMonitor.WebApi/wwwroot
 /src/EnvironmentMonitor.WebApi/Properties/serviceDependencies*
 /src/EnvironmentMonitor.HubObserver/Properties/serviceDependencies*
+/src/EnvironmentMonitor.WebApi/.config/dotnet-tools.json
