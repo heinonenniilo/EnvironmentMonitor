@@ -307,6 +307,12 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                       }
                     }
                   },
+                  onHover: (event) => {
+                    (event.native?.target as any).style.cursor = "pointer";
+                  },
+                  onLeave: (event) => {
+                    (event.native?.target as any).style.cursor = "default";
+                  },
                 },
               },
               elements: {
