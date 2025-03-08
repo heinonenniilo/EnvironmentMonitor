@@ -134,9 +134,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         }
       }
     });
-
     setDataSets(returnValues);
-  }, [model, getSensorLabel]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [model]);
 
   const getInfoValues = () => {
     let returnArray: MeasurementInfo[] = [];
