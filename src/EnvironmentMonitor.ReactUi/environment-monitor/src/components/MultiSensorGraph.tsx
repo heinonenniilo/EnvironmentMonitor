@@ -22,7 +22,7 @@ import {
 } from "./MeasurementsInfoTable";
 import { Link } from "react-router";
 import { routes } from "../utilities/routes";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 Chart.register(
   TimeScale,
@@ -45,6 +45,18 @@ export interface MultiSensorGraphProps {
   onSetAutoScale?: (state: boolean) => void;
 }
 
+interface GraphDataset {
+  label: string;
+  yAxisID: string;
+  data: {
+    x: Date;
+    y: number;
+  }[];
+  id: number;
+  visible: boolean;
+  measurementType: MeasurementTypes;
+}
+
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   sensors,
   model,
@@ -58,6 +70,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
   const [autoScale, setAutoScale] = useState(false);
+  const [dataSets, setDataSets] = useState<GraphDataset[]>([]);
 
   useEffect(() => {
     if (useAutoScale !== undefined) {
@@ -65,11 +78,34 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     }
   }, [useAutoScale]);
 
-  const getDatasets = () => {
-    const returnValues: any[] = [];
-    if (!model || model.measurements.length === 0) {
-      return { datasets: returnValues };
+  const getSensorLabel = useCallback(
+    (sensorId: number, typeId?: MeasurementTypes) => {
+      const matchingSensor = sensors?.find((s) => s.id === sensorId);
+      let sensorName = matchingSensor?.name ?? `${sensorId}`;
+      const device =
+        devices &&
+        devices.length > 1 &&
+        devices.find((d) => d.id === matchingSensor?.deviceId);
+      if (device) {
+        sensorName = `${device.name}: ${sensorName}`;
+      }
+
+      if (!typeId) {
+        return sensorName;
+      } else {
+        return `${sensorName} (${getMeasurementUnit(typeId)})`;
+      }
+    },
+    [sensors, devices]
+  );
+
+  useEffect(() => {
+    if (!model) {
+      setDataSets([]);
+      return;
     }
+    const returnValues: GraphDataset[] = [];
+    let id: number = 0;
     model.measurements.forEach((measurementsBySensor) => {
       for (let item in MeasurementTypes) {
         let val = parseInt(MeasurementTypes[item]);
@@ -77,11 +113,14 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           const yAxisId =
             (val as MeasurementTypes) === MeasurementTypes.Light ? "y1" : "y";
           returnValues.push({
+            id: id,
+            visible: true,
             label: getSensorLabel(
               measurementsBySensor.sensorId,
               val as MeasurementTypes
             ),
             yAxisID: yAxisId,
+            measurementType: val as MeasurementTypes,
             data: measurementsBySensor.measurements
               .filter((d) => d.typeId === val)
               .map((d) => {
@@ -91,13 +130,13 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                 };
               }),
           });
+          id++;
         }
       }
     });
-    return {
-      datasets: returnValues,
-    };
-  };
+
+    setDataSets(returnValues);
+  }, [model, getSensorLabel]);
 
   const getInfoValues = () => {
     let returnArray: MeasurementInfo[] = [];
@@ -128,24 +167,6 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     return `${singleDevice?.name} / (${singleDevice?.id})`;
   };
 
-  const getSensorLabel = (sensorId: number, typeId?: MeasurementTypes) => {
-    const matchingSensor = sensors?.find((s) => s.id === sensorId);
-    let sensorName = matchingSensor?.name ?? `${sensorId}`;
-    const device =
-      devices &&
-      devices.length > 1 &&
-      devices.find((d) => d.id === matchingSensor?.deviceId);
-    if (device) {
-      sensorName = `${device.name}: ${sensorName}`;
-    }
-
-    if (!typeId) {
-      return sensorName;
-    } else {
-      return `${sensorName} (${getMeasurementUnit(typeId)})`;
-    }
-  };
-
   const getMinScale = () => {
     if (autoScale) {
       return undefined;
@@ -173,9 +194,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   };
 
   const hasLightAxis = () => {
-    return model?.measurements.some((s) =>
-      s.measurements.some((s2) => s2.typeId === MeasurementTypes.Light)
-    );
+    const hasLightAxis = dataSets
+      .filter((d) => d.visible)
+      .some((d) => d.measurementType === MeasurementTypes.Light);
+    return hasLightAxis;
   };
 
   return (
@@ -247,7 +269,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           }}
         >
           <Line
-            data={getDatasets()}
+            data={{ datasets: dataSets }}
             height={"auto"}
             options={{
               maintainAspectRatio: false,
@@ -258,6 +280,33 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                 },
                 colors: {
                   forceOverride: true,
+                },
+                legend: {
+                  onClick: (event, legendItem, legend) => {
+                    if (legendItem.datasetIndex !== undefined) {
+                      if (!legendItem.hidden) {
+                        legend.chart.hide(legendItem.datasetIndex);
+                        setDataSets((prev) =>
+                          prev.map((prevDataSet) =>
+                            prevDataSet.id === legendItem.datasetIndex
+                              ? { ...prevDataSet, visible: false }
+                              : prevDataSet
+                          )
+                        );
+                        legend.chart.update("hide");
+                      } else {
+                        legend.chart.show(legendItem.datasetIndex);
+                        setDataSets((prev) =>
+                          prev.map((prevDataSet) =>
+                            prevDataSet.id === legendItem.datasetIndex
+                              ? { ...prevDataSet, visible: true }
+                              : prevDataSet
+                          )
+                        );
+                        legend.chart.update("show");
+                      }
+                    }
+                  },
                 },
               },
               elements: {
@@ -293,19 +342,18 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                   max: getMaxScale(),
                   min: getMinScale(),
                 },
-                y1: hasLightAxis()
-                  ? {
-                      max: undefined,
-                      min: undefined,
-                      position: "right",
-                      ticks: {
-                        callback: (value) => `${value} lx`,
-                      },
-                      grid: {
-                        drawOnChartArea: false,
-                      },
-                    }
-                  : undefined,
+                y1: {
+                  max: undefined,
+                  min: undefined,
+                  display: hasLightAxis(),
+                  position: "right",
+                  ticks: {
+                    callback: (value) => `${value} lx`,
+                  },
+                  grid: {
+                    drawOnChartArea: false,
+                  },
+                },
               },
             }}
           />
