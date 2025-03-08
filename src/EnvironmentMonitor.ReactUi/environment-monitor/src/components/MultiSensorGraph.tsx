@@ -283,23 +283,28 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                 },
                 legend: {
                   onClick: (event, legendItem, legend) => {
-                    let visibleToSet = false;
                     if (legendItem.datasetIndex !== undefined) {
                       if (!legendItem.hidden) {
                         legend.chart.hide(legendItem.datasetIndex);
-                        visibleToSet = false;
+                        setDataSets((prev) =>
+                          prev.map((prevDataSet) =>
+                            prevDataSet.id === legendItem.datasetIndex
+                              ? { ...prevDataSet, visible: false }
+                              : prevDataSet
+                          )
+                        );
+                        legend.chart.update("hide");
                       } else {
                         legend.chart.show(legendItem.datasetIndex);
-                        visibleToSet = true;
+                        setDataSets((prev) =>
+                          prev.map((prevDataSet) =>
+                            prevDataSet.id === legendItem.datasetIndex
+                              ? { ...prevDataSet, visible: true }
+                              : prevDataSet
+                          )
+                        );
+                        legend.chart.update("show");
                       }
-                      setDataSets((prev) =>
-                        prev.map((prevDataSet) =>
-                          prevDataSet.id === legendItem.datasetIndex
-                            ? { ...prevDataSet, visible: visibleToSet }
-                            : prevDataSet
-                        )
-                      );
-                      legend.chart.update();
                     }
                   },
                 },
