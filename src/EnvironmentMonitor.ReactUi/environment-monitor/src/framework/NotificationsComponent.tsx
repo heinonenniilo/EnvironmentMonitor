@@ -42,7 +42,7 @@ export const NotificationsComponent: React.FC<NotificationMessageProps> = ({
               }}
               severity={r.severity}
               variant="filled"
-              sx={{ width: "100%" }}
+              sx={{ width: "100%", marginTop: 1 }}
               key={r.id}
             >
               {r.title}
