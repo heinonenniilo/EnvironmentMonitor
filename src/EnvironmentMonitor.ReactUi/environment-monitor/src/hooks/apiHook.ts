@@ -80,9 +80,13 @@ export const useApiHook = (): ApiHook => {
     userHook: {
       getUserInfo: async () => {
         try {
-          const response = await apiClient.get<any, AxiosResponse<User>>(
-            "/api/authentication/info"
-          );
+          const response = await apiClient.get<
+            any,
+            AxiosResponse<User | undefined>
+          >("/api/authentication/info");
+          if (!response.data) {
+            return undefined;
+          }
           return response.data;
         } catch (ex: any) {
           console.error(ex);
