@@ -234,32 +234,47 @@ export const useApiHook = (): ApiHook => {
         return res.data;
       },
       setMotionControlState: async (identifier: string, state: number) => {
-        let res = await apiClient.post("/api/devices/motion-control-status", {
-          deviceIdentifier: identifier,
-          mode: state,
-        });
-        if (res.status === 200) {
-          return true;
-        } else {
+        try {
+          let res = await apiClient.post("/api/devices/motion-control-status", {
+            deviceIdentifier: identifier,
+            mode: state,
+          });
+          if (res.status === 200) {
+            return true;
+          } else {
+            return false;
+          }
+        } catch (ex) {
+          showError();
           return false;
         }
       },
       setMotionControlDelay: async (identifier: string, delay: number) => {
-        let res = await apiClient.post("/api/devices/motion-control-delay", {
-          deviceIdentifier: identifier,
-          DelayMs: delay,
-        });
-        if (res.status === 200) {
-          return true;
-        } else {
+        try {
+          let res = await apiClient.post("/api/devices/motion-control-delay", {
+            deviceIdentifier: identifier,
+            DelayMs: delay,
+          });
+          if (res.status === 200) {
+            return true;
+          } else {
+            return false;
+          }
+        } catch (ex) {
+          showError();
           return false;
         }
       },
       getDeviceEvents: async (identifier: string) => {
-        let res = await apiClient.get<any, AxiosResponse<DeviceEvent[]>>(
-          `/api/devices/events/${identifier}`
-        );
-        return res.data;
+        try {
+          let res = await apiClient.get<any, AxiosResponse<DeviceEvent[]>>(
+            `/api/devices/events/${identifier}`
+          );
+          return res.data;
+        } catch (ex) {
+          showError();
+          return [];
+        }
       },
     },
   };
