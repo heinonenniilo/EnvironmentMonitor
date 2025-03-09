@@ -1,6 +1,7 @@
 ﻿using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -61,7 +62,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var device = await _context.Devices.FindAsync(deviceId);
             if (device == null)
             {
-                throw new ArgumentException("Not found");
+                throw new ArgumentException($"Could not find a device with id: {deviceId}");
             }
             var utcDate = dateTimeUtc ?? DateTime.UtcNow;
             var toAdd = new DeviceEvent()

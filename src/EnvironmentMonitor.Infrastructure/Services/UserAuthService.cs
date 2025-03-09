@@ -1,6 +1,7 @@
 ﻿using Azure.Core;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
@@ -110,8 +111,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         public async Task RegisterUser(RegisterUserModel model)
         {
             if (await _userManager.FindByEmailAsync(model.Email) != null)
-                throw new ArgumentException($"User already exists");
-
+                throw new DuplicateEntityException($"User with email '{model.Email}' already exists");
             var user = new ApplicationUser
             {
                 UserName = model.Email,

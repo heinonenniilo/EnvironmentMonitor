@@ -64,11 +64,11 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet("info")]
-        public ActionResult<UserDto> UserInfo()
+        public ActionResult<UserDto?> UserInfo()
         {
             if (User == null || User.Identity == null || !User.Identity.IsAuthenticated)
             {
-                return NotFound();
+                return Ok(null);
             }
             var roles = User.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value);
 

@@ -116,6 +116,10 @@ namespace EnvironmentMonitor.Application.Services
         {
             var returnList = new List<MeasurementsBySensorDto>();
             _logger.LogInformation("Getting measurements by sensor");
+            if (model.SensorIds.Any(s => !_userService.HasAccessToSensor(s, AccessLevels.Read) ) )
+            {
+                throw new UnauthorizedAccessException();
+            }
             var accessibleSensorIds = model.SensorIds.Where(d => _userService.HasAccessToSensor(d, AccessLevels.Read)).ToList();
 
             var result = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()

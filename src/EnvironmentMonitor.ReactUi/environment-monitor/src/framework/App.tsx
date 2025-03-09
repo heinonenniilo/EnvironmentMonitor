@@ -74,7 +74,6 @@ export const App: React.FC<AppProps> = (props) => {
       apiHook.userHook
         .getUserInfo()
         .then((res) => {
-          console.info(res);
           dispath(storeUserInfo(res));
         })
         .catch((ex) => {

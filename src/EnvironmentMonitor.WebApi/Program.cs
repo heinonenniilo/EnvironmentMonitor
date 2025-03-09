@@ -81,8 +81,9 @@ builder.Services.Configure<SecurityStampValidatorOptions>((options) =>
 });
 
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
-// builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, CustomClaimsPrincipalFactory>();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 var app = builder.Build();
+app.UseExceptionHandler(o => { });
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
