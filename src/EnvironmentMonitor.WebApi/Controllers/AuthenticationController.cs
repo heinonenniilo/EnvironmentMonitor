@@ -13,6 +13,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Internal;
+using LoginModel = EnvironmentMonitor.Domain.Models.LoginModel;
+using ExternalLoginModel = EnvironmentMonitor.Domain.Models.ExternalLoginModel;
 
 namespace EnvironmentMonitor.WebApi.Controllers
 {
@@ -43,13 +46,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginModel request)
         {
             await _userService.Login(new Domain.Models.LoginModel()
             {
-                UserName = request.Email,
+                UserName = request.UserName,
                 Password = request.Password,
-                Persistent = true
+                Persistent = request.Persistent
             });
             return Ok(new { Message = "Login successful!" });
         }
@@ -81,15 +84,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet("google")]
-        public IActionResult GoogleLogin()
+        public IActionResult GoogleLogin([FromQuery] bool persistent = false)
         {
-            var redirectUrl = Url.Action(nameof(GoogleCallback), "Authentication");
+            var redirectUrl = Url.Action(nameof(GoogleCallback), "Authentication", new { returnUrl = "/", persistent });
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(GoogleDefaults.AuthenticationScheme, redirectUrl);
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
         [HttpGet("google-callback")]
-        public async Task<IActionResult> GoogleCallback(string returnUrl = "/")
+        public async Task<IActionResult> GoogleCallback(string returnUrl = "/", bool persistent = false)
         {
             var authenticateResult = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
             if (!authenticateResult.Succeeded)
@@ -99,7 +102,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
             }
             await _userService.ExternalLogin(new ExternalLoginModel()
             {
-                Persistent = true
+                Persistent = persistent
             });
             return Redirect(returnUrl ?? "/");
         }

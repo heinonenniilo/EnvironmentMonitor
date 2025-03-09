@@ -21,7 +21,11 @@ interface ApiHook {
 
 interface userHook {
   getUserInfo: () => Promise<User | undefined>;
-  logIn: (userId: string, password: string) => Promise<boolean>;
+  logIn: (
+    userId: string,
+    password: string,
+    persistent: boolean
+  ) => Promise<boolean>;
   logOut: () => Promise<boolean>;
 }
 
@@ -94,19 +98,20 @@ export const useApiHook = (): ApiHook => {
           return undefined;
         }
       },
-      logIn: async (userId, password) => {
+      logIn: async (userId, password, persistent) => {
         try {
           const response = await apiClient.post<any, AxiosResponse<boolean>>(
             "/api/authentication/login",
             {
-              email: userId,
+              userName: userId,
               password: password,
+              persistent: persistent,
             }
           );
           return response.data;
         } catch (ex: any) {
           console.error(ex);
-          showError();
+          showError("Login failed");
           return false;
         }
       },
