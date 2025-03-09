@@ -10,6 +10,8 @@ import {
 import moment from "moment";
 import { DeviceInfo } from "../models/deviceInfo";
 import { DeviceEvent } from "../models/deviceEvent";
+import { useDispatch } from "react-redux";
+import { addNotification } from "../reducers/userInterfaceReducer";
 
 interface ApiHook {
   userHook: userHook;
@@ -56,9 +58,6 @@ interface deviceHook {
 
 const apiClient = axios.create({
   baseURL: undefined,
-  //process.env.NODE_ENV === "production"
-  //  ? undefined
-  //  : "https://localhost:7135",
   withCredentials: true,
   paramsSerializer: (params) => {
     return qs.stringify(params, { arrayFormat: "repeat" }); // or "comma" if backend expects "1,2,3"
@@ -66,6 +65,17 @@ const apiClient = axios.create({
 });
 
 export const useApiHook = (): ApiHook => {
+  const dispatch = useDispatch();
+
+  const showError = (title?: string, body?: string) => {
+    dispatch(
+      addNotification({
+        title: title ?? "Error occured",
+        body: body ?? "",
+        severity: "error",
+      })
+    );
+  };
   return {
     userHook: {
       getUserInfo: async () => {
@@ -76,6 +86,7 @@ export const useApiHook = (): ApiHook => {
           return response.data;
         } catch (ex: any) {
           console.error(ex);
+          showError();
           return undefined;
         }
       },
@@ -91,6 +102,7 @@ export const useApiHook = (): ApiHook => {
           return response.data;
         } catch (ex: any) {
           console.error(ex);
+          showError();
           return false;
         }
       },
@@ -102,6 +114,7 @@ export const useApiHook = (): ApiHook => {
           return true;
         } catch (ex: any) {
           console.error(ex);
+          showError();
           return false;
         }
       },
@@ -115,6 +128,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
+          showError();
           return undefined;
         }
       },
@@ -131,6 +145,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
+          showError();
           return [];
         }
       },
@@ -153,6 +168,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
+          showError("Fetching measurements failed");
           return undefined;
         }
       },
@@ -177,6 +193,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
+          showError("Fetching measurements failed");
           return undefined;
         }
       },
@@ -194,7 +211,7 @@ export const useApiHook = (): ApiHook => {
             return false;
           }
         } catch (ex: any) {
-          console.log(ex);
+          showError();
           return false;
         }
       },
@@ -206,6 +223,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
+          showError();
           return undefined;
         }
       },
@@ -246,5 +264,3 @@ export const useApiHook = (): ApiHook => {
     },
   };
 };
-
-// getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
