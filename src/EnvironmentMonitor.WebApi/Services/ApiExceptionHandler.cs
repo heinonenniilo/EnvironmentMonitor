@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using EnvironmentMonitor.Domain.Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Devices.Common.Exceptions;
 
@@ -25,6 +26,11 @@ namespace EnvironmentMonitor.WebApi.Services
             };
             switch (exception)
             {
+                case BaseException ex:
+                    problemDetails.Title = ex.Message;
+                    problemDetails.Status = ex.StatusCode;
+                    problemDetails.Detail = ex.Detail;
+                    break;
                 case UnauthorizedAccessException:
                 case UnauthorizedException:
                     problemDetails.Title = "Not allowed";
@@ -33,7 +39,6 @@ namespace EnvironmentMonitor.WebApi.Services
                 case ArgumentException argEx:
                     problemDetails.Title = "Bad request";
                     problemDetails.Status = StatusCodes.Status400BadRequest;
-                    problemDetails.Detail = argEx.Message;
                     break;
                 default:
                     problemDetails.Title = "Error occured";

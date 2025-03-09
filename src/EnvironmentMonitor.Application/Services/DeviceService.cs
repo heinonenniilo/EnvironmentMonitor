@@ -2,6 +2,7 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -36,11 +37,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
-            if (device == null)
-            {
-                throw new ArgumentException($"Device with identifier: '{deviceIdentifier}' not found.");
-            }
+            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier) ?? throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
             _logger.LogInformation($"Trying to reboot device with identifier '{deviceIdentifier}'");
             await _messageService.SendMessageToDevice(deviceIdentifier, "REBOOT");
             await AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true);
@@ -55,7 +52,7 @@ namespace EnvironmentMonitor.Application.Services
             var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
             if (device == null)
             {
-                throw new ArgumentException($"Device with identifier: '{deviceIdentifier}' not found.");
+                throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
             }
             var message = $"MOTIONCONTROLSTATUS:{(int)status}";
             _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
@@ -72,7 +69,7 @@ namespace EnvironmentMonitor.Application.Services
             var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
             if (device == null)
             {
-                throw new ArgumentException($"Device with identifier: '{deviceIdentifier}' not found.");
+                throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
             }
             var message = $"MOTIONCONTROLDELAY:{delayMs}";
             _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
@@ -139,8 +136,7 @@ namespace EnvironmentMonitor.Application.Services
             var device = devices.FirstOrDefault();
             if (device == null)
             {
-                _logger.LogError($"Could not find device with id: {deviceId}");
-                throw new ArgumentException("Not found");
+                throw new EntityNotFoundException($"Device with id: '{deviceId}' not found");
             }
 
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
