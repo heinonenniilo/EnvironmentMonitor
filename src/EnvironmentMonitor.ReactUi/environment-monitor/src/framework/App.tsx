@@ -57,11 +57,11 @@ export const App: React.FC<AppProps> = (props) => {
     });
   };
 
-  const loginWithGoogleAuthCode = () => {
+  const loginWithGoogleAuthCode = (persistent: boolean) => {
     if (process.env.NODE_ENV === "production") {
-      window.location.href = "api/authentication/google";
+      window.location.href = `api/authentication/google?persistent=${persistent}`;
     } else {
-      window.location.href = "https://localhost:7135/api/authentication/google";
+      window.location.href = `https://localhost:7135/api/authentication/google?persistent=${persistent}`;
     }
   };
 

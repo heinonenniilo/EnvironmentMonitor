@@ -1,10 +1,17 @@
 import React, { useState } from "react";
-import { TextField, Button, Box, Typography } from "@mui/material";
+import {
+  TextField,
+  Button,
+  Box,
+  Typography,
+  FormControlLabel,
+  Checkbox,
+} from "@mui/material";
 import { useApiHook } from "../hooks/apiHook";
 
 export interface LoginPageProps {
   onLoggedIn: () => void;
-  onLogInWithGoogle: () => void;
+  onLogInWithGoogle: (persistent: boolean) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({
@@ -13,6 +20,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
 }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const apiHook = useApiHook();
 
@@ -21,7 +29,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
     setError("");
 
     try {
-      let res = await apiHook.userHook.logIn(userId, password);
+      let res = await apiHook.userHook.logIn(userId, password, rememberMe);
       console.info(res);
       if (res) {
         onLoggedIn();
@@ -86,10 +94,23 @@ const LoginPage: React.FC<LoginPageProps> = ({
           color="primary"
           fullWidth
           sx={{ marginTop: 2 }}
-          onClick={onLogInWithGoogle}
+          onClick={() => {
+            onLogInWithGoogle(rememberMe);
+          }}
         >
           Google login
         </Button>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Remember Me"
+          sx={{ marginTop: 1 }}
+        />
       </form>
     </Box>
   );

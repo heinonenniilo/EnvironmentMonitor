@@ -1,4 +1,5 @@
 ﻿using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
@@ -94,11 +95,11 @@ namespace EnvironmentMonitor.Tests
 
         private async Task<bool> LoginAsync(string email, string password)
         {
-            var loginData = new
+            var loginData = new LoginModel()
             {
-                Email = email,
+                UserName = email,
                 Password = password,
-                RememberMe = true
+                Persistent = true
             };
 
             var content = new StringContent(JsonConvert.SerializeObject(loginData), Encoding.UTF8, "application/json");
