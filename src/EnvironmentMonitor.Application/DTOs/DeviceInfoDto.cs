@@ -15,10 +15,12 @@ namespace EnvironmentMonitor.Application.DTOs
         public DeviceDto Device { get; set; }
         public DateTime? OnlineSince { get; set; }
         public DateTime? RebootedOn { get; set; }
-        public DateTime? LastMessage {  get; set; }
+        public DateTime? LastMessage { get; set; }
+
+        public bool ShowWarning { get; set; }
         public void Mapping(Profile profile)
         {
-            profile.CreateMap<DeviceInfo, DeviceInfoDto>().ReverseMap();
+            profile.CreateMap<DeviceInfo, DeviceInfoDto>().ForMember(x => x.ShowWarning, opt => opt.MapFrom(x => x.LastMessageUtc == null || x.LastMessageUtc < DateTime.UtcNow.AddMinutes(-10))).ReverseMap();
         }
     }
 }

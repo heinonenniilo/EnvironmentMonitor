@@ -14,5 +14,6 @@ namespace EnvironmentMonitor.Domain.Models
         public DateTime? RebootedOn { get; set; }
 
         public DateTime? LastMessage { get; set; }
+        public DateTime? LastMessageUtc { get; set; }
     }
 }
