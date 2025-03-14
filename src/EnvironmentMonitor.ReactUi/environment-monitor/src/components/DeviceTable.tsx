@@ -138,7 +138,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
             }}
           >
             {row.showWarning ? (
-              <WarningAmber color="warning" fontSize="small" />
+              <WarningAmber color="warning" />
             ) : (
               <CheckCircle color="success" />
             )}
