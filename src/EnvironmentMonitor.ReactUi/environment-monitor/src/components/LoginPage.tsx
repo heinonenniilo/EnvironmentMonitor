@@ -21,6 +21,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const apiHook = useApiHook();
 
@@ -29,19 +30,23 @@ const LoginPage: React.FC<LoginPageProps> = ({
     setError("");
 
     try {
+      setIsLoading(true);
       let res = await apiHook.userHook.logIn(userId, password, rememberMe);
-      console.info(res);
+      setIsLoading(false);
       if (res) {
         onLoggedIn();
       } else {
         setError("Login failed.");
       }
     } catch (err: any) {
+      setIsLoading(false);
       // Handle errors
       console.error("Error logging in:", err);
       setError(err?.response?.data?.message || "Login failed.");
     }
   };
+
+  const logInEnabled = userId.length > 4 && password.length > 4;
 
   return (
     <Box
@@ -84,6 +89,8 @@ const LoginPage: React.FC<LoginPageProps> = ({
           variant="contained"
           color="primary"
           fullWidth
+          disabled={!logInEnabled}
+          loading={isLoading}
           sx={{ marginTop: 2 }}
         >
           Login

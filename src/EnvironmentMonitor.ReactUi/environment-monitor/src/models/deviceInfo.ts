@@ -5,4 +5,5 @@ export interface DeviceInfo {
   onlineSince?: Date;
   rebootedOn?: Date;
   lastMessage?: Date;
+  showWarning?: boolean;
 }

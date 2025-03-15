@@ -4,6 +4,7 @@ import { routes } from "../utilities/routes";
 import { Link } from "react-router";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { CheckCircle, WarningAmber } from "@mui/icons-material";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
@@ -121,6 +122,20 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       },
       valueFormatter: (value, row) => {
         return formatDate((row as DeviceInfo)?.lastMessage);
+      },
+      renderCell: (params) => {
+        const row = params.row as DeviceInfo;
+
+        return (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            {row.showWarning ? (
+              <WarningAmber color="warning" />
+            ) : (
+              <CheckCircle color="success" />
+            )}
+            <span>{formatDate(params.row.lastMessage)}</span>
+          </Box>
+        );
       },
     },
   ];

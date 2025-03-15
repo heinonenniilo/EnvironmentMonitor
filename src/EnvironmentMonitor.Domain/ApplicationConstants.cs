@@ -11,5 +11,6 @@ namespace EnvironmentMonitor.Domain
         public static string TargetTimeZone = "FLE Standard Time";
 
         public static int MeasurementGroupByLimitInDays = 7;
+        public static int DeviceWarningLimitInMinutes = 10;
     }
 }
