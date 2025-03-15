@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EnvironmentMonitor.Application.Mappings;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Models;
 using System;
@@ -20,7 +21,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public bool ShowWarning { get; set; }
         public void Mapping(Profile profile)
         {
-            profile.CreateMap<DeviceInfo, DeviceInfoDto>().ForMember(x => x.ShowWarning, opt => opt.MapFrom(x => x.LastMessageUtc == null || x.LastMessageUtc < DateTime.UtcNow.AddMinutes(-10))).ReverseMap();
+            profile.CreateMap<DeviceInfo, DeviceInfoDto>().ForMember(x => x.ShowWarning, opt => opt.MapFrom(x => x.LastMessageUtc == null || x.LastMessageUtc < DateTime.UtcNow.AddMinutes(-1 * ApplicationConstants.DeviceWarningLimitInMinutes))).ReverseMap();
         }
     }
 }

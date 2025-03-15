@@ -127,23 +127,14 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         const row = params.row as DeviceInfo;
 
         return (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-
-              padding: "2px",
-              borderRadius: "4px",
-            }}
-          >
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {row.showWarning ? (
               <WarningAmber color="warning" />
             ) : (
               <CheckCircle color="success" />
             )}
             <span>{formatDate(params.row.lastMessage)}</span>
-          </div>
+          </Box>
         );
       },
     },
