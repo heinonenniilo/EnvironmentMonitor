@@ -30,6 +30,7 @@ jobs:
         with:
           name: .env-monitor-function-app
           path: "./output"
+          include-hidden-files: true
 
   deploy:
     runs-on: windows-latest
