@@ -1,0 +1,48 @@
+name: Build & deploy Environment Monitor function app
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: "."
+  DOTNET_VERSION: "8.0.x"
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@v4
+
+      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: "Build Environment Monitor"
+        shell: pwsh
+        run: |
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          dotnet build --configuration Release --output ./output
+          popd
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4C8625311A7E41DF94B1F493E439AE3D }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A9F03B52F6CA485B82924F1970E00D80 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E4CE7A1599994A388FDDA5640CED3ECE }}
+
+      - name: "Release function"
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: "EnvironmentMonitorHubObserver"
+          slot-name: "Production"
+          package: "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output"
