@@ -25,13 +25,15 @@ namespace EnvironmentMonitor.HubObserver.Functions
         {
             if (events?.Length > 0)
             {
-                _logger.LogInformation($"Start processing {events.Length} messages");
+                _logger.LogInformation($"Start processing {events.Length} messages.");
             }
             else
             {
                 _logger.LogWarning("No messages to process!");
                 return;
             }
+            var processedMessaged = 0;
+
             foreach (EventData message in events)
             {
                 var bodyString = Encoding.UTF8.GetString(message.EventBody);
@@ -69,6 +71,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 try
                 {
                     await _measurementService.AddMeasurements(objectToInsert);
+                    processedMessaged++;
                 }
                 catch (Exception ex)
                 {
@@ -76,6 +79,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     throw;
                 }
             }
+            _logger.LogInformation($"Total of {processedMessaged} processed");
         }
     }
 }
