@@ -1,10 +1,16 @@
 name: Build and deploy environment-monitor (Azure Function)
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy?"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 env:
   DOTNET_VERSION: "8.0.x"
@@ -32,9 +38,11 @@ jobs:
         with:
           name: .env-monitor-function-app
           path: "./output"
+          include-hidden-files: true
 
       - name: Login to Azure
         uses: azure/login@v2
+        if: inputs.deploy == 'true'
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4C8625311A7E41DF94B1F493E439AE3D }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A9F03B52F6CA485B82924F1970E00D80 }}
@@ -42,6 +50,7 @@ jobs:
 
       - name: "Deploy HubObserver"
         uses: Azure/functions-action@v1
+        if: inputs.deploy == 'true'
         id: fa
         with:
           app-name: "EnvironmentMonitorHubObserver"
