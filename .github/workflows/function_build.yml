@@ -35,9 +35,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4C8625311A7E41DF94B1F493E439AE3D }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A9F03B52F6CA485B82924F1970E00D80 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E4CE7A1599994A388FDDA5640CED3ECE }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_C314E8A58F7140E0A550C46FD0C36A18 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A5BFB822D1BF4878ADFA1523BA5A23A9 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3E8CCAEBE6DD408BA7CC58F52CAD4EC3 }}
 
       - name: "Release function"
         uses: Azure/functions-action@v1
