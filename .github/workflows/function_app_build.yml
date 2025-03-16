@@ -1,1 +1,34 @@
+name: Build & deploy Environment Monitor function app
 
+on:
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: "."
+  DOTNET_VERSION: "8.0.x"
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@v4
+
+      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: "Build Environment Monitor"
+        shell: pwsh
+        run: |
+          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
+          dotnet build --configuration Release --output ./output
+          popd
+      - name: Upload web api artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: .env-monitor-function-app
+          path: "./output"
