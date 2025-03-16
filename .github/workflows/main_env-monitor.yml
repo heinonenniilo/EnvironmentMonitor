@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy environment-monitor
 
 on:
@@ -63,14 +60,23 @@ jobs:
         run: |
           cp -r src/EnvironmentMonitor.ReactUi/environment-monitor/build/ src/EnvironmentMonitor.WebApi/wwwroot/
 
-      - name: dotnet publish
-        run: dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -o "${{env.DOTNET_ROOT}}/env-monitor"
+      - name: dotnet publish (WebApi)
+        run: dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -o "${{env.DOTNET_ROOT}}/env-monitor-web-api"
 
-      - name: Upload artifact for deployment job
+      - name: dotnet publish (Function)
+        run: dotnet publish src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj -c Release -o "${{env.DOTNET_ROOT}}/env-monitor-function"
+
+      - name: Upload web api artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .env-monitor
-          path: ${{env.DOTNET_ROOT}}/env-monitor
+          name: .env-monitor-web-api
+          path: ${{env.DOTNET_ROOT}}/env-monitor-web-api
+
+      - name: Upload function artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: .env-monitor-function
+          path: ${{env.DOTNET_ROOT}}/env-monitor-function
   deploy:
     runs-on: windows-latest
     needs: build
@@ -83,10 +89,11 @@ jobs:
       contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download WEB API artifacts
         uses: actions/download-artifact@v4
         with:
-          name: .env-monitor
+          name: .env-monitor-web-api
+          path: "./env-monitor-web-api"
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -95,10 +102,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A9F03B52F6CA485B82924F1970E00D80 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E4CE7A1599994A388FDDA5640CED3ECE }}
 
-      - name: Deploy to Azure Web App
+      - name: Deploy Environment Monitor Web API
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: "env-monitor"
           slot-name: "Production"
-          package: .
+          package: "./env-monitor-web-api"
