@@ -1,4 +1,4 @@
-name: Build & deploy Environment Monitor function app
+name: Build and deploy environment-monitor (Azure Function)
 
 on:
   push:

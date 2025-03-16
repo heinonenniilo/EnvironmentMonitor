@@ -1,4 +1,4 @@
-name: Build and deploy environment-monitor
+name: Build and deploy environment-monitor (Web)
 
 on:
   push:
