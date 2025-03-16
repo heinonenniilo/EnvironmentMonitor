@@ -93,13 +93,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: .env-monitor-web-api
-          path: "env-monitor-web-api"
+          path: "./env-monitor-web-api"
 
       - name: Download Function artifacts
         uses: actions/download-artifact@v4
         with:
           name: .env-monitor-function
-          path: "env-monitor-function"
+          path: "./env-monitor-function"
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -114,11 +114,11 @@ jobs:
         with:
           app-name: "env-monitor"
           slot-name: "Production"
-          package: "env-monitor-web-api"
+          package: "./env-monitor-web-api"
       - name: "Deploy Environment Monitor Function"
         uses: Azure/functions-action@v1
         id: fa
         with:
           app-name: "EnvironmentMonitorHubObserver"
           slot-name: "Production"
-          package: "env-monitor-function"
+          package: "./env-monitor-function"
