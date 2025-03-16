@@ -25,6 +25,11 @@ jobs:
       - name: Build HubObserver
         run: dotnet build src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj --configuration Release -o ./output
 
+      - name: List Files in Publish Directory
+        run: |
+          echo "Published files:"
+          Get-ChildItem -Path ./output -Recurse
+
       - name: Upload HubObserver
         uses: actions/upload-artifact@v4
         with:
@@ -45,6 +50,12 @@ jobs:
         with:
           name: .env-monitor-function-app
           path: "./deploy"
+
+      - name: List Downloaded Artifact Files
+        run: |
+          echo "Downloaded artifact files:"
+          Get-ChildItem -Path ./deploy -Recurse
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
