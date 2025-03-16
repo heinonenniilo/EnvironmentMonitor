@@ -1,6 +1,9 @@
 name: Build & deploy Environment Monitor function app
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
@@ -24,6 +27,12 @@ jobs:
       - name: Build Environment Monitor function app
         run: dotnet build src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj --configuration Release -o ./output
 
+      - name: Upload function app
+        uses: actions/upload-artifact@v4
+        with:
+          name: .env-monitor-function-app
+          path: "./output"
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -31,16 +40,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A9F03B52F6CA485B82924F1970E00D80 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E4CE7A1599994A388FDDA5640CED3ECE }}
 
-      - name: "Release function"
+      - name: "Deploy function"
         uses: Azure/functions-action@v1
         id: fa
         with:
           app-name: "EnvironmentMonitorHubObserver"
           slot-name: "Production"
           package: "./output"
-
-      - name: Upload web api artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: .env-monitor-function-app
-          path: "./output"
