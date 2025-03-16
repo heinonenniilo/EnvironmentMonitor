@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: "."
   DOTNET_VERSION: "8.0.x"
 jobs:
   build:
@@ -22,12 +21,8 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: "Build Environment Monitor"
-        shell: pwsh
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
-          popd
+      - name: Build Environment Monitor function app
+        run: dotnet build src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj --configuration Release -o ./output
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -42,7 +37,7 @@ jobs:
         with:
           app-name: "EnvironmentMonitorHubObserver"
           slot-name: "Production"
-          package: "${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output"
+          package: "./output"
 
       - name: Upload web api artifact
         uses: actions/upload-artifact@v4
