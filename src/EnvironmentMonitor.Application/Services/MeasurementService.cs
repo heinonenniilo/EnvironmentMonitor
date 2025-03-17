@@ -44,14 +44,14 @@ namespace EnvironmentMonitor.Application.Services
             var device = await _deviceService.GetDevice(measurement.DeviceId, AccessLevels.Write);
             if (device == null)
             {
-                _logger.LogInformation($"Could not find device with device id '{measurement.DeviceId}'");
+                _logger.LogWarning($"Could not find device with device id '{measurement.DeviceId}'");
                 return;
             }
             if (!_userService.HasAccessToDevice(device.Id, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException("No Access");
             }
-            _logger.LogInformation($"Found device with ID: {device.Id} for device id '{measurement.DeviceId}'");
+            _logger.LogInformation($"Found device with ID: {device.Id} for device identifier '{measurement.DeviceId}'");
             var measurementsToAdd = new List<Measurement>();
             foreach (var row in measurement.Measurements)
             {
@@ -84,13 +84,13 @@ namespace EnvironmentMonitor.Application.Services
             }
             if (measurementsToAdd.Any())
             {
-                _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device: {device.Id} / '{device.Name}'");
+                _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device ({device.Id}): '{device.Name}'");
                 if (measurement.FirstMessage)
                 {
                     await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
                 }
                 await _measurementRepository.AddMeasurements(measurementsToAdd);
-                _logger.LogInformation("Measurements added");
+                _logger.LogInformation("Measurementsadded");
             }
             else
             {

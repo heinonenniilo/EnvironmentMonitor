@@ -1,14 +1,23 @@
-name: Build & deploy Environment Monitor function app
+name: Build and deploy environment-monitor (Azure Function)
 
 on:
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy?"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: "."
   DOTNET_VERSION: "8.0.x"
 jobs:
   build:
     runs-on: windows-latest
+    environment: Production
     permissions:
       id-token: write
       contents: read
@@ -21,14 +30,29 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: "Build Environment Monitor"
-        shell: pwsh
-        run: |
-          pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
-          popd
-      - name: Upload web api artifact
+      - name: Build HubObserver
+        run: dotnet build src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj --configuration Release -o ./output
+
+      - name: Upload HubObserver
         uses: actions/upload-artifact@v4
         with:
           name: .env-monitor-function-app
           path: "./output"
+          include-hidden-files: true
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        if: inputs.deploy == 'true'
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4C8625311A7E41DF94B1F493E439AE3D }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A9F03B52F6CA485B82924F1970E00D80 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E4CE7A1599994A388FDDA5640CED3ECE }}
+
+      - name: "Deploy HubObserver"
+        uses: Azure/functions-action@v1
+        if: inputs.deploy == 'true'
+        id: fa
+        with:
+          app-name: "EnvironmentMonitorHubObserver"
+          slot-name: "Production"
+          package: "./output"
