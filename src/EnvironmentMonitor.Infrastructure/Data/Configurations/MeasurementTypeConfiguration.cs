@@ -22,22 +22,21 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
             builder.HasIndex(x => x.Name).IsUnique();
             builder.HasMany(x => x.Measurements).WithOne(x => x.Type).HasForeignKey(x => x.TypeId).IsRequired();
 
-            builder.HasData(new List<MeasurementType>()
-            {
-                new MeasurementType()
+            builder.HasData(Enum.GetValues(typeof(MeasurementTypes))
+                .Cast<MeasurementTypes>()
+                .Select(x => new MeasurementType
                 {
-                    Id = (int)MeasurementTypes.Undefined, Name = "Undefined", Unit = "-"
-                },
-                new MeasurementType() {
-                    Id = (int)MeasurementTypes.Temperature, Name = "Temperature", Unit = "C"
-                },
-                new MeasurementType() {
-                    Id = (int)MeasurementTypes.Humidity, Name = "Humidity", Unit = "%"
-                },
-                new MeasurementType() {
-                    Id = (int)MeasurementTypes.Light, Name = "Light", Unit = "Lux"
-                },
-            });
+                    Id = (int)x,
+                    Name = x.ToString(),
+                    Unit = x switch
+                    {
+                        MeasurementTypes.Temperature => "C",
+                        MeasurementTypes.Humidity => "%",
+                        MeasurementTypes.Light => "Lx",
+                        MeasurementTypes.Motion => "ON/OFF",
+                        _ => "-"
+                    }
+                }).ToList());
         }
     }
 }
