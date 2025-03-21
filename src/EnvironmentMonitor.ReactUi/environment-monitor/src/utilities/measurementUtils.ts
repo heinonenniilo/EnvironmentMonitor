@@ -25,6 +25,8 @@ export const getMeasurementUnit = (type: MeasurementTypes) => {
       return "°C";
     case MeasurementTypes.Light:
       return "lx";
+    case MeasurementTypes.Motion:
+      return "ON/OFF";
     default:
       return "";
   }
