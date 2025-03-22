@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { getMeasurementUnit } from "../utilities/measurementUtils";
+import { getDatasetLabel } from "../utilities/measurementUtils";
 import {
   MeasurementInfo,
   MeasurementsInfoTable,
@@ -90,11 +90,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         sensorName = `${device.name}: ${sensorName}`;
       }
 
-      if (!typeId) {
-        return sensorName;
-      } else {
-        return `${sensorName} (${getMeasurementUnit(typeId)})`;
-      }
+      return getDatasetLabel(sensorName, typeId as MeasurementTypes);
     },
     [sensors, devices]
   );

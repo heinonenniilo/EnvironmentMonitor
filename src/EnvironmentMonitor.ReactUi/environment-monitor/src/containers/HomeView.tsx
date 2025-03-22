@@ -10,7 +10,7 @@ import {
   MeasurementsInfoTable,
 } from "../components/MeasurementsInfoTable";
 import { MeasurementTypes } from "../enums/measurementTypes";
-import { getMeasurementUnit } from "../utilities/measurementUtils";
+import { getDatasetLabel } from "../utilities/measurementUtils";
 import { getUserInfo } from "../reducers/userReducer";
 import { dateTimeSort } from "../utilities/datetimeUtils";
 
@@ -28,12 +28,7 @@ export const HomeView: React.FC = () => {
   const getSensorLabel = (sensorId: number, typeId?: MeasurementTypes) => {
     const sensorName =
       sensors?.find((s) => s.id === sensorId)?.name ?? `${sensorId}`;
-
-    if (!typeId) {
-      return sensorName;
-    } else {
-      return `${sensorName} ${getMeasurementUnit(typeId)}`;
-    }
+    return getDatasetLabel(sensorName, typeId);
   };
 
   const getInfoRows = () => {
