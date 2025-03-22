@@ -6,15 +6,18 @@ export const formatMeasurement = (
   measurement: Measurement,
   onlyValue?: boolean
 ) => {
+  const formattedValue =
+    measurement.typeId === MeasurementTypes.Motion
+      ? formatMeasurementValue(measurement)
+      : `${formatMeasurementValue(measurement)} ${getMeasurementUnit(
+          measurement.typeId
+        )}`;
   if (onlyValue) {
-    return `${formatMeasurementValue(measurement)} ${getMeasurementUnit(
-      measurement.typeId
-    )}`;
+    return `${formattedValue}`;
   }
   const formattedDate = getFormattedDate(measurement.timestamp);
-  return `${formatMeasurementValue(measurement)} ${getMeasurementUnit(
-    measurement.typeId
-  )} (${formattedDate})`;
+
+  return `${formattedValue} (${formattedDate})`;
 };
 
 export const getMeasurementUnit = (type: MeasurementTypes) => {
@@ -26,7 +29,7 @@ export const getMeasurementUnit = (type: MeasurementTypes) => {
     case MeasurementTypes.Light:
       return "lx";
     case MeasurementTypes.Motion:
-      return "";
+      return "motion";
     default:
       return "";
   }
