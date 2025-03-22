@@ -6,15 +6,18 @@ export const formatMeasurement = (
   measurement: Measurement,
   onlyValue?: boolean
 ) => {
+  const formattedValue =
+    measurement.typeId === MeasurementTypes.Motion
+      ? formatMeasurementValue(measurement)
+      : `${formatMeasurementValue(measurement)} ${getMeasurementUnit(
+          measurement.typeId
+        )}`;
   if (onlyValue) {
-    return `${measurement.sensorValue.toFixed(2)} ${getMeasurementUnit(
-      measurement.typeId
-    )}`;
+    return `${formattedValue}`;
   }
   const formattedDate = getFormattedDate(measurement.timestamp);
-  return `${measurement.sensorValue.toFixed(2)} ${getMeasurementUnit(
-    measurement.typeId
-  )} (${formattedDate})`;
+
+  return `${formattedValue} (${formattedDate})`;
 };
 
 export const getMeasurementUnit = (type: MeasurementTypes) => {
@@ -25,7 +28,28 @@ export const getMeasurementUnit = (type: MeasurementTypes) => {
       return "°C";
     case MeasurementTypes.Light:
       return "lx";
+    case MeasurementTypes.Motion:
+      return "motion";
     default:
       return "";
   }
+};
+
+const formatMeasurementValue = (measurement: Measurement) => {
+  if (measurement.typeId === MeasurementTypes.Motion) {
+    return measurement.sensorValue > 0 ? "ON" : "OFF";
+  } else {
+    return measurement.sensorValue.toFixed(2);
+  }
+};
+
+export const getDatasetLabel = (
+  sensorName: string,
+  measurementType?: MeasurementTypes
+) => {
+  const unit = measurementType ? getMeasurementUnit(measurementType) : "";
+  if (unit === "") {
+    return sensorName;
+  }
+  return `${sensorName} (${unit})`;
 };
