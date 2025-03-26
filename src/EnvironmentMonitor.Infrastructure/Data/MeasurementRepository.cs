@@ -1,5 +1,6 @@
 ﻿using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +38,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
             else
             {
-                var dateDiff = ((model.To ?? _dateService.CurrentTime() ) - model.From).TotalDays;
+                var dateDiff = ((model.To ?? _dateService.CurrentTime()) - model.From).TotalDays;
                 query = query.Where(x => x.Timestamp >= model.From && (model.To == null || x.Timestamp <= model.To));
                 if (dateDiff > ApplicationConstants.MeasurementGroupByLimitInDays)
                 {
@@ -55,7 +56,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                         TypeId = x.Key.TypeId,
                         TimestampUtc = DateTime.UtcNow,
                         Timestamp = x.Max(d => d.Timestamp),
-                        Value = x.Average(d => d.Value),
+                        Value = x.Key.TypeId == (int)MeasurementTypes.Motion ? x.Max(d => d.Value) : x.Average(d => d.Value),
                         SensorId = x.Key.SensorId
                     }).OrderBy(x => x.Timestamp);
                     var rows = await query.ToListAsync();
