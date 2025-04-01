@@ -102,7 +102,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
                   handleClickSetOutputMode(() => onSetOutOnMotionControl())
                 }
               >
-                Enable motion control
+                Set motion control ON
               </MenuItem>
             </Menu>
             <Button
