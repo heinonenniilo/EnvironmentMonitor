@@ -1,11 +1,14 @@
 import {
   Box,
   Button,
+  Menu,
+  MenuItem,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 import { DeviceInfo } from "../models/deviceInfo";
+import { useState } from "react";
 
 export interface DeviceControlComponentProps {
   reboot: () => void;
@@ -28,6 +31,23 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
   const drawDesktop = useMediaQuery(theme.breakpoints.up("lg"));
 
   const hasMotionSensor = device?.device.hasMotionSensor ?? false;
+
+  const handleClickDelayItem = (delay: number) => {
+    onSetMotionControlDelay(delay);
+    setAnchorOutputDelay(null);
+  };
+
+  const handleClickSetOutputMode = (functionToCall: () => void) => {
+    functionToCall();
+    setAnchorOutputMode(null);
+  };
+  const [anchorOutputDelay, setAnchorOutputDelay] =
+    useState<null | HTMLElement>(null);
+
+  const [anchorOutputMode, setAnchorOutputMode] = useState<null | HTMLElement>(
+    null
+  );
+
   return (
     <Box marginTop={2}>
       {title !== undefined ? (
@@ -50,86 +70,77 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
             <Button
               variant="contained"
               color="primary"
-              onClick={() => {
-                onSetOutStatic(true);
+              onClick={(event) => {
+                setAnchorOutputMode(event.currentTarget);
               }}
             >
-              Set output ON (motion control OFF)
+              Set output mode
             </Button>
+            <Menu
+              anchorEl={anchorOutputMode}
+              open={Boolean(anchorOutputMode)}
+              onClose={() => {
+                setAnchorOutputMode(null);
+              }}
+            >
+              <MenuItem
+                onClick={() => {
+                  handleClickSetOutputMode(() => onSetOutStatic(true));
+                }}
+              >
+                Set output ON (motion control OFF)
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleClickSetOutputMode(() => onSetOutStatic(false));
+                }}
+              >
+                Set output OFF (motion control OFF)
+              </MenuItem>
+              <MenuItem
+                onClick={() =>
+                  handleClickSetOutputMode(() => onSetOutOnMotionControl())
+                }
+              >
+                Enable motion control
+              </MenuItem>
+            </Menu>
             <Button
               variant="contained"
               color="primary"
-              onClick={() => {
-                onSetOutStatic(false);
+              onClick={(event) => {
+                setAnchorOutputDelay(event.currentTarget);
               }}
             >
-              Set output OFF (motion control OFF)
+              Set output delay
             </Button>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={onSetOutOnMotionControl}
+
+            <Menu
+              anchorEl={anchorOutputDelay}
+              open={Boolean(anchorOutputDelay)}
+              onClose={() => {
+                setAnchorOutputDelay(null);
+              }}
             >
-              Enable motion control
-            </Button>
+              <MenuItem onClick={() => handleClickDelayItem(10000)}>
+                Motion control delays 10 S
+              </MenuItem>
+              <MenuItem onClick={() => handleClickDelayItem(45000)}>
+                Motion control delays 45 S
+              </MenuItem>
+              <MenuItem onClick={() => handleClickDelayItem(60000)}>
+                Motion control delays 1 min
+              </MenuItem>
+              <MenuItem onClick={() => handleClickDelayItem(120000)}>
+                Motion control delays 2 min
+              </MenuItem>
+              <MenuItem onClick={() => handleClickDelayItem(240000)}>
+                Motion control delays 4 min
+              </MenuItem>
+            </Menu>
           </>
         ) : null}
       </Box>
-      {hasMotionSensor ? (
-        <Box
-          display="flex"
-          justifyContent="start"
-          gap={2}
-          marginTop={2}
-          flexDirection={drawDesktop ? "row" : "column"}
-        >
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              onSetMotionControlDelay(10000);
-            }}
-          >
-            Motion control delays 10 S
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              onSetMotionControlDelay(45000);
-            }}
-          >
-            Motion control delays 45 S
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              onSetMotionControlDelay(60000);
-            }}
-          >
-            Motion control delays 1 min S
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              onSetMotionControlDelay(120000);
-            }}
-          >
-            Motion control delays 2 min S
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              onSetMotionControlDelay(240000);
-            }}
-          >
-            Motion control delays 4 min S
-          </Button>
-        </Box>
-      ) : null}
     </Box>
   );
 };
