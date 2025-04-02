@@ -19,6 +19,16 @@ export interface DeviceControlComponentProps {
   title?: string;
 }
 
+const delayOptions = [
+  { delay: 10 },
+  { delay: 45 },
+  { delay: 60 },
+  { delay: 2 * 60 },
+  { delay: 5 * 60 },
+  { delay: 10 * 60 },
+  { delay: 15 * 60 },
+];
+
 export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
   onSetOutStatic,
   onSetOutOnMotionControl,
@@ -122,21 +132,16 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
                 setAnchorOutputDelay(null);
               }}
             >
-              <MenuItem onClick={() => handleClickDelayItem(10000)}>
-                Motion control delays 10 S
-              </MenuItem>
-              <MenuItem onClick={() => handleClickDelayItem(45000)}>
-                Motion control delays 45 S
-              </MenuItem>
-              <MenuItem onClick={() => handleClickDelayItem(60000)}>
-                Motion control delays 1 min
-              </MenuItem>
-              <MenuItem onClick={() => handleClickDelayItem(120000)}>
-                Motion control delays 2 min
-              </MenuItem>
-              <MenuItem onClick={() => handleClickDelayItem(240000)}>
-                Motion control delays 4 min
-              </MenuItem>
+              {delayOptions.map((d, id) => (
+                <MenuItem
+                  onClick={() => {
+                    handleClickDelayItem(d.delay);
+                  }}
+                  id={`md_${id}`}
+                >
+                  {d.delay <= 60 ? `${d.delay} s` : `${d.delay / 60} min`}
+                </MenuItem>
+              ))}
             </Menu>
           </>
         ) : null}

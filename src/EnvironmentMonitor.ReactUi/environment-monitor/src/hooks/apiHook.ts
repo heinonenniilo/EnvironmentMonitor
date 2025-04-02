@@ -55,7 +55,7 @@ interface deviceHook {
   ) => Promise<boolean>;
   setMotionControlDelay: (
     identifier: string,
-    delay: number
+    delayMs: number
   ) => Promise<boolean>;
   getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
 }
@@ -258,11 +258,11 @@ export const useApiHook = (): ApiHook => {
           return false;
         }
       },
-      setMotionControlDelay: async (identifier: string, delay: number) => {
+      setMotionControlDelay: async (identifier: string, delayMs: number) => {
         try {
           let res = await apiClient.post("/api/devices/motion-control-delay", {
             deviceIdentifier: identifier,
-            DelayMs: delay,
+            DelayMs: delayMs,
           });
           if (res.status === 200) {
             return true;

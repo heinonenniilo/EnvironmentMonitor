@@ -5,7 +5,7 @@ import { useApiHook } from "../hooks/apiHook";
 import { DeviceInfo } from "../models/deviceInfo";
 import { SensorTable } from "../components/SensorTable";
 import { DeviceTable } from "../components/DeviceTable";
-import { DeviceControlComponent } from "../components/DeviceCommandButtons";
+import { DeviceControlComponent } from "../components/DeviceControlComponent";
 import { useDispatch } from "react-redux";
 import {
   addNotification,
@@ -138,13 +138,13 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const setMotionControlDelay = (delay: number, message?: string) => {
+  const setMotionControlDelay = (delayMs: number, message?: string) => {
     if (!selectedDevice) {
       return;
     }
     setIsLoading(true);
     deviceHook
-      .setMotionControlDelay(selectedDevice.device.deviceIdentifier, delay)
+      .setMotionControlDelay(selectedDevice.device.deviceIdentifier, delayMs)
       .then((res) => {
         if (res) {
           getDeviceEvents(selectedDevice.device.deviceIdentifier);
@@ -267,12 +267,12 @@ export const DeviceView: React.FC = () => {
               setConfirmDialog({
                 onConfirm: () => {
                   setMotionControlDelay(
-                    delay,
-                    `Motioncontrol delay set to ${delay / 1000} s`
+                    delay * 1000,
+                    `Motioncontrol delay set to ${delay} s`
                   );
                 },
                 title: `Set motion control delay`,
-                body: `Motion control delay will be set to ${delay / 1000} s`,
+                body: `Motion control delay will be set to ${delay} s`,
               })
             );
           }}
