@@ -27,6 +27,7 @@ const delayOptions = [
   { delay: 5 * 60 },
   { delay: 10 * 60 },
   { delay: 15 * 60 },
+  { delay: 20 * 60 },
 ];
 
 export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
