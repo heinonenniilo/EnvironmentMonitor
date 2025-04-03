@@ -1,17 +1,11 @@
 ﻿using AutoMapper;
 using EnvironmentMonitor.Application.Mappings;
-using EnvironmentMonitor.Domain;
-using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Application.ValueResolvers;
 using EnvironmentMonitor.Domain.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class DeviceInfoDto : IMapFrom<Device>
+    public class DeviceInfoDto : IMapFrom<DeviceInfo>
     {
         public DeviceDto Device { get; set; }
         public DateTime? OnlineSince { get; set; }
@@ -21,7 +15,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public bool ShowWarning { get; set; }
         public void Mapping(Profile profile)
         {
-            profile.CreateMap<DeviceInfo, DeviceInfoDto>().ForMember(x => x.ShowWarning, opt => opt.MapFrom(x => x.LastMessageUtc == null || x.LastMessageUtc < DateTime.UtcNow.AddMinutes(-1 * ApplicationConstants.DeviceWarningLimitInMinutes))).ReverseMap();
+            profile.CreateMap<DeviceInfo, DeviceInfoDto>().ForMember(x => x.ShowWarning, opt => opt.MapFrom<ShowDeviceWarningResolver>()).ReverseMap();
         }
     }
 }

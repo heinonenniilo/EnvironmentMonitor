@@ -1,9 +1,4 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Models
 {
@@ -12,8 +7,6 @@ namespace EnvironmentMonitor.Domain.Models
         public Device Device { get; set; }
         public DateTime? OnlineSince { get; set; }
         public DateTime? RebootedOn { get; set; }
-
         public DateTime? LastMessage { get; set; }
-        public DateTime? LastMessageUtc { get; set; }
     }
 }

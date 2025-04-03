@@ -111,8 +111,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 Device = device,
                 OnlineSince = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.Online)?.TimeStamp,
                 RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
-                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest,
-                LastMessageUtc = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.LatestUtc
+                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest
             }).ToList();
         }
 
