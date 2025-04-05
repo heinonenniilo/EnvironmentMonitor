@@ -2,19 +2,17 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  getDashboardAutoScale,
   getDashboardTimeRange,
   getDevices,
   getSensors,
   setDashboardTimeRange,
-  toggleAutoScale,
 } from "../reducers/measurementReducer";
 import { useApiHook } from "../hooks/apiHook";
 import { Box } from "@mui/material";
 import moment from "moment";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
-import { MultiSensorGraph } from "../components/MultiSensorGraph";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
+import { DashboardDeviceGraph } from "../components/DashboardDeviceGraph";
 
 export const DashboardView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
@@ -26,7 +24,6 @@ export const DashboardView: React.FC = () => {
 
   const sensors = useSelector(getSensors);
   const devices = useSelector(getDevices);
-  const autoScaleIds = useSelector(getDashboardAutoScale);
 
   const timeRange = useSelector(getDashboardTimeRange);
 
@@ -113,33 +110,12 @@ export const DashboardView: React.FC = () => {
           {memoizedMeasurements.map(
             ({ device, deviceSensors, measurementsModel }) => {
               return (
-                <Box
+                <DashboardDeviceGraph
+                  device={device}
+                  model={measurementsModel}
+                  sensors={deviceSensors}
                   key={device.id}
-                  sx={{
-                    border: "1px solid #ccc",
-                    borderRadius: 2,
-                    padding: 1,
-                    boxSizing: "border-box",
-                    backgroundColor: "#f9f9f9",
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <MultiSensorGraph
-                    sensors={deviceSensors}
-                    devices={[device]}
-                    model={measurementsModel}
-                    minHeight={400}
-                    titleAsLink
-                    useAutoScale={autoScaleIds.includes(device.id)}
-                    onSetAutoScale={(state) => {
-                      dispatch(toggleAutoScale({ deviceId: device.id, state }));
-                    }}
-                  />
-                </Box>
+                />
               );
             }
           )}

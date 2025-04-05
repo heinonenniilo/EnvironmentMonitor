@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSelector, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
@@ -68,6 +68,12 @@ export const getSensors = (state: RootState): Sensor[] =>
 export const getDashboardAutoScale = (state: RootState): number[] => {
   return state.measurementInfo.autoScaleSensorIds;
 };
+
+export const getDeviceAutoScale = (deviceId: number) =>
+  createSelector(
+    [(state: RootState) => state.measurementInfo.autoScaleSensorIds],
+    (autoScaleSensorIds) => autoScaleSensorIds.includes(deviceId)
+  );
 
 export const getDashboardTimeRange = (state: RootState): number => {
   return state.measurementInfo.timeRange;
