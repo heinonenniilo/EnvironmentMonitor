@@ -6,7 +6,7 @@ export interface TimeRangeSelectorComponentProps {
   onSelectTimeRange: (selection: number) => void;
 }
 
-const timeOptions = [6, 12, 24, 48, 72];
+const timeRangeOptions = [6, 12, 24, 48, 72];
 
 export const TimeRangeSelectorComponent: React.FC<
   TimeRangeSelectorComponentProps
@@ -31,7 +31,7 @@ export const TimeRangeSelectorComponent: React.FC<
         {`${timeRange} h`}
       </Button>
       <Menu anchorEl={anchorEl} open={open} onClose={() => handleClose()}>
-        {timeOptions.map((option) => (
+        {timeRangeOptions.map((option) => (
           <MenuItem
             key={option}
             selected={timeRange === option}
