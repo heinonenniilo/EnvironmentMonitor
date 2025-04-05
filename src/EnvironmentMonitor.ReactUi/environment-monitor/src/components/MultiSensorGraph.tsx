@@ -23,7 +23,6 @@ import {
 import { Link } from "react-router";
 import { routes } from "../utilities/routes";
 import { useCallback, useEffect, useState } from "react";
-import React from "react";
 
 Chart.register(
   TimeScale,
