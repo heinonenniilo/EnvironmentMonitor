@@ -64,16 +64,17 @@ export const DashboardView: React.FC = () => {
       .catch((er) => {
         console.error(er);
         setViewModel(undefined);
-        setIsLoading(false);
       })
       .finally(() => {
-        // setIsLoading(false);
+        setIsLoading(false);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange]);
 
   useEffect(() => {
-    setIsLoading(true);
+    if (devices.length === 0) {
+      return;
+    }
     setDashboardModel(
       devices.map((device) => {
         const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
@@ -92,7 +93,6 @@ export const DashboardView: React.FC = () => {
         };
       })
     );
-    setIsLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewModel]);
 

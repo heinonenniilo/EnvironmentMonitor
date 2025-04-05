@@ -1,12 +1,14 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
 import { MeasurementsLeftView } from "../components/MeasurementsLeftView";
 import {
   getDashboardTimeRange,
+  getDeviceAutoScale,
   getDevices,
   getSensors,
+  toggleAutoScale,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
 import { Device } from "../models/device";
@@ -18,6 +20,7 @@ import moment from "moment";
 
 export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const { deviceId } = useParams<{ deviceId?: string }>();
   const [selectedDevices, setSelectedDevices] = useState<Device[]>([]);
@@ -29,10 +32,12 @@ export const MeasurementsView: React.FC = () => {
   const [timeFrom, setTimeFrom] = useState<moment.Moment | undefined>(
     undefined
   );
-
   const devices = useSelector(getDevices);
   const sensors = useSelector(getSensors);
   const dashboardTimeRange = useSelector(getDashboardTimeRange);
+  const autoScaleInUseForDevice = useSelector(
+    getDeviceAutoScale(selectedDevices.length === 1 ? selectedDevices[0].id : 0)
+  );
   const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
 
   const toggleSensorSelection = (sensorId: number) => {
@@ -164,6 +169,19 @@ export const MeasurementsView: React.FC = () => {
           devices={selectedDevices}
           key={"graph_01"}
           minHeight={500}
+          useAutoScale={
+            selectedDevices.length === 1 ? autoScaleInUseForDevice : undefined
+          }
+          onSetAutoScale={(state) => {
+            if (selectedDevices.length === 1) {
+              dispatch(
+                toggleAutoScale({
+                  deviceId: selectedDevices[0].id,
+                  state: state,
+                })
+              );
+            }
+          }}
         />
       </Box>
     </AppContentWrapper>
