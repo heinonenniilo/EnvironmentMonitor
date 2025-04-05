@@ -104,15 +104,14 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 TimeStamp = x.Max(d => d.TimeStamp)
             }).ToListAsync();
 
-            var latestMessages =  await _context.Measurements.Where(x => deviceIds.Contains(x.Sensor.DeviceId)).GroupBy(x => x.Sensor.DeviceId).Select(d => new { DeviceId = d.Key, Latest = d.Max(x => x.Timestamp), LatestUtc = d.Max(x => x.TimestampUtc) }).ToListAsync();
+            var latestMessages = await _context.Measurements.Where(x => deviceIds.Contains(x.Sensor.DeviceId)).GroupBy(x => x.Sensor.DeviceId).Select(d => new { DeviceId = d.Key, Latest = d.Max(x => x.Timestamp) }).ToListAsync();
 
             return devices.Select(device => new DeviceInfo()
             {
                 Device = device,
                 OnlineSince = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.Online)?.TimeStamp,
                 RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
-                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest,
-                LastMessageUtc = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.LatestUtc
+                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest
             }).ToList();
         }
 
