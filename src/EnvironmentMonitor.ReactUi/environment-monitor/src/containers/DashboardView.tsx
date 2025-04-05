@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   getDashboardTimeRange,
   getDevices,
@@ -13,6 +13,14 @@ import moment from "moment";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 import { DashboardDeviceGraph } from "../components/DashboardDeviceGraph";
+import { Sensor } from "../models/sensor";
+import { Device } from "../models/device";
+
+interface DeviceDashboardModel {
+  model: MeasurementsViewModel | undefined;
+  sensors: Sensor[];
+  device: Device;
+}
 
 export const DashboardView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
@@ -26,6 +34,10 @@ export const DashboardView: React.FC = () => {
   const devices = useSelector(getDevices);
 
   const timeRange = useSelector(getDashboardTimeRange);
+
+  const [dashboardModel, setDashboardModel] = useState<DeviceDashboardModel[]>(
+    []
+  );
 
   const handleTimeRangeChange = (selection: number) => {
     dispatch(setDashboardTimeRange(selection));
@@ -47,32 +59,42 @@ export const DashboardView: React.FC = () => {
         undefined
       )
       .then((res) => {
-        setViewModel(res);
+        setViewModel(res); // Set to false once the model is formed
       })
       .catch((er) => {
         console.error(er);
         setViewModel(undefined);
+        setIsLoading(false);
       })
       .finally(() => {
-        setIsLoading(false);
+        // setIsLoading(false);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange]);
 
-  const memoizedMeasurements = useMemo(() => {
-    return devices.map((device) => {
-      const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
-      const measurementsModel: MeasurementsViewModel | undefined = viewModel
-        ? {
-            measurements: viewModel.measurements.filter((m) =>
-              deviceSensors.some((s) => s.id === m.sensorId)
-            ),
-          }
-        : undefined;
+  useEffect(() => {
+    setIsLoading(true);
+    setDashboardModel(
+      devices.map((device) => {
+        const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
+        const measurementsModel: MeasurementsViewModel | undefined = viewModel
+          ? {
+              measurements: viewModel.measurements.filter((m) =>
+                deviceSensors.some((s) => s.id === m.sensorId)
+              ),
+            }
+          : undefined;
 
-      return { device, deviceSensors, measurementsModel };
-    });
-  }, [devices, sensors, viewModel]);
+        return {
+          device: device,
+          model: measurementsModel,
+          sensors: deviceSensors,
+        };
+      })
+    );
+    setIsLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewModel]);
 
   return (
     <AppContentWrapper
@@ -107,18 +129,16 @@ export const DashboardView: React.FC = () => {
             height: "100%",
           }}
         >
-          {memoizedMeasurements.map(
-            ({ device, deviceSensors, measurementsModel }) => {
-              return (
-                <DashboardDeviceGraph
-                  device={device}
-                  model={measurementsModel}
-                  sensors={deviceSensors}
-                  key={device.id}
-                />
-              );
-            }
-          )}
+          {dashboardModel.map(({ device, sensors, model }) => {
+            return (
+              <DashboardDeviceGraph
+                device={device}
+                model={model}
+                sensors={sensors}
+                key={device.id}
+              />
+            );
+          })}
         </Box>
       </Box>
     </AppContentWrapper>
