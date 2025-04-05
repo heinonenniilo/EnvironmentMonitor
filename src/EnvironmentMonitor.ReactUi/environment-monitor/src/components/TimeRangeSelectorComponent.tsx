@@ -1,50 +1,46 @@
-import { Box, Button } from "@mui/material";
-import { TimeSelections } from "../enums/timeSelections";
+import { Box, Button, Menu, MenuItem } from "@mui/material";
+import { useState } from "react";
 
 export interface TimeRangeSelectorComponentProps {
-  timeRange: TimeSelections;
-  onSelectTimeRange: (selection: TimeSelections) => void;
+  timeRange: number;
+  onSelectTimeRange: (selection: number) => void;
 }
+
+const timeOptions = [6, 12, 24, 48, 72];
 
 export const TimeRangeSelectorComponent: React.FC<
   TimeRangeSelectorComponentProps
 > = ({ timeRange, onSelectTimeRange }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = (value?: number) => {
+    if (value !== undefined) {
+      onSelectTimeRange(value);
+    }
+    setAnchorEl(null);
+  };
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        justifyContent: "start",
-        alignItems: "start",
-        gap: 2,
-      }}
-    >
-      <Button
-        size="small"
-        onClick={() => {
-          onSelectTimeRange(TimeSelections.Hour24);
-        }}
-        variant={timeRange === TimeSelections.Hour24 ? "contained" : "outlined"}
-      >
-        24 h
+    <Box>
+      <Button variant="outlined" size="small" onClick={handleClick}>
+        {`${timeRange} h`}
       </Button>
-      <Button
-        size="small"
-        variant={timeRange === TimeSelections.Hour48 ? "contained" : "outlined"}
-        onClick={() => {
-          onSelectTimeRange(TimeSelections.Hour48);
-        }}
-      >
-        48 h
-      </Button>
-      <Button
-        size="small"
-        onClick={() => {
-          onSelectTimeRange(TimeSelections.Hour72);
-        }}
-        variant={timeRange === TimeSelections.Hour72 ? "contained" : "outlined"}
-      >
-        72 h
-      </Button>
+      <Menu anchorEl={anchorEl} open={open} onClose={() => handleClose()}>
+        {timeOptions.map((option) => (
+          <MenuItem
+            key={option}
+            selected={timeRange === option}
+            onClick={() => handleClose(option)}
+          >
+            {`${option} h`}
+          </MenuItem>
+        ))}
+      </Menu>
     </Box>
   );
 };

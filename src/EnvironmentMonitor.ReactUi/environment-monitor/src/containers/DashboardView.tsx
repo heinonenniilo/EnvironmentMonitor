@@ -14,7 +14,6 @@ import { Box } from "@mui/material";
 import moment from "moment";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
 import { MultiSensorGraph } from "../components/MultiSensorGraph";
-import { TimeSelections } from "../enums/timeSelections";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 
 export const DashboardView: React.FC = () => {
@@ -31,7 +30,7 @@ export const DashboardView: React.FC = () => {
 
   const timeRange = useSelector(getDashboardTimeRange);
 
-  const handleTimeRangeChange = (selection: TimeSelections) => {
+  const handleTimeRangeChange = (selection: number) => {
     dispatch(setDashboardTimeRange(selection));
   };
 
