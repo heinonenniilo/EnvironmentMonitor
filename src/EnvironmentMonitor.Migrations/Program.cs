@@ -5,15 +5,18 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-var configuration = new ConfigurationBuilder()
-      .AddJsonFile("appsettings.json") 
-      .AddUserSecrets<Program>()
-      .Build();
+if (!AppDomain.CurrentDomain.FriendlyName.Contains("ef"))
+{
+    var configuration = new ConfigurationBuilder()
+          .AddJsonFile("appsettings.json")
+          .AddUserSecrets<Program>()
+          .Build();
 
-var services = new ServiceCollection();
-services.AddInfrastructureServices(configuration);
-var serviceProvider = services.BuildServiceProvider();
-await ApplyMigrationsAsync(serviceProvider);
+    var services = new ServiceCollection();
+    services.AddInfrastructureServices(configuration);
+    var serviceProvider = services.BuildServiceProvider();
+    await ApplyMigrationsAsync(serviceProvider);
+}
 
 static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider)
 {
