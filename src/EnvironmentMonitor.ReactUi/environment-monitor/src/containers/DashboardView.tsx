@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   getDashboardTimeRange,
   getDevices,
@@ -35,10 +35,6 @@ export const DashboardView: React.FC = () => {
 
   const timeRange = useSelector(getDashboardTimeRange);
 
-  const [dashboardModel, setDashboardModel] = useState<DeviceDashboardModel[]>(
-    []
-  );
-
   const handleTimeRangeChange = (selection: number) => {
     dispatch(setDashboardTimeRange(selection));
   };
@@ -71,30 +67,19 @@ export const DashboardView: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange]);
 
-  useEffect(() => {
-    if (devices.length === 0) {
-      return;
-    }
-    setDashboardModel(
-      devices.map((device) => {
-        const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
-        const measurementsModel: MeasurementsViewModel | undefined = viewModel
-          ? {
-              measurements: viewModel.measurements.filter((m) =>
-                deviceSensors.some((s) => s.id === m.sensorId)
-              ),
-            }
-          : undefined;
-
-        return {
-          device: device,
-          model: measurementsModel,
-          sensors: deviceSensors,
-        };
-      })
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewModel]);
+  const measurementsModel: DeviceDashboardModel[] = useMemo(() => {
+    return devices.map((device) => {
+      const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
+      const measurementsModel: MeasurementsViewModel | undefined = viewModel
+        ? {
+            measurements: viewModel.measurements.filter((m) =>
+              deviceSensors.some((s) => s.id === m.sensorId)
+            ),
+          }
+        : undefined;
+      return { device, sensors: deviceSensors, model: measurementsModel };
+    });
+  }, [devices, sensors, viewModel]);
 
   return (
     <AppContentWrapper
@@ -129,7 +114,7 @@ export const DashboardView: React.FC = () => {
             height: "100%",
           }}
         >
-          {dashboardModel.map(({ device, sensors, model }) => {
+          {measurementsModel.map(({ device, sensors, model }) => {
             return (
               <DashboardDeviceGraph
                 device={device}
