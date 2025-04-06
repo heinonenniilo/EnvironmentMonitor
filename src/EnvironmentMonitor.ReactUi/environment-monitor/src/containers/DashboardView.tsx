@@ -2,20 +2,25 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  getDashboardAutoScale,
   getDashboardTimeRange,
   getDevices,
   getSensors,
   setDashboardTimeRange,
-  toggleAutoScale,
 } from "../reducers/measurementReducer";
 import { useApiHook } from "../hooks/apiHook";
 import { Box } from "@mui/material";
 import moment from "moment";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
-import { MultiSensorGraph } from "../components/MultiSensorGraph";
-import { TimeSelections } from "../enums/timeSelections";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
+import { DashboardDeviceGraph } from "../components/DashboardDeviceGraph";
+import { Sensor } from "../models/sensor";
+import { Device } from "../models/device";
+
+interface DeviceDashboardModel {
+  model: MeasurementsViewModel | undefined;
+  sensors: Sensor[];
+  device: Device;
+}
 
 export const DashboardView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
@@ -27,11 +32,10 @@ export const DashboardView: React.FC = () => {
 
   const sensors = useSelector(getSensors);
   const devices = useSelector(getDevices);
-  const autoScaleIds = useSelector(getDashboardAutoScale);
 
   const timeRange = useSelector(getDashboardTimeRange);
 
-  const handleTimeRangeChange = (selection: TimeSelections) => {
+  const handleTimeRangeChange = (selection: number) => {
     dispatch(setDashboardTimeRange(selection));
   };
 
@@ -51,7 +55,7 @@ export const DashboardView: React.FC = () => {
         undefined
       )
       .then((res) => {
-        setViewModel(res);
+        setViewModel(res); // Set to false once the model is formed
       })
       .catch((er) => {
         console.error(er);
@@ -63,7 +67,7 @@ export const DashboardView: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange]);
 
-  const memoizedMeasurements = useMemo(() => {
+  const measurementsModel: DeviceDashboardModel[] = useMemo(() => {
     return devices.map((device) => {
       const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
       const measurementsModel: MeasurementsViewModel | undefined = viewModel
@@ -73,8 +77,7 @@ export const DashboardView: React.FC = () => {
             ),
           }
         : undefined;
-
-      return { device, deviceSensors, measurementsModel };
+      return { device, sensors: deviceSensors, model: measurementsModel };
     });
   }, [devices, sensors, viewModel]);
 
@@ -111,39 +114,16 @@ export const DashboardView: React.FC = () => {
             height: "100%",
           }}
         >
-          {memoizedMeasurements.map(
-            ({ device, deviceSensors, measurementsModel }) => {
-              return (
-                <Box
-                  key={device.id}
-                  sx={{
-                    border: "1px solid #ccc",
-                    borderRadius: 2,
-                    padding: 1,
-                    boxSizing: "border-box",
-                    backgroundColor: "#f9f9f9",
-                    height: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <MultiSensorGraph
-                    sensors={deviceSensors}
-                    devices={[device]}
-                    model={measurementsModel}
-                    minHeight={400}
-                    titleAsLink
-                    useAutoScale={autoScaleIds.includes(device.id)}
-                    onSetAutoScale={(state) => {
-                      dispatch(toggleAutoScale({ deviceId: device.id, state }));
-                    }}
-                  />
-                </Box>
-              );
-            }
-          )}
+          {measurementsModel.map(({ device, sensors, model }) => {
+            return (
+              <DashboardDeviceGraph
+                device={device}
+                model={model}
+                sensors={sensors}
+                key={device.id}
+              />
+            );
+          })}
         </Box>
       </Box>
     </AppContentWrapper>

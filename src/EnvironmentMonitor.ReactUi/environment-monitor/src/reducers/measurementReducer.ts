@@ -1,5 +1,4 @@
-import { TimeSelections } from "./../enums/timeSelections";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSelector, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
@@ -9,7 +8,7 @@ export interface MeasurementState {
   devices: Device[];
   sensors: Sensor[];
   autoScaleSensorIds: number[];
-  timeRange: TimeSelections;
+  timeRange: number;
 }
 
 export interface DashboardAutoScale {
@@ -21,7 +20,7 @@ const initialState: MeasurementState = {
   devices: [],
   sensors: [],
   autoScaleSensorIds: [],
-  timeRange: TimeSelections.Hour24,
+  timeRange: 24,
 };
 
 export const measurementSlice = createSlice({
@@ -47,7 +46,7 @@ export const measurementSlice = createSlice({
         );
       }
     },
-    setDashboardTimeRange: (state, action: PayloadAction<TimeSelections>) => {
+    setDashboardTimeRange: (state, action: PayloadAction<number>) => {
       state.timeRange = action.payload;
     },
   },
@@ -70,7 +69,13 @@ export const getDashboardAutoScale = (state: RootState): number[] => {
   return state.measurementInfo.autoScaleSensorIds;
 };
 
-export const getDashboardTimeRange = (state: RootState): TimeSelections => {
+export const getDeviceAutoScale = (deviceId: number) =>
+  createSelector(
+    [(state: RootState) => state.measurementInfo.autoScaleSensorIds],
+    (autoScaleSensorIds) => autoScaleSensorIds.includes(deviceId)
+  );
+
+export const getDashboardTimeRange = (state: RootState): number => {
   return state.measurementInfo.timeRange;
 };
 

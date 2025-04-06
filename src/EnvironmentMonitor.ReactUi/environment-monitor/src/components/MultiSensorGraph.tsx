@@ -22,7 +22,7 @@ import {
 } from "./MeasurementsInfoTable";
 import { Link } from "react-router";
 import { routes } from "../utilities/routes";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 Chart.register(
   TimeScale,
@@ -53,7 +53,6 @@ interface GraphDataset {
     y: number;
   }[];
   id: number;
-  visible: boolean;
   measurementType: MeasurementTypes;
 }
 
@@ -70,7 +69,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
   const [autoScale, setAutoScale] = useState(false);
-  const [dataSets, setDataSets] = useState<GraphDataset[]>([]);
+  const [hiddenDatasetIds, setHiddenDatasetIds] = useState<number[]>([]);
 
   useEffect(() => {
     if (useAutoScale !== undefined) {
@@ -95,42 +94,31 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     [sensors, devices]
   );
 
-  useEffect(() => {
-    if (!model) {
-      setDataSets([]);
-      return;
-    }
+  const memoSets: GraphDataset[] = useMemo(() => {
+    if (!model) return [];
     const returnValues: GraphDataset[] = [];
-    let id: number = 0;
-    model.measurements.forEach((measurementsBySensor) => {
-      for (let item in MeasurementTypes) {
-        let val = parseInt(MeasurementTypes[item]);
+    let id = 0;
+
+    for (const measurementsBySensor of model.measurements) {
+      for (const item in MeasurementTypes) {
+        const val = parseInt(MeasurementTypes[item]);
         if (measurementsBySensor.measurements.some((m) => m.typeId === val)) {
-          const yAxisId =
-            (val as MeasurementTypes) === MeasurementTypes.Light ? "y1" : "y";
+          const yAxisId = val === MeasurementTypes.Light ? "y1" : "y";
+
           returnValues.push({
-            id: id,
-            visible: true,
-            label: getSensorLabel(
-              measurementsBySensor.sensorId,
-              val as MeasurementTypes
-            ),
+            id: id++,
+            label: getSensorLabel(measurementsBySensor.sensorId, val),
             yAxisID: yAxisId,
-            measurementType: val as MeasurementTypes,
+            measurementType: val,
             data: measurementsBySensor.measurements
               .filter((d) => d.typeId === val)
-              .map((d) => {
-                return {
-                  x: d.timestamp,
-                  y: d.sensorValue,
-                };
-              }),
+              .map((d) => ({ x: d.timestamp, y: d.sensorValue })),
           });
-          id++;
         }
       }
-    });
-    setDataSets(returnValues);
+    }
+
+    return returnValues;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model]);
 
@@ -190,8 +178,8 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   };
 
   const hasLightAxis = () => {
-    const hasLightAxis = dataSets
-      .filter((d) => d.visible)
+    const hasLightAxis = memoSets
+      .filter((d) => !hiddenDatasetIds.some((h) => h === d.id))
       .some((d) => d.measurementType === MeasurementTypes.Light);
     return hasLightAxis;
   };
@@ -265,7 +253,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           }}
         >
           <Line
-            data={{ datasets: dataSets }}
+            data={{ datasets: memoSets }}
             height={"auto"}
             options={{
               maintainAspectRatio: false,
@@ -282,21 +270,19 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                     if (legendItem.datasetIndex !== undefined) {
                       if (!legendItem.hidden) {
                         legend.chart.hide(legendItem.datasetIndex);
-                        setDataSets((prev) =>
-                          prev.map((prevDataSet) =>
-                            prevDataSet.id === legendItem.datasetIndex
-                              ? { ...prevDataSet, visible: false }
-                              : prevDataSet
-                          )
-                        );
+                        if (legendItem.datasetIndex !== undefined) {
+                          const datasetIndex = legendItem.datasetIndex;
+                          setHiddenDatasetIds((prev) => [
+                            ...prev,
+                            datasetIndex,
+                          ]);
+                        }
                         legend.chart.update("hide");
                       } else {
                         legend.chart.show(legendItem.datasetIndex);
-                        setDataSets((prev) =>
-                          prev.map((prevDataSet) =>
-                            prevDataSet.id === legendItem.datasetIndex
-                              ? { ...prevDataSet, visible: true }
-                              : prevDataSet
+                        setHiddenDatasetIds(
+                          hiddenDatasetIds.filter(
+                            (d) => d !== legendItem.datasetIndex
                           )
                         );
                         legend.chart.update("show");
