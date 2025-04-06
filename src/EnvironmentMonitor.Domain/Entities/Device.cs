@@ -17,5 +17,8 @@ namespace EnvironmentMonitor.Domain.Entities
         public int? TypeId { get; set; }
         public DeviceType? Type { get; set; }
         public bool HasMotionSensor { get; set; }
+        public Location Location { get; set; }
+        public int LocationId { get; set; }
+        public IList<LocationSensor> LocationSensors { get; set; }
     }
 }

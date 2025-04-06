@@ -23,6 +23,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 .WithOne(m => m.Sensor)
                 .HasForeignKey(m => m.SensorId)
                 .OnDelete(DeleteBehavior.Restrict);
+            builder.HasMany(s => s.LocationSensors).WithOne(x => x.Sensor).HasForeignKey(x => new { x.SensorId, x.DeviceId }).HasPrincipalKey(x => new { x.Id, x.DeviceId }).OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
