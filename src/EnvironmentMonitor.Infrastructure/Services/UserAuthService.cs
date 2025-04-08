@@ -25,7 +25,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly IDeviceRepository _deviceRepository;
         private readonly ILogger<UserAuthService> _logger;
 
-        public UserAuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, 
+        public UserAuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
             IDeviceRepository deviceRepository, ILogger<UserAuthService> logger)
         {
             _userManager = userManager;

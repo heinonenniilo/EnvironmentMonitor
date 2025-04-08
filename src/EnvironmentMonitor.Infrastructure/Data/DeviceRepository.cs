@@ -131,5 +131,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var query = _context.DeviceEvents.Include(x => x.Type).Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).Take(100);
             return await query.ToListAsync();
         }
+
+        public async Task<List<Device>> GetDevicesByLocation(int locationId)
+        {
+            return await _context.Devices.Where(x => x.LocationId == locationId).ToListAsync();
+        }
     }
 }

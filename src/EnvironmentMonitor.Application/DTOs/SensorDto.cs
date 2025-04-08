@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class SensorDto: IMapFrom<Sensor>
+    public class SensorDto : IMapFrom<Sensor>
     {
         public int Id { get; set; }
         public string Name { get; set; }
@@ -21,6 +21,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public void Mapping(Profile profile)
         {
             profile.CreateMap<Sensor, SensorDto>().ReverseMap();
+            profile.CreateMap<LocationSensor, SensorDto>().ForMember(x => x.Id, opt => opt.MapFrom(x => x.SensorId)).ReverseMap();
         }
     }
 }

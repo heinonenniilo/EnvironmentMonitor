@@ -20,7 +20,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 .HasMaxLength(512);
             builder.HasMany(x => x.Devices).WithOne(x => x.Location);
             builder.HasIndex(d => d.Name).IsUnique();
-
+            builder.HasMany(x => x.LocationSensors).WithOne(x => x.Location);
         }
     }
 }

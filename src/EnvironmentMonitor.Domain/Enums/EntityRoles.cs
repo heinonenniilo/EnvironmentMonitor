@@ -9,6 +9,7 @@ namespace EnvironmentMonitor.Domain.Enums
     public enum EntityRoles
     {
         Device = 0,
-        Sensor
+        Sensor = 1,
+        Location = 2
     }
 }

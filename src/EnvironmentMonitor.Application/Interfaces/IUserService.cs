@@ -15,10 +15,13 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task Login(LoginModel model);
         public Task ExternalLogin(ExternalLoginModel model);
         public Task RegisterUser(RegisterUserModel model);
+        bool HasAccessTo(EntityRoles entity, int id, AccessLevels accessLevel);
+
         bool HasAccessToDevice(int id, AccessLevels accessLevel);
         bool HasAccessToSensor(int id, AccessLevels accessLevel);
         bool HasAccessToSensors(List<int> ids, AccessLevels accessLevel);
         bool HasAccessToDevices(List<int> ids, AccessLevels accessLevel);
+        bool HasAccessToLocations(List<int> ids, AccessLevels accessLevel);
         public List<int> GetDevices();
         public bool IsAdmin { get; }
     }
