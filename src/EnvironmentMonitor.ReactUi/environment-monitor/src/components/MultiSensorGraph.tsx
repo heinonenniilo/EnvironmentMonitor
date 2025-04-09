@@ -1,7 +1,13 @@
 import "chartjs-adapter-moment";
 import { MeasurementTypes } from "../enums/measurementTypes";
 import { Sensor } from "../models/sensor";
-import { Box, Checkbox, FormControlLabel, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Typography,
+} from "@mui/material";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
 import { Device } from "../models/device";
 import {
@@ -43,6 +49,7 @@ export interface MultiSensorGraphProps {
   titleAsLink?: boolean;
   useAutoScale?: boolean;
   onSetAutoScale?: (state: boolean) => void;
+  onRefresh?: () => void;
 }
 
 interface GraphDataset {
@@ -65,6 +72,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   titleAsLink,
   useAutoScale,
   onSetAutoScale,
+  onRefresh,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
@@ -231,6 +239,11 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             typography: { fontSize: "14px" }, // Adjust font size
           }}
         />
+        {onRefresh && (
+          <Button variant="contained" onClick={onRefresh} size="small">
+            Refresh
+          </Button>
+        )}
       </Box>
       <Box
         flex={1}
