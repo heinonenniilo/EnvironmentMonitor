@@ -32,6 +32,7 @@ export const MeasurementsView: React.FC = () => {
   const [timeFrom, setTimeFrom] = useState<moment.Moment | undefined>(
     undefined
   );
+  const [timeTo, setTimeTo] = useState<moment.Moment | undefined>(undefined);
   const devices = useSelector(getDevices);
   const sensors = useSelector(getSensors);
   const dashboardTimeRange = useSelector(getDashboardTimeRange);
@@ -102,6 +103,25 @@ export const MeasurementsView: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId, devices]);
 
+  const onSearch = (
+    from: moment.Moment,
+    to: moment.Moment | undefined,
+    sensorIds: number[]
+  ) => {
+    setIsLoading(true);
+    measurementApiHook
+      .getMeasurementsBySensor(sensorIds, from, to)
+      .then((res) => {
+        setSelectedSensors(
+          sensors.filter((sensor) => sensorIds.some((s) => sensor.id === s))
+        );
+        setMeasurementsModel(res);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   return (
     <AppContentWrapper
       titleParts={[{ text: "Measurements" }]}
@@ -113,20 +133,9 @@ export const MeasurementsView: React.FC = () => {
             to: moment.Moment | undefined,
             sensorIds: number[]
           ) => {
-            setIsLoading(true);
-            measurementApiHook
-              .getMeasurementsBySensor(sensorIds, from, to)
-              .then((res) => {
-                setSelectedSensors(
-                  sensors.filter((sensor) =>
-                    sensorIds.some((s) => sensor.id === s)
-                  )
-                );
-                setMeasurementsModel(res);
-              })
-              .finally(() => {
-                setIsLoading(false);
-              });
+            setTimeFrom(from);
+            setTimeTo(to);
+            onSearch(from, to, sensorIds);
           }}
           onSelectDevice={toggleDeviceSelection}
           toggleSensorSelection={toggleSensorSelection}
@@ -179,6 +188,15 @@ export const MeasurementsView: React.FC = () => {
                   deviceId: selectedDevices[0].id,
                   state: state,
                 })
+              );
+            }
+          }}
+          onRefresh={() => {
+            if (timeFrom) {
+              onSearch(
+                timeFrom,
+                timeTo,
+                selectedSensors.map((s) => s.id)
               );
             }
           }}
