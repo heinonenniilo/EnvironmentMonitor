@@ -240,7 +240,12 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           }}
         />
         {onRefresh && (
-          <Button variant="contained" onClick={onRefresh} size="small">
+          <Button
+            variant="outlined"
+            onClick={onRefresh}
+            size="small"
+            sx={{ marginLeft: "auto" }}
+          >
             Refresh
           </Button>
         )}
