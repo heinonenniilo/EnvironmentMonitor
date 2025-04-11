@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
@@ -7,16 +7,61 @@ import {
   getDeviceAutoScale,
   toggleAutoScale,
 } from "../reducers/measurementReducer";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { MultiSensorGraph } from "./MultiSensorGraph";
+import { useApiHook } from "../hooks/apiHook";
+import moment from "moment";
 
 export const DashboardDeviceGraph: React.FC<{
   device: Device;
   sensors: Sensor[];
   model: MeasurementsViewModel | undefined;
-}> = ({ device, sensors, model }) => {
+  timeRange: number;
+}> = ({ device, sensors, model, timeRange }) => {
   const useAutoScale = useSelector(getDeviceAutoScale(device.id));
+  const measurementApiHook = useApiHook().measureHook;
+
+  const [deviceModel, setDeviceModel] = useState<
+    MeasurementsViewModel | undefined
+  >(undefined);
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (model) {
+      setDeviceModel(undefined);
+    }
+  }, [model]);
   const dispatch = useDispatch();
+
+  const onRefresh = () => {
+    if (sensors.length === 0) {
+      return;
+    }
+
+    const momentStart = moment()
+      .local(true)
+      .add(-1 * timeRange, "hour")
+      .utc(true);
+    setIsLoading(true);
+    measurementApiHook
+      .getMeasurementsBySensor(
+        sensors.map((x) => x.id),
+        momentStart,
+        undefined
+      )
+      .then((res) => {
+        setDeviceModel(res);
+      })
+      .catch((er) => {
+        console.error(er);
+        setDeviceModel(undefined);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   return (
     <Box
       sx={{
@@ -30,19 +75,39 @@ export const DashboardDeviceGraph: React.FC<{
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
+        position: "relative",
       }}
     >
       <MultiSensorGraph
         sensors={sensors}
         devices={[device]}
-        model={model}
+        model={deviceModel ? deviceModel : model}
         minHeight={400}
         titleAsLink
         useAutoScale={useAutoScale}
         onSetAutoScale={(state) =>
           dispatch(toggleAutoScale({ deviceId: device.id, state }))
         }
+        onRefresh={onRefresh}
       />
+      {isLoading && (
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          width="100%"
+          height="100%"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          sx={{
+            backgroundColor: "rgba(255,255,255,0.5)",
+            zIndex: 2,
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
     </Box>
   );
 };
