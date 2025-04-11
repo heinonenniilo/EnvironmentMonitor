@@ -82,6 +82,11 @@ namespace EnvironmentMonitor.Application.Services
             return _currentUser.Claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(d => int.Parse(d.Value)).ToList();
         }
 
+        public List<int> GetLocations()
+        {
+            return _currentUser.Claims.Where(x => x.Type == EntityRoles.Location.ToString()).Select(d => int.Parse(d.Value)).ToList();
+        }
+
         public bool HasAccessToLocations(List<int> ids, AccessLevels accessLevel) => ids.All(x => HasAccessTo(EntityRoles.Location, x, accessLevel));
 
         public bool IsAdmin

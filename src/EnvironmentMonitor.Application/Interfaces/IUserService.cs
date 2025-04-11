@@ -23,6 +23,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         bool HasAccessToDevices(List<int> ids, AccessLevels accessLevel);
         bool HasAccessToLocations(List<int> ids, AccessLevels accessLevel);
         public List<int> GetDevices();
+        public List<int> GetLocations();
         public bool IsAdmin { get; }
     }
 }
