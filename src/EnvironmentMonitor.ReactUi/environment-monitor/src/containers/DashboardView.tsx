@@ -121,6 +121,7 @@ export const DashboardView: React.FC = () => {
                 model={model}
                 sensors={sensors}
                 key={device.id}
+                timeRange={timeRange}
               />
             );
           })}
