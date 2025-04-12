@@ -62,7 +62,6 @@ export const DashboardLocationGraph: React.FC<{
         devices={undefined}
         model={measurementModel ?? model}
         minHeight={400}
-        titleAsLink
         isLoading={isLoading}
         onRefresh={onRefresh}
         useAutoScale={true}
