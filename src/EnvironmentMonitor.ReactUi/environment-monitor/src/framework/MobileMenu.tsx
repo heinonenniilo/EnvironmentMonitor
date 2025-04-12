@@ -113,7 +113,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                 <MenuItem
                   onClick={(event) => {
                     handleDashboardClose();
-                    handleClick("/dashboard/location", event);
+                    handleClick(routes.locationDashboard, event);
                   }}
                 >
                   Locations
