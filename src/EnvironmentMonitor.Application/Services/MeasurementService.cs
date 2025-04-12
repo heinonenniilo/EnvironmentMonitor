@@ -153,7 +153,8 @@ namespace EnvironmentMonitor.Application.Services
                 modelToReturn.Measurements.Add(new MeasurementsByLocationDto()
                 {
                     Id = location.Id,
-                    Measurements = measurementsInLocation
+                    Measurements = measurementsInLocation,
+                    Sensors = _mapper.Map<List<SensorDto>>(location.LocationSensors)
                 });
             }
             return modelToReturn;

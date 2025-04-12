@@ -7,7 +7,7 @@ import {
   getDeviceAutoScale,
   toggleAutoScale,
 } from "../reducers/measurementReducer";
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
 import { MultiSensorGraph } from "./MultiSensorGraph";
 import { useApiHook } from "../hooks/apiHook";
 import moment from "moment";
@@ -89,25 +89,8 @@ export const DashboardDeviceGraph: React.FC<{
           dispatch(toggleAutoScale({ deviceId: device.id, state }))
         }
         onRefresh={onRefresh}
+        isLoading={isLoading}
       />
-      {isLoading && (
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          width="100%"
-          height="100%"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          sx={{
-            backgroundColor: "rgba(255,255,255,0.5)",
-            zIndex: 2,
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      )}
     </Box>
   );
 };

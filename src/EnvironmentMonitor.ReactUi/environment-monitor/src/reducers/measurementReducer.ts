@@ -64,6 +64,7 @@ export const {
   setSensors,
   toggleAutoScale,
   setDashboardTimeRange,
+  setLocations,
 } = measurementSlice.actions;
 
 export const getDevices = (state: RootState): Device[] =>

@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   Checkbox,
+  CircularProgress,
   FormControlLabel,
   Typography,
 } from "@mui/material";
@@ -48,6 +49,7 @@ export interface MultiSensorGraphProps {
   minHeight?: number;
   titleAsLink?: boolean;
   useAutoScale?: boolean;
+  isLoading?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
 }
@@ -73,6 +75,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   useAutoScale,
   onSetAutoScale,
   onRefresh,
+  isLoading,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
@@ -200,7 +203,26 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       flex={1}
       flexGrow={1}
       sx={{ maxHeight: "100%", width: "100%" }}
+      position={"relative"}
     >
+      {isLoading && (
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          width="100%"
+          height="100%"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          sx={{
+            backgroundColor: "rgba(255,255,255,0.5)",
+            zIndex: 2,
+          }}
+        >
+          <CircularProgress />
+        </Box>
+      )}
       <Box
         width="100%"
         mt={0}

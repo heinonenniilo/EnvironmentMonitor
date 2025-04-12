@@ -18,6 +18,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   getDevices,
   setDevices,
+  setLocations,
   setSensors,
 } from "../reducers/measurementReducer";
 import {
@@ -37,12 +38,13 @@ export const App: React.FC<AppProps> = (props) => {
   // const [cookies, setCookie] = useCookies([userInfoCookieName]);
   const apiHook = useApiHook();
   const measurementApiHook = useApiHook().measureHook;
+  const locationApiHook = useApiHook().locationHook;
   const dispath = useDispatch();
   const user: User | undefined = useSelector(getUserInfo);
   const isLoggedIn = useSelector(getIsLoggedIn);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
-  const [devicesFetched, setDevicesFetched] = useState(false);
+  const [inited, setInited] = useState(false);
   const notifications = useSelector(getNotifications);
 
   const devices = useSelector(getDevices);
@@ -89,14 +91,18 @@ export const App: React.FC<AppProps> = (props) => {
 
   // Devices & sensors
   useEffect(() => {
-    if (isLoggedIn && measurementApiHook && !devicesFetched) {
-      setDevicesFetched(true);
+    if (isLoggedIn && measurementApiHook && !inited) {
+      setInited(true);
       measurementApiHook.getDevices().then((res) => {
         dispath(setDevices(res ?? []));
       });
+
+      locationApiHook.getLocations().then((res) => {
+        dispath(setLocations(res));
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoggedIn, dispath, devicesFetched]);
+  }, [isLoggedIn, dispath, inited]);
 
   useEffect(() => {
     if (devices.length === 0) {

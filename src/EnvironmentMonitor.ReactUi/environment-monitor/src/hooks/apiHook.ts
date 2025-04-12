@@ -13,6 +13,7 @@ import { DeviceInfo } from "../models/deviceInfo";
 import { DeviceEvent } from "../models/deviceEvent";
 import { useDispatch } from "react-redux";
 import { addNotification } from "../reducers/userInterfaceReducer";
+import { LocationModel } from "../models/location";
 
 interface ApiHook {
   userHook: userHook;
@@ -32,7 +33,7 @@ interface userHook {
 }
 
 interface locationHook {
-  getLocations: () => Promise<Location[]>;
+  getLocations: () => Promise<LocationModel[]>;
 }
 
 interface measureHook {
@@ -225,6 +226,7 @@ export const useApiHook = (): ApiHook => {
         latestOnly?: boolean
       ) => {
         try {
+          console.log(sensorIds);
           let res = await apiClient.get<
             any,
             AxiosResponse<MeasurementsByLocationModel>
@@ -326,7 +328,7 @@ export const useApiHook = (): ApiHook => {
     locationHook: {
       getLocations: async () => {
         try {
-          let res = await apiClient.get<any, AxiosResponse<Location[]>>(
+          let res = await apiClient.get<any, AxiosResponse<LocationModel[]>>(
             `/api/locations/`
           );
           return res.data;
