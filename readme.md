@@ -45,4 +45,15 @@ WebApi project. Includes the end points for fetching measurement data.
 
 Azure Function project which includes a function for listening to IoT hub. The function listens to messages arriving to the IoT hub, processes them and saves them to a DB.
 
+## Instructions
+
+### Adding migrations
+
+- Open Nuget manager console
+- Set ``EnvironmentMonitor.Migrations`` as startup project. Set ``EnvironmentMonitor.Infrastructure`` as default project.
+- Type ``Add-Migration {MigrationName} -context {Context}``. Context is either MeasurementDbContext or ApplicationDbContext, depending on where the changes were made.
+
+### Running migrations
+
+Migrations can be run with ``EnvironmentMonitor.Migrations`` project. Store DefaultConnection in user secrets and start the project. A confirmation will be asked before running migrations.
 
