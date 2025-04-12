@@ -3,10 +3,13 @@ import type { PayloadAction } from "@reduxjs/toolkit";
 import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
 import { RootState } from "../setup/appStore";
+import { LocationModel } from "../models/location";
 
 export interface MeasurementState {
   devices: Device[];
   sensors: Sensor[];
+
+  locations: LocationModel[];
   autoScaleSensorIds: number[];
   timeRange: number;
 }
@@ -21,6 +24,7 @@ const initialState: MeasurementState = {
   sensors: [],
   autoScaleSensorIds: [],
   timeRange: 24,
+  locations: [],
 };
 
 export const measurementSlice = createSlice({
@@ -49,6 +53,9 @@ export const measurementSlice = createSlice({
     setDashboardTimeRange: (state, action: PayloadAction<number>) => {
       state.timeRange = action.payload;
     },
+    setLocations: (state, action: PayloadAction<LocationModel[]>) => {
+      state.locations = action.payload;
+    },
   },
 });
 
@@ -68,6 +75,9 @@ export const getSensors = (state: RootState): Sensor[] =>
 export const getDashboardAutoScale = (state: RootState): number[] => {
   return state.measurementInfo.autoScaleSensorIds;
 };
+
+export const getLocations = (state: RootState): LocationModel[] =>
+  state.measurementInfo.locations;
 
 export const getDeviceAutoScale = (deviceId: number) =>
   createSelector(

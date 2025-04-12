@@ -124,6 +124,7 @@ namespace EnvironmentMonitor.Application.Services
 
             var locations = await _locationRepository.GetLocations(model.SensorIds, true);
             var locationSensors = locations.Select(x => x.LocationSensors).ToList();
+            var sensorIds = locationSensors.SelectMany(x => x).Select(d => d.SensorId).ToList();
             var res = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
             {
                 From = model.From,
@@ -134,22 +135,26 @@ namespace EnvironmentMonitor.Application.Services
             var modelToReturn = new MeasurementsByLocationModel();
             foreach (var location in locations)
             {
-                var sensorIdsToCheck = location.LocationSensors.Select(x => x.SensorId).ToList();
-
-                var measurementsRows = new List<Measurement>();
-
+                var measurementsInLocation = new List<MeasurementsBySensorDto>();
                 foreach (var sensor in location.LocationSensors)
                 {
-                    measurementsRows.AddRange(res.Where(x => x.SensorId == sensor.SensorId && x.TypeId == sensor.TypeId));
+                    var measurementsBySensor = _mapper.Map<List<MeasurementDto>>(res.Where(x => x.SensorId == sensor.SensorId && x.TypeId == sensor.TypeId));
+                    var infoRow = GetMeasurementInfo(measurementsBySensor, [sensor.SensorId]).FirstOrDefault();
+                    var bySensorRow = new MeasurementsBySensorDto()
+                    {
+                        SensorId = sensor.SensorId,
+                        Measurements = measurementsBySensor,
+                        LatestValues = infoRow?.LatestValues ?? [],
+                        MaxValues = infoRow?.MaxValues ?? [],
+                        MinValues = infoRow?.MinValues ?? []
+                    };
+                    measurementsInLocation.Add(bySensorRow);
                 }
-                var row = new MeasurementsByLocationDto()
+                modelToReturn.Measurements.Add(new MeasurementsByLocationDto()
                 {
-                    Name = location.Name,
                     Id = location.Id,
-                    Measurements = _mapper.Map<List<MeasurementDto>>(measurementsRows),
-                    Sensors = _mapper.Map<List<SensorDto>>(location.LocationSensors)
-                };
-                modelToReturn.Measurements.Add(row);
+                    Measurements = measurementsInLocation
+                });
             }
             return modelToReturn;
         }

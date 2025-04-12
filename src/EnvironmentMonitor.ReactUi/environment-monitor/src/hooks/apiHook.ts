@@ -4,6 +4,7 @@ import { Device } from "../models/device";
 import { Sensor } from "../models/sensor";
 import qs from "qs";
 import {
+  MeasurementsByLocationModel,
   MeasurementsModel,
   MeasurementsViewModel,
 } from "../models/measurementsBySensor";
@@ -17,6 +18,7 @@ interface ApiHook {
   userHook: userHook;
   measureHook: measureHook;
   deviceHook: deviceHook;
+  locationHook: locationHook;
 }
 
 interface userHook {
@@ -27,6 +29,10 @@ interface userHook {
     persistent: boolean
   ) => Promise<boolean>;
   logOut: () => Promise<boolean>;
+}
+
+interface locationHook {
+  getLocations: () => Promise<Location[]>;
 }
 
 interface measureHook {
@@ -43,6 +49,12 @@ interface measureHook {
     to?: moment.Moment,
     latestOnly?: boolean
   ) => Promise<MeasurementsViewModel | undefined>;
+  getMeasurementsByLocation: (
+    sensorIds: number[],
+    from: moment.Moment,
+    to?: moment.Moment,
+    latestOnly?: boolean
+  ) => Promise<MeasurementsByLocationModel | undefined>;
 }
 
 interface deviceHook {
@@ -206,6 +218,31 @@ export const useApiHook = (): ApiHook => {
           return undefined;
         }
       },
+      getMeasurementsByLocation: async (
+        sensorIds: number[],
+        from: moment.Moment,
+        to?: moment.Moment,
+        latestOnly?: boolean
+      ) => {
+        try {
+          let res = await apiClient.get<
+            any,
+            AxiosResponse<MeasurementsByLocationModel>
+          >("/api/Measurements/bylocation", {
+            params: {
+              SensorIds: sensorIds,
+              from: from.toISOString(),
+              to: to ? to.toISOString() : undefined,
+              latestOnly: latestOnly,
+            },
+          });
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          showError("Fetching measurements failed");
+          return undefined;
+        }
+      },
     },
     deviceHook: {
       rebootDevice: async (deviceIdentifier: string) => {
@@ -282,6 +319,19 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           showError();
+          return [];
+        }
+      },
+    },
+    locationHook: {
+      getLocations: async () => {
+        try {
+          let res = await apiClient.get<any, AxiosResponse<Location[]>>(
+            `/api/locations/`
+          );
+          return res.data;
+        } catch (ex) {
+          showError("Failed to get locations");
           return [];
         }
       },
