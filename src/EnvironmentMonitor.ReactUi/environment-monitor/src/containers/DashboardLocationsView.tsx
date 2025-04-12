@@ -71,11 +71,18 @@ export const DashbordLocationsView: React.FC = () => {
     >
       <Box
         sx={{
-          display: "flex",
+          display: "grid",
+          gridTemplateColumns:
+            viewModel?.measurements && viewModel?.measurements.length > 2
+              ? {
+                  xs: "1fr",
+                  lg: "1fr 1fr",
+                }
+              : "1fr",
           gap: 1, // Space between grid items
+          padding: 1, // Padding around the grid container
           flexGrow: 1,
           height: "100%",
-          flexDirection: "column",
         }}
       >
         {viewModel?.measurements.map((m) => {

@@ -28,7 +28,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
             if (includeLocationSensors)
             {
-                query = query.Include(x => x.LocationSensors);
+                query = query.Include(x => x.LocationSensors).ThenInclude(ls => ls.Sensor);
             }
             query = query.Where(x => x.Id > 0);
             return await query.ToListAsync();

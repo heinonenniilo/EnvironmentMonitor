@@ -21,7 +21,11 @@ namespace EnvironmentMonitor.Application.DTOs
         public void Mapping(Profile profile)
         {
             profile.CreateMap<Sensor, SensorDto>().ReverseMap();
-            profile.CreateMap<LocationSensor, SensorDto>().ForMember(x => x.Id, opt => opt.MapFrom(x => x.SensorId)).ReverseMap();
+            profile.CreateMap<LocationSensor, SensorDto>()
+                .ForMember(x => x.Id, opt => opt.MapFrom(x => x.SensorId))
+                .ForMember(x => x.ScaleMin, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMin : null))
+                .ForMember(x => x.ScaleMax, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMax : null))
+                .ReverseMap();
         }
     }
 }
