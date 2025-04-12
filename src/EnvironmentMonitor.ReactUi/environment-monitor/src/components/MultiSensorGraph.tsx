@@ -30,6 +30,7 @@ import {
 import { Link } from "react-router";
 import { routes } from "../utilities/routes";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { stringSort } from "../utilities/stringUtils";
 
 Chart.register(
   TimeScale,
@@ -131,7 +132,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       }
     }
 
-    return returnValues;
+    return returnValues.sort((a, b) => stringSort(a.label, b.label));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model, sensors]);
 
@@ -150,7 +151,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         }
       }
     });
-    return returnArray;
+    return returnArray.sort((a, b) => stringSort(a.label, b.label));
   };
 
   const getTitle = () => {
