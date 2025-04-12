@@ -45,7 +45,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var calculatedClaims = await GetSensorClaims(user);
+            var calculatedClaims = await GetCalculatedClaims(user);
             await _signInManager.SignInWithClaimsAsync(user, model.Persistent, calculatedClaims);
         }
 
@@ -82,7 +82,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var user = await _userManager.FindByLoginAsync(loginProvider, providerKey);
             if (user != null)
             {
-                var additionalClaims = await GetSensorClaims(user);
+                var additionalClaims = await GetCalculatedClaims(user);
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
             else
@@ -124,12 +124,20 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _logger.LogInformation($"User with email {model.Email} created.");
         }
 
-        private async Task<List<Claim>> GetSensorClaims(ApplicationUser user)
+        private async Task<List<Claim>> GetCalculatedClaims(ApplicationUser user)
         {
             var claims = await _userManager.GetClaimsAsync(user);
-            var deviceIds = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => int.Parse(x.Value));
-            var matchingSensors = await _deviceRepository.GetSensorsByDeviceIdsAsync(deviceIds.ToList());
-            return matchingSensors.Select(x => new Claim(EntityRoles.Sensor.ToString(), x.Id.ToString())).ToList();
+            var locationIdsAsClaims = claims.Where(x => x.Type == EntityRoles.Location.ToString()).Select(x => int.Parse(x.Value)).ToList();
+            var deviceIdsAsClaims = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => int.Parse(x.Value)).ToList();
+
+            var deviceIdsMatchingsLocations = (await _deviceRepository.GetDevicesByLocation(locationIdsAsClaims)).Select(x => x.Id).ToList();           
+            deviceIdsMatchingsLocations.AddRange(deviceIdsAsClaims);
+            deviceIdsAsClaims.AddRange(deviceIdsMatchingsLocations);
+            var claimsToReturn = new List<Claim>();
+            var matchingSensors = await _deviceRepository.GetSensorsByDeviceIdsAsync(deviceIdsAsClaims);
+            claimsToReturn.AddRange(matchingSensors.Select(x => new Claim(EntityRoles.Sensor.ToString(), x.Id.ToString())));
+            claimsToReturn.AddRange(deviceIdsMatchingsLocations.Select(x => new Claim(EntityRoles.Device.ToString(),x.ToString())));
+            return claimsToReturn;
         }
     }
 }

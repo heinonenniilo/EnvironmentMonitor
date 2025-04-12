@@ -20,9 +20,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         }
         public async Task<List<Location>> GetLocations(List<int>? ids, bool includeLocationSensors)
         {
-
             IQueryable<Location> query = _context.Locations;
-
             if (ids != null)
             {
                 query = query.Where(x => ids.Contains(x.Id));
@@ -32,9 +30,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Include(x => x.LocationSensors);
             }
-
             query = query.Where(x => x.Id > 0);
-
             return await query.ToListAsync();
         }
 

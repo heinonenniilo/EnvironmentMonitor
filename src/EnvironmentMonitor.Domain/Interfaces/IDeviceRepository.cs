@@ -14,7 +14,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<Device?> GetDeviceByIdentifier(string deviceId);
         Task<List<Device>> GetDevices(List<int>? ids = null, bool onlyVisible = true);
         Task<List<Device>> GetDevices(List<string>? identifiers = null, bool onlyVisible = true);
-        Task<List<Device>> GetDevicesByLocation(int locationId);
+        Task<List<Device>> GetDevicesByLocation(List<int> locationIds);
         Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible);
         Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible);
 
