@@ -33,6 +33,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Include(x => x.LocationSensors);
             }
 
+            query = query.Where(x => x.Id > 0);
+
             return await query.ToListAsync();
         }
 

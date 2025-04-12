@@ -1,11 +1,9 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   getDashboardTimeRange,
-  getDevices,
   getLocations,
-  getSensors,
   setDashboardTimeRange,
 } from "../reducers/measurementReducer";
 import { useApiHook } from "../hooks/apiHook";
@@ -35,12 +33,11 @@ export const DashbordLocationsView: React.FC = () => {
     if (!locations || locations.length === 0) {
       return;
     }
-    console.log(locations);
+    setIsLoading(true);
     const momentStart = moment()
       .local(true)
       .add(-1 * timeRange, "hour")
       .utc(true);
-    setIsLoading(true);
     measurementApiHook
       .getMeasurementsByLocation(
         locations.map((l) => l.id),

@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { MeasurementsByLocation } from "../models/measurementsBySensor";
 
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
 import { MultiSensorGraph } from "./MultiSensorGraph";
 import { useApiHook } from "../hooks/apiHook";
 import moment from "moment";
@@ -16,7 +16,15 @@ export const DashboardLocationGraph: React.FC<{
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // const dispatch = useDispatch();
+  const [measurementModel, setMeasurementModel] = useState<
+    MeasurementsByLocation | undefined
+  >(undefined);
+
+  useEffect(() => {
+    if (model) {
+      setMeasurementModel(undefined);
+    }
+  }, [model]);
 
   const onRefresh = () => {
     setIsLoading(true);
@@ -26,12 +34,14 @@ export const DashboardLocationGraph: React.FC<{
       .utc(true);
     measurementApiHook
       .getMeasurementsByLocation([location.id], momentStart)
-      .then((res) => {})
+      .then((res) => {
+        setMeasurementModel(res?.measurements[0]);
+      })
       .finally(() => {
         setIsLoading(false);
       });
   };
-
+  console.log(location);
   console.log(location?.locationSensors);
   return (
     <Box
@@ -52,10 +62,12 @@ export const DashboardLocationGraph: React.FC<{
       <MultiSensorGraph
         sensors={model?.sensors}
         devices={undefined}
-        model={model}
+        model={measurementModel ?? model}
         minHeight={400}
         titleAsLink
         isLoading={isLoading}
+        onRefresh={onRefresh}
+        useAutoScale={true}
       />
     </Box>
   );
