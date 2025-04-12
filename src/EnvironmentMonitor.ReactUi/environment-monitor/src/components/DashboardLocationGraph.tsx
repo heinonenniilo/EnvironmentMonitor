@@ -41,8 +41,6 @@ export const DashboardLocationGraph: React.FC<{
         setIsLoading(false);
       });
   };
-  console.log(location);
-  console.log(location?.locationSensors);
   return (
     <Box
       sx={{
@@ -68,6 +66,7 @@ export const DashboardLocationGraph: React.FC<{
         isLoading={isLoading}
         onRefresh={onRefresh}
         useAutoScale={true}
+        title={location.name}
       />
     </Box>
   );

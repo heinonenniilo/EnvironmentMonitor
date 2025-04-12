@@ -31,6 +31,7 @@ export const DashbordLocationsView: React.FC = () => {
 
   useEffect(() => {
     if (!locations || locations.length === 0) {
+      console.log("Returning");
       return;
     }
     setIsLoading(true);
@@ -84,6 +85,7 @@ export const DashbordLocationsView: React.FC = () => {
               location={location!}
               timeRange={timeRange}
               model={m}
+              key={m.id}
             />
           );
         })}

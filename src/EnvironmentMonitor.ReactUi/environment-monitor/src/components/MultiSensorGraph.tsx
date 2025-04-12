@@ -50,6 +50,7 @@ export interface MultiSensorGraphProps {
   titleAsLink?: boolean;
   useAutoScale?: boolean;
   isLoading?: boolean;
+  title?: string;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
 }
@@ -75,6 +76,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   useAutoScale,
   onSetAutoScale,
   onRefresh,
+  title,
   isLoading,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
@@ -152,6 +154,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   };
 
   const getTitle = () => {
+    if (title) {
+      return title;
+    }
     if (!singleDevice) {
       if (!devices || devices.length === 0) {
         return "Select a device";
