@@ -127,25 +127,60 @@ namespace EnvironmentMonitor.Tests
         }
 
         [Test]
-        public async Task LocationGivesAccessToDevicesInLocation()
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task LocationGivesAccessToLocationMeasurements(bool useLocationUser)
+        {
+            var model = await PrepareDatabase();
+
+            var result = useLocationUser ? await LoginAsync(LocationUserName, LocationUserPassword) : await LoginAsync(DeviceUserName, DeviceUserPassword);
+            var queryDictionaryForAccessibleLocations = new List<KeyValuePair<string, string>>(); //new Dictionary<string, string>();
+            var queryDictionaryForNonAccessibleLocations = new List<KeyValuePair<string, string>>();
+
+            queryDictionaryForAccessibleLocations.Add( new KeyValuePair<string, string>("SensorIds", model.Location.Id.ToString()));
+            queryDictionaryForNonAccessibleLocations.Add(new KeyValuePair<string, string>("SensorIds", "0"));
+            queryDictionaryForNonAccessibleLocations.Add(new KeyValuePair<string, string>("SensorIds", model.LocationWithNoDefinedAccess.Id.ToString()));
+
+            queryDictionaryForAccessibleLocations.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
+            queryDictionaryForNonAccessibleLocations.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
+            var apiPath = "/api/measurements/bylocation";
+            var expectedAccessiblePathWithQueryParams = QueryHelpers.AddQueryString(apiPath, queryDictionaryForAccessibleLocations);
+            var expectedNonAccessiblePathWithQueryParams = QueryHelpers.AddQueryString(apiPath, queryDictionaryForNonAccessibleLocations);
+            var responseCreatedLocation = await _client.GetAsync(expectedAccessiblePathWithQueryParams);
+            var responseDefaultLocation = await _client.GetAsync(expectedNonAccessiblePathWithQueryParams);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(responseCreatedLocation.StatusCode, Is.EqualTo(useLocationUser ? HttpStatusCode.OK : HttpStatusCode.Forbidden));
+                Assert.That(responseDefaultLocation.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+            });
+        }
+
+        [Test]
+        public async Task LocationGivesAccessToMeasurementsOfDevicesInLocation()
         {
             var model = await PrepareDatabase();
             var expectedAccessibleDevice = model.DeviceInLocation;
-            var expectedNonAccessibleDevice = model.UnassignedDevice;
+            var expectedNonAccessibleDevice = model.DeviceUnssigned;
 
             var result = await LoginAsync(LocationUserName, LocationUserPassword);
-            var queryDictionaryForAccessibleSensors = new Dictionary<string, string>();
-            var queryDictionaryForNonAccessibleSensors = new Dictionary<string, string>();
+            var queryDictionaryForAccessibleSensors = new List<KeyValuePair<string, string>>();
+            var queryDictionaryForNonAccessibleSensors = new List<KeyValuePair<string, string>>();
             foreach (var sensor in expectedAccessibleDevice.Sensors)
             {
-                queryDictionaryForAccessibleSensors.Add("SensorIds", sensor.Id.ToString());
+                queryDictionaryForAccessibleSensors.Add(new KeyValuePair<string, string>("SensorIds", sensor.Id.ToString()));
             }
             foreach (var sensor in expectedNonAccessibleDevice.Sensors)
             {
-                queryDictionaryForNonAccessibleSensors.Add("SensorIds", sensor.Id.ToString());
+                queryDictionaryForNonAccessibleSensors.Add(new KeyValuePair<string, string>("SensorIds", sensor.Id.ToString()));
             }
-            queryDictionaryForAccessibleSensors.Add("From", DateTime.Now.ToString("yyyy-MM-dd"));
-            queryDictionaryForNonAccessibleSensors.Add("From", DateTime.Now.ToString("yyyy-MM-dd"));
+            foreach (var sensor in model.DeviceInLocationWithNoAccess.Sensors)
+            {
+                queryDictionaryForNonAccessibleSensors.Add(new KeyValuePair<string, string>("SensorIds", sensor.Id.ToString()));
+            }
+
+            queryDictionaryForAccessibleSensors.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
+            queryDictionaryForNonAccessibleSensors.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
 
             var apiPath = "/api/measurements/bysensor";
 
@@ -162,10 +197,10 @@ namespace EnvironmentMonitor.Tests
         }
 
         [Test]
-        public async Task DeviceGivesAccessToSensorsInDevice()
+        public async Task DeviceGivesAccessToMeasurementsOfDeviceSensors()
         {
             var model = await PrepareDatabase();
-            var expectedAccessibleDevice = model.UnassignedDevice;
+            var expectedAccessibleDevice = model.DeviceUnssigned;
             var expectedNonAccessibleDevice = model.DeviceInLocation;
 
             var result = await LoginAsync(DeviceUserName, DeviceUserPassword);
@@ -194,6 +229,43 @@ namespace EnvironmentMonitor.Tests
                 Assert.That(responseOkExpected.StatusCode, Is.EqualTo(HttpStatusCode.OK));
                 Assert.That(responseForbiddenExpected.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
             });
+        }
+
+
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task AdminAndViewerCanSeeMeasurementsFromAllLocations(bool isAdmin)
+        {
+            var model = await PrepareDatabase();
+            var loginResult = isAdmin ? await LoginAsync(AdminUserName, AdminPassword) : await LoginAsync(ViewerUserName, ViewerPassword);
+            var queryParams =  new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("SensorIds", model.Location.Id.ToString()),
+                new KeyValuePair<string, string>( "SensorIds", model.LocationWithNoDefinedAccess.Id.ToString() ),
+                new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd"))
+            };
+            var apiPath = "/api/measurements/bylocation";
+            var clientPath = QueryHelpers.AddQueryString(apiPath, queryParams);
+            var responseOkExpected = await _client.GetAsync(clientPath);
+
+            Assert.That(responseOkExpected.StatusCode, Is.EqualTo((HttpStatusCode)HttpStatusCode.OK));
+        }
+
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task AdminAndViewerCanSeeMeasurementsFromAllSensors(bool isAdmin)
+        {
+            var model = await PrepareDatabase();
+            var loginResult = isAdmin ? await LoginAsync(AdminUserName, AdminPassword) : await LoginAsync(ViewerUserName, ViewerPassword);
+            var queryParams = model.Sensors.Select(x => new KeyValuePair<string, string>("SensorIds", x.Id.ToString())).ToList();
+            queryParams.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
+            var apiPath = "/api/measurements/bysensor";
+            var clientPath = QueryHelpers.AddQueryString(apiPath, queryParams);
+            var responseOkExpected = await _client.GetAsync(clientPath);
+
+            Assert.That(responseOkExpected.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         }
 
         private async Task<bool> LoginAsync(string email, string password)
@@ -225,7 +297,13 @@ namespace EnvironmentMonitor.Tests
                 {
                     Name = "Test",
                 };
+
+                var locationWithNoAccess = new Location()
+                {
+                    Name = "Another"
+                };
                 measurementDbContext.Locations.Add(location);
+                measurementDbContext.Locations.Add(locationWithNoAccess);
                 measurementDbContext.SaveChanges();
                 var deviceInLocation = new Device()
                 {
@@ -250,8 +328,21 @@ namespace EnvironmentMonitor.Tests
                     }],
                     Location = measurementDbContext.Locations.First(x => x.Id == 0)
                 };
+
+
+                var deviceInLocationWithNoAccess = new Device()
+                {
+                    Name = "AnotherDevivce",
+                    DeviceIdentifier = "Device-03",
+                    Sensors = [new Sensor() {
+                        Name = "Test-01",
+                        SensorId = 1
+                    }],
+                    Location = locationWithNoAccess
+                };
                 measurementDbContext.Devices.Add(deviceWithBaseLocation);
                 measurementDbContext.Devices.Add(deviceInLocation);
+                measurementDbContext.Devices.Add(deviceInLocationWithNoAccess);
                 measurementDbContext.SaveChanges();
 
 
@@ -269,11 +360,16 @@ namespace EnvironmentMonitor.Tests
                 await userManager.AddToRoleAsync(deviceUserInDb, GlobalRoles.User.ToString());
                 await userManager.AddClaimAsync(deviceUserInDb, new System.Security.Claims.Claim(EntityRoles.Device.ToString(), deviceWithBaseLocation.Id.ToString()));
 
+                var sensors = await measurementDbContext.Sensors.ToListAsync();
+
                 return new PrepareDbModel()
                 {
                     DeviceInLocation = await measurementDbContext.Devices.Include(x => x.Sensors).FirstAsync(x => x.Id == deviceInLocation.Id),
-                    UnassignedDevice = await measurementDbContext.Devices.Include(x => x.Sensors).FirstAsync(x => x.Id == deviceWithBaseLocation.Id),
-                    Location = await measurementDbContext.Locations.Include(x => x.LocationSensors).FirstAsync(x => x.Id == location.Id)
+                    DeviceUnssigned = await measurementDbContext.Devices.Include(x => x.Sensors).FirstAsync(x => x.Id == deviceWithBaseLocation.Id),
+                    DeviceInLocationWithNoAccess = await measurementDbContext.Devices.Include(x => x.Sensors).FirstAsync(x => x.Id == deviceInLocationWithNoAccess.Id),
+                    Location = await measurementDbContext.Locations.Include(x => x.LocationSensors).FirstAsync(x => x.Id == location.Id),
+                    LocationWithNoDefinedAccess = await measurementDbContext.Locations.Include(x => x.LocationSensors).FirstAsync(x => x.Id == locationWithNoAccess.Id),
+                    Sensors = sensors
                 };
             }
         }
@@ -281,8 +377,14 @@ namespace EnvironmentMonitor.Tests
         private class PrepareDbModel
         {
             public Device DeviceInLocation { get; set; }
-            public Device UnassignedDevice { get; set; }
+            public Device DeviceUnssigned { get; set; }
+
+            public Device DeviceInLocationWithNoAccess { get; set; }
             public Location Location { get; set; }
+
+            public Location LocationWithNoDefinedAccess { get; set; }
+
+            public List<Sensor> Sensors { get; set; }
         }
     }
 }
