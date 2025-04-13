@@ -6,6 +6,7 @@ import { MultiSensorGraph } from "./MultiSensorGraph";
 import { useApiHook } from "../hooks/apiHook";
 import moment from "moment";
 import { LocationModel } from "../models/location";
+import { ChartJsColorsPluginMaxDatasets } from "../models/applicationConstants";
 
 export const DashboardLocationGraph: React.FC<{
   location: LocationModel;
@@ -66,6 +67,9 @@ export const DashboardLocationGraph: React.FC<{
         onRefresh={onRefresh}
         useAutoScale={true}
         title={location.name}
+        useDynamicColors={
+          model && model.sensors.length > ChartJsColorsPluginMaxDatasets
+        }
       />
     </Box>
   );

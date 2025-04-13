@@ -31,6 +31,7 @@ import { Link } from "react-router";
 import { routes } from "../utilities/routes";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { stringSort } from "../utilities/stringUtils";
+import { getColor } from "../utilities/graphUtils";
 
 Chart.register(
   TimeScale,
@@ -52,6 +53,7 @@ export interface MultiSensorGraphProps {
   useAutoScale?: boolean;
   isLoading?: boolean;
   title?: string;
+  useDynamicColors?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
 }
@@ -65,6 +67,8 @@ interface GraphDataset {
   }[];
   id: number;
   measurementType: MeasurementTypes;
+  borderColor?: string;
+  backgroundColor?: string;
 }
 
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
@@ -79,6 +83,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   onRefresh,
   title,
   isLoading,
+  useDynamicColors,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
@@ -132,7 +137,13 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       }
     }
 
-    return returnValues.sort((a, b) => stringSort(a.label, b.label));
+    return returnValues
+      .sort((a, b) => stringSort(a.label, b.label))
+      .map((s, idx) => {
+        s.borderColor = getColor(idx);
+        s.backgroundColor = getColor(idx);
+        return s;
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model, sensors]);
 
@@ -308,9 +319,11 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                   text: "Chart.js Time Scale",
                   display: true,
                 },
-                colors: {
-                  forceOverride: true,
-                },
+                colors: useDynamicColors
+                  ? undefined
+                  : {
+                      forceOverride: true,
+                    },
                 legend: {
                   onClick: (event, legendItem, legend) => {
                     if (legendItem.datasetIndex !== undefined) {
