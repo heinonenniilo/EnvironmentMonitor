@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    [Migration("20250411194211_AddLocation")]
+    [Migration("20250413135313_AddLocation")]
     partial class AddLocation
     {
         /// <inheritdoc />
@@ -187,12 +187,20 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<Guid>("Identifier")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
 
                     b.HasIndex("Name")
                         .IsUnique();

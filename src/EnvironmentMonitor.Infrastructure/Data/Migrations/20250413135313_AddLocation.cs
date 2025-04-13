@@ -1,4 +1,5 @@
-﻿using EnvironmentMonitor.Infrastructure.Extensions;
+﻿using System;
+using EnvironmentMonitor.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -34,7 +35,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
+                    Identifier = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWID()")
                 },
                 constraints: table =>
                 {
@@ -85,6 +87,12 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                 name: "IX_Devices_LocationId",
                 table: "Devices",
                 column: "LocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Locations_Identifier",
+                table: "Locations",
+                column: "Identifier",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Locations_Name",
