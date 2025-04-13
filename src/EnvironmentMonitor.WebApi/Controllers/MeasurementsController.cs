@@ -33,7 +33,6 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet("bysensor")]
         public async Task<MeasurementsBySensorModel> GetMeasurementsBySensor([FromQuery] GetMeasurementsModel model)
         {
-            var user = User;
             return await _measurementService.GetMeasurementsBySensor(model);
         }
 

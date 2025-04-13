@@ -134,7 +134,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<List<Device>> GetDevicesByLocation(List<int> locationIds)
         {
-            return await _context.Devices.Where(x => locationIds.Contains(x.Id)).ToListAsync();
+            return await _context.Devices.Where(x => locationIds.Contains(x.LocationId)).ToListAsync();
         }
     }
 }
