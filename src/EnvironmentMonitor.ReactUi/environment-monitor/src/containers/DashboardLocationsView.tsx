@@ -73,14 +73,14 @@ export const DashbordLocationsView: React.FC = () => {
         sx={{
           display: "grid",
           gridTemplateColumns:
-            viewModel?.measurements && viewModel?.measurements.length > 2
+            viewModel?.measurements && viewModel?.measurements.length > 3
               ? {
                   xs: "1fr",
                   lg: "1fr 1fr",
                 }
               : "1fr",
-          gap: 1, // Space between grid items
-          padding: 1, // Padding around the grid container
+          gap: 1,
+          padding: 1,
           flexGrow: 1,
           height: "100%",
         }}
