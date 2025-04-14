@@ -12,6 +12,7 @@ import { store } from "./setup/appStore";
 import { DashboardView } from "./containers/DashboardView";
 import { DevicesView } from "./containers/DevicesView";
 import { DeviceView } from "./containers/DeviceView";
+import { DashbordLocationsView } from "./containers/DashboardLocationsView";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -25,6 +26,10 @@ root.render(
           <Routes>
             <Route path={routes.main} element={<HomeView />} />
             <Route path={routes.dashboard} element={<DashboardView />} />
+            <Route
+              path={routes.locationDashboard}
+              element={<DashbordLocationsView />}
+            />
             <Route path={routes.measurements} element={<MeasurementsView />} />
             <Route
               path={routes.measurementsByDevice}

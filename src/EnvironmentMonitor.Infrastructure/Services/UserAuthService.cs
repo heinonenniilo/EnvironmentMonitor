@@ -25,7 +25,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly IDeviceRepository _deviceRepository;
         private readonly ILogger<UserAuthService> _logger;
 
-        public UserAuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, 
+        public UserAuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
             IDeviceRepository deviceRepository, ILogger<UserAuthService> logger)
         {
             _userManager = userManager;
@@ -45,7 +45,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var calculatedClaims = await GetSensorClaims(user);
+            var calculatedClaims = await GetCalculatedClaims(user);
             await _signInManager.SignInWithClaimsAsync(user, model.Persistent, calculatedClaims);
         }
 
@@ -82,7 +82,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var user = await _userManager.FindByLoginAsync(loginProvider, providerKey);
             if (user != null)
             {
-                var additionalClaims = await GetSensorClaims(user);
+                var additionalClaims = await GetCalculatedClaims(user);
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
             else
@@ -123,13 +123,36 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new InvalidOperationException("Failed to create user");
             _logger.LogInformation($"User with email {model.Email} created.");
         }
-
-        private async Task<List<Claim>> GetSensorClaims(ApplicationUser user)
+        /// <summary>
+        /// Get calculated claims. Each location gives a claim to devices in the location. Each device gives a claim to each sensor attached to the device.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        private async Task<List<Claim>> GetCalculatedClaims(ApplicationUser user)
         {
             var claims = await _userManager.GetClaimsAsync(user);
-            var deviceIds = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => int.Parse(x.Value));
-            var matchingSensors = await _deviceRepository.GetSensorsByDeviceIdsAsync(deviceIds.ToList());
-            return matchingSensors.Select(x => new Claim(EntityRoles.Sensor.ToString(), x.Id.ToString())).ToList();
+            var locationIdsAsClaims = claims.Where(x => x.Type == EntityRoles.Location.ToString()).Select(x => int.Parse(x.Value)).ToList();
+
+            var existingSensorIdsInClaims = claims.Where(x => x.Type == EntityRoles.Sensor.ToString()).Select(x => int.Parse(x.Value)).ToList();
+
+            var deviceIdsAsClaims = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => int.Parse(x.Value)).ToList();
+            var deviceIdsMatchingsLocations = (await _deviceRepository.GetDevicesByLocation(locationIdsAsClaims)).Select(x => x.Id).ToList();
+
+            var deviceIds = new List<int>(deviceIdsAsClaims);
+            deviceIds.AddRange(deviceIdsMatchingsLocations);
+
+            var claimsToReturn = new List<Claim>();
+            var sensorIdsMatchingDevices = (await _deviceRepository.GetSensorsByDeviceIdsAsync(deviceIds)).Select(x => x.Id).ToList();
+
+            claimsToReturn.AddRange(sensorIdsMatchingDevices
+                .Where(x => !existingSensorIdsInClaims.Contains(x))
+                .Distinct()
+                .Select(x => new Claim(EntityRoles.Sensor.ToString(), x.ToString())));
+            claimsToReturn.AddRange(deviceIdsMatchingsLocations
+                .Where(x => !deviceIdsAsClaims.Contains(x))
+                .Distinct()
+                .Select(x => new Claim(EntityRoles.Device.ToString(), x.ToString())));
+            return claimsToReturn;
         }
     }
 }

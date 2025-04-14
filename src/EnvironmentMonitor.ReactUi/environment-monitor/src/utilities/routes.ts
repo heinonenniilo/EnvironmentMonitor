@@ -3,6 +3,7 @@ export const routes = {
   measurements: "/measurements",
   measurementsByDevice: "/measurements/:deviceId",
   dashboard: "/dashboard",
+  locationDashboard: "/dashboard/location",
   devices: "/devices",
   deviceView: "/devices/:deviceId",
 };

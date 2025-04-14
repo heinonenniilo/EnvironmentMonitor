@@ -13,6 +13,7 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<IMeasurementService, MeasurementService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IDeviceService, DeviceService>();
+            services.AddScoped<ILocationService, LocationService>();
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
             return services;
         }

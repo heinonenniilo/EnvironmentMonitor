@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Entities
 {
-    public class MeasurementType
+    public class Location
     {
         public int Id { get; set; }
-        public required string Name { get; set; }
-        public required string Unit { get; set; }
-        public List<Measurement> Measurements { get; set; }
+        public string Name { get; set; }
+        public Guid Identifier { get; set; }
+        public IList<Device> Devices { get; set; }
         public IList<LocationSensor> LocationSensors { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 import { Box, IconButton, Menu, MenuItem } from "@mui/material";
 import React from "react";
-import { Menu as MenuIcon } from "@mui/icons-material";
+import { ArrowRight, Menu as MenuIcon } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { User } from "../models/user";
 import { routes } from "../utilities/routes";
@@ -11,6 +11,7 @@ import {
   getIsLeftMenuOpen,
   toggleLeftMenuOpen,
 } from "../reducers/userInterfaceReducer";
+import { getLocations } from "../reducers/measurementReducer";
 
 export interface MobileMenuProps {
   onNavigate: (route: string) => void;
@@ -27,10 +28,23 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 }) => {
   const dispath = useDispatch();
   const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
+  const locations = useSelector(getLocations);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const [dashboardAnchorEl, setDashboardAnchorEl] =
+    React.useState<null | HTMLElement>(null);
+  const isDashboardMenuOpen = Boolean(dashboardAnchorEl);
+
+  const handleDashboardOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setDashboardAnchorEl(event.currentTarget);
+  };
+
+  const handleDashboardClose = () => {
+    setDashboardAnchorEl(null);
   };
 
   const handleClick = (
@@ -68,13 +82,44 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           </MenuItem>
           <AuthorizedComponent requiredRole={RoleNames.User}>
             <MenuItem
+              onClick={
+                locations.length > 0
+                  ? handleDashboardOpen
+                  : (e) => {
+                      handleClick(routes.dashboard, e);
+                    }
+              }
               selected={false}
-              onClick={(event) => {
-                handleClick(routes.dashboard, event);
-              }}
             >
               Dashboard
+              {locations.length > 0 ? <ArrowRight sx={{ mr: 1 }} /> : null}
             </MenuItem>
+            {locations.length > 0 ? (
+              <Menu
+                anchorEl={dashboardAnchorEl}
+                open={isDashboardMenuOpen}
+                onClose={handleDashboardClose}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
+              >
+                <MenuItem
+                  onClick={(event) => {
+                    handleDashboardClose();
+                    handleClick(routes.dashboard, event);
+                  }}
+                >
+                  Devices
+                </MenuItem>
+                <MenuItem
+                  onClick={(event) => {
+                    handleDashboardClose();
+                    handleClick(routes.locationDashboard, event);
+                  }}
+                >
+                  Locations
+                </MenuItem>
+              </Menu>
+            ) : null}
           </AuthorizedComponent>
           <AuthorizedComponent requiredRole={RoleNames.User}>
             <MenuItem

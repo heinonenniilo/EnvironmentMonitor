@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { User } from "../models/user";
 import { RootState } from "../setup/appStore";
+import { RoleNames } from "../enums/roleNames";
 
 export interface UserState {
   user: User | undefined;
@@ -40,5 +41,11 @@ export const getIsLoggedIn = (state: RootState): boolean =>
 
 export const getIsLoggingIn = (state: RootState): boolean =>
   state.userInfo.isLoggingIn;
+
+export const hasRole =
+  (roleName: RoleNames) =>
+  (state: RootState): boolean => {
+    return state.userInfo.user?.roles.includes(roleName) ?? false;
+  };
 
 export default userSlice.reducer;

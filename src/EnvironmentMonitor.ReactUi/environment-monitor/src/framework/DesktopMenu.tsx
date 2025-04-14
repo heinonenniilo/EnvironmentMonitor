@@ -1,4 +1,4 @@
-import { Box, Container, IconButton, MenuItem } from "@mui/material";
+import { Box, Container, IconButton, Menu, MenuItem } from "@mui/material";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -12,6 +12,8 @@ import {
   getIsLeftMenuOpen,
   toggleLeftMenuOpen,
 } from "../reducers/userInterfaceReducer";
+import { ArrowDropDownIcon } from "@mui/x-date-pickers";
+import { getLocations } from "../reducers/measurementReducer";
 
 export interface DesktopMenuProps {
   onNavigate: (route: string) => void;
@@ -41,7 +43,20 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
 }) => {
   const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
   const dispath = useDispatch();
+  const locations = useSelector(getLocations);
+
   // const user = useSelector(getUserInfo);
+
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleDashboardClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   return (
     <Container maxWidth={"xl"}>
@@ -67,12 +82,50 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
             Home
           </MenuItem>
           <AuthorizedComponent requiredRole={RoleNames.User}>
+            {locations.length > 0 ? (
+              <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleMenuClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose();
+                    onNavigate(routes.dashboard);
+                  }}
+                >
+                  Devices
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose();
+                    onNavigate(routes.locationDashboard);
+                  }}
+                >
+                  Locations
+                </MenuItem>
+              </Menu>
+            ) : null}
             <MenuItem
-              onClick={() => {
-                onNavigate(routes.dashboard);
-              }}
+              onClick={
+                locations.length > 0
+                  ? handleDashboardClick
+                  : () => {
+                      onNavigate(routes.dashboard);
+                    }
+              }
+              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
             >
               Dashboard
+              {locations.length > 0 ? <ArrowDropDownIcon /> : null}
             </MenuItem>
           </AuthorizedComponent>
           <AuthorizedComponent requiredRole={RoleNames.User}>

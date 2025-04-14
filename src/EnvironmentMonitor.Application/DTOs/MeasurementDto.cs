@@ -47,4 +47,16 @@ namespace EnvironmentMonitor.Application.DTOs
     {
         public List<MeasurementDto> Measurements { get; set; } = [];
     }
+
+    public class MeasurementsByLocationDto
+    {
+        public List<MeasurementsBySensorDto> Measurements { get; set; }
+        public int Id { get; set; }
+        public List<SensorDto> Sensors { get; set; }
+    }
+
+    public class MeasurementsByLocationModel
+    {
+        public List<MeasurementsByLocationDto> Measurements { get; set; } = [];
+    }
 }

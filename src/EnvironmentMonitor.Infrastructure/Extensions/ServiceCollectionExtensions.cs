@@ -33,6 +33,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             });
             services.AddScoped<IMeasurementRepository, MeasurementRepository>();
             services.AddScoped<IDeviceRepository, DeviceRepository>();
+            services.AddScoped<ILocationRepository, LocationRepository>();
             // Identity stuff
             services.AddIdentity<ApplicationUser, ApplicationUserRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

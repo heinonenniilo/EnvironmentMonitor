@@ -21,6 +21,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IMapper _mapper;
         private readonly IDeviceService _deviceService;
         private readonly IDateService _dateService;
+        private readonly ILocationRepository _locationRepository;
         
 
         public MeasurementService(
@@ -29,7 +30,8 @@ namespace EnvironmentMonitor.Application.Services
             IUserService userService,
             IMapper mapper,
             IDeviceService deviceService,
-            IDateService dateService)
+            IDateService dateService,
+            ILocationRepository locationRepository)
         {
             _measurementRepository = measurement;
             _logger = logger;
@@ -37,6 +39,7 @@ namespace EnvironmentMonitor.Application.Services
             _mapper = mapper;
             _deviceService = deviceService;
             _dateService = dateService;
+            _locationRepository = locationRepository;
         }
 
         public async Task AddMeasurements(SaveMeasurementsDto measurement)
@@ -112,11 +115,56 @@ namespace EnvironmentMonitor.Application.Services
             };
         }
 
+        public async Task<MeasurementsByLocationModel> GetMeasurementsByLocation(GetMeasurementsModel model)
+        {
+            if (!_userService.HasAccessToLocations(model.SensorIds, AccessLevels.Read))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var locations = await _locationRepository.GetLocations(model.SensorIds, true);
+            var locationSensors = locations.Select(x => x.LocationSensors).ToList();
+            var sensorIds = locationSensors.SelectMany(x => x).Select(d => d.SensorId).ToList();
+            var res = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
+            {
+                From = model.From,
+                To = model.To,
+                SensorIds = locationSensors.SelectMany(x => x).Select(d => d.SensorId).ToList()
+            });
+
+            var modelToReturn = new MeasurementsByLocationModel();
+            foreach (var location in locations)
+            {
+                var measurementsInLocation = new List<MeasurementsBySensorDto>();
+                foreach (var sensor in location.LocationSensors)
+                {
+                    var measurementsBySensor = _mapper.Map<List<MeasurementDto>>(res.Where(x => x.SensorId == sensor.SensorId && x.TypeId == sensor.TypeId));
+                    var infoRow = GetMeasurementInfo(measurementsBySensor, [sensor.SensorId]).FirstOrDefault();
+                    var bySensorRow = new MeasurementsBySensorDto()
+                    {
+                        SensorId = sensor.SensorId,
+                        Measurements = measurementsBySensor,
+                        LatestValues = infoRow?.LatestValues ?? [],
+                        MaxValues = infoRow?.MaxValues ?? [],
+                        MinValues = infoRow?.MinValues ?? []
+                    };
+                    measurementsInLocation.Add(bySensorRow);
+                }
+                modelToReturn.Measurements.Add(new MeasurementsByLocationDto()
+                {
+                    Id = location.Id,
+                    Measurements = measurementsInLocation,
+                    Sensors = _mapper.Map<List<SensorDto>>(location.LocationSensors)
+                });
+            }
+            return modelToReturn;
+        }
+
         public async Task<MeasurementsBySensorModel> GetMeasurementsBySensor(GetMeasurementsModel model)
         {
             var returnList = new List<MeasurementsBySensorDto>();
             _logger.LogInformation("Getting measurements by sensor");
-            if (model.SensorIds.Any(s => !_userService.HasAccessToSensor(s, AccessLevels.Read) ) )
+            if (model.SensorIds.Any(s => !_userService.HasAccessToSensor(s, AccessLevels.Read)))
             {
                 throw new UnauthorizedAccessException();
             }

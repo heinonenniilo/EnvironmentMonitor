@@ -83,7 +83,7 @@ export const DashboardView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      titleParts={[{ text: "Dashboard" }]}
+      titleParts={[{ text: "Dashboard - Devices" }]}
       isLoading={isLoading}
       titleComponent={
         <TimeRangeSelectorComponent

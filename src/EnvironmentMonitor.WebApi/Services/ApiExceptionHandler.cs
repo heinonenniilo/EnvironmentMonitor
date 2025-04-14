@@ -34,7 +34,7 @@ namespace EnvironmentMonitor.WebApi.Services
                 case UnauthorizedAccessException:
                 case UnauthorizedException:
                     problemDetails.Title = "Not allowed";
-                    problemDetails.Status = StatusCodes.Status404NotFound;
+                    problemDetails.Status = StatusCodes.Status403Forbidden;
                     break;
                 case ArgumentException argEx:
                     problemDetails.Title = "Bad request";
