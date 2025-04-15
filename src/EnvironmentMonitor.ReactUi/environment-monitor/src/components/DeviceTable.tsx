@@ -75,6 +75,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       headerName: "Online since",
       type: "dateTime",
       flex: 1,
+      minWidth: 170,
       valueGetter: (value, row) => {
         if (row) {
           const data = row as DeviceInfo;
@@ -93,6 +94,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       headerName: "Rebooted",
       type: "dateTime",
       flex: 1,
+      minWidth: 170,
       valueGetter: (value, row) => {
         if (row) {
           const data = row as DeviceInfo;
@@ -111,6 +113,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       headerName: "Last Message",
       type: "dateTime",
       flex: 1,
+      minWidth: 170,
       valueGetter: (value, row) => {
         if (row) {
           const data = row as DeviceInfo;
@@ -141,7 +144,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   ];
 
   return (
-    <Box marginTop={2} sx={{ overflow: "auto", minWidth: "600" }}>
+    <Box marginTop={2} sx={{ overflow: "auto", minWidth: "800px" }}>
       {title !== undefined ? (
         <Typography variant="h6" marginBottom={2}>
           {title}
