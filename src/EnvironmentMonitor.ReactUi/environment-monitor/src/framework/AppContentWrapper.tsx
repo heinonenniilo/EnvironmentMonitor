@@ -9,7 +9,6 @@ import {
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
 import { LeftMenu } from "./LefMenu";
 import {
   getHasLeftMenu,
@@ -28,9 +27,8 @@ export interface AppContentWrapperProps {
   isLoading?: boolean;
   leftMenu?: JSX.Element;
   titleComponent?: JSX.Element;
-  titleParts: TitlePart[];
   useSmallTitle?: boolean;
-  noMaxHeight?: boolean;
+  title: string;
 }
 
 const PageContent = styled.div<{ max?: number }>`
@@ -62,11 +60,6 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
     }
   }, [props.leftMenu, dispatch, hasLeftMenu]);
   const drawTitle = () => {
-    const count = props.titleParts.length;
-
-    const shouldUseSmallTitle =
-      props.useSmallTitle ||
-      (props.titleParts.length > 1 && props.titleParts.some((t) => t.to));
     return (
       <Box
         sx={{
@@ -78,30 +71,8 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
           flexDirection: "row",
         }}
       >
-        <Typography variant={shouldUseSmallTitle ? "h6" : "h5"}>
-          {props.titleParts.map((r, idx) => {
-            let el: JSX.Element;
-            if (r.to) {
-              el = (
-                <Link key={`title_${idx}`} to={r.to}>
-                  {r.text}
-                </Link>
-              );
-            } else {
-              el = <>{r.text}</>;
-            }
-
-            if (idx < count - 1) {
-              return (
-                <span key={`el_${idx}`}>
-                  {el}
-                  {">"}
-                </span>
-              );
-            } else {
-              return <span key={`el_${idx}`}>{el}</span>;
-            }
-          })}
+        <Typography variant={props.useSmallTitle ? "h6" : "h5"}>
+          {props.title}
         </Typography>
         {props.titleComponent ? props.titleComponent : null}
       </Box>
