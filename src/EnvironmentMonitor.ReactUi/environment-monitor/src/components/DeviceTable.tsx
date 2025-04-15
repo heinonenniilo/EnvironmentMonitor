@@ -33,6 +33,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       headerName: "Name",
       hideable: true,
       flex: 1,
+      minWidth: 200,
       renderCell: (params) => (
         <Link
           to={`${routes.devices}/${
@@ -144,49 +145,51 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   ];
 
   return (
-    <Box marginTop={2} sx={{ overflow: "auto", minWidth: "800px" }}>
+    <Box marginTop={2} display={"flex"} flexDirection={"column"}>
       {title !== undefined ? (
         <Typography variant="h6" marginBottom={2}>
           {title}
         </Typography>
       ) : null}
-      <DataGrid
-        rows={devices}
-        columns={columns}
-        getRowId={(row) => {
-          if (row) {
-            return (row as DeviceInfo).device.id;
-          }
-          return "";
-        }}
-        sx={{
-          border: 0,
-          minWidth: 600,
-        }}
-        pagination={undefined}
-        pageSizeOptions={[]}
-        disableColumnSorting={disableSort}
-        hideFooter
-        initialState={{
-          columns: {
-            columnVisibilityModel: hideName
-              ? {
-                  name: false,
-                }
-              : undefined,
-          },
-          sorting: disableSort
-            ? undefined
-            : {
-                sortModel: [
-                  {
-                    field: "onlineSince",
-                    sort: "desc",
-                  },
-                ],
-              },
-        }}
-      />
+      <Box sx={{ overflow: "auto" }}>
+        <DataGrid
+          rows={devices}
+          columns={columns}
+          getRowId={(row) => {
+            if (row) {
+              return (row as DeviceInfo).device.id;
+            }
+            return "";
+          }}
+          sx={{
+            border: 0,
+            minWidth: 600,
+          }}
+          pagination={undefined}
+          pageSizeOptions={[]}
+          disableColumnSorting={disableSort}
+          hideFooter
+          initialState={{
+            columns: {
+              columnVisibilityModel: hideName
+                ? {
+                    name: false,
+                  }
+                : undefined,
+            },
+            sorting: disableSort
+              ? undefined
+              : {
+                  sortModel: [
+                    {
+                      field: "onlineSince",
+                      sort: "desc",
+                    },
+                  ],
+                },
+          }}
+        />
+      </Box>
     </Box>
   );
 };
