@@ -89,7 +89,7 @@ export const DevicesView: React.FC = () => {
     dateTimeSort(a.lastMessage ?? new Date(), b.lastMessage ?? new Date())
   );
   return (
-    <AppContentWrapper titleParts={[{ text: "Devices" }]} isLoading={isLoading}>
+    <AppContentWrapper title="Devices" isLoading={isLoading}>
       <DeviceTable
         devices={sorted}
         onReboot={(device) => {
