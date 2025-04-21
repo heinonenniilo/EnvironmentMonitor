@@ -44,11 +44,26 @@ namespace EnvironmentMonitor.WebApi.Controllers
             await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode);
         }
 
-        [HttpPost("motion-control-delay")]
+        [HttpPost("default-image")]
         [Authorize(Roles = "Admin")]
-        public async Task SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model)
+        public async Task<DeviceInfoDto> Upload([FromForm] string deviceId, IFormFile file)
         {
-            await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs);
+            await _deviceService.SetDefaultImage(deviceId, file.OpenReadStream(), file.FileName);
+            var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId]);
+            return deviceInfos.First();
+        }
+
+        [HttpGet("default-image/{deviceId}")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "image/jpeg")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetFile([FromRoute] string deviceId)
+        {
+            var stream = await _deviceService.GetDefaultImage(deviceId);
+            if (stream == null)
+            {
+                return NotFound();
+            }
+            return new FileStreamResult(stream.Stream, stream.ContentType);
         }
 
         [HttpGet]

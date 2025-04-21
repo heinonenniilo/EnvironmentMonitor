@@ -14,6 +14,7 @@ import {
 import { DeviceEventTable } from "../components/DeviceEventTable";
 import { DeviceEvent } from "../models/deviceEvent";
 import { Box } from "@mui/material";
+import { DeviceImage } from "../components/DeviceImage";
 
 interface PromiseInfo {
   type: string;
@@ -219,6 +220,8 @@ export const DeviceView: React.FC = () => {
           devices={selectedDevice ? [selectedDevice] : []}
           disableSort
         />
+        <DeviceImage device={selectedDevice?.device} title="Image" />
+
         <SensorTable
           title="Sensors"
           sensors={selectedDevice?.device?.sensors ?? []}

@@ -2,6 +2,7 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
@@ -20,16 +21,20 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILogger<DeviceService> _logger;
         private readonly IUserService _userService;
         private readonly IDeviceRepository _deviceRepository;
+        private readonly IStorageClient _storageClient;
         private readonly IMapper _mapper;
+        private readonly IDateService _dateService;
 
         public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IMapper mapper)
+            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService)
         {
             _messageService = messageService;
             _logger = logger;
             _userService = userService;
             _deviceRepository = deviceRepository;
             _mapper = mapper;
+            _storageClient = storageClient;
+            _dateService = dateService;
         }
         public async Task Reboot(string deviceIdentifier)
         {
@@ -162,6 +167,40 @@ namespace EnvironmentMonitor.Application.Services
             var device = await GetDevice(identifier, AccessLevels.Read) ?? throw new UnauthorizedAccessException();
             var events = await _deviceRepository.GetDeviceEvents(identifier);
             return _mapper.Map<List<DeviceEventDto>>(events);
+        }
+
+        public async Task SetDefaultImage(string deviceIdentifier, Stream fileStream, string fileName)
+        {
+            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
+            if (device == null || !_userService.HasAccessTo(EntityRoles.Device, device.Id, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var fileNameToSave = $"{deviceIdentifier}_{Guid.NewGuid()}_{fileName}";
+            var res = await _storageClient.Upload(fileStream, fileNameToSave);
+            device.DefaultImage = new Attachment()
+            {
+                Name = fileNameToSave,
+                FullPath = res.ToString(),
+                Path = res.ToString(),
+                Extension = $"{Path.GetExtension(fileName)}",
+                CreatedAt = _dateService.CurrentTime()
+            };
+            await _deviceRepository.SaveChanges();
+        }
+
+        public async Task<AttachmentInfoModel?> GetDefaultImage(string deviceIdentifier)
+        {
+            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
+            if (device == null || !_userService.HasAccessTo(EntityRoles.Device, device.Id, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            if (device.DefaultImage == null)
+            {
+                return null;
+            }
+            return await _storageClient.GetImageAsync(device.DefaultImage.Name);
         }
     }
 }

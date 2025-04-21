@@ -24,7 +24,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         }
         public async Task<Device?> GetDeviceByIdentifier(string deviceId)
         {
-            return await _context.Devices.Include(x => x.Sensors).FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
+            return await _context.Devices.Include(x => x.DefaultImage).Include(x => x.Sensors).FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
         }
 
         public async Task<List<Device>> GetDevices(List<int>? ids = null, bool onlyVisible = true)
@@ -83,13 +83,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible)
         {
-            var devices = _context.Devices.Include(x => x.Sensors).Where(x => ids == null || ids.Contains(x.Id));
+            var devices = _context.Devices.Include(x => x.Sensors).Include(x => x.DefaultImage).Where(x => ids == null || ids.Contains(x.Id));
             return await GetDeviceInfos(devices);
         }
 
         public async Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible)
         {
-            var devices = _context.Devices.Include(x => x.Sensors).Where(x => identifiers == null || identifiers.Contains(x.DeviceIdentifier));
+            var devices = _context.Devices.Include(x => x.Sensors).Include(x => x.DefaultImage).Where(x => identifiers == null || identifiers.Contains(x.DeviceIdentifier));
             return await GetDeviceInfos(devices);
         }
 
@@ -135,6 +135,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public async Task<List<Device>> GetDevicesByLocation(List<int> locationIds)
         {
             return await _context.Devices.Where(x => locationIds.Contains(x.LocationId)).ToListAsync();
+        }
+
+        public async Task SaveChanges()
+        {
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -20,5 +20,7 @@ namespace EnvironmentMonitor.Domain.Entities
         public Location Location { get; set; }
         public int LocationId { get; set; }
         public IList<LocationSensor> LocationSensors { get; set; }
+        public Attachment? DefaultImage { get; set; }
+        public int? DefaultImageId { get; set; }
     }
 }

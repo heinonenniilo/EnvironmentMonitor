@@ -19,9 +19,14 @@ namespace EnvironmentMonitor.Application.DTOs
 
         public bool HasMotionSensor { get; set; }
 
+        public bool HasDefaultImage { get; set; }
+
         public void Mapping(Profile profile)
         {
-            profile.CreateMap<Device, DeviceDto>().ReverseMap();
+            profile.CreateMap<Device, DeviceDto>().ForMember(
+                x => x.HasDefaultImage,
+                opt => opt.MapFrom(x => x.DefaultImage != null))
+                .ReverseMap();
         }
     }
 }

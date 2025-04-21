@@ -1,5 +1,6 @@
 ﻿using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,9 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
         public Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
         public Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null);
+        public Task SetDefaultImage(string deviceIdentifier, Stream fileStream, string fileName);
         public Task<List<DeviceEventDto>> GetDeviceEvents(string identifier);
+
+        public Task<AttachmentInfoModel?> GetDefaultImage(string deviceIdentifier);
     }
 }
