@@ -29,6 +29,7 @@ export const DeviceView: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+  const [defaultImageVer, setDefaultImageVer] = useState(0);
   const dispatch = useDispatch();
 
   const { deviceId } = useParams<{ deviceId?: string }>();
@@ -203,6 +204,24 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const uploadImage = (file: File) => {
+    if (selectedDevice === undefined) {
+      return;
+    }
+    //
+    setIsLoading(true);
+
+    deviceHook
+      .uploadDefaultImage(selectedDevice?.device.deviceIdentifier, file)
+      .then((res) => {
+        setSelectedDevice(res);
+        setDefaultImageVer(defaultImageVer + 1);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   return (
     <AppContentWrapper
       title={`${selectedDevice?.device?.name ?? ""}`}
@@ -220,7 +239,22 @@ export const DeviceView: React.FC = () => {
           devices={selectedDevice ? [selectedDevice] : []}
           disableSort
         />
-        <DeviceImage device={selectedDevice?.device} title="Image" />
+        <DeviceImage
+          device={selectedDevice?.device}
+          title="Image"
+          ver={defaultImageVer}
+          onUploadImage={(file) => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  uploadImage(file);
+                },
+                title: `Upload new default image`,
+                body: `Upload file ${file.name} as default image for ${selectedDevice?.device.name}`,
+              })
+            );
+          }}
+        />
 
         <SensorTable
           title="Sensors"

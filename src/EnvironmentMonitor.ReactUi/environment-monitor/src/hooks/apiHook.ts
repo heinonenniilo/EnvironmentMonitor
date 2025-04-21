@@ -71,6 +71,10 @@ interface deviceHook {
     delayMs: number
   ) => Promise<boolean>;
   getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
+  uploadDefaultImage: (
+    identifire: string,
+    file: File
+  ) => Promise<DeviceInfo | undefined>;
 }
 
 const apiClient = axios.create({
@@ -322,6 +326,21 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           showError();
           return [];
+        }
+      },
+      uploadDefaultImage: async (identifier: string, file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("deviceId", identifier);
+        try {
+          let res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
+            `/api/devices/default-image/`,
+            formData
+          );
+          return res.data;
+        } catch (Ex) {
+          showError("Failed to upload image");
+          return undefined;
         }
       },
     },
