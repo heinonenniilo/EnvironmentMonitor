@@ -140,9 +140,12 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     return returnValues
       .sort((a, b) => stringSort(a.label, b.label))
       .map((s, idx) => {
-        s.borderColor = getColor(idx);
-        s.backgroundColor = getColor(idx);
-        return s;
+        return {
+          ...s,
+          borderColor: getColor(idx),
+          backgroundColor: getColor(idx),
+          id: idx,
+        };
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model]);

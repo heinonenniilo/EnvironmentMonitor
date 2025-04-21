@@ -204,7 +204,7 @@ export const DeviceView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      titleParts={[{ text: `${selectedDevice?.device?.name ?? ""}` }]}
+      title={`${selectedDevice?.device?.name ?? ""}`}
       isLoading={isLoading}
     >
       <Box

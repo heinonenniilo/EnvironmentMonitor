@@ -60,7 +60,7 @@ export const DashbordLocationsView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      titleParts={[{ text: "Dashboard - Locations" }]}
+      title="Dashboard - Locations"
       isLoading={isLoading}
       titleComponent={
         <TimeRangeSelectorComponent

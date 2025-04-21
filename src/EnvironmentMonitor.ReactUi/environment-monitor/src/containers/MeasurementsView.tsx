@@ -124,7 +124,7 @@ export const MeasurementsView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      titleParts={[{ text: "Measurements" }]}
+      title="Measurements"
       isLoading={isLoading}
       leftMenu={
         <MeasurementsLeftView

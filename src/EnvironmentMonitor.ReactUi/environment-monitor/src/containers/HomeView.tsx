@@ -92,10 +92,7 @@ export const HomeView: React.FC = () => {
   }, [sensors, model]);
 
   return (
-    <AppContentWrapper
-      titleParts={[{ text: getTitle() }]}
-      isLoading={isLoading}
-    >
+    <AppContentWrapper title={getTitle()} isLoading={isLoading}>
       <p>Latest measurements</p>
       <MeasurementsInfoTable infoRows={getInfoRows()} hideMax hideMin />
     </AppContentWrapper>
