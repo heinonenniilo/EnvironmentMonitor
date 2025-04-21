@@ -250,7 +250,13 @@ export const DeviceView: React.FC = () => {
                   uploadImage(file);
                 },
                 title: `Upload new default image`,
-                body: `Upload file ${file.name} as default image for ${selectedDevice?.device.name}`,
+                body: `Upload file ${file.name} as default image for ${
+                  selectedDevice?.device.name
+                }. ${
+                  selectedDevice?.device.hasDefaultImage
+                    ? " Old image will be replaced"
+                    : ""
+                }`,
               })
             );
           }}

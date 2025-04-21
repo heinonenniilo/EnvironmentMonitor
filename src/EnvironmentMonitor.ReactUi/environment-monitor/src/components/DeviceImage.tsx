@@ -24,19 +24,17 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
 }) => {
   const [isLoadingImage, setIsLoadingImage] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // const [file, setFile] = useState<File | null>(null);
-  if (!device) {
-    return <></>;
-  }
 
-  const imageUrl = `/api/devices/default-image/${device.deviceIdentifier}?ver=${
-    ver ?? 0
-  }`;
+  const imageUrl = `/api/devices/default-image/${
+    device?.deviceIdentifier
+  }?ver=${ver ?? 0}`;
 
   const openFileDialog = () => {
     fileInputRef.current?.click();
   };
-  return (
+  return !device ? (
+    <></>
+  ) : (
     <Box marginTop={2} display={"flex"} flexDirection={"row"}>
       {device.hasDefaultImage ? (
         <Box

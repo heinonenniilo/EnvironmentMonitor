@@ -39,10 +39,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
         public async Task<AttachmentInfoModel> GetImageAsync(string fileName)
         {
-
             var blobClient = _containerClient.GetBlobClient(fileName);
             var exists = await blobClient.ExistsAsync();
-            if (!exists) throw new FileNotFoundException("Image not found");
+            if (!exists)
+            {
+                throw new FileNotFoundException("Image not found");
+            }
             var response = await blobClient.DownloadAsync();
             return new AttachmentInfoModel()
             {

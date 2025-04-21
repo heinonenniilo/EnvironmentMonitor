@@ -46,7 +46,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("default-image")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> Upload([FromForm] string deviceId, IFormFile file)
+        public async Task<DeviceInfoDto> UploadDefaultImage([FromForm] string deviceId, IFormFile file)
         {
             await _deviceService.SetDefaultImage(deviceId, file.OpenReadStream(), file.FileName);
             var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId]);
@@ -56,14 +56,10 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet("default-image/{deviceId}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "image/jpeg")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetFile([FromRoute] string deviceId)
+        public async Task<IActionResult> GetDefaultImage([FromRoute] string deviceId)
         {
             var stream = await _deviceService.GetDefaultImage(deviceId);
-            if (stream == null)
-            {
-                return NotFound();
-            }
-            return new FileStreamResult(stream.Stream, stream.ContentType);
+            return stream == null ? NotFound() : new FileStreamResult(stream.Stream, stream.ContentType);
         }
 
         [HttpGet]
