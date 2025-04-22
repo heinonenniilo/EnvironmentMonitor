@@ -104,7 +104,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 TimeStamp = x.Max(d => d.TimeStamp)
             }).ToListAsync();
 
-            var latestMessages = await _context.Measurements.Where(x => deviceIds.Contains(x.Sensor.DeviceId)).GroupBy(x => x.Sensor.DeviceId).Select(d => new { DeviceId = d.Key, Latest = d.Max(x => x.Timestamp) }).ToListAsync();
+            var latestMessages = await _context.Measurements.Where(
+                x => deviceIds.Contains(x.Sensor.DeviceId) 
+                && x.Timestamp > _dateService.CurrentTime().AddDays(-1*ApplicationConstants.DeviceLastMessageFetchLimitIndays)
+             ).GroupBy(x => x.Sensor.DeviceId).Select(d => new { DeviceId = d.Key, Latest = d.Max(x => x.Timestamp) }).ToListAsync();
 
             return devices.Select(device => new DeviceInfo()
             {
