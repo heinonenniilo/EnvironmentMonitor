@@ -31,18 +31,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("reboot")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Reboot([FromBody] MessageDeviceModel model)
-        {
-            await _deviceService.Reboot(model.DeviceIdentifier);
-            return Ok(new { Message = "Message sent" });
-        }
+        public async Task Reboot([FromBody] MessageDeviceModel model) => await _deviceService.Reboot(model.DeviceIdentifier);
 
         [HttpPost("motion-control-status")]
         [Authorize(Roles = "Admin")]
-        public async Task SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model)
-        {
-            await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode);
-        }
+        public async Task SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode);
+
+        [HttpPost("motion-control-delay")]
+        [Authorize(Roles = "Admin")]
+        public async Task SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs);
 
         [HttpPost("default-image")]
         [Authorize(Roles = "Admin")]
