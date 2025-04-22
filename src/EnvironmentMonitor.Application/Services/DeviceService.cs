@@ -169,24 +169,39 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceEventDto>>(events);
         }
 
-        public async Task SetDefaultImage(string deviceIdentifier, Stream fileStream, string fileName)
+        public async Task SetDefaultImage(string deviceIdentifier, UploadAttachmentModel fileModel, bool removeOld = true)
         {
             var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
             if (device == null || !_userService.HasAccessTo(EntityRoles.Device, device.Id, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
             }
-            var fileNameToSave = $"{deviceIdentifier}_{Guid.NewGuid()}_{fileName}";
-            var res = await _storageClient.Upload(fileStream, fileNameToSave);
-            device.DefaultImage = new Attachment()
+            var extension = Path.GetExtension(fileModel.FileName);
+            var fileNameToSave = $"{deviceIdentifier}_{Guid.NewGuid()}{extension}";
+            var res = await _storageClient.Upload(new UploadAttachmentModel()
+            {
+                FileName = fileNameToSave,
+                ContentType = fileModel.ContentType,
+                Stream = fileModel.Stream,
+            });
+            var oldAttachment = device.DefaultImage;
+            await _deviceRepository.AddDefaultImage(device.Id, new Attachment()
             {
                 Name = fileNameToSave,
                 FullPath = res.ToString(),
                 Path = res.ToString(),
-                Extension = $"{Path.GetExtension(fileName)}",
-                CreatedAt = _dateService.CurrentTime()
-            };
-            await _deviceRepository.SaveChanges();
+                Extension = extension,
+                CreatedAt = _dateService.CurrentTime(),
+                ContentType = fileModel.ContentType,
+            },
+            removeOld,
+            true);
+
+            if (removeOld && oldAttachment != null)
+            {
+                _logger.LogInformation($"Removing old default image blog: '{oldAttachment.Name}'");
+                await _storageClient.DeleteBlob(oldAttachment.Name);
+            }
         }
 
         public async Task<AttachmentInfoModel?> GetDefaultImage(string deviceIdentifier)

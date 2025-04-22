@@ -16,12 +16,12 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<Attachment> builder)
         {
             builder.HasKey(d => d.Id);
-            builder.Property(x => x.Name).IsRequired();
+            builder.Property(x => x.Name).HasMaxLength(512).IsRequired();
             builder.Property(x => x.Extension).IsRequired();
-            builder.Property(x => x.Path).IsRequired();
-            builder.Property(x => x.FullPath);
+            builder.Property(x => x.Path).HasMaxLength(1024).IsRequired();
+            builder.Property(x => x.FullPath).HasMaxLength(1024);
             builder.Property(x => x.CreatedAtUtc).HasDefaultValueSql("GETUTCDATE()").IsRequired();
-            builder.HasMany(x => x.DevicesDefaultImage).WithOne(x => x.DefaultImage).HasForeignKey(x => x.DefaultImageId).IsRequired(false);
+            builder.HasMany(x => x.DevicesDefaultImages).WithOne(x => x.DefaultImage).HasForeignKey(x => x.DefaultImageId).IsRequired(false);
         }
     }
 }

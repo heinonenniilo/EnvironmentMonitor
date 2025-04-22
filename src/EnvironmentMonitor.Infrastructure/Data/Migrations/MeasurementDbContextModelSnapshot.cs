@@ -30,6 +30,10 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -44,18 +48,18 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("FullPath")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<string>("Path")
                         .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.HasKey("Id");
 
@@ -445,7 +449,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Device", b =>
                 {
                     b.HasOne("EnvironmentMonitor.Domain.Entities.Attachment", "DefaultImage")
-                        .WithMany("DevicesDefaultImage")
+                        .WithMany("DevicesDefaultImages")
                         .HasForeignKey("DefaultImageId");
 
                     b.HasOne("EnvironmentMonitor.Domain.Entities.Location", "Location")
@@ -558,7 +562,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Attachment", b =>
                 {
-                    b.Navigation("DevicesDefaultImage");
+                    b.Navigation("DevicesDefaultImages");
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Device", b =>

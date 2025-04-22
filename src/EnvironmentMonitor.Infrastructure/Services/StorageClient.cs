@@ -1,5 +1,6 @@
 ﻿using Azure.Identity;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -45,20 +46,23 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
         }
 
-        public async Task<Uri> Upload(Stream stream, string blobName)
+        public async Task<Uri> Upload(UploadAttachmentModel model)
         {
             if (_containerClient == null)
             {
                 throw new InvalidOperationException("Blob client not initialized");
             }
             await _containerClient.CreateIfNotExistsAsync();
-            if (string.IsNullOrEmpty(blobName))
+            if (string.IsNullOrEmpty(model.FileName))
             {
                 throw new ArgumentException("Invalid blob name");
             }
-            _logger.LogInformation($"Trying to upload blob named: {blobName}");
-            var blobClient = _containerClient.GetBlobClient(blobName);
-            var res = await blobClient.UploadAsync(stream, overwrite: true);
+            _logger.LogInformation($"Trying to upload blob named: {model.FileName}");
+            var blobClient = _containerClient.GetBlobClient(model.FileName);
+            var res = await blobClient.UploadAsync(model.Stream, new BlobUploadOptions()
+            {
+                HttpHeaders = new BlobHttpHeaders() { ContentType = model.ContentType }
+            });
             return blobClient.Uri;
         }
 
@@ -80,6 +84,17 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 Stream = response.Value.Content,
                 ContentType = response.Value.ContentType,
             };
+        }
+
+        public async Task<bool> DeleteBlob(string fileName)
+        {
+            if (_containerClient == null)
+            {
+                throw new InvalidOperationException("Client not initialized");
+            }
+            var blobClient = _containerClient.GetBlobClient(fileName);
+            var result = await blobClient.DeleteIfExistsAsync();
+            return result.Value;
         }
     }
 }

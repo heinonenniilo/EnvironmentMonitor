@@ -48,7 +48,12 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> UploadDefaultImage([FromForm] string deviceId, IFormFile file)
         {
-            await _deviceService.SetDefaultImage(deviceId, file.OpenReadStream(), file.FileName);
+            await _deviceService.SetDefaultImage(deviceId, new UploadAttachmentModel()
+            {
+                FileName = file.FileName,
+                Stream = file.OpenReadStream(),
+                ContentType = file.ContentType
+            });
             var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId]);
             return deviceInfos.First();
         }

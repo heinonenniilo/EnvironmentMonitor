@@ -23,10 +23,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
                     Extension = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    Path = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    FullPath = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    ContentType = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Path = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: false),
+                    FullPath = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: true),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },

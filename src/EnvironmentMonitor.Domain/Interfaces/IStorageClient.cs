@@ -9,7 +9,8 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IStorageClient
     {
-        public Task<Uri> Upload(Stream stream, string blobName);
+        public Task<Uri> Upload(UploadAttachmentModel model);
         Task<AttachmentInfoModel> GetImageAsync(string fileName);
+        Task<bool> DeleteBlob(string fileName);
     }
 }
