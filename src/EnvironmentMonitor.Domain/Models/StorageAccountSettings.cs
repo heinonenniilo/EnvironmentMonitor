@@ -8,9 +8,9 @@ namespace EnvironmentMonitor.Domain.Models
 {
     public class StorageAccountSettings
     {
-        public string ConnectionString { get; set; } = "";
-        public required string ContainerName { get; set; }
-        public required string AccountName { get; set; }
-        public string AccountUri { get; set; } = "";
+        public string ConnectionString { get; set; } = string.Empty;
+        public string ContainerName { get; set; } = string.Empty;
+        public string AccountName { get; set; } = string.Empty;
+        public string AccountUri { get; set; } = string.Empty;
     }
 }

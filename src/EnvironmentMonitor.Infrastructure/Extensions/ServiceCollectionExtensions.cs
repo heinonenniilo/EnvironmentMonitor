@@ -49,7 +49,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
 
             var defaultSettings = new IotHubSettings();
             configuration.GetSection("IotHubSettings").Bind(defaultSettings);
-            var storageAccountSettings = new StorageAccountSettings() { AccountName = "", ContainerName = "" };
+            var storageAccountSettings = new StorageAccountSettings();
             configuration.GetSection("StorageSettings").Bind(storageAccountSettings);
             services.AddSingleton(defaultSettings);
             services.AddSingleton(storageAccountSettings);
