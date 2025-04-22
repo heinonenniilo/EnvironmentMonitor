@@ -9,10 +9,10 @@
       "enableLiveMetricsFilters": true
     },
     "logLevel": {
-      "default": "Information",
-      "Function": "Information",
-      "Host.Results": "Information",
-      "Host.Aggregator": "Information"
+      "default": "Warning",
+      "Function": "Warning",
+      "Host.Results": "Warning",
+      "Host.Aggregator": "Warning"
     }
   },
   "extensions": {
