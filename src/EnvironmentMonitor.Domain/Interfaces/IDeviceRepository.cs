@@ -25,7 +25,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers);
         public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);
-        public Task AddDefaultImage(int deviceId, Attachment attachment, bool removeOld, bool saveChanges);
+        public Task SetDefaultImage(int deviceId, Attachment? attachment, bool removeOld, bool saveChanges);
         public Task SaveChanges();
     }
 }

@@ -169,33 +169,41 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceEventDto>>(events);
         }
 
-        public async Task SetDefaultImage(string deviceIdentifier, UploadAttachmentModel fileModel, bool removeOld = true)
+        public async Task SetDefaultImage(string deviceIdentifier, UploadAttachmentModel? fileModel, bool removeOld = true)
         {
             var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
             if (device == null || !_userService.HasAccessTo(EntityRoles.Device, device.Id, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
             }
-            var extension = Path.GetExtension(fileModel.FileName);
-            var fileNameToSave = $"{deviceIdentifier}_{Guid.NewGuid()}{extension}";
-            var res = await _storageClient.Upload(new UploadAttachmentModel()
-            {
-                FileName = fileNameToSave,
-                ContentType = fileModel.ContentType,
-                Stream = fileModel.Stream,
-            });
             var oldAttachment = device.DefaultImage;
-            await _deviceRepository.AddDefaultImage(device.Id, new Attachment()
+            if (fileModel != null)
             {
-                Name = fileNameToSave,
-                FullPath = res.ToString(),
-                Path = res.ToString(),
-                Extension = extension,
-                CreatedAt = _dateService.CurrentTime(),
-                ContentType = fileModel.ContentType,
-            },
-            removeOld,
-            true);
+                var extension = Path.GetExtension(fileModel.FileName);
+                var fileNameToSave = $"{deviceIdentifier}_{Guid.NewGuid()}{extension}";
+                var res = await _storageClient.Upload(new UploadAttachmentModel()
+                {
+                    FileName = fileNameToSave,
+                    ContentType = fileModel.ContentType,
+                    Stream = fileModel.Stream,
+                });
+
+                await _deviceRepository.SetDefaultImage(device.Id, new Attachment()
+                {
+                    Name = fileNameToSave,
+                    FullPath = res.ToString(),
+                    Path = res.ToString(),
+                    Extension = extension,
+                    CreatedAt = _dateService.CurrentTime(),
+                    ContentType = fileModel.ContentType,
+                },
+                removeOld,
+                true);
+            }
+            else
+            {
+                await _deviceRepository.SetDefaultImage(device.Id, null, removeOld, true);
+            }
 
             if (removeOld && oldAttachment != null)
             {

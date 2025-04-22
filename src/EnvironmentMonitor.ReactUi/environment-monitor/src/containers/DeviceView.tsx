@@ -222,6 +222,23 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const deleteImage = () => {
+    if (selectedDevice === undefined) {
+      return;
+    }
+    setIsLoading(true);
+
+    deviceHook
+      .deleteDefaultImage(selectedDevice.device.deviceIdentifier)
+      .then((res) => {
+        setSelectedDevice(res);
+        // setDefaultImageVer(defaultImageVer + 1);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   return (
     <AppContentWrapper
       title={`${selectedDevice?.device?.name ?? ""}`}
@@ -243,6 +260,17 @@ export const DeviceView: React.FC = () => {
           device={selectedDevice?.device}
           title="Image"
           ver={defaultImageVer}
+          onDeleteImage={() => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  deleteImage();
+                },
+                title: `Delete default image`,
+                body: `Default image of ${selectedDevice?.device.name} will be removed.`,
+              })
+            );
+          }}
           onUploadImage={(file) => {
             dispatch(
               setConfirmDialog({

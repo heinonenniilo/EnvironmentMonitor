@@ -7,12 +7,13 @@ import {
 } from "@mui/material";
 import { Device } from "../models/device";
 import { useRef, useState } from "react";
-import { FileUpload } from "@mui/icons-material";
+import { Delete, FileUpload } from "@mui/icons-material";
 
 export interface DeviceImageProps {
   device: Device | undefined;
   title: string;
   onUploadImage: (file: File) => void;
+  onDeleteImage: () => void;
   ver?: number;
 }
 
@@ -20,6 +21,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   device,
   title,
   onUploadImage,
+  onDeleteImage,
   ver,
 }) => {
   const [isLoadingImage, setIsLoadingImage] = useState(true);
@@ -50,6 +52,13 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               size="small"
             >
               <FileUpload></FileUpload>
+            </IconButton>
+            <IconButton
+              onClick={onDeleteImage}
+              sx={{ ml: 1, cursor: "pointer" }}
+              size="small"
+            >
+              <Delete />
             </IconButton>
           </Box>
           {isLoadingImage && (

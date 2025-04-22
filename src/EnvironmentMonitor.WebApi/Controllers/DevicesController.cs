@@ -67,6 +67,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return stream == null ? NotFound() : new FileStreamResult(stream.Stream, stream.ContentType);
         }
 
+        [HttpDelete("default-image/{deviceId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<DeviceInfoDto> DeleteDefaultImage([FromRoute] string deviceId)
+        {
+            await _deviceService.SetDefaultImage(deviceId, null);
+            var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId]);
+            return deviceInfos.First();
+        }
+
         [HttpGet]
         public async Task<List<DeviceDto>> GetDevices()
         {

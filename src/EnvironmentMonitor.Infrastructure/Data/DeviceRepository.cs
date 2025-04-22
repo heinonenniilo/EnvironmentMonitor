@@ -140,7 +140,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return await _context.Devices.Where(x => locationIds.Contains(x.LocationId)).ToListAsync();
         }
 
-        public async Task AddDefaultImage(int deviceId, Attachment attachment, bool removeOld, bool saveChanges)
+        public async Task SetDefaultImage(int deviceId, Attachment? attachment, bool removeOld, bool saveChanges)
         {
             var device = await _context.Devices.Include(x => x.DefaultImage).FirstAsync(x => x.Id == deviceId);
             var oldAttachment = device.DefaultImage;
