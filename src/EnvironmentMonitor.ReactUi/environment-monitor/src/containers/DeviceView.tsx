@@ -212,7 +212,7 @@ export const DeviceView: React.FC = () => {
     setIsLoading(true);
 
     deviceHook
-      .uploadDefaultImage(selectedDevice?.device.deviceIdentifier, file)
+      .uploadImage(selectedDevice?.device.deviceIdentifier, file)
       .then((res) => {
         setSelectedDevice(res);
         setDefaultImageVer(defaultImageVer + 1);
@@ -257,8 +257,7 @@ export const DeviceView: React.FC = () => {
           disableSort
         />
         <DeviceImage
-          device={selectedDevice?.device}
-          title="Image"
+          device={selectedDevice}
           ver={defaultImageVer}
           onDeleteImage={() => {
             dispatch(
@@ -278,13 +277,7 @@ export const DeviceView: React.FC = () => {
                   uploadImage(file);
                 },
                 title: `Upload new default image`,
-                body: `Upload file ${file.name} as default image for ${
-                  selectedDevice?.device.name
-                }. ${
-                  selectedDevice?.device.hasDefaultImage
-                    ? " Old image will be replaced"
-                    : ""
-                }`,
+                body: `Upload image?`,
               })
             );
           }}

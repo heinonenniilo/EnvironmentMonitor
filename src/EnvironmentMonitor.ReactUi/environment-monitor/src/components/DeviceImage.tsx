@@ -5,13 +5,18 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import { Device } from "../models/device";
 import { useRef, useState } from "react";
-import { Delete, FileUpload } from "@mui/icons-material";
+import {
+  ArrowBack,
+  ArrowForward,
+  Delete,
+  FileUpload,
+} from "@mui/icons-material";
+import { DeviceInfo } from "../models/deviceInfo";
 
 export interface DeviceImageProps {
-  device: Device | undefined;
-  title: string;
+  device: DeviceInfo | undefined;
+  title?: string;
   onUploadImage: (file: File) => void;
   onDeleteImage: () => void;
   ver?: number;
@@ -26,32 +31,57 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
 }) => {
   const [isLoadingImage, setIsLoadingImage] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const imageUrl = `/api/devices/default-image/${
-    device?.deviceIdentifier
-  }?ver=${ver ?? 0}`;
+  const prevImage = () => {
+    if (imageUrls.length <= 1) {
+      return;
+    }
+    setCurrentIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
+    setIsLoadingImage(true);
+  };
+
+  const nextImage = () => {
+    if (imageUrls.length <= 1) {
+      return;
+    }
+    setCurrentIndex((prev) => (prev + 1) % imageUrls.length);
+    setIsLoadingImage(true);
+  };
 
   const openFileDialog = () => {
     fileInputRef.current?.click();
   };
+
+  const imageUrls =
+    device?.attachments.map(
+      (d) =>
+        `/api/devices/attachment/${device?.device.deviceIdentifier}/${d.guid}`
+    ) ?? [];
   return !device ? (
     <></>
   ) : (
     <Box marginTop={2} display={"flex"} flexDirection={"row"}>
-      {device.hasDefaultImage ? (
+      {imageUrls.length > 0 ? (
         <Box
-          sx={{ maxHeight: 600, position: "relative", alignItems: "center" }}
+          sx={{
+            maxHeight: 600,
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+          }}
         >
+          <Typography variant="h6" marginBottom={0}>
+            {title ?? "Devices images"}
+          </Typography>
           <Box sx={{ display: "flex", flexDirection: "row" }}>
-            <Typography variant="h6" marginBottom={0}>
-              {title ?? "Image"}
-            </Typography>
             <IconButton
               onClick={openFileDialog}
               sx={{ ml: 1, cursor: "pointer" }}
               size="small"
             >
-              <FileUpload></FileUpload>
+              <FileUpload />
             </IconButton>
             <IconButton
               onClick={onDeleteImage}
@@ -77,7 +107,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
             </Box>
           )}
           <img
-            src={imageUrl}
+            src={imageUrls[currentIndex]}
             alt="Device"
             style={{
               width: "100%",
@@ -94,6 +124,31 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               setIsLoadingImage(false);
             }}
           />
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <IconButton
+              onClick={prevImage}
+              sx={{ ml: 1, cursor: "pointer" }}
+              size="small"
+            >
+              <ArrowBack />
+            </IconButton>
+            <Typography variant="caption">{`${currentIndex + 1}/${
+              imageUrls.length
+            }`}</Typography>
+            <IconButton
+              onClick={nextImage}
+              sx={{ ml: 1, cursor: "pointer" }}
+              size="small"
+            >
+              <ArrowForward />
+            </IconButton>
+          </Box>
         </Box>
       ) : (
         <Button

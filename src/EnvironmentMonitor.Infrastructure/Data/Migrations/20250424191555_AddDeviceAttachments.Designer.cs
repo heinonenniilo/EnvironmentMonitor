@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    [Migration("20250422190555_AddAttachmentAndDeviceDefaultImage")]
-    partial class AddAttachmentAndDeviceDefaultImage
+    [Migration("20250424191555_AddDeviceAttachments")]
+    partial class AddDeviceAttachments
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -77,9 +77,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("DefaultImageId")
-                        .HasColumnType("int");
-
                     b.Property<string>("DeviceIdentifier")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -106,8 +103,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DefaultImageId");
-
                     b.HasIndex("DeviceIdentifier")
                         .IsUnique();
 
@@ -119,6 +114,39 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("TypeId");
 
                     b.ToTable("Devices");
+                });
+
+            modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceAttachment", b =>
+                {
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AttachmentId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("Guid")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("newid()");
+
+                    b.Property<bool>("IsDefaultImage")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsImage")
+                        .HasColumnType("bit");
+
+                    b.HasKey("DeviceId", "AttachmentId");
+
+                    b.HasIndex("AttachmentId");
+
+                    b.HasIndex("DeviceId")
+                        .IsUnique()
+                        .HasFilter("[IsDefaultImage] = 1");
+
+                    b.HasIndex("Guid")
+                        .IsUnique();
+
+                    b.ToTable("DeviceAttachments");
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceEvent", b =>
@@ -451,10 +479,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Device", b =>
                 {
-                    b.HasOne("EnvironmentMonitor.Domain.Entities.Attachment", "DefaultImage")
-                        .WithMany("DevicesDefaultImages")
-                        .HasForeignKey("DefaultImageId");
-
                     b.HasOne("EnvironmentMonitor.Domain.Entities.Location", "Location")
                         .WithMany("Devices")
                         .HasForeignKey("LocationId")
@@ -466,11 +490,28 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasForeignKey("TypeId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("DefaultImage");
-
                     b.Navigation("Location");
 
                     b.Navigation("Type");
+                });
+
+            modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceAttachment", b =>
+                {
+                    b.HasOne("EnvironmentMonitor.Domain.Entities.Attachment", "Attachment")
+                        .WithMany("DeviceAttachments")
+                        .HasForeignKey("AttachmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EnvironmentMonitor.Domain.Entities.Device", "Device")
+                        .WithMany("Attachments")
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Attachment");
+
+                    b.Navigation("Device");
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceEvent", b =>
@@ -565,11 +606,13 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Attachment", b =>
                 {
-                    b.Navigation("DevicesDefaultImages");
+                    b.Navigation("DeviceAttachments");
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Device", b =>
                 {
+                    b.Navigation("Attachments");
+
                     b.Navigation("Events");
 
                     b.Navigation("LocationSensors");

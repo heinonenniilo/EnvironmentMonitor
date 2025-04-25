@@ -6,6 +6,5 @@ export interface Device {
   name: string;
   visible: boolean;
   hasMotionSensor: boolean;
-  hasDefaultImage: boolean;
   sensors: Sensor[];
 }

@@ -4,6 +4,7 @@ using EnvironmentMonitor.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,11 +13,15 @@ namespace EnvironmentMonitor.Domain.Interfaces
     public interface IDeviceRepository
     {
         Task<Device?> GetDeviceByIdentifier(string deviceId);
+
         Task<List<Device>> GetDevices(List<int>? ids = null, bool onlyVisible = true);
         Task<List<Device>> GetDevices(List<string>? identifiers = null, bool onlyVisible = true);
         Task<List<Device>> GetDevicesByLocation(List<int> locationIds);
-        Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible);
-        Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible);
+
+        Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible, bool getAttachments = false);
+        Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible, bool getAttachments = false);
+
+        Task<Attachment> GetAttachment(int deviceId, Guid attachmentIdentifier);
 
         Task<List<DeviceEvent>> GetDeviceEvents(int id);
         Task<List<DeviceEvent>> GetDeviceEvents(string deviceIdentifier);
@@ -25,7 +30,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers);
         public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);
-        public Task SetDefaultImage(int deviceId, Attachment? attachment, bool removeOld, bool saveChanges);
+        public Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges);
         public Task SaveChanges();
     }
 }

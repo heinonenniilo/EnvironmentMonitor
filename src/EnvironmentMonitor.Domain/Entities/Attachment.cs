@@ -14,8 +14,9 @@ namespace EnvironmentMonitor.Domain.Entities
         public string? ContentType { get; set; }
         public required string Path { get; set; }
         public string? FullPath { get; set; }
-        public List<Device> DevicesDefaultImages { get; set; }
         public DateTime CreatedAtUtc { get; set; }
         public DateTime? CreatedAt { get; set; }
+
+        public List<DeviceAttachment> DeviceAttachments { get; set; }
     }
 }

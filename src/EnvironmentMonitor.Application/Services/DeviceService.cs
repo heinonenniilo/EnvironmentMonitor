@@ -147,17 +147,17 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
 
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<string>? identifiers)
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<string>? identifiers, bool getAttachments = false)
         {
             _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
             var infos = new List<DeviceInfo>();
             if (identifiers?.Any() == true)
             {
-                infos = (await _deviceRepository.GetDeviceInfo(identifiers, onlyVisible)).Where(d => _userService.HasAccessToDevice(d.Device.Id, AccessLevels.Read)).ToList();
+                infos = (await _deviceRepository.GetDeviceInfo(identifiers, onlyVisible, getAttachments)).Where(d => _userService.HasAccessToDevice(d.Device.Id, AccessLevels.Read)).ToList();
             }
             else
             {
-                infos = await _deviceRepository.GetDeviceInfo(_userService.IsAdmin ? null : _userService.GetDevices(), onlyVisible);
+                infos = await _deviceRepository.GetDeviceInfo(_userService.IsAdmin ? null : _userService.GetDevices(), onlyVisible, getAttachments);
             }
             return _mapper.Map<List<DeviceInfoDto>>(infos);
         }
@@ -169,61 +169,46 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceEventDto>>(events);
         }
 
-        public async Task SetDefaultImage(string deviceIdentifier, UploadAttachmentModel? fileModel, bool removeOld = true)
+        public async Task UploadImage(string deviceIdentifier, UploadAttachmentModel fileModel)
         {
             var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
             if (device == null || !_userService.HasAccessTo(EntityRoles.Device, device.Id, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
             }
-            var oldAttachment = device.DefaultImage;
-            if (fileModel != null)
-            {
-                var extension = Path.GetExtension(fileModel.FileName);
-                var fileNameToSave = $"{deviceIdentifier}_{Guid.NewGuid()}{extension}";
-                var res = await _storageClient.Upload(new UploadAttachmentModel()
-                {
-                    FileName = fileNameToSave,
-                    ContentType = fileModel.ContentType,
-                    Stream = fileModel.Stream,
-                });
 
-                await _deviceRepository.SetDefaultImage(device.Id, new Attachment()
-                {
-                    Name = fileNameToSave,
-                    FullPath = res.ToString(),
-                    Path = res.ToString(),
-                    Extension = extension,
-                    CreatedAt = _dateService.CurrentTime(),
-                    ContentType = fileModel.ContentType,
-                },
-                removeOld,
-                true);
-            }
-            else
+            var extension = Path.GetExtension(fileModel.FileName);
+            var fileNameToSave = $"{deviceIdentifier}_{Guid.NewGuid()}{extension}";
+            var res = await _storageClient.Upload(new UploadAttachmentModel()
             {
-                await _deviceRepository.SetDefaultImage(device.Id, null, removeOld, true);
-            }
+                FileName = fileNameToSave,
+                ContentType = fileModel.ContentType,
+                Stream = fileModel.Stream,
+            });
 
-            if (removeOld && oldAttachment != null)
+            await _deviceRepository.AddAttachment(device.Id, new Attachment()
             {
-                _logger.LogInformation($"Removing old default image blog: '{oldAttachment.Name}'");
-                await _storageClient.DeleteBlob(oldAttachment.Name);
-            }
+                Name = fileNameToSave,
+                FullPath = res.ToString(),
+                Path = res.ToString(),
+                Extension = extension,
+                CreatedAt = _dateService.CurrentTime(),
+                ContentType = fileModel.ContentType,
+            },
+            true);
         }
 
-        public async Task<AttachmentInfoModel?> GetDefaultImage(string deviceIdentifier)
+        public async Task<AttachmentInfoModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier)
         {
             var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
             if (device == null || !_userService.HasAccessTo(EntityRoles.Device, device.Id, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
             }
-            if (device.DefaultImage == null)
-            {
-                return null;
-            }
-            return await _storageClient.GetImageAsync(device.DefaultImage.Name);
+
+            var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
+            
+            return await _storageClient.GetImageAsync(attachment.Name);
         }
     }
 }

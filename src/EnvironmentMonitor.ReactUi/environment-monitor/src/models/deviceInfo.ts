@@ -1,4 +1,5 @@
 import { Device } from "./device";
+import { DeviceAttachment } from "./deviceAttachment";
 
 export interface DeviceInfo {
   device: Device;
@@ -6,4 +7,5 @@ export interface DeviceInfo {
   rebootedOn?: Date;
   lastMessage?: Date;
   showWarning?: boolean;
+  attachments: DeviceAttachment[];
 }

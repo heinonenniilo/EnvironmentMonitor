@@ -41,34 +41,34 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs);
 
-        [HttpPost("default-image")]
+        [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> UploadDefaultImage([FromForm] string deviceId, IFormFile file)
+        public async Task<DeviceInfoDto> UploadImage([FromForm] string deviceId, IFormFile file)
         {
-            await _deviceService.SetDefaultImage(deviceId, new UploadAttachmentModel()
+            await _deviceService.UploadImage(deviceId, new UploadAttachmentModel()
             {
                 FileName = file.FileName,
                 Stream = file.OpenReadStream(),
                 ContentType = file.ContentType
             });
-            var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId]);
+            var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId], true);
             return deviceInfos.First();
         }
 
-        [HttpGet("default-image/{deviceId}")]
+        [HttpGet("attachment/{deviceId}/{identifier}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "image/jpeg")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetDefaultImage([FromRoute] string deviceId)
+        public async Task<IActionResult> GetAttachment([FromRoute] string deviceId, [FromRoute] Guid identifier)
         {
-            var stream = await _deviceService.GetDefaultImage(deviceId);
+            var stream = await _deviceService.GetAttachment(deviceId, identifier);
             return stream == null ? NotFound() : new FileStreamResult(stream.Stream, stream.ContentType);
         }
 
-        [HttpDelete("default-image/{deviceId}")]
+        [HttpDelete("attachment/{deviceId}")]
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> DeleteDefaultImage([FromRoute] string deviceId)
         {
-            await _deviceService.SetDefaultImage(deviceId, null);
+            await _deviceService.UploadImage(deviceId, null);
             var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId]);
             return deviceInfos.First();
         }
@@ -92,7 +92,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> GetDeviceInfo(string identifier)
         {
-            var result = await _deviceService.GetDeviceInfos(false, [identifier]); // Also the ones marked as non-visible
+            var result = await _deviceService.GetDeviceInfos(false, [identifier], true); // Also the ones marked as non-visible
             return result.First();
         }
 

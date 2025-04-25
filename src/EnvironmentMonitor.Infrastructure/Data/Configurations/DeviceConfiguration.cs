@@ -33,6 +33,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 
             builder.HasMany(x => x.Events).WithOne(x => x.Device).HasForeignKey(x => x.DeviceId).OnDelete(DeleteBehavior.Cascade);
             builder.HasMany(x => x.LocationSensors).WithOne(x => x.Device).HasForeignKey(x => new { x.DeviceId, x.LocationId }).HasPrincipalKey(x => new { x.Id, x.LocationId }).OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

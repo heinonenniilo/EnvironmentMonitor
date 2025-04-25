@@ -71,7 +71,7 @@ interface deviceHook {
     delayMs: number
   ) => Promise<boolean>;
   getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
-  uploadDefaultImage: (
+  uploadImage: (
     identifire: string,
     file: File
   ) => Promise<DeviceInfo | undefined>;
@@ -329,13 +329,13 @@ export const useApiHook = (): ApiHook => {
           return [];
         }
       },
-      uploadDefaultImage: async (identifier: string, file: File) => {
+      uploadImage: async (identifier: string, file: File) => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("deviceId", identifier);
         try {
           let res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
-            `/api/devices/default-image/`,
+            `/api/devices/attachment/`,
             formData
           );
           return res.data;
