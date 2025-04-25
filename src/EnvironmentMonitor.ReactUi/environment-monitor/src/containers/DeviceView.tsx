@@ -32,6 +32,7 @@ export const DeviceView: React.FC = () => {
   const [deviceEvents, setDeviceEvents] = useState<DeviceEvent[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMeasurements, setIsLoadingMeasurments] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const [model, setModel] = useState<MeasurementsViewModel | undefined>(
     undefined
@@ -43,15 +44,17 @@ export const DeviceView: React.FC = () => {
   const deviceHook = useApiHook().deviceHook;
   const measurementApiHook = useApiHook().measureHook;
 
-  useEffect(() => {
+  const loadMeasurements = () => {
     if (!selectedDevice) {
       return;
     }
+
     const momentStart = moment()
       .local(true)
       .add(-1 * 48, "hour")
       .utc(true);
-    setIsLoading(true);
+
+    setIsLoadingMeasurments(true);
     measurementApiHook
       .getMeasurementsBySensor(
         selectedDevice.device.sensors.map((x) => x.id),
@@ -65,7 +68,32 @@ export const DeviceView: React.FC = () => {
         console.error(er);
       })
       .finally(() => {
-        setIsLoading(false);
+        setIsLoadingMeasurments(false);
+      });
+  };
+  useEffect(() => {
+    if (!selectedDevice) {
+      return;
+    }
+    const momentStart = moment()
+      .local(true)
+      .add(-1 * 48, "hour")
+      .utc(true);
+    setIsLoadingMeasurments(true);
+    measurementApiHook
+      .getMeasurementsBySensor(
+        selectedDevice.device.sensors.map((x) => x.id),
+        momentStart,
+        undefined
+      )
+      .then((res) => {
+        setModel(res);
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoadingMeasurments(false);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDevice]);
@@ -347,6 +375,8 @@ export const DeviceView: React.FC = () => {
             minHeight={400}
             title={`${selectedDevice?.device.name} - Last 48 h`}
             useAutoScale
+            onRefresh={loadMeasurements}
+            isLoading={isLoadingMeasurements}
           />
         </Collapsible>
         <Collapsible isOpen={true} title="Commands">
