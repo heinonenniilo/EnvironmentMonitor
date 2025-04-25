@@ -59,16 +59,15 @@ export const DeviceView: React.FC = () => {
         undefined
       )
       .then((res) => {
-        //setViewModel(res); // Set to false once the model is formed
         setModel(res);
       })
       .catch((er) => {
         console.error(er);
-        // setViewModel(undefined);
       })
       .finally(() => {
         setIsLoading(false);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDevice]);
 
   useEffect(() => {
@@ -302,12 +301,13 @@ export const DeviceView: React.FC = () => {
         flexDirection={"column"}
         height={"100%"}
       >
-        <DeviceTable
-          title="Info"
-          hideName
-          devices={selectedDevice ? [selectedDevice] : []}
-          disableSort
-        />
+        <Collapsible title="Info" isOpen={true}>
+          <DeviceTable
+            hideName
+            devices={selectedDevice ? [selectedDevice] : []}
+            disableSort
+          />
+        </Collapsible>
 
         <DeviceImage
           device={selectedDevice}
@@ -346,6 +346,7 @@ export const DeviceView: React.FC = () => {
             model={model}
             minHeight={400}
             title="Last 48 h"
+            useAutoScale
           />
         </Collapsible>
         <DeviceControlComponent
@@ -402,11 +403,9 @@ export const DeviceView: React.FC = () => {
             );
           }}
         />
-        <DeviceEventTable
-          events={deviceEvents}
-          title="Events"
-          maxHeight={"500px"}
-        />
+        <Collapsible title="Events" isOpen={true}>
+          <DeviceEventTable events={deviceEvents} maxHeight={"500px"} />
+        </Collapsible>
       </Box>
     </AppContentWrapper>
   );

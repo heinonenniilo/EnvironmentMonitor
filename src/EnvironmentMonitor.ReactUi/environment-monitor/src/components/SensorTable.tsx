@@ -19,11 +19,9 @@ export interface SensorTableProps {
 export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
   return (
     <Box marginTop={2}>
-      {title && (
-        <Typography variant="h6" marginBottom={2}>
-          {title}
-        </Typography>
-      )}
+      <Typography variant="h6" marginBottom={2}>
+        {title ?? ""}
+      </Typography>
 
       <TableContainer component={Paper}>
         <Table size="small">
