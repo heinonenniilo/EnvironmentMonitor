@@ -61,11 +61,11 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
 
   return (
     <Box marginTop={2}>
-      {title !== undefined ? (
+      {title && (
         <Typography variant="h6" marginBottom={2}>
           {title}
         </Typography>
-      ) : null}
+      )}
       <Box
         display="flex"
         justifyContent="start"
