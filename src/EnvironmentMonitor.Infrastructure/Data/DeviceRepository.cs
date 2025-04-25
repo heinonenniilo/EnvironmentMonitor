@@ -105,6 +105,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Include(x => x.Attachments).ThenInclude(a => a.Attachment);
             }
+            query = query.Include(x => x.Sensors);
             var devices = query.Where(x => ids == null || ids.Contains(x.Id));
             return await GetDeviceInfos(devices);
         }
@@ -116,6 +117,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Include(x => x.Attachments).ThenInclude(a => a.Attachment);
             }
+
+            query = query.Include(x => x.Sensors);
             var devices = query.Where(x => identifiers == null || identifiers.Contains(x.DeviceIdentifier));
             return await GetDeviceInfos(devices);
         }

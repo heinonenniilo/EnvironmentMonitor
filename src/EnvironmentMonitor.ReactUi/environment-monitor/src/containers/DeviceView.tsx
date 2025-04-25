@@ -15,6 +15,10 @@ import { DeviceEventTable } from "../components/DeviceEventTable";
 import { DeviceEvent } from "../models/deviceEvent";
 import { Box } from "@mui/material";
 import { DeviceImage } from "../components/DeviceImage";
+import { Collapsible } from "../components/CollabsibleComponent";
+import { MultiSensorGraph } from "../components/MultiSensorGraph";
+import moment from "moment";
+import { MeasurementsViewModel } from "../models/measurementsBySensor";
 
 interface PromiseInfo {
   type: string;
@@ -29,11 +33,43 @@ export const DeviceView: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+  const [model, setModel] = useState<MeasurementsViewModel | undefined>(
+    undefined
+  );
   const [defaultImageVer, setDefaultImageVer] = useState(0);
   const dispatch = useDispatch();
 
   const { deviceId } = useParams<{ deviceId?: string }>();
   const deviceHook = useApiHook().deviceHook;
+  const measurementApiHook = useApiHook().measureHook;
+
+  useEffect(() => {
+    if (!selectedDevice) {
+      return;
+    }
+    const momentStart = moment()
+      .local(true)
+      .add(-1 * 48, "hour")
+      .utc(true);
+    setIsLoading(true);
+    measurementApiHook
+      .getMeasurementsBySensor(
+        selectedDevice.device.sensors.map((x) => x.id),
+        momentStart,
+        undefined
+      )
+      .then((res) => {
+        //setViewModel(res); // Set to false once the model is formed
+        setModel(res);
+      })
+      .catch((er) => {
+        console.error(er);
+        // setViewModel(undefined);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [selectedDevice]);
 
   useEffect(() => {
     if (deviceId && !hasFetched) {
@@ -272,9 +308,11 @@ export const DeviceView: React.FC = () => {
           devices={selectedDevice ? [selectedDevice] : []}
           disableSort
         />
+
         <DeviceImage
           device={selectedDevice}
           ver={defaultImageVer}
+          title={"Device images"}
           onDeleteImage={(identifier: string) => {
             dispatch(
               setConfirmDialog({
@@ -298,11 +336,18 @@ export const DeviceView: React.FC = () => {
             );
           }}
         />
+        <Collapsible title="Sensors" isOpen={true}>
+          <SensorTable sensors={selectedDevice?.device?.sensors ?? []} />
+        </Collapsible>
 
-        <SensorTable
-          title="Sensors"
-          sensors={selectedDevice?.device?.sensors ?? []}
-        />
+        <Collapsible title="Measurements">
+          <MultiSensorGraph
+            sensors={selectedDevice?.device.sensors}
+            model={model}
+            minHeight={400}
+            title="Last 48 h"
+          />
+        </Collapsible>
         <DeviceControlComponent
           device={selectedDevice}
           title="Commands"

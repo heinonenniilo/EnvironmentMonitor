@@ -6,7 +6,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowBack,
   ArrowForward,
@@ -14,6 +14,7 @@ import {
   FileUpload,
 } from "@mui/icons-material";
 import { DeviceInfo } from "../models/deviceInfo";
+import { Collapsible } from "./CollabsibleComponent";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -42,6 +43,15 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     setIsLoadingImage(true);
   };
 
+  useEffect(() => {
+    if (!device) {
+      return;
+    }
+    if (currentIndex >= device.attachments.length) {
+      setCurrentIndex(0);
+    }
+  }, [device, currentIndex]);
+
   const nextImage = () => {
     if (imageUrls.length <= 1) {
       return;
@@ -62,132 +72,133 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   return !device ? (
     <></>
   ) : (
-    <Box marginTop={2} display={"flex"} flexDirection={"row"}>
-      {imageUrls.length > 0 ? (
-        <Box
-          sx={{
-            maxHeight: 600,
-            position: "relative",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "flex-start",
-          }}
-        >
-          <Typography variant="h6" marginBottom={0}>
-            {title ?? "Devices images"}
-          </Typography>
-          <Box>
-            <Tooltip title="Upload new image" arrow>
-              <IconButton
-                onClick={openFileDialog}
-                sx={{ ml: 1, cursor: "pointer" }}
-                size="small"
-              >
-                <FileUpload />
-              </IconButton>
-            </Tooltip>
-          </Box>
-
-          {isLoadingImage && (
-            <Box
-              sx={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "rgba(255,255,255,0.6)",
-                zIndex: 1,
-              }}
-            >
-              <CircularProgress />
-            </Box>
-          )}
-          <img
-            src={imageUrls[currentIndex]}
-            alt="Device"
-            style={{
-              width: "100%",
-              display: "block",
-              height: "auto",
-              maxHeight: 500,
-              objectFit: "contain",
-              filter: isLoadingImage ? "blur(10px)" : "none",
-              transition: "filter 0.3s ease-in-out",
-            }}
-            onLoad={() => setIsLoadingImage(false)}
-            onError={() => {
-              setIsLoadingImage(false);
-            }}
-          />
+    <Collapsible
+      title="Device images"
+      isOpen={true}
+      customComponent={
+        <Tooltip title="Upload new image" arrow>
+          <IconButton
+            onClick={openFileDialog}
+            sx={{ ml: 1, cursor: "pointer" }}
+            size="small"
+          >
+            <FileUpload />
+          </IconButton>
+        </Tooltip>
+      }
+    >
+      <Box marginTop={2} display={"flex"} flexDirection={"row"}>
+        {imageUrls.length > 0 ? (
           <Box
             sx={{
+              maxHeight: 600,
+              position: "relative",
               display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
+              flexDirection: "column",
+              justifyContent: "flex-start",
             }}
           >
-            <IconButton
-              onClick={prevImage}
-              sx={{ ml: 1, cursor: "pointer" }}
-              size="small"
-            >
-              <ArrowBack />
-            </IconButton>
+            {isLoadingImage && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "rgba(255,255,255,0.6)",
+                  zIndex: 1,
+                }}
+              >
+                <CircularProgress />
+              </Box>
+            )}
+            <img
+              src={imageUrls[currentIndex]}
+              alt="Device"
+              style={{
+                width: "100%",
+                display: "block",
+                height: "auto",
+                maxHeight: 500,
+                objectFit: "contain",
+                filter: isLoadingImage ? "blur(10px)" : "none",
+                transition: "filter 0.3s ease-in-out",
+              }}
+              onLoad={() => setIsLoadingImage(false)}
+              onError={() => {
+                setIsLoadingImage(false);
+              }}
+            />
             <Box
               sx={{
                 display: "flex",
                 flexDirection: "row",
+                justifyContent: "space-between",
                 alignItems: "center",
               }}
             >
-              <Typography variant="caption" textAlign={"center"}>{`${
-                currentIndex + 1
-              }/${imageUrls.length}`}</Typography>
-              <Tooltip title={"Delete image?"}>
-                <IconButton
-                  onClick={() => {
-                    const attachment = device.attachments[currentIndex];
-                    onDeleteImage(attachment.guid);
-                  }}
-                  sx={{ ml: 1, cursor: "pointer" }}
-                  size="small"
-                >
-                  <Delete />
-                </IconButton>
-              </Tooltip>
+              <IconButton
+                onClick={prevImage}
+                sx={{ ml: 1, cursor: "pointer" }}
+                size="small"
+              >
+                <ArrowBack />
+              </IconButton>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="caption" textAlign={"center"}>{`${
+                  currentIndex + 1
+                }/${imageUrls.length}`}</Typography>
+                <Tooltip title={"Delete image?"}>
+                  <IconButton
+                    onClick={() => {
+                      const attachment = device.attachments[currentIndex];
+                      onDeleteImage(attachment.guid);
+                    }}
+                    sx={{ ml: 1, cursor: "pointer" }}
+                    size="small"
+                  >
+                    <Delete />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <IconButton
+                onClick={nextImage}
+                sx={{ ml: 1, cursor: "pointer" }}
+                size="small"
+              >
+                <ArrowForward />
+              </IconButton>
             </Box>
-            <IconButton
-              onClick={nextImage}
-              sx={{ ml: 1, cursor: "pointer" }}
-              size="small"
-            >
-              <ArrowForward />
-            </IconButton>
           </Box>
-        </Box>
-      ) : (
-        <Button
-          variant="contained"
-          component="label"
-          sx={{ mt: 1, mb: 2 }}
-          onClick={openFileDialog}
-        >
-          Choose Image
-        </Button>
-      )}
-      <input
-        type="file"
-        hidden
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={(e) => {
-          if (e.target.files && e.target.files?.length > 0) {
-            onUploadImage(e.target.files?.[0]);
-          }
-        }}
-      />
-    </Box>
+        ) : (
+          <Button
+            variant="contained"
+            component="label"
+            sx={{ mt: 1, mb: 2 }}
+            onClick={openFileDialog}
+          >
+            Choose Image
+          </Button>
+        )}
+        <input
+          type="file"
+          hidden
+          accept="image/*"
+          ref={fileInputRef}
+          onChange={(e) => {
+            if (e.target.files && e.target.files?.length > 0) {
+              onUploadImage(e.target.files?.[0]);
+            }
+          }}
+        />
+      </Box>
+    </Collapsible>
   );
 };
