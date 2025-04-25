@@ -21,11 +21,12 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
         public Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
         public Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null);
-        public Task UploadImage(string deviceIdentifier, UploadAttachmentModel fileModel);
-        public Task DeleteImage(string deviceIdentifier, Guid attachmentIdentifier);
+
+        public Task AddAttachment(string deviceIdentifier, UploadAttachmentModel fileModel);
+        public Task DeleteAttachment(string deviceIdentifier, Guid attachmentIdentifier);
+        public Task<AttachmentInfoModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier);
 
         public Task<List<DeviceEventDto>> GetDeviceEvents(string identifier);
 
-        public Task<AttachmentInfoModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier);
     }
 }

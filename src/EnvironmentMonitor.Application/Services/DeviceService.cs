@@ -170,7 +170,7 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceEventDto>>(events);
         }
 
-        public async Task UploadImage(string deviceIdentifier, UploadAttachmentModel fileModel)
+        public async Task AddAttachment(string deviceIdentifier, UploadAttachmentModel fileModel)
         {
             var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
 
@@ -186,16 +186,17 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.AddAttachment(device.Id, new Attachment()
             {
                 Name = fileNameToSave,
+                OriginalName = fileModel.FileName,
                 FullPath = res.ToString(),
                 Path = res.ToString(),
                 Extension = extension,
-                CreatedAt = _dateService.CurrentTime(),
+                Created = _dateService.CurrentTime(),
                 ContentType = fileModel.ContentType,
             },
             true);
         }
 
-        public async Task DeleteImage(string deviceIdentifier, Guid attachmentIdentifier)
+        public async Task DeleteAttachment(string deviceIdentifier, Guid attachmentIdentifier)
         {
             _logger.LogInformation($"Removing attachment with identifier: '{attachmentIdentifier}' for device with identifier: '{deviceIdentifier}'");
             var device = await GetDevice(deviceIdentifier, AccessLevels.Write);

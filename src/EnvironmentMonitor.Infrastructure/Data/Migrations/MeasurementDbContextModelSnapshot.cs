@@ -34,13 +34,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<DateTime?>("CreatedAt")
+                    b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Extension")
                         .IsRequired()
@@ -51,8 +49,15 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasMaxLength(1024)
                         .HasColumnType("nvarchar(1024)");
 
+                    b.Property<bool>("IsImage")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("OriginalName")
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
@@ -62,6 +67,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasColumnType("nvarchar(1024)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Attachments");
                 });
@@ -121,15 +129,18 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Property<int>("AttachmentId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("Guid")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("newid()");
 
                     b.Property<bool>("IsDefaultImage")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsImage")
                         .HasColumnType("bit");
 
                     b.HasKey("DeviceId", "AttachmentId");
@@ -497,7 +508,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasOne("EnvironmentMonitor.Domain.Entities.Attachment", "Attachment")
                         .WithMany("DeviceAttachments")
                         .HasForeignKey("AttachmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("EnvironmentMonitor.Domain.Entities.Device", "Device")

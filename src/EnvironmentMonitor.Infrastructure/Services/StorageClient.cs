@@ -63,6 +63,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 HttpHeaders = new BlobHttpHeaders() { ContentType = model.ContentType }
             });
+
             return blobClient.Uri;
         }
 

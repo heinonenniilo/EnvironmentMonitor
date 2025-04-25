@@ -216,6 +216,13 @@ export const DeviceView: React.FC = () => {
       .then((res) => {
         setSelectedDevice(res);
         setDefaultImageVer(defaultImageVer + 1);
+        dispatch(
+          addNotification({
+            title: "Image uploaded",
+            body: "",
+            severity: "success",
+          })
+        );
       })
       .finally(() => {
         setIsLoading(false);
@@ -232,6 +239,13 @@ export const DeviceView: React.FC = () => {
       .deleteAttachment(selectedDevice.device.deviceIdentifier, identifier)
       .then((res) => {
         setSelectedDevice(res);
+        dispatch(
+          addNotification({
+            title: "Image deleted",
+            body: "Success",
+            severity: "success",
+          })
+        );
       })
       .catch((er) => {
         //
@@ -278,8 +292,8 @@ export const DeviceView: React.FC = () => {
                 onConfirm: () => {
                   uploadImage(file);
                 },
-                title: `Upload new default image`,
-                body: `Upload image?`,
+                title: "Upload new image?",
+                body: `Upload "${file.name}"?`,
               })
             );
           }}

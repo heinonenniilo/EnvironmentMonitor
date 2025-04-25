@@ -147,7 +147,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             var device = await _context.Devices.Include(x => x.Attachments).FirstAsync(x => x.Id == deviceId);
             _context.Attachments.Add(attachment);
-            _context.DeviceAttachments.Add(new DeviceAttachment() { Attachment = attachment, Device = device, IsDefaultImage = !device.Attachments.Any(x => x.IsDefaultImage) });
+            _context.DeviceAttachments.Add(new DeviceAttachment()
+            {
+                Created = _dateService.CurrentTime(),
+                Attachment = attachment,
+                Device = device,
+                IsDefaultImage = !device.Attachments.Any(x => x.IsDefaultImage)
+            });
             if (saveChanges)
             {
                 await _context.SaveChangesAsync();
@@ -197,6 +203,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier);
             _context.Remove(deviceAttachment);
+            _context.Remove(deviceAttachment.Attachment);            
             if (deviceAttachment.IsDefaultImage)
             {
                 var firstOtherAttachment = await _context.DeviceAttachments.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid != attachmentIdentifier);

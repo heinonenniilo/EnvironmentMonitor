@@ -15,8 +15,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
         {
             builder.HasKey(x => new { x.DeviceId, x.AttachmentId });
             builder.HasOne(x => x.Device).WithMany(x => x.Attachments).HasForeignKey(x => x.DeviceId);
-            builder.HasOne(x => x.Attachment).WithMany(x => x.DeviceAttachments).HasForeignKey(x => x.AttachmentId);
-            builder.Property(x => x.IsImage).IsRequired();
+            builder.HasOne(x => x.Attachment).WithMany(x => x.DeviceAttachments).HasForeignKey(x => x.AttachmentId).OnDelete(DeleteBehavior.Restrict);
             builder.HasIndex(x => new { x.DeviceId }).IsUnique().HasFilter("[IsDefaultImage] = 1"); ;
             builder.HasIndex(x => x.Guid).IsUnique();
             builder.Property(x => x.Guid).IsRequired();

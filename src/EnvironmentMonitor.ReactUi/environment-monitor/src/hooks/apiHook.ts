@@ -344,7 +344,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (Ex) {
           showError("Failed to upload image");
-          return undefined;
+          throw Ex;
         }
       },
       deleteAttachment: async (

@@ -3,6 +3,7 @@ import {
   Button,
   CircularProgress,
   IconButton,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { useRef, useState } from "react";
@@ -75,25 +76,18 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
           <Typography variant="h6" marginBottom={0}>
             {title ?? "Devices images"}
           </Typography>
-          <Box sx={{ display: "flex", flexDirection: "row" }}>
-            <IconButton
-              onClick={openFileDialog}
-              sx={{ ml: 1, cursor: "pointer" }}
-              size="small"
-            >
-              <FileUpload />
-            </IconButton>
-            <IconButton
-              onClick={() => {
-                const attachment = device.attachments[currentIndex];
-                onDeleteImage(attachment.guid);
-              }}
-              sx={{ ml: 1, cursor: "pointer" }}
-              size="small"
-            >
-              <Delete />
-            </IconButton>
+          <Box>
+            <Tooltip title="Upload new image" arrow>
+              <IconButton
+                onClick={openFileDialog}
+                sx={{ ml: 1, cursor: "pointer" }}
+                size="small"
+              >
+                <FileUpload />
+              </IconButton>
+            </Tooltip>
           </Box>
+
           {isLoadingImage && (
             <Box
               sx={{
@@ -120,7 +114,6 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               objectFit: "contain",
               filter: isLoadingImage ? "blur(10px)" : "none",
               transition: "filter 0.3s ease-in-out",
-              // maxHeight: 400,
             }}
             onLoad={() => setIsLoadingImage(false)}
             onError={() => {
@@ -132,6 +125,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               display: "flex",
               flexDirection: "row",
               justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
             <IconButton
@@ -141,9 +135,29 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
             >
               <ArrowBack />
             </IconButton>
-            <Typography variant="caption">{`${currentIndex + 1}/${
-              imageUrls.length
-            }`}</Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="caption" textAlign={"center"}>{`${
+                currentIndex + 1
+              }/${imageUrls.length}`}</Typography>
+              <Tooltip title={"Delete image?"}>
+                <IconButton
+                  onClick={() => {
+                    const attachment = device.attachments[currentIndex];
+                    onDeleteImage(attachment.guid);
+                  }}
+                  sx={{ ml: 1, cursor: "pointer" }}
+                  size="small"
+                >
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+            </Box>
             <IconButton
               onClick={nextImage}
               sx={{ ml: 1, cursor: "pointer" }}

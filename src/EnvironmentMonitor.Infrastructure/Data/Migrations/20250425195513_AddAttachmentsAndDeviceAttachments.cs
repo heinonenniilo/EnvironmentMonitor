@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddDeviceAttachments : Migration
+    public partial class AddAttachmentsAndDeviceAttachments : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,11 +19,13 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: false),
                     Extension = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    OriginalName = table.Column<string>(type: "nvarchar(512)", maxLength: 512, nullable: true),
                     ContentType = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Path = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: false),
                     FullPath = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: true),
-                    CreatedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    IsImage = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Created = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -37,8 +39,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     DeviceId = table.Column<int>(type: "int", nullable: false),
                     AttachmentId = table.Column<int>(type: "int", nullable: false),
                     Guid = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "newid()"),
-                    IsImage = table.Column<bool>(type: "bit", nullable: false),
-                    IsDefaultImage = table.Column<bool>(type: "bit", nullable: false)
+                    IsDefaultImage = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Created = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -48,7 +51,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         column: x => x.AttachmentId,
                         principalTable: "Attachments",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_DeviceAttachments_Devices_DeviceId",
                         column: x => x.DeviceId,
@@ -56,6 +59,12 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Attachments_Name",
+                table: "Attachments",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_DeviceAttachments_AttachmentId",

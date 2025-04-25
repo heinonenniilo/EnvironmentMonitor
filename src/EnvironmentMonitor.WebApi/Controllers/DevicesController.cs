@@ -43,9 +43,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> UploadImage([FromForm] string deviceId, IFormFile file)
+        public async Task<DeviceInfoDto> UploadAttachment([FromForm] string deviceId, IFormFile file)
         {
-            await _deviceService.UploadImage(deviceId, new UploadAttachmentModel()
+            await _deviceService.AddAttachment(deviceId, new UploadAttachmentModel()
             {
                 FileName = file.FileName,
                 Stream = file.OpenReadStream(),
@@ -68,7 +68,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> DeleteAttachment([FromRoute] string deviceId, [FromRoute] Guid attachmentIdentifier)
         {
-            await _deviceService.DeleteImage(deviceId, attachmentIdentifier);
+            await _deviceService.DeleteAttachment(deviceId, attachmentIdentifier);
             var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId], true);
             return deviceInfos.First();
         }
