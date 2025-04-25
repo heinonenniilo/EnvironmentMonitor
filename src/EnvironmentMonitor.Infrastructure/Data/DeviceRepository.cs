@@ -197,6 +197,14 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier);
             _context.Remove(deviceAttachment);
+            if (deviceAttachment.IsDefaultImage)
+            {
+                var firstOtherAttachment = await _context.DeviceAttachments.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid != attachmentIdentifier);
+                if (firstOtherAttachment != null)
+                {
+                    firstOtherAttachment.IsDefaultImage = true;
+                }
+            }
             if (saveChanges)
             {
                 await _context.SaveChangesAsync();

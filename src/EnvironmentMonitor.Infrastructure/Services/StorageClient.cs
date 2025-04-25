@@ -93,7 +93,9 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new InvalidOperationException("Client not initialized");
             }
             var blobClient = _containerClient.GetBlobClient(fileName);
+            _logger.LogInformation($"Removing blob named '{fileName}'");
             var result = await blobClient.DeleteIfExistsAsync();
+            _logger.LogInformation($"Remove result: {result.Value}");
             return result.Value;
         }
     }

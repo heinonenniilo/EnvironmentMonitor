@@ -105,6 +105,7 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel)
         {
             var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
+
             if (device == null || !_userService.HasAccessToDevice(device.Id, accessLevel))
             {
                 throw new UnauthorizedAccessException();
@@ -171,11 +172,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task UploadImage(string deviceIdentifier, UploadAttachmentModel fileModel)
         {
-            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
-            if (device == null || !_userService.HasAccessTo(EntityRoles.Device, device.Id, AccessLevels.Write))
-            {
-                throw new UnauthorizedAccessException();
-            }
+            var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
 
             var extension = Path.GetExtension(fileModel.FileName);
             var fileNameToSave = $"{deviceIdentifier}_{Guid.NewGuid()}{extension}";
@@ -204,20 +201,14 @@ namespace EnvironmentMonitor.Application.Services
             var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
             var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
             await _deviceRepository.DeleteAttachment(device.Id, attachmentIdentifier, true);
-            _logger.LogInformation($"Removing blob with name: '{attachment.Name}'");
             await _storageClient.DeleteBlob(attachment.Name);
         }
 
         public async Task<AttachmentInfoModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier)
         {
-            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
-            if (device == null || !_userService.HasAccessTo(EntityRoles.Device, device.Id, AccessLevels.Write))
-            {
-                throw new UnauthorizedAccessException();
-            }
-
+            _logger.LogInformation($"Trying to get attachment with identifier '{attachmentIdentifier}' for device: '{deviceIdentifier}'");
+            var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
             var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
-            
             return await _storageClient.GetImageAsync(attachment.Name);
         }
     }
