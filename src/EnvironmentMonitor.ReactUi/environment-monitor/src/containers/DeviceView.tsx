@@ -222,17 +222,19 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const deleteImage = () => {
+  const deleteImage = (identifier: string) => {
     if (selectedDevice === undefined) {
       return;
     }
     setIsLoading(true);
 
     deviceHook
-      .deleteDefaultImage(selectedDevice.device.deviceIdentifier)
+      .deleteAttachment(selectedDevice.device.deviceIdentifier, identifier)
       .then((res) => {
         setSelectedDevice(res);
-        // setDefaultImageVer(defaultImageVer + 1);
+      })
+      .catch((er) => {
+        //
       })
       .finally(() => {
         setIsLoading(false);
@@ -259,14 +261,14 @@ export const DeviceView: React.FC = () => {
         <DeviceImage
           device={selectedDevice}
           ver={defaultImageVer}
-          onDeleteImage={() => {
+          onDeleteImage={(identifier: string) => {
             dispatch(
               setConfirmDialog({
                 onConfirm: () => {
-                  deleteImage();
+                  deleteImage(identifier);
                 },
-                title: `Delete default image`,
-                body: `Default image of ${selectedDevice?.device.name} will be removed.`,
+                title: "Delete image",
+                body: `The selected image of ${selectedDevice?.device.name} will be removed.`,
               })
             );
           }}

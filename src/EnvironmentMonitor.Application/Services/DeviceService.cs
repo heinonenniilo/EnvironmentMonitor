@@ -198,6 +198,16 @@ namespace EnvironmentMonitor.Application.Services
             true);
         }
 
+        public async Task DeleteImage(string deviceIdentifier, Guid attachmentIdentifier)
+        {
+            _logger.LogInformation($"Removing attachment with identifier: '{attachmentIdentifier}' for device with identifier: '{deviceIdentifier}'");
+            var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
+            var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
+            await _deviceRepository.DeleteAttachment(device.Id, attachmentIdentifier, true);
+            _logger.LogInformation($"Removing blob with name: '{attachment.Name}'");
+            await _storageClient.DeleteBlob(attachment.Name);
+        }
+
         public async Task<AttachmentInfoModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier)
         {
             var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);

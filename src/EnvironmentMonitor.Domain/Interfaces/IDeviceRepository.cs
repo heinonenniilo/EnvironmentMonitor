@@ -31,6 +31,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);
         public Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges);
+        public Task DeleteAttachment(int deviceId, Guid attachmentIdentifier, bool saveChanges);
         public Task SaveChanges();
     }
 }

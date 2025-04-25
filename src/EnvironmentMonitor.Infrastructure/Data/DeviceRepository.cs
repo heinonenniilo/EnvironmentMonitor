@@ -192,5 +192,15 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest
             }).ToList();
         }
+
+        public async Task DeleteAttachment(int deviceId, Guid attachmentIdentifier, bool saveChanges)
+        {
+            var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier);
+            _context.Remove(deviceAttachment);
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

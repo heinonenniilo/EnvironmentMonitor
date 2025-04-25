@@ -64,12 +64,12 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return stream == null ? NotFound() : new FileStreamResult(stream.Stream, stream.ContentType);
         }
 
-        [HttpDelete("attachment/{deviceId}")]
+        [HttpDelete("attachment/{deviceId}/{attachmentIdentifier}")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> DeleteDefaultImage([FromRoute] string deviceId)
+        public async Task<DeviceInfoDto> DeleteAttachment([FromRoute] string deviceId, [FromRoute] Guid attachmentIdentifier)
         {
-            await _deviceService.UploadImage(deviceId, null);
-            var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId]);
+            await _deviceService.DeleteImage(deviceId, attachmentIdentifier);
+            var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId], true);
             return deviceInfos.First();
         }
 

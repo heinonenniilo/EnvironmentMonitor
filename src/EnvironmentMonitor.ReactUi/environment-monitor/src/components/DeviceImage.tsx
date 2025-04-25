@@ -18,7 +18,7 @@ export interface DeviceImageProps {
   device: DeviceInfo | undefined;
   title?: string;
   onUploadImage: (file: File) => void;
-  onDeleteImage: () => void;
+  onDeleteImage: (identifier: string) => void;
   ver?: number;
 }
 
@@ -84,7 +84,10 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               <FileUpload />
             </IconButton>
             <IconButton
-              onClick={onDeleteImage}
+              onClick={() => {
+                const attachment = device.attachments[currentIndex];
+                onDeleteImage(attachment.guid);
+              }}
               sx={{ ml: 1, cursor: "pointer" }}
               size="small"
             >
