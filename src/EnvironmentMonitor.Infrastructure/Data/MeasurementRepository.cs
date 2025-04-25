@@ -29,10 +29,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 model.SensorIds.Contains(x.SensorId));
             if (model.LatestOnly == true)
             {
-                var grouped = await query.GroupBy(x => new { x.SensorId, x.TypeId }).Select(d => new
-                {
-                    Id = d.Max(x => x.Id),
-                }).ToListAsync();
+                var grouped = await query.Where(
+                    x => x.Timestamp > _dateService.CurrentTime().AddDays(-1 * ApplicationConstants.DeviceLastMessageFetchLimitIndays))
+                    .GroupBy(x => new { x.SensorId, x.TypeId }).Select(d => new
+                    {
+                        Id = d.Max(x => x.Id),
+                    }).ToListAsync();
                 var latestMeasurements = _context.Measurements.Where(x => grouped.Select(g => g.Id).Contains(x.Id)).OrderByDescending(x => x.Timestamp);
                 return await latestMeasurements.ToListAsync();
             }
