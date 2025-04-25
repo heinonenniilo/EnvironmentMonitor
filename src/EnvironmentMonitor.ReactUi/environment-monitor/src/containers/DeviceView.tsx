@@ -345,7 +345,7 @@ export const DeviceView: React.FC = () => {
             sensors={selectedDevice?.device.sensors}
             model={model}
             minHeight={400}
-            title="Last 48 h"
+            title={`${selectedDevice?.device.name} - Last 48 h`}
             useAutoScale
           />
         </Collapsible>
