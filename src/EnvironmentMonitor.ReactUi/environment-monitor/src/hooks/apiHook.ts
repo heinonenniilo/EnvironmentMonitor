@@ -71,6 +71,14 @@ interface deviceHook {
     delayMs: number
   ) => Promise<boolean>;
   getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
+  uploadImage: (
+    identifire: string,
+    file: File
+  ) => Promise<DeviceInfo | undefined>;
+  deleteAttachment: (
+    deviceIdentifier: string,
+    attachmentIdentifier: string
+  ) => Promise<DeviceInfo | undefined>;
 }
 
 const apiClient = axios.create({
@@ -322,6 +330,35 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           showError();
           return [];
+        }
+      },
+      uploadImage: async (identifier: string, file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("deviceId", identifier);
+        try {
+          let res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
+            `/api/devices/attachment/`,
+            formData
+          );
+          return res.data;
+        } catch (Ex) {
+          showError("Failed to upload image");
+          throw Ex;
+        }
+      },
+      deleteAttachment: async (
+        deviceIdentifier: string,
+        attachmentIdentifier: string
+      ) => {
+        try {
+          let res = await apiClient.delete<any, AxiosResponse<DeviceInfo>>(
+            `/api/devices/attachment/${deviceIdentifier}/${attachmentIdentifier}`
+          );
+          return res.data;
+        } catch (Ex) {
+          showError("Deleting attachment failed");
+          throw Ex;
         }
       },
     },

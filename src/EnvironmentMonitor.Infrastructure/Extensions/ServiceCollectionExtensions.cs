@@ -17,7 +17,10 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, string? connectionString = null)
+        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
+            IConfiguration configuration,
+            string? connectionString = null
+            )
         {
             services.AddDbContext<MeasurementDbContext>(options =>
             {
@@ -43,11 +46,21 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<IRoleManager, RoleManager>();
             services.AddScoped<IUserAuthService, UserAuthService>();
 
+
             var defaultSettings = new IotHubSettings();
             configuration.GetSection("IotHubSettings").Bind(defaultSettings);
+            var storageAccountSettings = new StorageAccountSettings();
+            configuration.GetSection("StorageSettings").Bind(storageAccountSettings);
             services.AddSingleton(defaultSettings);
+            services.AddSingleton(storageAccountSettings);
+
+            var fileUploadDefaultSettings = new FileUploadSettings();
+            configuration.GetSection("FileUploadSettings").Bind(defaultSettings);
+            services.AddSingleton(fileUploadDefaultSettings);
+
             services.AddSingleton<IDateService, DateService>();
-            services.AddScoped<IHubMessageService, HubMessageService>();
+            services.AddSingleton<IHubMessageService, HubMessageService>();
+            services.AddSingleton<IStorageClient, StorageClient>();
             return services;
         }
     }

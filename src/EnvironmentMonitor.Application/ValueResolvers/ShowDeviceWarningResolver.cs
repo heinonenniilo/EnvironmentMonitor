@@ -22,7 +22,7 @@ namespace EnvironmentMonitor.Application.ValueResolvers
 
         public bool Resolve(DeviceInfo source, DeviceInfoDto destination, bool destMember, ResolutionContext context)
         {
-            return _dateService.CurrentTime().AddMinutes(-1 * ApplicationConstants.DeviceWarningLimitInMinutes) > source.LastMessage;
+            return source.LastMessage == null || _dateService.CurrentTime().AddMinutes(-1 * ApplicationConstants.DeviceWarningLimitInMinutes) > source.LastMessage;
         }
     }
 }

@@ -14,6 +14,11 @@ import {
 import { DeviceEventTable } from "../components/DeviceEventTable";
 import { DeviceEvent } from "../models/deviceEvent";
 import { Box } from "@mui/material";
+import { DeviceImage } from "../components/DeviceImage";
+import { Collapsible } from "../components/CollabsibleComponent";
+import { MultiSensorGraph } from "../components/MultiSensorGraph";
+import moment from "moment";
+import { MeasurementsViewModel } from "../models/measurementsBySensor";
 
 interface PromiseInfo {
   type: string;
@@ -27,11 +32,71 @@ export const DeviceView: React.FC = () => {
   const [deviceEvents, setDeviceEvents] = useState<DeviceEvent[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMeasurements, setIsLoadingMeasurments] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+  const [model, setModel] = useState<MeasurementsViewModel | undefined>(
+    undefined
+  );
+  const [defaultImageVer, setDefaultImageVer] = useState(0);
   const dispatch = useDispatch();
 
   const { deviceId } = useParams<{ deviceId?: string }>();
   const deviceHook = useApiHook().deviceHook;
+  const measurementApiHook = useApiHook().measureHook;
+
+  const loadMeasurements = () => {
+    if (!selectedDevice) {
+      return;
+    }
+
+    const momentStart = moment()
+      .local(true)
+      .add(-1 * 48, "hour")
+      .utc(true);
+
+    setIsLoadingMeasurments(true);
+    measurementApiHook
+      .getMeasurementsBySensor(
+        selectedDevice.device.sensors.map((x) => x.id),
+        momentStart,
+        undefined
+      )
+      .then((res) => {
+        setModel(res);
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoadingMeasurments(false);
+      });
+  };
+  useEffect(() => {
+    if (!selectedDevice) {
+      return;
+    }
+    const momentStart = moment()
+      .local(true)
+      .add(-1 * 48, "hour")
+      .utc(true);
+    setIsLoadingMeasurments(true);
+    measurementApiHook
+      .getMeasurementsBySensor(
+        selectedDevice.device.sensors.map((x) => x.id),
+        momentStart,
+        undefined
+      )
+      .then((res) => {
+        setModel(res);
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoadingMeasurments(false);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDevice]);
 
   useEffect(() => {
     if (deviceId && !hasFetched) {
@@ -202,6 +267,60 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const uploadImage = (file: File) => {
+    if (selectedDevice === undefined) {
+      return;
+    }
+    //
+    setIsLoading(true);
+
+    deviceHook
+      .uploadImage(selectedDevice?.device.deviceIdentifier, file)
+      .then((res) => {
+        setSelectedDevice(res);
+        setDefaultImageVer(defaultImageVer + 1);
+        dispatch(
+          addNotification({
+            title: "Image uploaded",
+            body: "",
+            severity: "success",
+          })
+        );
+      })
+      .catch((ex) => {
+        console.error("Failed to upload image");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const deleteImage = (identifier: string) => {
+    if (selectedDevice === undefined) {
+      return;
+    }
+    setIsLoading(true);
+
+    deviceHook
+      .deleteAttachment(selectedDevice.device.deviceIdentifier, identifier)
+      .then((res) => {
+        setSelectedDevice(res);
+        dispatch(
+          addNotification({
+            title: "Image deleted",
+            body: "Success",
+            severity: "success",
+          })
+        );
+      })
+      .catch((er) => {
+        //
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   return (
     <AppContentWrapper
       title={`${selectedDevice?.device?.name ?? ""}`}
@@ -213,75 +332,116 @@ export const DeviceView: React.FC = () => {
         flexDirection={"column"}
         height={"100%"}
       >
-        <DeviceTable
-          title="Info"
-          hideName
-          devices={selectedDevice ? [selectedDevice] : []}
-          disableSort
-        />
-        <SensorTable
-          title="Sensors"
-          sensors={selectedDevice?.device?.sensors ?? []}
-        />
-        <DeviceControlComponent
+        <Collapsible title="Info" isOpen={true}>
+          <DeviceTable
+            hideName
+            devices={selectedDevice ? [selectedDevice] : []}
+            disableSort
+          />
+        </Collapsible>
+
+        <DeviceImage
           device={selectedDevice}
-          title="Commands"
-          reboot={() => {
+          ver={defaultImageVer}
+          title={"Device images"}
+          onDeleteImage={(identifier: string) => {
             dispatch(
               setConfirmDialog({
                 onConfirm: () => {
-                  reboot(`Boot command sent to ${selectedDevice?.device.name}`);
+                  deleteImage(identifier);
                 },
-                title: `Reboot device?`,
-                body: `${selectedDevice?.device.name} will be rebooted`,
+                title: "Delete image",
+                body: `The selected image of ${selectedDevice?.device.name} will be removed.`,
               })
             );
           }}
-          onSetOutStatic={(mode: boolean) => {
+          onUploadImage={(file) => {
             dispatch(
               setConfirmDialog({
                 onConfirm: () => {
-                  setMotionControlState(
-                    mode ? 1 : 0,
-                    `Outputs set to ${mode} for ${selectedDevice?.device.name}`
-                  );
+                  uploadImage(file);
                 },
-                title: `Set output as ${mode}`,
-                body: `Output pins will be set as ${mode}. Motion sensor trigger will be disabled`,
-              })
-            );
-          }}
-          onSetOutOnMotionControl={() => {
-            dispatch(
-              setConfirmDialog({
-                onConfirm: () => {
-                  setMotionControlState(2, "Motion control enabled");
-                },
-                title: `Enable motion control`,
-                body: "Output pins will be controlled by motion sensor",
-              })
-            );
-          }}
-          onSetMotionControlDelay={(delay: number) => {
-            dispatch(
-              setConfirmDialog({
-                onConfirm: () => {
-                  setMotionControlDelay(
-                    delay * 1000,
-                    `Motioncontrol delay set to ${delay} s`
-                  );
-                },
-                title: `Set motion control delay`,
-                body: `Motion control delay will be set to ${delay} s`,
+                title: "Upload new image?",
+                body: `Upload "${file.name}"?`,
               })
             );
           }}
         />
-        <DeviceEventTable
-          events={deviceEvents}
-          title="Events"
-          maxHeight={"500px"}
-        />
+        <Collapsible title="Sensors" isOpen={true}>
+          <SensorTable sensors={selectedDevice?.device?.sensors ?? []} />
+        </Collapsible>
+
+        <Collapsible title="Measurements">
+          <MultiSensorGraph
+            sensors={selectedDevice?.device.sensors}
+            model={model}
+            minHeight={400}
+            title={`${selectedDevice?.device.name} - Last 48 h`}
+            useAutoScale
+            onRefresh={loadMeasurements}
+            isLoading={isLoadingMeasurements}
+          />
+        </Collapsible>
+        <Collapsible isOpen={true} title="Commands">
+          <DeviceControlComponent
+            device={selectedDevice}
+            reboot={() => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    reboot(
+                      `Boot command sent to ${selectedDevice?.device.name}`
+                    );
+                  },
+                  title: `Reboot device?`,
+                  body: `${selectedDevice?.device.name} will be rebooted`,
+                })
+              );
+            }}
+            onSetOutStatic={(mode: boolean) => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    setMotionControlState(
+                      mode ? 1 : 0,
+                      `Outputs set to ${mode} for ${selectedDevice?.device.name}`
+                    );
+                  },
+                  title: `Set output as ${mode}`,
+                  body: `Output pins will be set as ${mode}. Motion sensor trigger will be disabled`,
+                })
+              );
+            }}
+            onSetOutOnMotionControl={() => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    setMotionControlState(2, "Motion control enabled");
+                  },
+                  title: `Enable motion control`,
+                  body: "Output pins will be controlled by motion sensor",
+                })
+              );
+            }}
+            onSetMotionControlDelay={(delay: number) => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    setMotionControlDelay(
+                      delay * 1000,
+                      `Motioncontrol delay set to ${delay} s`
+                    );
+                  },
+                  title: `Set motion control delay`,
+                  body: `Motion control delay will be set to ${delay} s`,
+                })
+              );
+            }}
+          />
+        </Collapsible>
+        <Collapsible title="Events" isOpen={true}>
+          <DeviceEventTable events={deviceEvents} maxHeight={"500px"} />
+        </Collapsible>
       </Box>
     </AppContentWrapper>
   );

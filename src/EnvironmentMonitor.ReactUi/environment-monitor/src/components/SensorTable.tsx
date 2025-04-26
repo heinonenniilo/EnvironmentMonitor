@@ -13,15 +13,18 @@ import {
 
 export interface SensorTableProps {
   sensors: Sensor[];
-  title: string;
+  title?: string;
 }
 
 export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
   return (
     <Box marginTop={2}>
-      <Typography variant="h6" marginBottom={2}>
-        Sensors
-      </Typography>
+      {title && (
+        <Typography variant="h6" marginBottom={2}>
+          {title}
+        </Typography>
+      )}
+
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>

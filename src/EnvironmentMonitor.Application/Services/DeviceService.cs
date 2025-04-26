@@ -2,6 +2,7 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
@@ -20,16 +21,20 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILogger<DeviceService> _logger;
         private readonly IUserService _userService;
         private readonly IDeviceRepository _deviceRepository;
+        private readonly IStorageClient _storageClient;
         private readonly IMapper _mapper;
+        private readonly IDateService _dateService;
 
         public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IMapper mapper)
+            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService)
         {
             _messageService = messageService;
             _logger = logger;
             _userService = userService;
             _deviceRepository = deviceRepository;
             _mapper = mapper;
+            _storageClient = storageClient;
+            _dateService = dateService;
         }
         public async Task Reboot(string deviceIdentifier)
         {
@@ -100,6 +105,7 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel)
         {
             var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
+
             if (device == null || !_userService.HasAccessToDevice(device.Id, accessLevel))
             {
                 throw new UnauthorizedAccessException();
@@ -142,17 +148,17 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
 
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<string>? identifiers)
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<string>? identifiers, bool getAttachments = false)
         {
             _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
             var infos = new List<DeviceInfo>();
             if (identifiers?.Any() == true)
             {
-                infos = (await _deviceRepository.GetDeviceInfo(identifiers, onlyVisible)).Where(d => _userService.HasAccessToDevice(d.Device.Id, AccessLevels.Read)).ToList();
+                infos = (await _deviceRepository.GetDeviceInfo(identifiers, onlyVisible, getAttachments)).Where(d => _userService.HasAccessToDevice(d.Device.Id, AccessLevels.Read)).ToList();
             }
             else
             {
-                infos = await _deviceRepository.GetDeviceInfo(_userService.IsAdmin ? null : _userService.GetDevices(), onlyVisible);
+                infos = await _deviceRepository.GetDeviceInfo(_userService.IsAdmin ? null : _userService.GetDevices(), onlyVisible, getAttachments);
             }
             return _mapper.Map<List<DeviceInfoDto>>(infos);
         }
@@ -162,6 +168,49 @@ namespace EnvironmentMonitor.Application.Services
             var device = await GetDevice(identifier, AccessLevels.Read) ?? throw new UnauthorizedAccessException();
             var events = await _deviceRepository.GetDeviceEvents(identifier);
             return _mapper.Map<List<DeviceEventDto>>(events);
+        }
+
+        public async Task AddAttachment(string deviceIdentifier, UploadAttachmentModel fileModel)
+        {
+            var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
+
+            var extension = Path.GetExtension(fileModel.FileName);
+            var fileNameToSave = $"{deviceIdentifier}_{Guid.NewGuid()}{extension}";
+            var res = await _storageClient.Upload(new UploadAttachmentModel()
+            {
+                FileName = fileNameToSave,
+                ContentType = fileModel.ContentType,
+                Stream = fileModel.Stream,
+            });
+
+            await _deviceRepository.AddAttachment(device.Id, new Attachment()
+            {
+                Name = fileNameToSave,
+                OriginalName = fileModel.FileName,
+                FullPath = res.ToString(),
+                Path = res.ToString(),
+                Extension = extension,
+                Created = _dateService.CurrentTime(),
+                ContentType = fileModel.ContentType,
+            },
+            true);
+        }
+
+        public async Task DeleteAttachment(string deviceIdentifier, Guid attachmentIdentifier)
+        {
+            _logger.LogInformation($"Removing attachment with identifier: '{attachmentIdentifier}' for device with identifier: '{deviceIdentifier}'");
+            var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
+            var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
+            await _deviceRepository.DeleteAttachment(device.Id, attachmentIdentifier, true);
+            await _storageClient.DeleteBlob(attachment.Name);
+        }
+
+        public async Task<AttachmentInfoModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier)
+        {
+            _logger.LogInformation($"Trying to get attachment with identifier '{attachmentIdentifier}' for device: '{deviceIdentifier}'");
+            var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
+            var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
+            return await _storageClient.GetImageAsync(attachment.Name);
         }
     }
 }

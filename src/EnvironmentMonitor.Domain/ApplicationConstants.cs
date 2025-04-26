@@ -12,5 +12,6 @@ namespace EnvironmentMonitor.Domain
 
         public static int MeasurementGroupByLimitInDays = 7;
         public static int DeviceWarningLimitInMinutes = 10;
+        public static int DeviceLastMessageFetchLimitIndays = 1;
     }
 }
