@@ -2,6 +2,9 @@ import {
   Box,
   Button,
   CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   IconButton,
   Tooltip,
   Typography,
@@ -11,8 +14,10 @@ import {
   ArrowBack,
   ArrowForward,
   CheckCircle,
+  Close,
   Delete,
   FileUpload,
+  WidthFull,
 } from "@mui/icons-material";
 import { DeviceInfo } from "../models/deviceInfo";
 import { Collapsible } from "./CollabsibleComponent";
@@ -40,6 +45,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   const [isLoadingImage, setIsLoadingImage] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string>("");
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: (files) => {
@@ -121,6 +127,52 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
         </Tooltip>
       }
     >
+      <Dialog
+        open={imagePreviewUrl.length > 0}
+        onClose={() => {
+          setImagePreviewUrl("");
+        }}
+        maxWidth="xl"
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box
+            sx={{ display: "flex", flexDirection: "row", alignItems: "center" }}
+          ></Box>
+          <Box sx={{ display: "flex", flexBasis: "row" }}>
+            <IconButton
+              aria-label="close"
+              onClick={() => {
+                setImagePreviewUrl("");
+              }}
+              sx={{
+                color: (theme) => theme.palette.grey[500],
+              }}
+              size="small"
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box
+            component="img"
+            src={`${imagePreviewUrl}`}
+            alt="Preview"
+            sx={{
+              width: "100%",
+              height: "auto",
+              borderRadius: 1,
+              display: "block",
+            }}
+          />
+        </DialogContent>
+      </Dialog>
       <Box
         marginTop={2}
         display={"flex"}
@@ -221,6 +273,17 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                     size="small"
                   >
                     <CheckCircle />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={"Expand"}>
+                  <IconButton
+                    onClick={() => {
+                      setImagePreviewUrl(urls[currentIndex].url);
+                    }}
+                    sx={{ ml: 1, cursor: "pointer" }}
+                    size="small"
+                  >
+                    <WidthFull />
                   </IconButton>
                 </Tooltip>
               </Box>
