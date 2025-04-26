@@ -15,6 +15,7 @@ import {
 } from "@mui/icons-material";
 import { DeviceInfo } from "../models/deviceInfo";
 import { Collapsible } from "./CollabsibleComponent";
+import { useSwipeable } from "react-swipeable";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -43,15 +44,6 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     setIsLoadingImage(true);
   };
 
-  useEffect(() => {
-    if (!device) {
-      return;
-    }
-    if (currentIndex >= device.attachments.length) {
-      setCurrentIndex(0);
-    }
-  }, [device, currentIndex]);
-
   const nextImage = () => {
     if (imageUrls.length <= 1) {
       return;
@@ -59,6 +51,21 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     setCurrentIndex((prev) => (prev + 1) % imageUrls.length);
     setIsLoadingImage(true);
   };
+
+  useEffect(() => {
+    if (!device) {
+      return;
+    }
+    if (currentIndex >= device.attachments.length) {
+      setCurrentIndex(device.attachments.length - 1);
+    }
+  }, [device, currentIndex]);
+
+  const handlers = useSwipeable({
+    onSwipedLeft: () => nextImage(),
+    onSwipedRight: () => prevImage(),
+    trackMouse: true,
+  });
 
   const openFileDialog = () => {
     fileInputRef.current?.click();
@@ -93,10 +100,13 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
             sx={{
               maxHeight: 600,
               position: "relative",
+
               display: "flex",
               flexDirection: "column",
               justifyContent: "flex-start",
+              touchAction: "pan-y",
             }}
+            {...handlers}
           >
             {isLoadingImage && (
               <Box
