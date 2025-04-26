@@ -12,7 +12,8 @@ namespace EnvironmentMonitor.Application.DTOs
     public class DeviceAttachmentDto : IMapFrom<DeviceAttachment>
     {
         public Guid Guid { get; set; }
-        public bool IsImage { get; set; } = true;
+        public bool IsImage { get; set; }
+        public bool IsDefaultImage { get; set; }
 
         public void Mapping(Profile profile)
         {

@@ -1,10 +1,10 @@
 import { DeviceInfo } from "../models/deviceInfo";
-import { Box, Checkbox, Typography } from "@mui/material";
+import { Box, Checkbox, IconButton, Tooltip, Typography } from "@mui/material";
 import { routes } from "../utilities/routes";
 import { Link } from "react-router";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { CheckCircle, WarningAmber } from "@mui/icons-material";
+import { CheckCircle, Photo, WarningAmber } from "@mui/icons-material";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
@@ -48,6 +48,49 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           return "";
         }
         return (row as DeviceInfo)?.device.name;
+      },
+    },
+    {
+      field: "image",
+      headerName: "Image",
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        const device = params.row as DeviceInfo;
+
+        if (!device.defaultImageGuid) {
+          return null;
+        }
+        const imageUrl = `/api/Devices/default-image/${device.device.deviceIdentifier}`;
+
+        return (
+          <Tooltip
+            title={
+              <Box
+                component="img"
+                src={imageUrl}
+                alt="Preview"
+                sx={{
+                  width: 600,
+                  height: "auto",
+                  transition: "filter 0.3s ease-in-out",
+                  borderRadius: 1,
+                  display: "block",
+                }}
+              />
+            }
+            followCursor
+            arrow
+          >
+            <IconButton
+              onClick={() => {
+                //
+              }}
+            >
+              <Photo />
+            </IconButton>
+          </Tooltip>
+        );
       },
     },
     {

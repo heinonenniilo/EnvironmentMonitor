@@ -79,6 +79,10 @@ interface deviceHook {
     deviceIdentifier: string,
     attachmentIdentifier: string
   ) => Promise<DeviceInfo | undefined>;
+  setDefaultImage: (
+    deviceIdentifier: string,
+    attachmentIdentifier: string
+  ) => Promise<DeviceInfo | undefined>;
 }
 
 const apiClient = axios.create({
@@ -353,11 +357,29 @@ export const useApiHook = (): ApiHook => {
       ) => {
         try {
           let res = await apiClient.delete<any, AxiosResponse<DeviceInfo>>(
-            `/api/devices/attachment/${deviceIdentifier}/${attachmentIdentifier}`
+            `/api/devices/attachment/${deviceIdentifier}`
           );
           return res.data;
         } catch (Ex) {
           showError("Deleting attachment failed");
+          throw Ex;
+        }
+      },
+      setDefaultImage: async (
+        deviceIdentifier: string,
+        attachmentIdentifier: string
+      ) => {
+        try {
+          let res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
+            `/api/devices/default-image`,
+            {
+              attachmentGuid: attachmentIdentifier,
+              deviceIdentifier: deviceIdentifier,
+            }
+          );
+          return res.data;
+        } catch (Ex) {
+          showError("Setting default attachment failed");
           throw Ex;
         }
       },

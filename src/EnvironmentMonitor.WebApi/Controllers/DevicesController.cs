@@ -72,6 +72,23 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return stream == null ? NotFound() : new FileStreamResult(stream.Stream, stream.ContentType);
         }
 
+        [HttpGet("default-image/{deviceId}")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "image/jpeg")]
+        [Authorize(Roles = "Admin")]
+        public async Task<FileStreamResult?> GetDefaultImage([FromRoute] string deviceId)
+        {
+            var stream = await _deviceService.GetDefaultImage(deviceId);
+            return stream == null ? null : new FileStreamResult(stream.Stream, stream.ContentType);
+        }
+
+        [HttpPost("default-image")]
+        public async Task<DeviceInfoDto> SetDefaultImage([FromBody] SetDefaultImage model)
+        {
+            await _deviceService.SetDefaultImage(model.DeviceIdentifier, model.AttachmentGuid);
+            var res = await _deviceService.GetDeviceInfos(false, [model.DeviceIdentifier], true);
+            return res.FirstOrDefault();
+        }
+
         [HttpDelete("attachment/{deviceId}/{attachmentIdentifier}")]
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> DeleteAttachment([FromRoute] string deviceId, [FromRoute] Guid attachmentIdentifier)

@@ -13,13 +13,15 @@ namespace EnvironmentMonitor.Application.DTOs
         public DateTime? RebootedOn { get; set; }
         public DateTime? LastMessage { get; set; }
         public List<DeviceAttachmentDto> Attachments { get; set; } = [];
+        public Guid? DefaultImageGuid { get; set; }
 
         public bool ShowWarning { get; set; }
         public void Mapping(Profile profile)
         {
             profile.CreateMap<DeviceInfo, DeviceInfoDto>()
                 .ForMember(x => x.ShowWarning, opt => opt.MapFrom<ShowDeviceWarningResolver>())
-                .ForMember(x => x.Attachments, opt => opt.MapFrom(x => x.Device.Attachments ?? new List<DeviceAttachment>())).ReverseMap(); // Check
+                .ForMember(x => x.Attachments, opt => opt.MapFrom(x => x.Device.Attachments ?? new List<DeviceAttachment>()))
+                .ReverseMap();
         }
     }
 }

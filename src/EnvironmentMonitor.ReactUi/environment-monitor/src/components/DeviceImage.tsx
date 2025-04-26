@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowBack,
   ArrowForward,
+  CheckCircle,
   Delete,
   FileUpload,
 } from "@mui/icons-material";
@@ -23,6 +24,7 @@ export interface DeviceImageProps {
   title?: string;
   onUploadImage: (file: File) => void;
   onDeleteImage: (identifier: string) => void;
+  onSetDefaultImage: (identifier: string) => void;
   ver?: number;
 }
 
@@ -31,6 +33,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   title,
   onUploadImage,
   onDeleteImage,
+  onSetDefaultImage,
   ver,
 }) => {
   const [isLoadingImage, setIsLoadingImage] = useState(true);
@@ -48,18 +51,18 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   });
 
   const prevImage = () => {
-    if (imageUrls.length <= 1) {
+    if (urls.length <= 1) {
       return;
     }
-    setCurrentIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
+    setCurrentIndex((prev) => (prev - 1 + urls.length) % urls.length);
     setIsLoadingImage(true);
   };
 
   const nextImage = () => {
-    if (imageUrls.length <= 1) {
+    if (urls.length <= 1) {
       return;
     }
-    setCurrentIndex((prev) => (prev + 1) % imageUrls.length);
+    setCurrentIndex((prev) => (prev + 1) % urls.length);
     setIsLoadingImage(true);
   };
 
@@ -81,11 +84,21 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     fileInputRef.current?.click();
   };
 
-  const imageUrls =
-    device?.attachments.map(
-      (d) =>
-        `/api/devices/attachment/${device?.device.deviceIdentifier}/${d.guid}`
-    ) ?? [];
+  const urls =
+    device?.attachments.map((s) => {
+      return {
+        url: `/api/devices/attachment/${device?.device.deviceIdentifier}/${s.guid}`,
+        guid: s.guid,
+      };
+    }) ?? [];
+
+  const isDisabled = (guid: string) => {
+    return (
+      device === undefined ||
+      (device.defaultImageGuid.length > 0 && device.defaultImageGuid === guid)
+    );
+  };
+
   return !device ? (
     <></>
   ) : (
@@ -111,7 +124,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
         {...getRootProps()}
       >
         <input {...getInputProps()} />
-        {imageUrls.length > 0 ? (
+        {urls !== undefined && urls.length > 0 ? (
           <Box
             sx={{
               maxHeight: 600,
@@ -140,7 +153,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               </Box>
             )}
             <img
-              src={imageUrls[currentIndex]}
+              src={urls[currentIndex].url}
               alt="Device"
               style={{
                 width: "100%",
@@ -180,7 +193,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               >
                 <Typography variant="caption" textAlign={"center"}>{`${
                   currentIndex + 1
-                }/${imageUrls.length}`}</Typography>
+                }/${urls.length}`}</Typography>
                 <Tooltip title={"Delete image?"}>
                   <IconButton
                     onClick={() => {
@@ -191,6 +204,19 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                     size="small"
                   >
                     <Delete />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={"Set as default"}>
+                  <IconButton
+                    onClick={() => {
+                      const attachment = device.attachments[currentIndex];
+                      onSetDefaultImage(attachment.guid);
+                    }}
+                    disabled={isDisabled(urls[currentIndex].guid)}
+                    sx={{ ml: 1, cursor: "pointer" }}
+                    size="small"
+                  >
+                    <CheckCircle />
                   </IconButton>
                 </Tooltip>
               </Box>

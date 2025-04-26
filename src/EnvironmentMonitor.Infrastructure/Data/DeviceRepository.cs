@@ -6,6 +6,7 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.Azure.Devices;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -22,10 +23,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
     {
         private readonly MeasurementDbContext _context;
         private readonly IDateService _dateService;
-        public DeviceRepository(MeasurementDbContext context, IDateService dateService)
+        private readonly ILogger<DeviceRepository> _logger;
+        public DeviceRepository(MeasurementDbContext context, IDateService dateService, ILogger<DeviceRepository> logger)
         {
             _context = context;
             _dateService = dateService;
+            _logger = logger;
         }
         public async Task<Device?> GetDeviceByIdentifier(string deviceId)
         {
@@ -193,12 +196,15 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 && x.Timestamp > _dateService.CurrentTime().AddDays(-1 * ApplicationConstants.DeviceLastMessageFetchLimitIndays)
              ).GroupBy(x => x.Sensor.DeviceId).Select(d => new { DeviceId = d.Key, Latest = d.Max(x => x.Timestamp) }).ToListAsync();
 
+
+            var defaultImages = await _context.DeviceAttachments.Where(x => x.IsDefaultImage && deviceIds.Contains(x.DeviceId)).ToListAsync();
             return devices.Select(device => new DeviceInfo()
             {
                 Device = device,
                 OnlineSince = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.Online)?.TimeStamp,
                 RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
-                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest
+                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest,
+                DefaultImageGuid = defaultImages.FirstOrDefault(x => x.DeviceId == device.Id)?.Guid
             }).ToList();
         }
 
@@ -206,7 +212,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier);
             _context.Remove(deviceAttachment);
-            _context.Remove(deviceAttachment.Attachment);            
+            _context.Remove(deviceAttachment.Attachment);
             if (deviceAttachment.IsDefaultImage)
             {
                 var firstOtherAttachment = await _context.DeviceAttachments.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid != attachmentIdentifier);
@@ -218,6 +224,30 @@ namespace EnvironmentMonitor.Infrastructure.Data
             if (saveChanges)
             {
                 await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task SetDefaultImage(int deviceId, Guid attachmentIdentifier)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var currentDefaultImage = await _context.DeviceAttachments.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.IsDefaultImage);
+                if (currentDefaultImage != null)
+                {
+                    currentDefaultImage.IsDefaultImage = false;
+                    await _context.SaveChangesAsync();
+                }
+                var attachmentToSetAsDefault = await _context.DeviceAttachments.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier) ?? throw new InvalidOperationException($"Device attachment '{attachmentIdentifier}' not found");
+                attachmentToSetAsDefault.IsDefaultImage = true;
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex, "Setting default image failed");
+                await transaction.RollbackAsync();
+                throw;
             }
         }
     }
