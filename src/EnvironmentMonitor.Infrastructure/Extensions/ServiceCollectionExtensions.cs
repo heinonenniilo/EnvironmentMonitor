@@ -53,6 +53,11 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             configuration.GetSection("StorageSettings").Bind(storageAccountSettings);
             services.AddSingleton(defaultSettings);
             services.AddSingleton(storageAccountSettings);
+
+            var fileUploadDefaultSettings = new FileUploadSettings();
+            configuration.GetSection("FileUploadSettings").Bind(defaultSettings);
+            services.AddSingleton(fileUploadDefaultSettings);
+
             services.AddSingleton<IDateService, DateService>();
             services.AddSingleton<IHubMessageService, HubMessageService>();
             services.AddSingleton<IStorageClient, StorageClient>();

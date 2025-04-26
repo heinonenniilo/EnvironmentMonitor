@@ -24,9 +24,12 @@ namespace EnvironmentMonitor.WebApi.Controllers
     {
 
         private readonly IDeviceService _deviceService;
-        public DevicesController(IDeviceService deviceService)
+        private readonly FileUploadSettings _fileUploadSettings;
+
+        public DevicesController(IDeviceService deviceService, FileUploadSettings fileUploadSettings)
         {
             _deviceService = deviceService;
+            _fileUploadSettings = fileUploadSettings;
         }
 
         [HttpPost("reboot")]
@@ -45,7 +48,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> UploadAttachment([FromForm] string deviceId, IFormFile file)
         {
-            var maxFileSize = 4 * 1024 * 1024; // 4 mb
+            var maxFileSize = _fileUploadSettings.MaxImageUploadSizeMb * 1024 * 1024;
             if (file == null || file.Length > maxFileSize)
             {
                 throw new ArgumentException("File too large");
