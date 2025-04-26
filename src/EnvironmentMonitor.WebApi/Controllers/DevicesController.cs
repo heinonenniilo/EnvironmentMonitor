@@ -45,6 +45,11 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> UploadAttachment([FromForm] string deviceId, IFormFile file)
         {
+            var maxFileSize = 3 * 1024 * 1024; // 3 mb
+            if (file == null || file.Length > maxFileSize)
+            {
+                throw new ArgumentException("File too large");
+            }
             await _deviceService.AddAttachment(deviceId, new UploadAttachmentModel()
             {
                 FileName = file.FileName,

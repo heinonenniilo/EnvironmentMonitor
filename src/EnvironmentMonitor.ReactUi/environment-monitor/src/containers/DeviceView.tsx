@@ -287,6 +287,9 @@ export const DeviceView: React.FC = () => {
           })
         );
       })
+      .catch((ex) => {
+        console.error("Failed to upload image");
+      })
       .finally(() => {
         setIsLoading(false);
       });
