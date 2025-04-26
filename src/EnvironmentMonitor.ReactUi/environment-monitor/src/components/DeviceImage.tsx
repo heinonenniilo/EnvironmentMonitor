@@ -16,6 +16,7 @@ import {
 import { DeviceInfo } from "../models/deviceInfo";
 import { Collapsible } from "./CollabsibleComponent";
 import { useSwipeable } from "react-swipeable";
+import { useDropzone } from "react-dropzone";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -35,6 +36,16 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   const [isLoadingImage, setIsLoadingImage] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop: (files) => {
+      if (files.length === 1) {
+        onUploadImage(files[0]);
+      }
+    },
+    noClick: true,
+    maxFiles: 1,
+  });
 
   const prevImage = () => {
     if (imageUrls.length <= 1) {
@@ -57,7 +68,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
       return;
     }
     if (currentIndex >= device.attachments.length) {
-      setCurrentIndex(device.attachments.length - 1);
+      setCurrentIndex(0);
     }
   }, [device, currentIndex]);
 
@@ -66,7 +77,6 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     onSwipedRight: () => prevImage(),
     trackMouse: true,
   });
-
   const openFileDialog = () => {
     fileInputRef.current?.click();
   };
@@ -94,7 +104,13 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
         </Tooltip>
       }
     >
-      <Box marginTop={2} display={"flex"} flexDirection={"row"}>
+      <Box
+        marginTop={2}
+        display={"flex"}
+        flexDirection={"row"}
+        {...getRootProps()}
+      >
+        <input {...getInputProps()} />
         {imageUrls.length > 0 ? (
           <Box
             sx={{
@@ -188,14 +204,17 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
             </Box>
           </Box>
         ) : (
-          <Button
-            variant="contained"
-            component="label"
-            sx={{ mt: 1, mb: 2 }}
-            onClick={openFileDialog}
-          >
-            Choose Image
-          </Button>
+          <Box {...getRootProps({ noClick: false })}>
+            <input {...getInputProps()} />
+            <Button
+              variant="contained"
+              component="label"
+              sx={{ mt: 1, mb: 2 }}
+              onClick={openFileDialog}
+            >
+              Choose or drag an image
+            </Button>
+          </Box>
         )}
         <input
           type="file"
