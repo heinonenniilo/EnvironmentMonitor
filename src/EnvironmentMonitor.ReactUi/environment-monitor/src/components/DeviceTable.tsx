@@ -1,10 +1,20 @@
 import { DeviceInfo } from "../models/deviceInfo";
-import { Box, Checkbox, IconButton, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  Checkbox,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Tooltip,
+  Typography,
+} from "@mui/material";
 import { routes } from "../utilities/routes";
 import { Link } from "react-router";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { CheckCircle, Photo, WarningAmber } from "@mui/icons-material";
+import { CheckCircle, Close, Photo, WarningAmber } from "@mui/icons-material";
+import { useState } from "react";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
@@ -84,7 +94,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           >
             <IconButton
               onClick={() => {
-                //
+                setSelectedDeviceIdentifier(device.device.deviceIdentifier);
               }}
             >
               <Photo />
@@ -187,6 +197,17 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
     },
   ];
 
+  const [selectedDeviceIdentifier, setSelectedDeviceIdentifier] = useState<
+    string | undefined
+  >(undefined);
+
+  const selectedDevice =
+    selectedDeviceIdentifier !== undefined
+      ? devices.find(
+          (d) => d.device.deviceIdentifier === selectedDeviceIdentifier
+        )
+      : undefined;
+
   return (
     <Box marginTop={2} display={"flex"} flexDirection={"column"}>
       {title !== undefined ? (
@@ -194,6 +215,63 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           {title}
         </Typography>
       ) : null}
+      <Dialog
+        open={
+          selectedDeviceIdentifier !== undefined &&
+          selectedDeviceIdentifier.length > 0
+        }
+        onClose={() => {
+          setSelectedDeviceIdentifier("");
+        }}
+        maxWidth="lg"
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box
+            sx={{ display: "flex", flexDirection: "row", alignItems: "center" }}
+          >
+            {`${selectedDevice?.device.name}`}
+          </Box>
+          <Box sx={{ display: "flex", flexBasis: "row" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mr: 2 }}>
+              {selectedDevice?.showWarning ? (
+                <WarningAmber color="warning" />
+              ) : (
+                <CheckCircle color="success" />
+              )}
+              <span>{formatDate(selectedDevice?.lastMessage)}</span>
+            </Box>
+            <IconButton
+              aria-label="close"
+              onClick={() => setSelectedDeviceIdentifier("")}
+              sx={{
+                color: (theme) => theme.palette.grey[500],
+              }}
+              size="small"
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box
+            component="img"
+            src={`/api/Devices/default-image/${selectedDeviceIdentifier}`}
+            alt="Preview"
+            sx={{
+              width: "100%",
+              height: "auto",
+              borderRadius: 1,
+              display: "block",
+            }}
+          />
+        </DialogContent>
+      </Dialog>
       <Box sx={{ overflow: "auto" }}>
         <DataGrid
           rows={devices}

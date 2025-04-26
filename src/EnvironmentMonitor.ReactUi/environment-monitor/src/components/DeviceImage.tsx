@@ -18,6 +18,7 @@ import { DeviceInfo } from "../models/deviceInfo";
 import { Collapsible } from "./CollabsibleComponent";
 import { useSwipeable } from "react-swipeable";
 import { useDropzone } from "react-dropzone";
+import { stringSort } from "../utilities/stringUtils";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -84,15 +85,18 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     fileInputRef.current?.click();
   };
 
-  const urls =
-    device?.attachments.map((s) => {
-      return {
-        url: `/api/devices/attachment/${device?.device.deviceIdentifier}/${s.guid}`,
-        guid: s.guid,
-      };
-    }) ?? [];
+  const urls = device?.attachments
+    ? device?.attachments
+        .sort((a, b) => stringSort(a.guid, b.guid))
+        .map((s) => {
+          return {
+            url: `/api/devices/attachment/${device?.device.deviceIdentifier}/${s.guid}`,
+            guid: s.guid,
+          };
+        })
+    : [];
 
-  const isDisabled = (guid: string) => {
+  const isDefaultImage = (guid: string) => {
     return (
       device === undefined ||
       (device.defaultImageGuid.length > 0 && device.defaultImageGuid === guid)
@@ -212,7 +216,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                       const attachment = device.attachments[currentIndex];
                       onSetDefaultImage(attachment.guid);
                     }}
-                    disabled={isDisabled(urls[currentIndex].guid)}
+                    disabled={isDefaultImage(urls[currentIndex].guid)}
                     sx={{ ml: 1, cursor: "pointer" }}
                     size="small"
                   >
