@@ -82,6 +82,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpPost("default-image")]
+        [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> SetDefaultImage([FromBody] SetDefaultImage model)
         {
             await _deviceService.SetDefaultImage(model.DeviceIdentifier, model.AttachmentGuid);
