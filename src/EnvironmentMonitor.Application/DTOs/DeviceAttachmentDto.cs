@@ -14,6 +14,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public Guid Guid { get; set; }
         public bool IsImage { get; set; }
         public bool IsDefaultImage { get; set; }
+        public DateTime Created { get; set; }
 
         public void Mapping(Profile profile)
         {

@@ -19,8 +19,8 @@ import { DeviceInfo } from "../models/deviceInfo";
 import { Collapsible } from "./CollabsibleComponent";
 import { useSwipeable } from "react-swipeable";
 import { useDropzone } from "react-dropzone";
-import { stringSort } from "../utilities/stringUtils";
 import { DeviceImageDialog } from "./DeviceImageDialog";
+import { dateTimeSort } from "../utilities/datetimeUtils";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -90,7 +90,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
 
   const urls = device?.attachments
     ? device?.attachments
-        .sort((a, b) => stringSort(a.guid, b.guid))
+        .sort((a, b) => dateTimeSort(b.created, a.created))
         .map((s) => {
           return {
             url: `/api/devices/attachment/${device?.device.deviceIdentifier}/${s.guid}`,
@@ -141,7 +141,6 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
         {urls !== undefined && urls.length > 0 ? (
           <Box
             sx={{
-              maxHeight: 600,
               position: "relative",
 
               display: "flex",
@@ -173,7 +172,8 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 width: "100%",
                 display: "block",
                 height: "auto",
-                maxHeight: 500,
+                minHeight: "300px",
+                maxHeight: "min(80vh, 600px)",
                 objectFit: "contain",
                 filter: isLoadingImage ? "blur(10px)" : "none",
                 transition: "filter 0.3s ease-in-out",
