@@ -2,9 +2,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Tooltip,
   Typography,
@@ -14,7 +11,6 @@ import {
   ArrowBack,
   ArrowForward,
   CheckCircle,
-  Close,
   Delete,
   FileUpload,
   WidthFull,
@@ -24,6 +20,7 @@ import { Collapsible } from "./CollabsibleComponent";
 import { useSwipeable } from "react-swipeable";
 import { useDropzone } from "react-dropzone";
 import { stringSort } from "../utilities/stringUtils";
+import { DeviceImageDialog } from "./DeviceImageDialog";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -127,52 +124,13 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
         </Tooltip>
       }
     >
-      <Dialog
-        open={imagePreviewUrl.length > 0}
+      <DeviceImageDialog
+        isOpen={imagePreviewUrl.length > 0}
+        imageUrl={imagePreviewUrl}
         onClose={() => {
           setImagePreviewUrl("");
         }}
-        maxWidth="xl"
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-          }}
-        >
-          <Box
-            sx={{ display: "flex", flexDirection: "row", alignItems: "center" }}
-          ></Box>
-          <Box sx={{ display: "flex", flexBasis: "row" }}>
-            <IconButton
-              aria-label="close"
-              onClick={() => {
-                setImagePreviewUrl("");
-              }}
-              sx={{
-                color: (theme) => theme.palette.grey[500],
-              }}
-              size="small"
-            >
-              <Close />
-            </IconButton>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
-          <Box
-            component="img"
-            src={`${imagePreviewUrl}`}
-            alt="Preview"
-            sx={{
-              width: "100%",
-              height: "auto",
-              borderRadius: 1,
-              display: "block",
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      />
       <Box
         marginTop={2}
         display={"flex"}
