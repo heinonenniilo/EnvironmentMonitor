@@ -193,8 +193,14 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 Added:
               </Typography>
               <Typography variant="body2">
-                {getFormattedDate(urls[currentIndex]?.created)}
+                {activeAttachment !== undefined
+                  ? getFormattedDate(activeAttachment?.created)
+                  : "-"}
               </Typography>
+              <Typography variant="body2" fontWeight="bold" ml={1} mr={1}>
+                Name:
+              </Typography>
+              <Typography variant="body2">{activeAttachment?.name}</Typography>
             </Box>
             <Box
               sx={{
