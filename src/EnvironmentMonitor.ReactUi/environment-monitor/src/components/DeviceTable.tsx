@@ -73,8 +73,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
                 src={imageUrl}
                 alt="Preview"
                 sx={{
-                  width: 600,
-                  height: "auto",
+                  maxHeight: 400,
                   transition: "filter 0.3s ease-in-out",
                   borderRadius: 1,
                   display: "block",
