@@ -96,14 +96,15 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     device && device.attachments.length >= currentIndex
       ? device.attachments[currentIndex]
       : undefined;
-  const isDefaultImage = (guid: string) => {
-    return (
-      device === undefined ||
-      (device.defaultImageGuid.length > 0 && device.defaultImageGuid === guid)
-    );
+
+  const isDefaultImage = () => {
+    if (device === undefined || activeAttachment === undefined) {
+      return false;
+    }
+    return device.defaultImageGuid === activeAttachment.guid;
   };
 
-  const getCurrentAttachment = () => {
+  const getCurrentAttachmentUrl = () => {
     if (!activeAttachment) {
       return "";
     }
@@ -171,7 +172,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               </Box>
             )}
             <img
-              src={getCurrentAttachment()}
+              src={getCurrentAttachmentUrl()}
               alt="Device"
               style={{
                 width: "100%",
@@ -249,10 +250,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                       }
                       onSetDefaultImage(activeAttachment.guid);
                     }}
-                    disabled={
-                      activeAttachment === undefined ||
-                      isDefaultImage(activeAttachment.guid)
-                    }
+                    disabled={isDefaultImage()}
                     sx={{ ml: 1, cursor: "pointer" }}
                     size="small"
                   >
@@ -262,7 +260,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 <Tooltip title={"Expand"}>
                   <IconButton
                     onClick={() => {
-                      setImagePreviewUrl(getCurrentAttachment());
+                      setImagePreviewUrl(getCurrentAttachmentUrl());
                     }}
                     sx={{ ml: 1, cursor: "pointer" }}
                     size="small"
