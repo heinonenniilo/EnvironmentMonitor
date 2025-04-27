@@ -20,7 +20,7 @@ import { Collapsible } from "./CollabsibleComponent";
 import { useSwipeable } from "react-swipeable";
 import { useDropzone } from "react-dropzone";
 import { DeviceImageDialog } from "./DeviceImageDialog";
-import { dateTimeSort } from "../utilities/datetimeUtils";
+import { dateTimeSort, getFormattedDate } from "../utilities/datetimeUtils";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -89,21 +89,26 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   };
 
   const urls = device?.attachments
-    ? device?.attachments
-        .sort((a, b) => dateTimeSort(b.created, a.created))
-        .map((s) => {
-          return {
-            url: `/api/devices/attachment/${device?.device.deviceIdentifier}/${s.guid}`,
-            guid: s.guid,
-          };
-        })
+    ? device?.attachments.sort((a, b) => dateTimeSort(b.created, a.created))
     : [];
 
+  const activeAttachment =
+    device && device.attachments.length >= currentIndex
+      ? device.attachments[currentIndex]
+      : undefined;
   const isDefaultImage = (guid: string) => {
     return (
       device === undefined ||
       (device.defaultImageGuid.length > 0 && device.defaultImageGuid === guid)
     );
+  };
+
+  const getCurrentAttachment = () => {
+    if (!activeAttachment) {
+      return "";
+    }
+
+    return `/api/devices/attachment/${device?.device.deviceIdentifier}/${activeAttachment.guid}`;
   };
 
   return !device ? (
@@ -166,7 +171,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               </Box>
             )}
             <img
-              src={urls[currentIndex].url}
+              src={getCurrentAttachment()}
               alt="Device"
               style={{
                 width: "100%",
@@ -183,6 +188,14 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 setIsLoadingImage(false);
               }}
             />
+            <Box sx={{ display: "flex", flexDirection: "row" }}>
+              <Typography variant="body2" fontWeight="bold" mr={1}>
+                Added:
+              </Typography>
+              <Typography variant="body2">
+                {getFormattedDate(urls[currentIndex]?.created)}
+              </Typography>
+            </Box>
             <Box
               sx={{
                 display: "flex",
@@ -205,14 +218,16 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                   alignItems: "center",
                 }}
               >
-                <Typography variant="caption" textAlign={"center"}>{`${
+                <Typography variant="caption" textAlign={"center"}>{` ${
                   currentIndex + 1
                 }/${urls.length}`}</Typography>
                 <Tooltip title={"Delete image?"}>
                   <IconButton
                     onClick={() => {
-                      const attachment = device.attachments[currentIndex];
-                      onDeleteImage(attachment.guid);
+                      if (!activeAttachment) {
+                        return;
+                      }
+                      onDeleteImage(activeAttachment.guid);
                     }}
                     sx={{ ml: 1, cursor: "pointer" }}
                     size="small"
@@ -223,10 +238,15 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 <Tooltip title={"Set as default"}>
                   <IconButton
                     onClick={() => {
-                      const attachment = device.attachments[currentIndex];
-                      onSetDefaultImage(attachment.guid);
+                      if (!activeAttachment) {
+                        return;
+                      }
+                      onSetDefaultImage(activeAttachment.guid);
                     }}
-                    disabled={isDefaultImage(urls[currentIndex].guid)}
+                    disabled={
+                      activeAttachment === undefined ||
+                      isDefaultImage(activeAttachment.guid)
+                    }
                     sx={{ ml: 1, cursor: "pointer" }}
                     size="small"
                   >
@@ -236,7 +256,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 <Tooltip title={"Expand"}>
                   <IconButton
                     onClick={() => {
-                      setImagePreviewUrl(urls[currentIndex].url);
+                      setImagePreviewUrl(getCurrentAttachment());
                     }}
                     sx={{ ml: 1, cursor: "pointer" }}
                     size="small"
