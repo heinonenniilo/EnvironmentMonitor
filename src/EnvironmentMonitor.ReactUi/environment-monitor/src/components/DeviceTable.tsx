@@ -200,7 +200,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       : undefined;
 
   return (
-    <Box marginTop={2} display={"flex"} flexDirection={"column"}>
+    <Box marginTop={1} display={"flex"} flexDirection={"column"}>
       {title !== undefined ? (
         <Typography variant="h6" marginBottom={2}>
           {title}
