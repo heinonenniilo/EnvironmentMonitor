@@ -34,8 +34,8 @@ export const Collapsible: React.FC<CollapsibleProps> = ({
   };
 
   return (
-    <Box sx={{ mb: 2, mt: 2 }}>
-      <Box display="flex" alignItems="center" sx={{ mb: 2 }}>
+    <Box sx={{ mb: 1, mt: 1 }}>
+      <Box display="flex" alignItems="center" sx={{ mb: 1 }}>
         <Box sx={{ display: "flex", flexDirection: "row" }}>
           <ExpandMoreIconButton
             expand={open ? 1 : 0}
