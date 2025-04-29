@@ -13,6 +13,7 @@ export interface DeviceTableProps {
   onReboot?: (device: DeviceInfo) => void;
   title?: string;
   disableSort?: boolean;
+  showDeviceImageAsTooltip?: boolean;
   hideName?: boolean;
 }
 
@@ -21,6 +22,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   title,
   disableSort,
   hideName,
+  showDeviceImageAsTooltip,
 }) => {
   const formatDate = (input: Date | undefined | null) => {
     if (input) {
@@ -64,8 +66,17 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           return null;
         }
         const imageUrl = `/api/Devices/default-image/${device.device.deviceIdentifier}`;
+        const iconButtonToRender = (
+          <IconButton
+            onClick={() => {
+              setSelectedDeviceIdentifier(device.device.deviceIdentifier);
+            }}
+          >
+            <Photo />
+          </IconButton>
+        );
 
-        return (
+        return showDeviceImageAsTooltip ? (
           <Tooltip
             title={
               <Box
@@ -83,14 +94,10 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
             followCursor
             arrow
           >
-            <IconButton
-              onClick={() => {
-                setSelectedDeviceIdentifier(device.device.deviceIdentifier);
-              }}
-            >
-              <Photo />
-            </IconButton>
+            {iconButtonToRender}
           </Tooltip>
+        ) : (
+          iconButtonToRender
         );
       },
     },
