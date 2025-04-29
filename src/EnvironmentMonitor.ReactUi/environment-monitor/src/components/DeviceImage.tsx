@@ -55,18 +55,20 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   });
 
   const prevImage = () => {
-    if (urls.length <= 1) {
+    if (attachments.length <= 1) {
       return;
     }
-    setCurrentIndex((prev) => (prev - 1 + urls.length) % urls.length);
+    setCurrentIndex(
+      (prev) => (prev - 1 + attachments.length) % attachments.length
+    );
     setIsLoadingImage(true);
   };
 
   const nextImage = () => {
-    if (urls.length <= 1) {
+    if (attachments.length <= 1) {
       return;
     }
-    setCurrentIndex((prev) => (prev + 1) % urls.length);
+    setCurrentIndex((prev) => (prev + 1) % attachments.length);
     setIsLoadingImage(true);
   };
 
@@ -88,14 +90,12 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     fileInputRef.current?.click();
   };
 
-  const urls = device?.attachments
+  const attachments = device?.attachments
     ? device?.attachments.sort((a, b) => dateTimeSort(b.created, a.created))
     : [];
 
   const activeAttachment =
-    device && device.attachments.length >= currentIndex
-      ? device.attachments[currentIndex]
-      : undefined;
+    attachments.length > currentIndex ? attachments[currentIndex] : undefined;
 
   const isDefaultImage = () => {
     if (device === undefined || activeAttachment === undefined) {
@@ -144,7 +144,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
         {...getRootProps()}
       >
         <input {...getInputProps()} />
-        {urls !== undefined && urls.length > 0 ? (
+        {attachments !== undefined && attachments.length > 0 ? (
           <Box
             sx={{
               position: "relative",
@@ -227,7 +227,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               >
                 <Typography variant="caption" textAlign={"center"}>{` ${
                   currentIndex + 1
-                }/${urls.length}`}</Typography>
+                }/${attachments.length}`}</Typography>
                 <Tooltip title={"Delete image?"}>
                   <IconButton
                     onClick={() => {
