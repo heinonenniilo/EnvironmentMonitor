@@ -18,7 +18,7 @@ export interface SensorTableProps {
 
 export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
   return (
-    <Box marginTop={2}>
+    <Box marginTop={1}>
       {title && (
         <Typography variant="h6" marginBottom={2}>
           {title}

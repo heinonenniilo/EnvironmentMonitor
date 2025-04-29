@@ -212,5 +212,23 @@ namespace EnvironmentMonitor.Application.Services
             var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
             return await _storageClient.GetImageAsync(attachment.Name);
         }
+        public async Task<AttachmentInfoModel?> GetDefaultImage(string deviceIdentifier)
+        {
+            var device = await GetDevice(deviceIdentifier, AccessLevels.Read);
+            var deviceInfo = (await _deviceRepository.GetDeviceInfo([device.Id], false, true)).FirstOrDefault();
+            var attachment = deviceInfo?.Device.Attachments.FirstOrDefault(x => x.IsDefaultImage);
+            if (attachment == null)
+            {
+                return null;
+            }
+            return await _storageClient.GetImageAsync(attachment.Attachment.Name);
+        }
+
+        public async Task SetDefaultImage(string deviceIdentifier, Guid attachmentGuid)
+        {
+            _logger.LogInformation($"Setting default image for device '{deviceIdentifier}'");
+            var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
+            await _deviceRepository.SetDefaultImage(device.Id, attachmentGuid);
+        }
     }
 }

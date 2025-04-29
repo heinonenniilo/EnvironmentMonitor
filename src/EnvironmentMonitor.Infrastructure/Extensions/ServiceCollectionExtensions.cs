@@ -55,7 +55,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddSingleton(storageAccountSettings);
 
             var fileUploadDefaultSettings = new FileUploadSettings();
-            configuration.GetSection("FileUploadSettings").Bind(defaultSettings);
+            configuration.GetSection("FileUploadSettings").Bind(fileUploadDefaultSettings);
             services.AddSingleton(fileUploadDefaultSettings);
 
             services.AddSingleton<IDateService, DateService>();

@@ -8,5 +8,6 @@ namespace EnvironmentMonitor.Domain.Models
         public DateTime? OnlineSince { get; set; }
         public DateTime? RebootedOn { get; set; }
         public DateTime? LastMessage { get; set; }
+        public Guid? DefaultImageGuid { get; set; }
     }
 }

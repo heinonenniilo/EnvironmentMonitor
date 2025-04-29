@@ -321,6 +321,31 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const setDefaultImage = (identifier: string) => {
+    if (!selectedDevice) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    deviceHook
+      .setDefaultImage(selectedDevice?.device.deviceIdentifier, identifier)
+      .then((res) => {
+        setSelectedDevice(res);
+        dispatch(
+          addNotification({
+            title: "Default image set",
+            body: "Success",
+            severity: "success",
+          })
+        );
+      })
+      .catch((ex) => {})
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   return (
     <AppContentWrapper
       title={`${selectedDevice?.device?.name ?? ""}`}
@@ -344,6 +369,17 @@ export const DeviceView: React.FC = () => {
           device={selectedDevice}
           ver={defaultImageVer}
           title={"Device images"}
+          onSetDefaultImage={(identifier: string) => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  setDefaultImage(identifier);
+                },
+                title: "Set default image",
+                body: `Current image will be set as default image for ${selectedDevice?.device.name}`,
+              })
+            );
+          }}
           onDeleteImage={(identifier: string) => {
             dispatch(
               setConfirmDialog({

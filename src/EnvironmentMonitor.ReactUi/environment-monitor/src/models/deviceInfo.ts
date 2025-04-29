@@ -8,4 +8,5 @@ export interface DeviceInfo {
   lastMessage?: Date;
   showWarning?: boolean;
   attachments: DeviceAttachment[];
+  defaultImageGuid: string;
 }

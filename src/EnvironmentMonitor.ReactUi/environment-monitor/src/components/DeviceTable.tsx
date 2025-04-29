@@ -1,16 +1,19 @@
 import { DeviceInfo } from "../models/deviceInfo";
-import { Box, Checkbox, Typography } from "@mui/material";
+import { Box, Checkbox, IconButton, Tooltip, Typography } from "@mui/material";
 import { routes } from "../utilities/routes";
 import { Link } from "react-router";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { CheckCircle, WarningAmber } from "@mui/icons-material";
+import { CheckCircle, Photo, WarningAmber } from "@mui/icons-material";
+import { useState } from "react";
+import { DeviceImageDialog } from "./DeviceImageDialog";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
   onReboot?: (device: DeviceInfo) => void;
   title?: string;
   disableSort?: boolean;
+  showDeviceImageAsTooltip?: boolean;
   hideName?: boolean;
 }
 
@@ -19,6 +22,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   title,
   disableSort,
   hideName,
+  showDeviceImageAsTooltip,
 }) => {
   const formatDate = (input: Date | undefined | null) => {
     if (input) {
@@ -48,6 +52,53 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           return "";
         }
         return (row as DeviceInfo)?.device.name;
+      },
+    },
+    {
+      field: "image",
+      headerName: "Image",
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => {
+        const device = params.row as DeviceInfo;
+
+        if (!device.defaultImageGuid) {
+          return null;
+        }
+        const imageUrl = `/api/Devices/default-image/${device.device.deviceIdentifier}`;
+        const iconButtonToRender = (
+          <IconButton
+            onClick={() => {
+              setSelectedDeviceIdentifier(device.device.deviceIdentifier);
+            }}
+          >
+            <Photo />
+          </IconButton>
+        );
+
+        return showDeviceImageAsTooltip ? (
+          <Tooltip
+            title={
+              <Box
+                component="img"
+                src={imageUrl}
+                alt="Preview"
+                sx={{
+                  maxHeight: 400,
+                  transition: "filter 0.3s ease-in-out",
+                  borderRadius: 1,
+                  display: "block",
+                }}
+              />
+            }
+            followCursor
+            arrow
+          >
+            {iconButtonToRender}
+          </Tooltip>
+        ) : (
+          iconButtonToRender
+        );
       },
     },
     {
@@ -144,13 +195,35 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
     },
   ];
 
+  const [selectedDeviceIdentifier, setSelectedDeviceIdentifier] = useState<
+    string | undefined
+  >(undefined);
+
+  const selectedDevice =
+    selectedDeviceIdentifier !== undefined
+      ? devices.find(
+          (d) => d.device.deviceIdentifier === selectedDeviceIdentifier
+        )
+      : undefined;
+
   return (
-    <Box marginTop={2} display={"flex"} flexDirection={"column"}>
+    <Box marginTop={1} display={"flex"} flexDirection={"column"}>
       {title !== undefined ? (
         <Typography variant="h6" marginBottom={2}>
           {title}
         </Typography>
       ) : null}
+      <DeviceImageDialog
+        isOpen={
+          selectedDeviceIdentifier !== undefined &&
+          selectedDeviceIdentifier.length > 0
+        }
+        imageUrl={`/api/Devices/default-image/${selectedDeviceIdentifier}`}
+        onClose={() => {
+          setSelectedDeviceIdentifier("");
+        }}
+        title={selectedDevice?.device.name}
+      />
       <Box sx={{ overflow: "auto" }}>
         <DataGrid
           rows={devices}

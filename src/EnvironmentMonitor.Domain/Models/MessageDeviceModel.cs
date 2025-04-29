@@ -20,4 +20,9 @@ namespace EnvironmentMonitor.Domain.Models
     {
         public long DelayMs { get; set; }
     }
+
+    public class SetDefaultImage: MessageDeviceModel
+    {
+        public Guid AttachmentGuid { get; set; }
+    }
 }

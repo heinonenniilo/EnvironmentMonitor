@@ -10,19 +10,24 @@ import { useEffect, useRef, useState } from "react";
 import {
   ArrowBack,
   ArrowForward,
+  CheckCircle,
   Delete,
   FileUpload,
+  WidthFull,
 } from "@mui/icons-material";
 import { DeviceInfo } from "../models/deviceInfo";
 import { Collapsible } from "./CollabsibleComponent";
 import { useSwipeable } from "react-swipeable";
 import { useDropzone } from "react-dropzone";
+import { DeviceImageDialog } from "./DeviceImageDialog";
+import { dateTimeSort, getFormattedDate } from "../utilities/datetimeUtils";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
   title?: string;
   onUploadImage: (file: File) => void;
   onDeleteImage: (identifier: string) => void;
+  onSetDefaultImage: (identifier: string) => void;
   ver?: number;
 }
 
@@ -31,11 +36,13 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   title,
   onUploadImage,
   onDeleteImage,
+  onSetDefaultImage,
   ver,
 }) => {
   const [isLoadingImage, setIsLoadingImage] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string>("");
 
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: (files) => {
@@ -48,18 +55,20 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   });
 
   const prevImage = () => {
-    if (imageUrls.length <= 1) {
+    if (attachments.length <= 1) {
       return;
     }
-    setCurrentIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
+    setCurrentIndex(
+      (prev) => (prev - 1 + attachments.length) % attachments.length
+    );
     setIsLoadingImage(true);
   };
 
   const nextImage = () => {
-    if (imageUrls.length <= 1) {
+    if (attachments.length <= 1) {
       return;
     }
-    setCurrentIndex((prev) => (prev + 1) % imageUrls.length);
+    setCurrentIndex((prev) => (prev + 1) % attachments.length);
     setIsLoadingImage(true);
   };
 
@@ -81,11 +90,28 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     fileInputRef.current?.click();
   };
 
-  const imageUrls =
-    device?.attachments.map(
-      (d) =>
-        `/api/devices/attachment/${device?.device.deviceIdentifier}/${d.guid}`
-    ) ?? [];
+  const attachments = device?.attachments
+    ? device?.attachments.sort((a, b) => dateTimeSort(b.created, a.created))
+    : [];
+
+  const activeAttachment =
+    attachments.length > currentIndex ? attachments[currentIndex] : undefined;
+
+  const isDefaultImage = () => {
+    if (device === undefined || activeAttachment === undefined) {
+      return false;
+    }
+    return device.defaultImageGuid === activeAttachment.guid;
+  };
+
+  const getCurrentAttachmentUrl = () => {
+    if (!activeAttachment) {
+      return "";
+    }
+
+    return `/api/devices/attachment/${device?.device.deviceIdentifier}/${activeAttachment.guid}`;
+  };
+
   return !device ? (
     <></>
   ) : (
@@ -104,6 +130,13 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
         </Tooltip>
       }
     >
+      <DeviceImageDialog
+        isOpen={imagePreviewUrl.length > 0}
+        imageUrl={imagePreviewUrl}
+        onClose={() => {
+          setImagePreviewUrl("");
+        }}
+      />
       <Box
         marginTop={2}
         display={"flex"}
@@ -111,10 +144,9 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
         {...getRootProps()}
       >
         <input {...getInputProps()} />
-        {imageUrls.length > 0 ? (
+        {attachments !== undefined && attachments.length > 0 ? (
           <Box
             sx={{
-              maxHeight: 600,
               position: "relative",
 
               display: "flex",
@@ -140,13 +172,14 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               </Box>
             )}
             <img
-              src={imageUrls[currentIndex]}
+              src={getCurrentAttachmentUrl()}
               alt="Device"
               style={{
                 width: "100%",
                 display: "block",
                 height: "auto",
-                maxHeight: 500,
+                minHeight: "300px",
+                maxHeight: "min(80vh, 600px)",
                 objectFit: "contain",
                 filter: isLoadingImage ? "blur(10px)" : "none",
                 transition: "filter 0.3s ease-in-out",
@@ -156,6 +189,20 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 setIsLoadingImage(false);
               }}
             />
+            <Box sx={{ display: "flex", flexDirection: "row" }}>
+              <Typography variant="body2" fontWeight="bold" mr={1}>
+                Added:
+              </Typography>
+              <Typography variant="body2">
+                {activeAttachment !== undefined
+                  ? getFormattedDate(activeAttachment?.created)
+                  : "-"}
+              </Typography>
+              <Typography variant="body2" fontWeight="bold" ml={1} mr={1}>
+                Name:
+              </Typography>
+              <Typography variant="body2">{activeAttachment?.name}</Typography>
+            </Box>
             <Box
               sx={{
                 display: "flex",
@@ -178,19 +225,47 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                   alignItems: "center",
                 }}
               >
-                <Typography variant="caption" textAlign={"center"}>{`${
+                <Typography variant="caption" textAlign={"center"}>{` ${
                   currentIndex + 1
-                }/${imageUrls.length}`}</Typography>
+                }/${attachments.length}`}</Typography>
                 <Tooltip title={"Delete image?"}>
                   <IconButton
                     onClick={() => {
-                      const attachment = device.attachments[currentIndex];
-                      onDeleteImage(attachment.guid);
+                      if (!activeAttachment) {
+                        return;
+                      }
+                      onDeleteImage(activeAttachment.guid);
                     }}
                     sx={{ ml: 1, cursor: "pointer" }}
                     size="small"
                   >
                     <Delete />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={"Set as default"}>
+                  <IconButton
+                    onClick={() => {
+                      if (!activeAttachment) {
+                        return;
+                      }
+                      onSetDefaultImage(activeAttachment.guid);
+                    }}
+                    disabled={isDefaultImage()}
+                    sx={{ ml: 1, cursor: "pointer" }}
+                    size="small"
+                  >
+                    <CheckCircle />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={"Expand"}>
+                  <IconButton
+                    onClick={() => {
+                      setImagePreviewUrl(getCurrentAttachmentUrl());
+                    }}
+                    sx={{ ml: 1, cursor: "pointer" }}
+                    size="small"
+                  >
+                    <WidthFull />
                   </IconButton>
                 </Tooltip>
               </Box>

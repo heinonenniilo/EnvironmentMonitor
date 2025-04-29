@@ -20,7 +20,7 @@ namespace EnvironmentMonitor.WebApi.Services
             _logger.LogError(exception, "WebApi exception occured");
             var problemDetails = new ProblemDetails
             {
-                Title = "An error occurred",
+                Title =  "An error occurred",
                 Status = StatusCodes.Status500InternalServerError,
                 Detail = ""
             };
@@ -37,7 +37,7 @@ namespace EnvironmentMonitor.WebApi.Services
                     problemDetails.Status = StatusCodes.Status403Forbidden;
                     break;
                 case ArgumentException argEx:
-                    problemDetails.Title = "Bad request";
+                    problemDetails.Title = exception?.Message ?? "Bad request";
                     problemDetails.Status = StatusCodes.Status400BadRequest;
                     break;
                 default:
