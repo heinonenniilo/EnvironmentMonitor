@@ -24,8 +24,8 @@ namespace EnvironmentMonitor.Application.Interfaces
 
         public Task AddAttachment(string deviceIdentifier, UploadAttachmentModel fileModel);
         public Task DeleteAttachment(string deviceIdentifier, Guid attachmentIdentifier);
-        public Task<AttachmentInfoModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier);
-        public Task<AttachmentInfoModel?> GetDefaultImage(string deviceIdentifier);
+        public Task<AttachmentDownloadModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier);
+        public Task<AttachmentDownloadModel?> GetDefaultImage(string deviceIdentifier);
         public Task SetDefaultImage(string deviceIdentifier, Guid attachmentGuid);
 
         public Task<List<DeviceEventDto>> GetDeviceEvents(string identifier);
