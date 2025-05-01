@@ -21,6 +21,7 @@ import { useSwipeable } from "react-swipeable";
 import { useDropzone } from "react-dropzone";
 import { DeviceImageDialog } from "./DeviceImageDialog";
 import { dateTimeSort, getFormattedDate } from "../utilities/datetimeUtils";
+import { formatBytes } from "../utilities/stringUtils";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -202,6 +203,14 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 Name:
               </Typography>
               <Typography variant="body2">{activeAttachment?.name}</Typography>
+              <Typography variant="body2" fontWeight="bold" ml={1} mr={1}>
+                Size:
+              </Typography>
+              <Typography variant="body2">
+                {activeAttachment && activeAttachment.sizeInBytes
+                  ? formatBytes(activeAttachment.sizeInBytes)
+                  : ""}
+              </Typography>
             </Box>
             <Box
               sx={{
