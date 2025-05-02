@@ -16,7 +16,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
         }
 
         [Function(nameof(ConnectionStatusObserver))]
-        [FixedDelayRetry(5, "00:00:10")]
+        [FixedDelayRetry(3, "00:00:05")]
         public async Task Run([TimerTrigger("%ConnectionStatusSchedule%")] TimerInfo timerInfo,
             FunctionContext context)
         {
