@@ -20,7 +20,6 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<SensorDto>> GetSensors(List<string> deviceIdentifiers);
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
         public Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
-        public Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null);
 
         public Task AddAttachment(string deviceIdentifier, UploadAttachmentModel fileModel);
         public Task DeleteAttachment(string deviceIdentifier, Guid attachmentIdentifier);
@@ -28,7 +27,8 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<AttachmentDownloadModel?> GetDefaultImage(string deviceIdentifier);
         public Task SetDefaultImage(string deviceIdentifier, Guid attachmentGuid);
 
+        public Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null);
         public Task<List<DeviceEventDto>> GetDeviceEvents(string identifier);
-
+        public Task SetStatus(SetDeviceStatusModel model);
     }
 }

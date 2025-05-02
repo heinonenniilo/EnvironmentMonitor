@@ -34,6 +34,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<LocationSensor> LocationSensors { get; set; }
         public DbSet<DeviceAttachment> DeviceAttachments { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
+        public DbSet<DeviceStatus> DeviceStatusChanges { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeasurementDbContext).Assembly, type =>

@@ -22,6 +22,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDeviceService _deviceService;
         private readonly IDateService _dateService;
         private readonly ILocationRepository _locationRepository;
+        private readonly IDeviceRepository _deviceRepository;
         
 
         public MeasurementService(
@@ -31,7 +32,8 @@ namespace EnvironmentMonitor.Application.Services
             IMapper mapper,
             IDeviceService deviceService,
             IDateService dateService,
-            ILocationRepository locationRepository)
+            ILocationRepository locationRepository,
+            IDeviceRepository deviceRepository)
         {
             _measurementRepository = measurement;
             _logger = logger;
@@ -40,6 +42,7 @@ namespace EnvironmentMonitor.Application.Services
             _deviceService = deviceService;
             _dateService = dateService;
             _locationRepository = locationRepository;
+            _deviceRepository = deviceRepository;
         }
 
         public async Task AddMeasurements(SaveMeasurementsDto measurement)
@@ -92,6 +95,12 @@ namespace EnvironmentMonitor.Application.Services
                 {
                     await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
                 }
+
+                if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
+                {
+                    await _deviceRepository.SetStatus(new SetDeviceStatusModel() { DeviceId = device.Id, Status = true, TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value), Message = $"Measurement count: {measurementsToAdd.Count}" }, false);
+                }
+
                 await _measurementRepository.AddMeasurements(measurementsToAdd);
                 _logger.LogInformation("Measurementsadded");
             }
