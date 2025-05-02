@@ -254,15 +254,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public async Task SetStatus(SetDeviceStatusModel model, bool saveChanges)
         {
             bool statusToSet;
-            var device = await _context.Devices.FirstOrDefaultAsync(x => x.Id == model.DeviceId);
-            if (device == null)
-            {
-                throw new EntityNotFoundException();
-            }
-
+            var device = await _context.Devices.FirstOrDefaultAsync(x => x.Id == model.DeviceId) ?? throw new EntityNotFoundException();
             var latestStatus = await _context.DeviceStatusChanges.Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
             var latestMessage = await _context.Measurements.Where(x => x.Sensor.DeviceId == device.Id).OrderByDescending(x => x.Timestamp).FirstOrDefaultAsync();
-
             if (model.Status != null)
             {
                 statusToSet = model.Status.Value;
@@ -270,10 +264,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
             else
             {
                 statusToSet = latestMessage != null && ((model.TimeStamp ?? _dateService.CurrentTime()) - latestMessage.Timestamp).TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes;
-            }
+            }           
             var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
             if (latestStatus == null || (latestStatus.Status != statusToSet && timeStamp > latestStatus.TimeStamp))
-            {               
+            {
+                _logger.LogInformation($"Device status is being set to: {statusToSet}");
                 _context.DeviceStatusChanges.Add(new Domain.Entities.DeviceStatus()
                 {
 
