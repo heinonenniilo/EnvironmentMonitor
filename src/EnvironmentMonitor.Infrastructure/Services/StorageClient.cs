@@ -67,7 +67,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             return blobClient.Uri;
         }
 
-        public async Task<AttachmentInfoModel> GetImageAsync(string fileName)
+        public async Task<AttachmentDownloadModel> GetImageAsync(string fileName)
         {
             if (_containerClient == null)
             {
@@ -80,12 +80,14 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new FileNotFoundException("Image not found");
             }
             var response = await blobClient.DownloadAsync();
-            return new AttachmentInfoModel()
+
+            return new AttachmentDownloadModel()
             {
                 Stream = response.Value.Content,
                 ContentType = response.Value.ContentType,
             };
         }
+
 
         public async Task<bool> DeleteBlob(string fileName)
         {
@@ -98,6 +100,21 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var result = await blobClient.DeleteIfExistsAsync();
             _logger.LogInformation($"Remove result: {result.Value}");
             return result.Value;
+        }
+
+        public async Task<AttachmentInfoModel> GetBlobInfo(string fileName)
+        {
+            if (_containerClient == null)
+            {
+                throw new InvalidOperationException("Client not initialized");
+            }
+            var blobClient = _containerClient.GetBlobClient(fileName);
+            var properties = await blobClient.GetPropertiesAsync();
+            return new AttachmentInfoModel()
+            {
+                ContentType = properties.Value.ContentType,
+                SizeInBytes = properties.Value.ContentLength
+            };
         }
     }
 }

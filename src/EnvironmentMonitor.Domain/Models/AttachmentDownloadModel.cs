@@ -6,9 +6,15 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Models
 {
-    public class AttachmentInfoModel
+
+    public class AttachmentDownloadModel : AttachmentInfoModel
     {
         public required Stream Stream { get; set; }
+    }
+
+    public class AttachmentInfoModel
+    {
         public required string ContentType { get; set; }
+        public long SizeInBytes { get; set; }
     }
 }

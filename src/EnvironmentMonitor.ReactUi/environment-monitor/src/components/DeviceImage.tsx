@@ -21,6 +21,7 @@ import { useSwipeable } from "react-swipeable";
 import { useDropzone } from "react-dropzone";
 import { DeviceImageDialog } from "./DeviceImageDialog";
 import { dateTimeSort, getFormattedDate } from "../utilities/datetimeUtils";
+import { formatBytes } from "../utilities/stringUtils";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -171,7 +172,8 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 <CircularProgress />
               </Box>
             )}
-            <img
+            <Box
+              component={"img"}
               src={getCurrentAttachmentUrl()}
               alt="Device"
               style={{
@@ -184,12 +186,19 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 filter: isLoadingImage ? "blur(10px)" : "none",
                 transition: "filter 0.3s ease-in-out",
               }}
+              sx={{ order: { xs: 2, sm: 1 } }}
               onLoad={() => setIsLoadingImage(false)}
               onError={() => {
                 setIsLoadingImage(false);
               }}
             />
-            <Box sx={{ display: "flex", flexDirection: "row" }}>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                order: { xs: 1, sm: 2 },
+              }}
+            >
               <Typography variant="body2" fontWeight="bold" mr={1}>
                 Added:
               </Typography>
@@ -198,10 +207,28 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                   ? getFormattedDate(activeAttachment?.created)
                   : "-"}
               </Typography>
-              <Typography variant="body2" fontWeight="bold" ml={1} mr={1}>
+              <Typography
+                variant="body2"
+                fontWeight="bold"
+                sx={{ ml: { xs: 0, sm: 1 } }}
+                mr={1}
+              >
                 Name:
               </Typography>
               <Typography variant="body2">{activeAttachment?.name}</Typography>
+              <Typography
+                variant="body2"
+                fontWeight="bold"
+                sx={{ ml: { xs: 0, sm: 1 } }}
+                mr={1}
+              >
+                Size:
+              </Typography>
+              <Typography variant="body2">
+                {activeAttachment && activeAttachment.sizeInBytes
+                  ? formatBytes(activeAttachment.sizeInBytes)
+                  : ""}
+              </Typography>
             </Box>
             <Box
               sx={{
@@ -209,6 +236,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
+                order: 3,
               }}
             >
               <IconButton

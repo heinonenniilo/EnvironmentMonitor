@@ -8,6 +8,11 @@ namespace EnvironmentMonitor.Domain.Models
 {
     public class FileUploadSettings
     {
-        public int MaxImageUploadSizeMb { get; set; } = 3;
-    } 
+        public uint MaxImageUploadSizeMb { get; set; } = 6;
+        public uint MaxImageSaveSizeMb { get; set; } = 3;
+        public uint ImageSaveQuality { get; set; } = 100;
+
+        public uint ImageMinWidht { get; set; } = 300;
+        public uint ImageMinHeight { get; set; } = 300;
+    }
 }

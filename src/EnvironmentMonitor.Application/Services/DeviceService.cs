@@ -24,9 +24,10 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IStorageClient _storageClient;
         private readonly IMapper _mapper;
         private readonly IDateService _dateService;
+        private readonly IImageService _imageService;
 
         public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService)
+            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService, IImageService imageService)
         {
             _messageService = messageService;
             _logger = logger;
@@ -35,6 +36,7 @@ namespace EnvironmentMonitor.Application.Services
             _mapper = mapper;
             _storageClient = storageClient;
             _dateService = dateService;
+            _imageService = imageService;
         }
         public async Task Reboot(string deviceIdentifier)
         {
@@ -160,7 +162,22 @@ namespace EnvironmentMonitor.Application.Services
             {
                 infos = await _deviceRepository.GetDeviceInfo(_userService.IsAdmin ? null : _userService.GetDevices(), onlyVisible, getAttachments);
             }
-            return _mapper.Map<List<DeviceInfoDto>>(infos);
+
+            var listToReturn = _mapper.Map<List<DeviceInfoDto>>(infos);
+            foreach (var info in listToReturn)
+            {
+                foreach (var attachment in info.Attachments)
+                {
+                    var matchingAttachment = infos.FirstOrDefault(x => x.Device.Id == info.Device.Id)?.Device.Attachments.FirstOrDefault(a => a.Guid == attachment.Guid)?.Attachment;
+                    if (matchingAttachment != null)
+                    {
+                        var blobInfo = await _storageClient.GetBlobInfo(matchingAttachment.Name);
+                        attachment.SizeInBytes = blobInfo.SizeInBytes;
+                    }
+
+                }
+            }
+            return listToReturn;
         }
 
         public async Task<List<DeviceEventDto>> GetDeviceEvents(string identifier)
@@ -173,14 +190,13 @@ namespace EnvironmentMonitor.Application.Services
         public async Task AddAttachment(string deviceIdentifier, UploadAttachmentModel fileModel)
         {
             var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
-
             var extension = Path.GetExtension(fileModel.FileName);
             var fileNameToSave = $"{deviceIdentifier}_{Guid.NewGuid()}{extension}";
             var res = await _storageClient.Upload(new UploadAttachmentModel()
             {
                 FileName = fileNameToSave,
                 ContentType = fileModel.ContentType,
-                Stream = fileModel.Stream,
+                Stream = await _imageService.CompressToSize(fileModel.Stream),
             });
 
             await _deviceRepository.AddAttachment(device.Id, new Attachment()
@@ -205,14 +221,14 @@ namespace EnvironmentMonitor.Application.Services
             await _storageClient.DeleteBlob(attachment.Name);
         }
 
-        public async Task<AttachmentInfoModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier)
+        public async Task<AttachmentDownloadModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier)
         {
             _logger.LogInformation($"Trying to get attachment with identifier '{attachmentIdentifier}' for device: '{deviceIdentifier}'");
             var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
             var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
             return await _storageClient.GetImageAsync(attachment.Name);
         }
-        public async Task<AttachmentInfoModel?> GetDefaultImage(string deviceIdentifier)
+        public async Task<AttachmentDownloadModel?> GetDefaultImage(string deviceIdentifier)
         {
             var device = await GetDevice(deviceIdentifier, AccessLevels.Read);
             var deviceInfo = (await _deviceRepository.GetDeviceInfo([device.Id], false, true)).FirstOrDefault();

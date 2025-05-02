@@ -61,6 +61,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddSingleton<IDateService, DateService>();
             services.AddSingleton<IHubMessageService, HubMessageService>();
             services.AddSingleton<IStorageClient, StorageClient>();
+            services.AddSingleton<IImageService, ImageService>();
             return services;
         }
     }

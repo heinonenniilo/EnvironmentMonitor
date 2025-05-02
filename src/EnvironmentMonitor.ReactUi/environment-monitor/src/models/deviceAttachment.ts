@@ -3,4 +3,5 @@ export interface DeviceAttachment {
   isImage: boolean;
   created: Date;
   name: string;
+  sizeInBytes: number;
 }
