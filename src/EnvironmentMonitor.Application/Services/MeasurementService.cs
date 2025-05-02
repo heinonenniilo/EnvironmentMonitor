@@ -96,7 +96,7 @@ namespace EnvironmentMonitor.Application.Services
                     await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
                 }
 
-                if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < 10)
+                if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
                 {
                     await _deviceRepository.SetStatus(new SetDeviceStatusModel() { DeviceId = device.Id, Status = true, TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value), Message = $"Measurement count: {measurementsToAdd.Count}" }, false);
                 }
