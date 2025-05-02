@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EnvironmentMonitor.Domain;
 
 namespace EnvironmentMonitor.Application.Services
 {
@@ -245,6 +246,16 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Setting default image for device '{deviceIdentifier}'");
             var device = await GetDevice(deviceIdentifier, AccessLevels.Write);
             await _deviceRepository.SetDefaultImage(device.Id, attachmentGuid);
+        }
+
+        public async Task SetStatus(SetDeviceStatusModel model)
+        {
+            _logger.LogInformation($"Trying to set status for device: {model.DeviceId}. Status: {model.Status}");
+            if (!_userService.HasAccessToDevice(model.DeviceId, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            await _deviceRepository.SetStatus(model, true);
         }
     }
 }

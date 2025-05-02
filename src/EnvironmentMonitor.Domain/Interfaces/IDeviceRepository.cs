@@ -33,6 +33,8 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges);
         public Task DeleteAttachment(int deviceId, Guid attachmentIdentifier, bool saveChanges);
         public Task SetDefaultImage(int deviceId, Guid attachmentIdentifier);
+
+        public Task SetStatus(SetDeviceStatusModel status, bool saveChanges);
         public Task SaveChanges();
     }
 }

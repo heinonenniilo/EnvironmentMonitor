@@ -21,5 +21,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public int LocationId { get; set; }
         public IList<LocationSensor> LocationSensors { get; set; } = [];
         public IList<DeviceAttachment> Attachments { get; set; } = [];
+        public IList<DeviceStatus> StatusChanges { get; set; } = [];
     }
 }
