@@ -35,6 +35,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<DeviceAttachment> DeviceAttachments { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
         public DbSet<DeviceStatus> DeviceStatusChanges { get; set; }
+        public DbSet<DeviceMessage> DeviceMessages { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeasurementDbContext).Assembly, type =>

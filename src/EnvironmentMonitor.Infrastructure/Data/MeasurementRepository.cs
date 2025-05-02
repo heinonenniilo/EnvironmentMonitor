@@ -73,13 +73,36 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return await query.ToListAsync();
         }
 
-        public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true)
+        public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, int? deviceId = null)
         {
-            await _context.Measurements.AddRangeAsync(measurements);
+            var timeStamp = measurements.FirstOrDefault()?.Timestamp ?? _dateService.CurrentTime();
+            DeviceMessage? deviceMessage = null;
+            if (deviceId != null)
+            {
+                deviceMessage = new DeviceMessage()
+                {
+                    TimeStamp = timeStamp,
+                    TimeStampUtc = _dateService.LocalToUtc(timeStamp),
+                    DeviceId = deviceId.Value
+                };
+                await _context.DeviceMessages.AddAsync(deviceMessage);
+            }
+            await _context.Measurements.AddRangeAsync(measurements.Select(m =>
+            {
+                m.DeviceMessage = deviceMessage;
+                return m;
+            }));
             if (saveChanges)
             {
                 _logger.LogInformation("Saving changes (AddMeasurements)");
-                await _context.SaveChangesAsync();
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to save");
+                }
             }
             return measurements;
         }

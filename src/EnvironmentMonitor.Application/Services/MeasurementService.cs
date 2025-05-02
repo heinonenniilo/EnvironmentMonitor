@@ -101,7 +101,7 @@ namespace EnvironmentMonitor.Application.Services
                     await _deviceRepository.SetStatus(new SetDeviceStatusModel() { DeviceId = device.Id, Status = true, TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value), Message = $"Measurement count: {measurementsToAdd.Count}" }, false);
                 }
 
-                await _measurementRepository.AddMeasurements(measurementsToAdd);
+                await _measurementRepository.AddMeasurements(measurementsToAdd, true, device.Id);
                 _logger.LogInformation("Measurementsadded");
             }
             else
