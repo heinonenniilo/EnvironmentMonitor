@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EnvironmentMonitor.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,5 +14,6 @@ namespace EnvironmentMonitor.Domain.Models
         public string? Details { get; set; }
         public required int DeviceId { get; set; }
         public string? Message { get; set; }
+        public DeviceMessage? DeviceMessage { get; set; }
     }
 }

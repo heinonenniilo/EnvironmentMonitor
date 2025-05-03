@@ -28,6 +28,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 .Where(x =>
                 model.SensorIds.Contains(x.SensorId));
             if (model.LatestOnly == true)
+            if (model.LatestOnly == true)
             {
                 var grouped = await query.Where(
                     x => x.Timestamp > _dateService.CurrentTime().AddDays(-1 * ApplicationConstants.DeviceLastMessageFetchLimitIndays))
@@ -73,20 +74,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return await query.ToListAsync();
         }
 
-        public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, int? deviceId = null)
+        public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, DeviceMessage? deviceMessage = null)
         {
             var timeStamp = measurements.FirstOrDefault()?.Timestamp ?? _dateService.CurrentTime();
-            DeviceMessage? deviceMessage = null;
-            if (deviceId != null)
-            {
-                deviceMessage = new DeviceMessage()
-                {
-                    TimeStamp = timeStamp,
-                    TimeStampUtc = _dateService.LocalToUtc(timeStamp),
-                    DeviceId = deviceId.Value
-                };
-                await _context.DeviceMessages.AddAsync(deviceMessage);
-            }
+
             await _context.Measurements.AddRangeAsync(measurements.Select(m =>
             {
                 m.DeviceMessage = deviceMessage;

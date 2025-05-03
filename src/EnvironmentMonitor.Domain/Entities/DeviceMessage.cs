@@ -15,5 +15,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public DateTime TimeStampUtc { get; set; } = DateTime.UtcNow;
         public IList<Measurement> Measurements { get; set; } = [];
         public IList<DeviceStatus> DeviceStatuses { get; set; } = [];
+        public long? SequenceNumber { get; set; }
     }
 }
