@@ -19,6 +19,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime CreatedAtUtc { get; set; }
         public DeviceMessage? DeviceMessage { get; set; }
-        public int? DeviceMessageId { get; set; }
+        public long? DeviceMessageId { get; set; }
     }
 }

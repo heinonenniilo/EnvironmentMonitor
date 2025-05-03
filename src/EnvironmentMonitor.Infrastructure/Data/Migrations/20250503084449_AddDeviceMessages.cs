@@ -11,23 +11,23 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
+            migrationBuilder.AddColumn<long>(
                 name: "DeviceMessageId",
                 table: "Measurements",
-                type: "int",
+                type: "bigint",
                 nullable: true);
 
-            migrationBuilder.AddColumn<int>(
+            migrationBuilder.AddColumn<long>(
                 name: "DeviceMessageId",
                 table: "DeviceStatusChanges",
-                type: "int",
+                type: "bigint",
                 nullable: true);
 
             migrationBuilder.CreateTable(
                 name: "DeviceMessages",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     DeviceId = table.Column<int>(type: "int", nullable: false),
                     TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false),

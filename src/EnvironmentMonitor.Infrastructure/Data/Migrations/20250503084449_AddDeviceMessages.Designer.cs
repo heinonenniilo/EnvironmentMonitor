@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    [Migration("20250503081745_AddDeviceMessages")]
+    [Migration("20250503084449_AddDeviceMessages")]
     partial class AddDeviceMessages
     {
         /// <inheritdoc />
@@ -246,11 +246,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceMessage", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<int>("DeviceId")
                         .HasColumnType("int");
@@ -282,8 +282,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Property<int>("DeviceId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("DeviceMessageId")
-                        .HasColumnType("int");
+                    b.Property<long?>("DeviceMessageId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Message")
                         .HasMaxLength(256)
@@ -409,8 +409,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int?>("DeviceMessageId")
-                        .HasColumnType("int");
+                    b.Property<long?>("DeviceMessageId")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("SensorId")
                         .HasColumnType("int");

@@ -8,7 +8,7 @@ namespace EnvironmentMonitor.Domain.Entities
 {
     public class DeviceMessage
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public int DeviceId { get; set; }
         public Device Device { get; set; }
         public required DateTime TimeStamp { get; set; }

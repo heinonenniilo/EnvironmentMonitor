@@ -17,6 +17,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public string? Message { get; set; }
 
         public DeviceMessage? DeviceMessage { get; set; }
-        public int? DeviceMessageId { get; set; }
+        public long? DeviceMessageId { get; set; }
     }
 }
