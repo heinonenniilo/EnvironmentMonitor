@@ -76,8 +76,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, DeviceMessage? deviceMessage = null)
         {
-            var timeStamp = measurements.FirstOrDefault()?.Timestamp ?? _dateService.CurrentTime();
-
             await _context.Measurements.AddRangeAsync(measurements.Select(m =>
             {
                 m.DeviceMessage = deviceMessage;
