@@ -68,7 +68,6 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     item.TimestampUtc = message.EnqueuedTime.UtcDateTime;
                 }
                 objectToInsert.EnqueuedUtc = message.EnqueuedTime.UtcDateTime;
-                objectToInsert.SequenceNumber = message.SequenceNumber;
                 try
                 {
                     await _measurementService.AddMeasurements(objectToInsert);

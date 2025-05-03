@@ -241,42 +241,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceMessage", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CreatedUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("DeviceId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("FirstMessage")
-                        .HasColumnType("bit");
-
-                    b.Property<long?>("SequenceNumber")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("TimeStamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("TimeStampUtc")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DeviceId");
-
-                    b.ToTable("DeviceMessages");
-                });
-
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceStatus", b =>
                 {
                     b.Property<int>("Id")
@@ -287,9 +251,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.Property<int>("DeviceId")
                         .HasColumnType("int");
-
-                    b.Property<long?>("DeviceMessageId")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("Message")
                         .HasMaxLength(256)
@@ -307,8 +268,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DeviceId");
-
-                    b.HasIndex("DeviceMessageId");
 
                     b.HasIndex("TimeStamp", "DeviceId", "Status");
 
@@ -415,9 +374,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<long?>("DeviceMessageId")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("SensorId")
                         .HasColumnType("int");
 
@@ -434,8 +390,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasColumnType("float");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DeviceMessageId");
 
                     b.HasIndex("SensorId");
 
@@ -620,17 +574,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Navigation("Type");
                 });
 
-            modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceMessage", b =>
-                {
-                    b.HasOne("EnvironmentMonitor.Domain.Entities.Device", "Device")
-                        .WithMany("DeviceMessages")
-                        .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Device");
-                });
-
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceStatus", b =>
                 {
                     b.HasOne("EnvironmentMonitor.Domain.Entities.Device", "Device")
@@ -639,13 +582,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EnvironmentMonitor.Domain.Entities.DeviceMessage", "DeviceMessage")
-                        .WithMany("DeviceStatuses")
-                        .HasForeignKey("DeviceMessageId");
-
                     b.Navigation("Device");
-
-                    b.Navigation("DeviceMessage");
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.LocationSensor", b =>
@@ -685,10 +622,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Measurement", b =>
                 {
-                    b.HasOne("EnvironmentMonitor.Domain.Entities.DeviceMessage", "DeviceMessage")
-                        .WithMany("Measurements")
-                        .HasForeignKey("DeviceMessageId");
-
                     b.HasOne("EnvironmentMonitor.Domain.Entities.Sensor", "Sensor")
                         .WithMany("Measurements")
                         .HasForeignKey("SensorId")
@@ -700,8 +633,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasForeignKey("TypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("DeviceMessage");
 
                     b.Navigation("Sensor");
 
@@ -734,8 +665,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                 {
                     b.Navigation("Attachments");
 
-                    b.Navigation("DeviceMessages");
-
                     b.Navigation("Events");
 
                     b.Navigation("LocationSensors");
@@ -748,13 +677,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceEventType", b =>
                 {
                     b.Navigation("Events");
-                });
-
-            modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceMessage", b =>
-                {
-                    b.Navigation("DeviceStatuses");
-
-                    b.Navigation("Measurements");
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceType", b =>

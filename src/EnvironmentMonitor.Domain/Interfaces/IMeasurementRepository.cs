@@ -13,7 +13,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
     {
         Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model);
         public Task<MeasurementType?> GetMeasurementType(int id);
-        Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, DeviceMessage? deviceMessage = null);
+        Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true);
 
         public Task<IEnumerable<Measurement>> Get(
             Expression<Func<Measurement, bool>> filter = null,

@@ -264,7 +264,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             else
             {
                 statusToSet = latestMessage != null && ((model.TimeStamp ?? _dateService.CurrentTime()) - latestMessage.Timestamp).TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes;
-            }
+            }           
             var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
             if (latestStatus == null || (latestStatus.Status != statusToSet && timeStamp > latestStatus.TimeStamp))
             {
@@ -276,8 +276,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     Status = statusToSet,
                     TimeStamp = timeStamp,
                     TimeStampUtc = _dateService.LocalToUtc(timeStamp),
-                    Message = model.Message,
-                    DeviceMessage = model.DeviceMessage,
+                    Message = model.Message
                 });
             }
             if (saveChanges)

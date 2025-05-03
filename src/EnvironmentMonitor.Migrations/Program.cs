@@ -33,7 +33,6 @@ static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider)
 
             if (Console.ReadLine()?.ToLower() == "y")
             {
-                measureDbContext.Database.SetCommandTimeout(180);
                 Console.WriteLine("Migrating measurements db context");
                 await measureDbContext.Database.MigrateAsync();
                 Console.WriteLine("Migrating ApplicationDbContex");

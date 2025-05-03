@@ -15,8 +15,5 @@ namespace EnvironmentMonitor.Domain.Entities
         public required DateTime TimeStamp { get; set; }
         public DateTime TimeStampUtc { get; set; } = DateTime.UtcNow;
         public string? Message { get; set; }
-
-        public DeviceMessage? DeviceMessage { get; set; }
-        public long? DeviceMessageId { get; set; }
     }
 }

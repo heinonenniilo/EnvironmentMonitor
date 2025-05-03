@@ -28,7 +28,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 .Where(x =>
                 model.SensorIds.Contains(x.SensorId));
             if (model.LatestOnly == true)
-            if (model.LatestOnly == true)
             {
                 var grouped = await query.Where(
                     x => x.Timestamp > _dateService.CurrentTime().AddDays(-1 * ApplicationConstants.DeviceLastMessageFetchLimitIndays))
@@ -74,24 +73,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return await query.ToListAsync();
         }
 
-        public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, DeviceMessage? deviceMessage = null)
+        public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true)
         {
-            await _context.Measurements.AddRangeAsync(measurements.Select(m =>
-            {
-                m.DeviceMessage = deviceMessage;
-                return m;
-            }));
+            await _context.Measurements.AddRangeAsync(measurements);
             if (saveChanges)
             {
                 _logger.LogInformation("Saving changes (AddMeasurements)");
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to save");
-                }
+                await _context.SaveChangesAsync();
             }
             return measurements;
         }
