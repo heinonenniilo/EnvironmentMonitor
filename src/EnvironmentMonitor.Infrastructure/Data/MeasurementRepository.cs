@@ -28,7 +28,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 .Where(x =>
                 model.SensorIds.Contains(x.SensorId));
             if (model.LatestOnly == true)
-            if (model.LatestOnly == true)
             {
                 var grouped = await query.Where(
                     x => x.Timestamp > _dateService.CurrentTime().AddDays(-1 * ApplicationConstants.DeviceLastMessageFetchLimitIndays))
