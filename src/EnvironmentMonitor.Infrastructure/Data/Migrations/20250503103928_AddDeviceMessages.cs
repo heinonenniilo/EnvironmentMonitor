@@ -33,7 +33,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false),
                     TimeStampUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
                     SequenceNumber = table.Column<long>(type: "bigint", nullable: true),
-                    FirstMessage = table.Column<bool>(type: "bit", nullable: false)
+                    FirstMessage = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Created = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {

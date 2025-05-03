@@ -249,6 +249,12 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("DeviceId")
                         .HasColumnType("int");
 

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    [Migration("20250503102518_AddDeviceMessages")]
+    [Migration("20250503103928_AddDeviceMessages")]
     partial class AddDeviceMessages
     {
         /// <inheritdoc />
@@ -251,6 +251,12 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasColumnType("bigint");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedUtc")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("DeviceId")
                         .HasColumnType("int");

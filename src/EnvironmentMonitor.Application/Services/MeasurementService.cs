@@ -103,7 +103,8 @@ namespace EnvironmentMonitor.Application.Services
                     TimeStampUtc = measurement.EnqueuedUtc.Value,
                     DeviceId = device.Id,
                     SequenceNumber = measurement.SequenceNumber,
-                    FirstMessage = measurement.FirstMessage
+                    FirstMessage = measurement.FirstMessage,
+                    Created = _dateService.CurrentTime(),
                 };
             }
             if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Entities
 {
-    public class DeviceMessage
+    public class DeviceMessage: TrackedEntity
     {
         public long Id { get; set; }
         public int DeviceId { get; set; }
