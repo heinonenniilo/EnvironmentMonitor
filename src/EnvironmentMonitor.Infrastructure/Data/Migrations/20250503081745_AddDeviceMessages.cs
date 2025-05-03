@@ -31,7 +31,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     DeviceId = table.Column<int>(type: "int", nullable: false),
                     TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TimeStampUtc = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    TimeStampUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SequenceNumber = table.Column<long>(type: "bigint", nullable: true)
                 },
                 constraints: table =>
                 {

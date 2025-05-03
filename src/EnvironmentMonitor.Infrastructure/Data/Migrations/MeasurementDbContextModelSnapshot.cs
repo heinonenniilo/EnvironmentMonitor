@@ -252,6 +252,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Property<int>("DeviceId")
                         .HasColumnType("int");
 
+                    b.Property<long?>("SequenceNumber")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime>("TimeStamp")
                         .HasColumnType("datetime2");
 
