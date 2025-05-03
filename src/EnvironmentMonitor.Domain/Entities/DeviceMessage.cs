@@ -6,17 +6,16 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Entities
 {
-    public class DeviceStatus
+    public class DeviceMessage: TrackedEntity
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public int DeviceId { get; set; }
         public Device Device { get; set; }
-        public required bool Status { get; set; }
         public required DateTime TimeStamp { get; set; }
         public DateTime TimeStampUtc { get; set; } = DateTime.UtcNow;
-        public string? Message { get; set; }
-
-        public DeviceMessage? DeviceMessage { get; set; }
-        public long? DeviceMessageId { get; set; }
+        public IList<Measurement> Measurements { get; set; } = [];
+        public IList<DeviceStatus> DeviceStatuses { get; set; } = [];
+        public long? SequenceNumber { get; set; }
+        public bool FirstMessage { get; set; }
     }
 }

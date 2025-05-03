@@ -12,5 +12,6 @@ namespace EnvironmentMonitor.Application.DTOs
         public List<MeasurementDto> Measurements { get; set; } = new List<MeasurementDto>();
         public bool FirstMessage { get; set; }
         public DateTime? EnqueuedUtc { get; set; }
+        public long? SequenceNumber { get; set; }
     }
 }

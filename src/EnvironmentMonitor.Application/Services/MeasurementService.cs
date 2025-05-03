@@ -88,26 +88,38 @@ namespace EnvironmentMonitor.Application.Services
                     TypeId = row.TypeId
                 });
             }
-            if (measurementsToAdd.Any())
-            {
-                _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device ({device.Id}): '{device.Name}'");
-                if (measurement.FirstMessage)
-                {
-                    await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
-                }
 
-                if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
-                {
-                    await _deviceRepository.SetStatus(new SetDeviceStatusModel() { DeviceId = device.Id, Status = true, TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value), Message = $"Measurement count: {measurementsToAdd.Count}" }, false);
-                }
-
-                await _measurementRepository.AddMeasurements(measurementsToAdd);
-                _logger.LogInformation("Measurementsadded");
-            }
-            else
+            _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device ({device.Id}): '{device.Name}'");
+            if (measurement.FirstMessage)
             {
-                _logger.LogWarning("No measurements to add");
+                await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
             }
+            DeviceMessage? deviceMessage = null;
+            if (measurement.EnqueuedUtc != null)
+            {
+                deviceMessage = new DeviceMessage()
+                {
+                    TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
+                    TimeStampUtc = measurement.EnqueuedUtc.Value,
+                    DeviceId = device.Id,
+                    SequenceNumber = measurement.SequenceNumber,
+                    FirstMessage = measurement.FirstMessage,
+                    Created = _dateService.CurrentTime(),
+                };
+            }
+            if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
+            {
+                await _deviceRepository.SetStatus(new SetDeviceStatusModel()
+                {
+                    DeviceId = device.Id,
+                    Status = true,
+                    TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
+                    Message = $"Measurement count: {measurementsToAdd.Count}",
+                    DeviceMessage = deviceMessage
+                }, false);
+            }
+            await _measurementRepository.AddMeasurements(measurementsToAdd, true, deviceMessage);
+            _logger.LogInformation("Measurementsadded");
         }
 
         public async Task<MeasurementsModel> GetMeasurements(GetMeasurementsModel model)
