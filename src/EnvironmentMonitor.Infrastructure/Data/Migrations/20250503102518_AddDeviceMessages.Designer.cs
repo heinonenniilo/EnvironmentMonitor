@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    [Migration("20250503084449_AddDeviceMessages")]
+    [Migration("20250503102518_AddDeviceMessages")]
     partial class AddDeviceMessages
     {
         /// <inheritdoc />
@@ -254,6 +254,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.Property<int>("DeviceId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("FirstMessage")
+                        .HasColumnType("bit");
 
                     b.Property<long?>("SequenceNumber")
                         .HasColumnType("bigint");

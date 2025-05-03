@@ -32,7 +32,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     DeviceId = table.Column<int>(type: "int", nullable: false),
                     TimeStamp = table.Column<DateTime>(type: "datetime2", nullable: false),
                     TimeStampUtc = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    SequenceNumber = table.Column<long>(type: "bigint", nullable: true)
+                    SequenceNumber = table.Column<long>(type: "bigint", nullable: true),
+                    FirstMessage = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {

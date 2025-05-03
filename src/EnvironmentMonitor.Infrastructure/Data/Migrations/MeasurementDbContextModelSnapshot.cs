@@ -252,6 +252,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Property<int>("DeviceId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("FirstMessage")
+                        .HasColumnType("bit");
+
                     b.Property<long?>("SequenceNumber")
                         .HasColumnType("bigint");
 

@@ -16,5 +16,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public IList<Measurement> Measurements { get; set; } = [];
         public IList<DeviceStatus> DeviceStatuses { get; set; } = [];
         public long? SequenceNumber { get; set; }
+        public bool FirstMessage { get; set; }
     }
 }
