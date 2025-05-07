@@ -172,8 +172,15 @@ namespace EnvironmentMonitor.Application.Services
                     var matchingAttachment = infos.FirstOrDefault(x => x.Device.Id == info.Device.Id)?.Device.Attachments.FirstOrDefault(a => a.Guid == attachment.Guid)?.Attachment;
                     if (matchingAttachment != null)
                     {
-                        var blobInfo = await _storageClient.GetBlobInfo(matchingAttachment.Name);
-                        attachment.SizeInBytes = blobInfo.SizeInBytes;
+                        try
+                        {
+                            var blobInfo = await _storageClient.GetBlobInfo(matchingAttachment.Name);
+                            attachment.SizeInBytes = blobInfo.SizeInBytes;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Failed to fetch blob info for attachment: '{matchingAttachment.Name }'");
+                        }
                     }
 
                 }

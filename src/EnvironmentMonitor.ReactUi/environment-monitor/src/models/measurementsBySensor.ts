@@ -1,4 +1,3 @@
-import { MeasurementTypes } from "../enums/measurementTypes";
 import { Measurement } from "./measurement";
 import { Sensor } from "./sensor";
 
@@ -9,10 +8,12 @@ export interface MeasurementsViewModel {
 export interface MeasurementsBySensor {
   sensorId: number;
   measurements: Measurement[];
-  minValues: Record<MeasurementTypes, Measurement>;
-  maxValues: Record<MeasurementTypes, Measurement>;
-  latestValues: Record<MeasurementTypes, Measurement>;
+  minValues: { [key: number]: Measurement };
+  maxValues: { [key: number]: Measurement };
+  latestValues: { [key: number]: Measurement };
 }
+
+// const myDict: { [key: number]: Measurement } = {};
 
 export interface MeasurementsModel {
   measurements: Measurement[];
@@ -21,9 +22,9 @@ export interface MeasurementsModel {
 
 export interface MeasurementsInfo {
   sensorId: number;
-  minValues: Record<MeasurementTypes, Measurement>;
-  maxValues: Record<MeasurementTypes, Measurement>;
-  latestValues: Record<MeasurementTypes, Measurement>;
+  minValues: { [key: number]: Measurement };
+  maxValues: { [key: number]: Measurement };
+  latestValues: { [key: number]: Measurement };
 }
 
 export interface MeasurementsByLocation {

@@ -290,12 +290,30 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model)
         {
+            var listToReturn = new List<DeviceStatus>();
+            foreach (var deviceId in model.DeviceIds)
+            {
+                var latestStatus = await _context.DeviceStatusChanges.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.TimeStamp < model.From);
+                if (latestStatus != null)
+                {
+                    listToReturn.Add(latestStatus);
+                }
+            }
+
             var query = _context.DeviceStatusChanges.Where(
                 x => model.DeviceIds.Contains(x.DeviceId) &&
                 x.TimeStamp >= model.From && (model.To == null || x.TimeStamp < model.To)
             ).OrderBy(x => x.TimeStamp);
-            // TODO Get first value before range start for each device?
-            return await query.ToListAsync();
+
+            var statusList = await query.ToListAsync();
+            listToReturn.AddRange(statusList);
+
+            listToReturn.AddRange(model.DeviceIds.Select(x => new DeviceStatus()
+            {
+                TimeStamp = _dateService.CurrentTime(),
+                Status = statusList.OrderByDescending(x => x.TimeStamp).FirstOrDefault()?.Status ?? false
+            }));
+            return listToReturn;
         }
     }
 }

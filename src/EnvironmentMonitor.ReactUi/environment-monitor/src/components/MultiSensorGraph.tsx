@@ -54,6 +54,7 @@ export interface MultiSensorGraphProps {
   isLoading?: boolean;
   title?: string;
   useDynamicColors?: boolean;
+  stepped?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
 }
@@ -69,6 +70,7 @@ interface GraphDataset {
   measurementType: MeasurementTypes;
   borderColor?: string;
   backgroundColor?: string;
+  stepped?: boolean;
 }
 
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
@@ -84,6 +86,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   title,
   isLoading,
   useDynamicColors,
+  stepped,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
@@ -129,6 +132,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             label: getSensorLabel(measurementsBySensor.sensorId, val),
             yAxisID: yAxisId,
             measurementType: val,
+            stepped: stepped,
             data: measurementsBySensor.measurements
               .filter((d) => d.typeId === val)
               .map((d) => ({ x: d.timestamp, y: d.sensorValue })),
@@ -155,6 +159,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     model?.measurements.forEach((m) => {
       for (let item in MeasurementTypes) {
         let val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
+
         if (m.minValues[val] !== undefined) {
           returnArray.push({
             min: m.minValues[val],
