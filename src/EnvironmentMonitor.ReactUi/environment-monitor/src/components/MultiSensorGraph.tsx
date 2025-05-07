@@ -295,28 +295,33 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             typography: { fontSize: "14px" }, // Adjust font size
           }}
         />
-        {enableZoom && (
-          <Button
-            variant="outlined"
-            onClick={() => {
-              handleResetZoom();
+        {enableZoom || onRefresh !== undefined ? (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              marginLeft: "auto",
+              gap: 1,
             }}
-            size="small"
-            sx={{ marginLeft: "auto" }}
           >
-            Reset zoom
-          </Button>
-        )}
-        {onRefresh && (
-          <Button
-            variant="outlined"
-            onClick={onRefresh}
-            size="small"
-            sx={{ marginLeft: "auto" }}
-          >
-            Refresh
-          </Button>
-        )}
+            {enableZoom && (
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  handleResetZoom();
+                }}
+                size="small"
+              >
+                Reset zoom
+              </Button>
+            )}
+            {onRefresh && (
+              <Button variant="outlined" onClick={onRefresh} size="small">
+                Refresh
+              </Button>
+            )}
+          </Box>
+        ) : null}
       </Box>
       <Box
         flex={1}

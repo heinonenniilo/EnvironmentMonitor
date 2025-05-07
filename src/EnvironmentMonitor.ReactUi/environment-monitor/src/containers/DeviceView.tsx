@@ -449,7 +449,7 @@ export const DeviceView: React.FC = () => {
         </Collapsible>
         <Collapsible title="Online status">
           <MultiSensorGraph
-            title="Online status"
+            title="Last 7 days"
             sensors={
               selectedDevice
                 ? [
