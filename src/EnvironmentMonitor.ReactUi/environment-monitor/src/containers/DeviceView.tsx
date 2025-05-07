@@ -447,7 +447,7 @@ export const DeviceView: React.FC = () => {
             isLoading={isLoadingMeasurements}
           />
         </Collapsible>
-        <Collapsible title="Status">
+        <Collapsible title="Online status">
           <MultiSensorGraph
             title="Online status"
             sensors={
@@ -464,7 +464,8 @@ export const DeviceView: React.FC = () => {
                   ]
                 : []
             }
-            stepped={true}
+            stepped
+            enableZoom
             minHeight={400}
             isLoading={isLoadingDeviceStatus}
             model={

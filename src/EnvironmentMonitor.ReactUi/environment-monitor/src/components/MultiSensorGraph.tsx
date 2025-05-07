@@ -29,9 +29,10 @@ import {
 } from "./MeasurementsInfoTable";
 import { Link } from "react-router";
 import { routes } from "../utilities/routes";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { stringSort } from "../utilities/stringUtils";
 import { getColor } from "../utilities/graphUtils";
+import zoomPlugin from "chartjs-plugin-zoom";
 
 Chart.register(
   TimeScale,
@@ -40,7 +41,8 @@ Chart.register(
   LineElement,
   Tooltip,
   Legend,
-  Colors
+  Colors,
+  zoomPlugin
 );
 
 export interface MultiSensorGraphProps {
@@ -55,6 +57,7 @@ export interface MultiSensorGraphProps {
   title?: string;
   useDynamicColors?: boolean;
   stepped?: boolean;
+  enableZoom?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
 }
@@ -87,11 +90,13 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   isLoading,
   useDynamicColors,
   stepped,
+  enableZoom,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
   const [autoScale, setAutoScale] = useState(false);
   const [hiddenDatasetIds, setHiddenDatasetIds] = useState<number[]>([]);
+  const chartRef = useRef<any>(null); // Types?
 
   useEffect(() => {
     if (useAutoScale !== undefined) {
@@ -115,6 +120,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     },
     [sensors, devices]
   );
+
+  const handleResetZoom = () => {
+    chartRef.current?.resetZoom();
+  };
 
   const memoSets: GraphDataset[] = useMemo(() => {
     if (!model) return [];
@@ -286,6 +295,18 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             typography: { fontSize: "14px" }, // Adjust font size
           }}
         />
+        {enableZoom && (
+          <Button
+            variant="outlined"
+            onClick={() => {
+              handleResetZoom();
+            }}
+            size="small"
+            sx={{ marginLeft: "auto" }}
+          >
+            Reset zoom
+          </Button>
+        )}
         {onRefresh && (
           <Button
             variant="outlined"
@@ -320,6 +341,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           <Line
             data={{ datasets: memoSets }}
             height={"auto"}
+            ref={chartRef}
             options={{
               maintainAspectRatio: false,
               plugins: {
@@ -363,6 +385,19 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                     (event.native?.target as any).style.cursor = "default";
                   },
                 },
+                zoom: enableZoom
+                  ? {
+                      zoom: {
+                        drag: {
+                          enabled: true,
+                          borderColor: "rgba(54,162,235,0.5)",
+                          borderWidth: 1,
+                          backgroundColor: "rgba(54,162,235,0.15)",
+                        },
+                        mode: "x",
+                      },
+                    }
+                  : undefined,
               },
               elements: {
                 point: {
