@@ -257,5 +257,20 @@ namespace EnvironmentMonitor.Application.Services
             }
             await _deviceRepository.SetStatus(model, true);
         }
+
+        public async Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model)
+        {
+            if (!_userService.HasAccessToDevices(model.DeviceIds, AccessLevels.Read))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var returnList = await _deviceRepository.GetDevicesStatus(model);
+            return new DeviceStatusModel()
+            {
+                DeviceStatuses = _mapper.Map<List<DeviceStatusDto>>(returnList),
+
+            };
+        }
     }
 }

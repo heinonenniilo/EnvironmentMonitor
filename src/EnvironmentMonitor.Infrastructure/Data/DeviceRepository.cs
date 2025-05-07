@@ -4,6 +4,7 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Entities;
 using Microsoft.Azure.Devices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Device = EnvironmentMonitor.Domain.Entities.Device;
+using DeviceStatus = EnvironmentMonitor.Domain.Entities.DeviceStatus;
 
 namespace EnvironmentMonitor.Infrastructure.Data
 {
@@ -284,6 +286,16 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model)
+        {
+            var query = _context.DeviceStatusChanges.Where(
+                x => model.DeviceIds.Contains(x.DeviceId) &&
+                x.TimeStamp >= model.From && (model.To == null || x.TimeStamp < model.To)
+            ).OrderBy(x => x.TimeStamp);
+            // TODO Get first value before range start for each device?
+            return await query.ToListAsync();
         }
     }
 }
