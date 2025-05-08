@@ -465,7 +465,9 @@ export const DeviceView: React.FC = () => {
                 : []
             }
             stepped
-            enableZoom
+            zoomable
+            hideInfo
+            hideUseAutoScale
             minHeight={400}
             isLoading={isLoadingDeviceStatus}
             model={
@@ -482,7 +484,7 @@ export const DeviceView: React.FC = () => {
                               return {
                                 sensorId: selectedDevice.device.id,
                                 sensorValue: d.status,
-                                typeId: MeasurementTypes.Motion,
+                                typeId: MeasurementTypes.Undefined,
                                 timestamp: d.timestamp,
                               };
                             })

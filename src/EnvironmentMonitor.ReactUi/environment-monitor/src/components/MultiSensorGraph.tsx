@@ -57,7 +57,8 @@ export interface MultiSensorGraphProps {
   title?: string;
   useDynamicColors?: boolean;
   stepped?: boolean;
-  enableZoom?: boolean;
+  zoomable?: boolean;
+  hideUseAutoScale?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
 }
@@ -90,7 +91,8 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   isLoading,
   useDynamicColors,
   stepped,
-  enableZoom,
+  zoomable,
+  hideUseAutoScale,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
@@ -276,26 +278,28 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             {getTitle()}
           </Typography>
         )}
-        <FormControlLabel
-          sx={{ marginLeft: 2 }}
-          control={
-            <Checkbox
-              checked={autoScale}
-              onChange={(e, c) => {
-                setAutoScale(c);
-                if (onSetAutoScale) {
-                  onSetAutoScale(c);
-                }
-              }}
-              inputProps={{ "aria-label": "controlled checkbox" }}
-            />
-          }
-          label="Auto scale"
-          componentsProps={{
-            typography: { fontSize: "14px" }, // Adjust font size
-          }}
-        />
-        {enableZoom || onRefresh !== undefined ? (
+        {!hideUseAutoScale && (
+          <FormControlLabel
+            sx={{ marginLeft: 2 }}
+            control={
+              <Checkbox
+                checked={autoScale}
+                onChange={(e, c) => {
+                  setAutoScale(c);
+                  if (onSetAutoScale) {
+                    onSetAutoScale(c);
+                  }
+                }}
+                inputProps={{ "aria-label": "controlled checkbox" }}
+              />
+            }
+            label="Auto scale"
+            componentsProps={{
+              typography: { fontSize: "14px" }, // Adjust font size
+            }}
+          />
+        )}
+        {zoomable || onRefresh !== undefined ? (
           <Box
             sx={{
               display: "flex",
@@ -304,7 +308,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
               gap: 1,
             }}
           >
-            {enableZoom && (
+            {zoomable && (
               <Button
                 variant="outlined"
                 onClick={() => {
@@ -390,7 +394,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                     (event.native?.target as any).style.cursor = "default";
                   },
                 },
-                zoom: enableZoom
+                zoom: zoomable
                   ? {
                       zoom: {
                         drag: {
