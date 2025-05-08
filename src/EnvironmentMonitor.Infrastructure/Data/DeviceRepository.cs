@@ -4,18 +4,9 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
-using EnvironmentMonitor.Domain.Entities;
-using Microsoft.Azure.Devices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using Device = EnvironmentMonitor.Domain.Entities.Device;
 using DeviceStatus = EnvironmentMonitor.Domain.Entities.DeviceStatus;
 
@@ -127,7 +118,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var devices = query.Where(x => identifiers == null || identifiers.Contains(x.DeviceIdentifier));
             return await GetDeviceInfos(devices);
         }
-
 
         public async Task<List<DeviceEvent>> GetDeviceEvents(int id)
         {
@@ -293,10 +283,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var listToReturn = new List<DeviceStatus>();
             foreach (var deviceId in model.DeviceIds)
             {
-                var latestStatus = await _context.DeviceStatusChanges.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.TimeStamp < model.From);
-                if (latestStatus != null)
+                var latestStatusBeforeTimeRangeStart = await _context.DeviceStatusChanges.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.TimeStamp < model.From);
+                if (latestStatusBeforeTimeRangeStart != null)
                 {
-                    listToReturn.Add(latestStatus);
+                    listToReturn.Add(latestStatusBeforeTimeRangeStart);
                 }
             }
 
