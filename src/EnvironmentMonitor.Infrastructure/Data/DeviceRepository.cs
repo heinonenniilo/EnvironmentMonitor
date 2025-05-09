@@ -297,11 +297,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
             var statusList = await query.ToListAsync();
             listToReturn.AddRange(statusList);
-
             listToReturn.AddRange(model.DeviceIds.Select(x => new DeviceStatus()
             {
                 TimeStamp = _dateService.CurrentTime(),
-                Status = statusList.OrderByDescending(x => x.TimeStamp).FirstOrDefault()?.Status ?? false
+                Status = listToReturn.OrderByDescending(x => x.TimeStamp).FirstOrDefault()?.Status ?? false
             }));
             return listToReturn;
         }
