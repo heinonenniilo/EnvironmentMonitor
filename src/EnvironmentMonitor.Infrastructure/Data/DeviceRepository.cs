@@ -292,7 +292,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
             var query = _context.DeviceStatusChanges.Where(
                 x => model.DeviceIds.Contains(x.DeviceId) &&
-                x.TimeStamp >= model.From && (model.To == null || x.TimeStamp < model.To)
+                x.TimeStamp >= model.From && (model.To == null || x.TimeStamp <= model.To)
             ).OrderBy(x => x.TimeStamp);
 
             var statusList = await query.ToListAsync();
