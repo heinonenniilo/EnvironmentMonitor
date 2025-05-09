@@ -59,6 +59,7 @@ export interface MultiSensorGraphProps {
   stepped?: boolean;
   zoomable?: boolean;
   hideUseAutoScale?: boolean;
+  highlightPoints?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
 }
@@ -93,6 +94,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   stepped,
   zoomable,
   hideUseAutoScale,
+  highlightPoints,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
@@ -229,6 +231,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       .filter((d) => !hiddenDatasetIds.some((h) => h === d.id))
       .some((d) => d.measurementType === MeasurementTypes.Light);
     return hasLightAxis;
+  };
+
+  const isTouchDevice = () => {
+    return window.matchMedia("(hover: none)").matches;
   };
 
   return (
@@ -403,6 +409,12 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                           borderWidth: 1,
                           backgroundColor: "rgba(54,162,235,0.15)",
                         },
+                        pinch: { enabled: true },
+                        mode: "x",
+                        wheel: { enabled: true },
+                      },
+                      pan: {
+                        enabled: isTouchDevice(),
                         mode: "x",
                       },
                     }
@@ -410,7 +422,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
               },
               elements: {
                 point: {
-                  radius: 0,
+                  radius: highlightPoints ? 2 : 0,
                 },
               },
               responsive: true,

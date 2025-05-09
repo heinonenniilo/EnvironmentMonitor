@@ -468,6 +468,7 @@ export const DeviceView: React.FC = () => {
             zoomable
             hideInfo
             hideUseAutoScale
+            highlightPoints
             minHeight={400}
             isLoading={isLoadingDeviceStatus}
             model={
