@@ -300,7 +300,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
             listToReturn.AddRange(model.DeviceIds.Select(x => new DeviceStatus()
             {
                 TimeStamp = _dateService.CurrentTime(),
-                Status = listToReturn.OrderByDescending(x => x.TimeStamp).FirstOrDefault()?.Status ?? false
+                Status = listToReturn.Where(y => y.DeviceId == x).OrderByDescending(x => x.TimeStamp).FirstOrDefault()?.Status ?? false,
+                DeviceId = x
             }));
             return listToReturn;
         }
