@@ -1,6 +1,6 @@
 import "chartjs-adapter-moment";
 import { MeasurementTypes } from "../enums/measurementTypes";
-import { Sensor } from "../models/sensor";
+import { type Sensor } from "../models/sensor";
 import {
   Box,
   Button,
@@ -9,8 +9,8 @@ import {
   FormControlLabel,
   Typography,
 } from "@mui/material";
-import { MeasurementsViewModel } from "../models/measurementsBySensor";
-import { Device } from "../models/device";
+import { type MeasurementsViewModel } from "../models/measurementsBySensor";
+import { type Device } from "../models/device";
 import {
   Chart,
   Colors,
@@ -24,7 +24,7 @@ import {
 import { Line } from "react-chartjs-2";
 import { getDatasetLabel } from "../utilities/measurementUtils";
 import {
-  MeasurementInfo,
+  type MeasurementInfo,
   MeasurementsInfoTable,
 } from "./MeasurementsInfoTable";
 import { Link } from "react-router";

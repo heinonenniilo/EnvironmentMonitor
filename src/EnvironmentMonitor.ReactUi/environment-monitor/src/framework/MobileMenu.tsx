@@ -2,7 +2,6 @@ import { Box, IconButton, Menu, MenuItem } from "@mui/material";
 import React from "react";
 import { ArrowRight, Menu as MenuIcon } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { User } from "../models/user";
 import { routes } from "../utilities/routes";
 import { UserMenu } from "./UserMenu";
 import { AuthorizedComponent } from "../components/AuthorizedComponent";
@@ -12,6 +11,7 @@ import {
   toggleLeftMenuOpen,
 } from "../reducers/userInterfaceReducer";
 import { getLocations } from "../reducers/measurementReducer";
+import type { User } from "../models/user";
 
 export interface MobileMenuProps {
   onNavigate: (route: string) => void;

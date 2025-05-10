@@ -5,7 +5,6 @@ import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { CookiesProvider } from "react-cookie";
 import { MenuBar } from "./MenuBar";
-import { User } from "../models/user";
 import {
   getIsLoggedIn,
   getUserInfo,
@@ -28,6 +27,7 @@ import {
 } from "../reducers/userInterfaceReducer";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { NotificationsComponent } from "./NotificationsComponent";
+import type { User } from "../models/user";
 
 interface AppProps {
   children: React.ReactNode;
@@ -105,14 +105,17 @@ export const App: React.FC<AppProps> = (props) => {
   }, [isLoggedIn, dispath, inited]);
 
   useEffect(() => {
-    if (devices.length === 0) {
+    if (!devices || devices.length === 0) {
       dispath(setSensors([]));
     } else {
+      console.log(devices);
+      /*
       measurementApiHook
         .getSensors(devices.map((x) => x.deviceIdentifier))
         .then((res) => {
           dispath(setSensors(res));
         });
+        */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [devices, dispath]);

@@ -1,4 +1,4 @@
-import { DeviceEvent } from "../models/deviceEvent";
+import { type DeviceEvent } from "../models/deviceEvent";
 import {
   Box,
   Paper,

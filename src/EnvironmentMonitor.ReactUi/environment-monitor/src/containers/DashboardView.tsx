@@ -10,11 +10,11 @@ import {
 import { useApiHook } from "../hooks/apiHook";
 import { Box } from "@mui/material";
 import moment from "moment";
-import { MeasurementsViewModel } from "../models/measurementsBySensor";
+import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 import { DashboardDeviceGraph } from "../components/DashboardDeviceGraph";
-import { Sensor } from "../models/sensor";
-import { Device } from "../models/device";
+import { type Sensor } from "../models/sensor";
+import { type Device } from "../models/device";
 
 interface DeviceDashboardModel {
   model: MeasurementsViewModel | undefined;

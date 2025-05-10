@@ -1,5 +1,5 @@
 import { MeasurementTypes } from "../enums/measurementTypes";
-import { Measurement } from "../models/measurement";
+import type { Measurement } from "../models/measurement";
 import { getFormattedDate } from "./datetimeUtils";
 
 export const formatMeasurement = (

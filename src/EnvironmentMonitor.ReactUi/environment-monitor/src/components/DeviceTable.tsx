@@ -1,9 +1,9 @@
-import { DeviceInfo } from "../models/deviceInfo";
+import { type DeviceInfo } from "../models/deviceInfo";
 import { Box, Checkbox, IconButton, Tooltip, Typography } from "@mui/material";
 import { routes } from "../utilities/routes";
 import { Link } from "react-router";
 import { getFormattedDate } from "../utilities/datetimeUtils";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { CheckCircle, Photo, WarningAmber } from "@mui/icons-material";
 import { useState } from "react";
 import { DeviceImageDialog } from "./DeviceImageDialog";

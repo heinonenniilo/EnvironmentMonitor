@@ -9,8 +9,8 @@ import {
 import React, { useEffect, useState } from "react";
 import moment from "moment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
-import { Device } from "../models/device";
-import { Sensor } from "../models/sensor";
+import { type Device } from "../models/device";
+import { type Sensor } from "../models/sensor";
 import { stringSort } from "../utilities/stringUtils";
 
 export interface MeasurementsLeftViewProps {

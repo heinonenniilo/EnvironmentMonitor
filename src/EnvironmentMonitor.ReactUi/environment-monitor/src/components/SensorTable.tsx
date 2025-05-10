@@ -1,4 +1,4 @@
-import { Sensor } from "../models/sensor";
+import { type Sensor } from "../models/sensor";
 import {
   Box,
   Paper,

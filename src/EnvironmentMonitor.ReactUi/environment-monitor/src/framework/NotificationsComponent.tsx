@@ -1,4 +1,4 @@
-import { Alert, Snackbar, SnackbarCloseReason } from "@mui/material";
+import { Alert, Snackbar, type SnackbarCloseReason } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { removeNotification } from "../reducers/userInterfaceReducer";
 

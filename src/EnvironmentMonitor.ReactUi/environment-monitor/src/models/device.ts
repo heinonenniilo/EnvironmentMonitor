@@ -1,4 +1,4 @@
-import { Sensor } from "./sensor";
+import type { Sensor } from "./sensor";
 
 export interface Device {
   deviceIdentifier: string;

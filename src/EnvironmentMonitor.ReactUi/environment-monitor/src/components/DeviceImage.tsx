@@ -15,7 +15,7 @@ import {
   FileUpload,
   WidthFull,
 } from "@mui/icons-material";
-import { DeviceInfo } from "../models/deviceInfo";
+import { type DeviceInfo } from "../models/deviceInfo";
 import { Collapsible } from "./CollabsibleComponent";
 import { useSwipeable } from "react-swipeable";
 import { useDropzone } from "react-dropzone";
