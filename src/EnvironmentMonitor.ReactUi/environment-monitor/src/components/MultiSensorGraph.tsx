@@ -29,9 +29,10 @@ import {
 } from "./MeasurementsInfoTable";
 import { Link } from "react-router";
 import { routes } from "../utilities/routes";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { stringSort } from "../utilities/stringUtils";
 import { getColor } from "../utilities/graphUtils";
+import zoomPlugin from "chartjs-plugin-zoom";
 
 Chart.register(
   TimeScale,
@@ -40,7 +41,8 @@ Chart.register(
   LineElement,
   Tooltip,
   Legend,
-  Colors
+  Colors,
+  zoomPlugin
 );
 
 export interface MultiSensorGraphProps {
@@ -54,6 +56,10 @@ export interface MultiSensorGraphProps {
   isLoading?: boolean;
   title?: string;
   useDynamicColors?: boolean;
+  stepped?: boolean;
+  zoomable?: boolean;
+  hideUseAutoScale?: boolean;
+  highlightPoints?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
 }
@@ -69,6 +75,7 @@ interface GraphDataset {
   measurementType: MeasurementTypes;
   borderColor?: string;
   backgroundColor?: string;
+  stepped?: boolean;
 }
 
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
@@ -84,11 +91,16 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   title,
   isLoading,
   useDynamicColors,
+  stepped,
+  zoomable,
+  hideUseAutoScale,
+  highlightPoints,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
   const [autoScale, setAutoScale] = useState(false);
   const [hiddenDatasetIds, setHiddenDatasetIds] = useState<number[]>([]);
+  const chartRef = useRef<any>(null); // Types?
 
   useEffect(() => {
     if (useAutoScale !== undefined) {
@@ -113,6 +125,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     [sensors, devices]
   );
 
+  const handleResetZoom = () => {
+    chartRef.current?.resetZoom();
+  };
+
   const memoSets: GraphDataset[] = useMemo(() => {
     if (!model) return [];
     const returnValues: GraphDataset[] = [];
@@ -129,6 +145,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             label: getSensorLabel(measurementsBySensor.sensorId, val),
             yAxisID: yAxisId,
             measurementType: val,
+            stepped: stepped,
             data: measurementsBySensor.measurements
               .filter((d) => d.typeId === val)
               .map((d) => ({ x: d.timestamp, y: d.sensorValue })),
@@ -155,6 +172,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     model?.measurements.forEach((m) => {
       for (let item in MeasurementTypes) {
         let val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
+
         if (m.minValues[val] !== undefined) {
           returnArray.push({
             min: m.minValues[val],
@@ -215,6 +233,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     return hasLightAxis;
   };
 
+  const isTouchDevice = () => {
+    return window.matchMedia("(pointer: coarse)").matches;
+  };
+
   return (
     <Box
       display="flex"
@@ -262,35 +284,54 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             {getTitle()}
           </Typography>
         )}
-        <FormControlLabel
-          sx={{ marginLeft: 2 }}
-          control={
-            <Checkbox
-              checked={autoScale}
-              onChange={(e, c) => {
-                setAutoScale(c);
-                if (onSetAutoScale) {
-                  onSetAutoScale(c);
-                }
-              }}
-              inputProps={{ "aria-label": "controlled checkbox" }}
-            />
-          }
-          label="Auto scale"
-          componentsProps={{
-            typography: { fontSize: "14px" }, // Adjust font size
-          }}
-        />
-        {onRefresh && (
-          <Button
-            variant="outlined"
-            onClick={onRefresh}
-            size="small"
-            sx={{ marginLeft: "auto" }}
-          >
-            Refresh
-          </Button>
+        {!hideUseAutoScale && (
+          <FormControlLabel
+            sx={{ marginLeft: 2 }}
+            control={
+              <Checkbox
+                checked={autoScale}
+                onChange={(e, c) => {
+                  setAutoScale(c);
+                  if (onSetAutoScale) {
+                    onSetAutoScale(c);
+                  }
+                }}
+                inputProps={{ "aria-label": "controlled checkbox" }}
+              />
+            }
+            label="Auto scale"
+            componentsProps={{
+              typography: { fontSize: "14px" }, // Adjust font size
+            }}
+          />
         )}
+        {zoomable || onRefresh !== undefined ? (
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              marginLeft: "auto",
+              gap: 1,
+            }}
+          >
+            {zoomable && (
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  handleResetZoom();
+                }}
+                size="small"
+              >
+                Reset zoom
+              </Button>
+            )}
+            {onRefresh && (
+              <Button variant="outlined" onClick={onRefresh} size="small">
+                Refresh
+              </Button>
+            )}
+          </Box>
+        ) : null}
       </Box>
       <Box
         flex={1}
@@ -315,6 +356,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           <Line
             data={{ datasets: memoSets }}
             height={"auto"}
+            ref={chartRef}
             options={{
               maintainAspectRatio: false,
               plugins: {
@@ -358,10 +400,29 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                     (event.native?.target as any).style.cursor = "default";
                   },
                 },
+                zoom: zoomable
+                  ? {
+                      zoom: {
+                        drag: {
+                          enabled: true,
+                          borderColor: "rgba(54,162,235,0.5)",
+                          borderWidth: 1,
+                          backgroundColor: "rgba(54,162,235,0.15)",
+                        },
+                        pinch: { enabled: true },
+                        mode: "x",
+                        wheel: { enabled: true },
+                      },
+                      pan: {
+                        enabled: isTouchDevice(),
+                        mode: "x",
+                      },
+                    }
+                  : undefined,
               },
               elements: {
                 point: {
-                  radius: 0,
+                  radius: highlightPoints ? 2 : 0,
                 },
               },
               responsive: true,

@@ -14,6 +14,7 @@ import { DeviceEvent } from "../models/deviceEvent";
 import { useDispatch } from "react-redux";
 import { addNotification } from "../reducers/userInterfaceReducer";
 import { LocationModel } from "../models/location";
+import { DeviceStatusModel } from "../models/deviceStatus";
 
 interface ApiHook {
   userHook: userHook;
@@ -83,6 +84,11 @@ interface deviceHook {
     deviceIdentifier: string,
     attachmentIdentifier: string
   ) => Promise<DeviceInfo | undefined>;
+  getDeviceStatus: (
+    deviceIds: number[],
+    from: moment.Moment,
+    to?: moment.Moment
+  ) => Promise<DeviceStatusModel>;
 }
 
 const apiClient = axios.create({
@@ -383,6 +389,28 @@ export const useApiHook = (): ApiHook => {
           throw Ex;
         }
       },
+      getDeviceStatus: async (
+        deviceIds: number[],
+        from: moment.Moment,
+        to?: moment.Moment
+      ) => {
+        try {
+          let res = await apiClient.get<any, AxiosResponse<DeviceStatusModel>>(
+            `/api/devices/status`,
+            {
+              params: {
+                deviceIds: deviceIds,
+                from: from.toISOString(),
+                to: to ? to.toISOString() : undefined,
+              },
+            }
+          );
+          return res.data;
+        } catch (Ex) {
+          showError("Failed to fetch device status");
+          throw Ex;
+        }
+      },
     },
     locationHook: {
       getLocations: async () => {
@@ -399,3 +427,10 @@ export const useApiHook = (): ApiHook => {
     },
   };
 };
+/*
+  getDeviceStatus: (
+    deviceIds: number[],
+    from: Date,
+    to?: Date
+  ) => Promise<DeviceStatusModel>;
+*/

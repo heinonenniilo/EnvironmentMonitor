@@ -19,6 +19,8 @@ import { Collapsible } from "../components/CollabsibleComponent";
 import { MultiSensorGraph } from "../components/MultiSensorGraph";
 import moment from "moment";
 import { MeasurementsViewModel } from "../models/measurementsBySensor";
+import { DeviceStatusModel } from "../models/deviceStatus";
+import { MeasurementTypes } from "../enums/measurementTypes";
 
 interface PromiseInfo {
   type: string;
@@ -30,9 +32,13 @@ export const DeviceView: React.FC = () => {
     undefined
   );
   const [deviceEvents, setDeviceEvents] = useState<DeviceEvent[]>([]);
+  const [deviceStatusModel, setDeviceStatusModel] = useState<
+    DeviceStatusModel | undefined
+  >(undefined);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMeasurements, setIsLoadingMeasurments] = useState(false);
+  const [isLoadingDeviceStatus, setIsLoadingDeviceStatus] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const [model, setModel] = useState<MeasurementsViewModel | undefined>(
     undefined
@@ -94,6 +100,29 @@ export const DeviceView: React.FC = () => {
       })
       .finally(() => {
         setIsLoadingMeasurments(false);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDevice]);
+
+  useEffect(() => {
+    if (!selectedDevice) {
+      return;
+    }
+    const momentStart = moment()
+      .local(true)
+      .add(-1 * 7, "day")
+      .utc(true);
+    setIsLoadingDeviceStatus(true);
+    deviceHook
+      .getDeviceStatus([selectedDevice.device.id], momentStart, undefined)
+      .then((res) => {
+        setDeviceStatusModel(res);
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoadingDeviceStatus(false);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDevice]);
@@ -416,6 +445,56 @@ export const DeviceView: React.FC = () => {
             useAutoScale
             onRefresh={loadMeasurements}
             isLoading={isLoadingMeasurements}
+          />
+        </Collapsible>
+        <Collapsible title="Online status">
+          <MultiSensorGraph
+            title="Last 7 days"
+            sensors={
+              selectedDevice
+                ? [
+                    {
+                      id: selectedDevice.device.id,
+                      sensorId: 1,
+                      name: selectedDevice.device.name,
+                      deviceId: selectedDevice.device.id,
+                      scaleMin: 0,
+                      scaleMax: 2,
+                    },
+                  ]
+                : []
+            }
+            stepped
+            zoomable
+            hideInfo
+            hideUseAutoScale
+            highlightPoints
+            minHeight={400}
+            isLoading={isLoadingDeviceStatus}
+            model={
+              selectedDevice
+                ? {
+                    measurements: [
+                      {
+                        sensorId: selectedDevice.device.id,
+                        minValues: {},
+                        maxValues: {},
+                        latestValues: {},
+                        measurements: deviceStatusModel
+                          ? deviceStatusModel.deviceStatuses.map((d) => {
+                              return {
+                                sensorId: selectedDevice.device.id,
+                                sensorValue: d.status,
+                                typeId: MeasurementTypes.Undefined,
+                                timestamp: d.timestamp,
+                              };
+                            })
+                          : [],
+                      },
+                    ],
+                  }
+                : undefined
+            }
           />
         </Collapsible>
         <Collapsible isOpen={true} title="Commands">

@@ -172,8 +172,15 @@ namespace EnvironmentMonitor.Application.Services
                     var matchingAttachment = infos.FirstOrDefault(x => x.Device.Id == info.Device.Id)?.Device.Attachments.FirstOrDefault(a => a.Guid == attachment.Guid)?.Attachment;
                     if (matchingAttachment != null)
                     {
-                        var blobInfo = await _storageClient.GetBlobInfo(matchingAttachment.Name);
-                        attachment.SizeInBytes = blobInfo.SizeInBytes;
+                        try
+                        {
+                            var blobInfo = await _storageClient.GetBlobInfo(matchingAttachment.Name);
+                            attachment.SizeInBytes = blobInfo.SizeInBytes;
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Failed to fetch blob info for attachment: '{matchingAttachment.Name }'");
+                        }
                     }
 
                 }
@@ -256,6 +263,21 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
             await _deviceRepository.SetStatus(model, true);
+        }
+
+        public async Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model)
+        {
+            if (!_userService.HasAccessToDevices(model.DeviceIds, AccessLevels.Read))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var returnList = await _deviceRepository.GetDevicesStatus(model);
+            return new DeviceStatusModel()
+            {
+                DeviceStatuses = _mapper.Map<List<DeviceStatusDto>>(returnList),
+
+            };
         }
     }
 }

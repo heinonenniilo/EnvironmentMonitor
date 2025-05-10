@@ -36,5 +36,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
 
         public Task SetStatus(SetDeviceStatusModel status, bool saveChanges);
         public Task SaveChanges();
+
+        public Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model);
     }
 }

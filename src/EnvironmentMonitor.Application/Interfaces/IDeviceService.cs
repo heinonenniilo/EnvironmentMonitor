@@ -20,7 +20,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<SensorDto>> GetSensors(List<string> deviceIdentifiers);
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
         public Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
-
+        public Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model);
         public Task AddAttachment(string deviceIdentifier, UploadAttachmentModel fileModel);
         public Task DeleteAttachment(string deviceIdentifier, Guid attachmentIdentifier);
         public Task<AttachmentDownloadModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier);

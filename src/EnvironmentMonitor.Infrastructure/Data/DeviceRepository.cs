@@ -4,18 +4,11 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
-using Microsoft.Azure.Devices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using Device = EnvironmentMonitor.Domain.Entities.Device;
+using DeviceStatus = EnvironmentMonitor.Domain.Entities.DeviceStatus;
 
 namespace EnvironmentMonitor.Infrastructure.Data
 {
@@ -125,7 +118,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var devices = query.Where(x => identifiers == null || identifiers.Contains(x.DeviceIdentifier));
             return await GetDeviceInfos(devices);
         }
-
 
         public async Task<List<DeviceEvent>> GetDeviceEvents(int id)
         {
@@ -284,6 +276,34 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model)
+        {
+            var listToReturn = new List<DeviceStatus>();
+            foreach (var deviceId in model.DeviceIds)
+            {
+                var latestStatusBeforeTimeRangeStart = await _context.DeviceStatusChanges.Where(x => x.DeviceId == deviceId && x.TimeStamp < model.From).OrderBy(x => x.TimeStamp).FirstOrDefaultAsync();
+                if (latestStatusBeforeTimeRangeStart != null)
+                {
+                    listToReturn.Add(latestStatusBeforeTimeRangeStart);
+                }
+            }
+
+            var query = _context.DeviceStatusChanges.Where(
+                x => model.DeviceIds.Contains(x.DeviceId) &&
+                x.TimeStamp >= model.From && (model.To == null || x.TimeStamp <= model.To)
+            ).OrderBy(x => x.TimeStamp);
+
+            var statusList = await query.ToListAsync();
+            listToReturn.AddRange(statusList);
+            listToReturn.AddRange(model.DeviceIds.Select(x => new DeviceStatus()
+            {
+                TimeStamp = _dateService.CurrentTime(),
+                Status = listToReturn.Where(y => y.DeviceId == x).OrderByDescending(x => x.TimeStamp).FirstOrDefault()?.Status ?? false,
+                DeviceId = x
+            }));
+            return listToReturn;
         }
     }
 }

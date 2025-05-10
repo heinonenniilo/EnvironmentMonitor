@@ -140,5 +140,11 @@ namespace EnvironmentMonitor.WebApi.Controllers
             var result = await _deviceService.GetSensors(deviceIds);
             return result;
         }
+
+        [HttpGet("status")]
+        public async Task<DeviceStatusModel> GetDeviceStatus([FromQuery] GetDeviceStatusModel model)
+        {
+            return await _deviceService.GetDeviceStatus(model);
+        }
     }
 }
