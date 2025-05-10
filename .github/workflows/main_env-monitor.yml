@@ -46,7 +46,9 @@ jobs:
           dotnet test tests/EnvironmentMonitor.Tests/EnvironmentMonitor.Tests.csproj
 
       - name: Install dependencies for React UI
-        run: npm install --prefix src/EnvironmentMonitor.ReactUi/environment-monitor --legacy-peer-deps
+        run: |
+          cd src/EnvironmentMonitor.ReactUi/environment-monitor
+          npm install
 
       - name: Build React UI (Vite)
         run: |
