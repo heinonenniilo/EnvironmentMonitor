@@ -99,6 +99,34 @@ jobs:
           name: .env-monitor-function
           path: "./env-monitor-function"
 
+      - name: Remove unneeded runtimes (WEB API)
+        run: |
+          $runtimesPath = "./env-monitor-web-api/runtimes"
+          if (Test-Path $runtimesPath) {
+            Get-ChildItem -Directory $runtimesPath | Where-Object {
+              $_.Name -ne 'win-x64' -and $_.Name -ne 'win-x86'
+            } | ForEach-Object {
+              Write-Host "Removing runtime folder: $($_.FullName)"
+              Remove-Item $_.FullName -Recurse -Force
+            }
+          } else {
+            Write-Host "No runtimes folder found for WEB API."
+          }
+
+      - name: Remove unneeded runtimes (Function)
+        run: |
+          $runtimesPath = "./env-monitor-function/runtimes"
+          if (Test-Path $runtimesPath) {
+            Get-ChildItem -Directory $runtimesPath | Where-Object {
+              $_.Name -ne 'win-x64' -and $_.Name -ne 'win-x86'
+            } | ForEach-Object {
+              Write-Host "Removing runtime folder: $($_.FullName)"
+              Remove-Item $_.FullName -Recurse -Force
+            }
+          } else {
+            Write-Host "No runtimes folder found for Function."
+          }
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -114,9 +142,9 @@ jobs:
           slot-name: "Production"
           package: "./env-monitor-web-api"
 
-      - name: "Deploy HubObserver (Azure function)"
-        uses: Azure/functions-action@v1
+      - name: Deploy HubObserver (Azure function)
         id: fa
+        uses: Azure/functions-action@v1
         with:
           app-name: "EnvironmentMonitorHubObserver"
           slot-name: "Production"
