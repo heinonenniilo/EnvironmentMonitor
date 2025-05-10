@@ -7,7 +7,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { DeviceInfo } from "../models/deviceInfo";
+import { type DeviceInfo } from "../models/deviceInfo";
 import { useState } from "react";
 
 export interface DeviceControlComponentProps {

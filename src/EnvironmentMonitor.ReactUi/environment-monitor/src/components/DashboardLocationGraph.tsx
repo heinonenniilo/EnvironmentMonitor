@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { MeasurementsByLocation } from "../models/measurementsBySensor";
+import { type MeasurementsByLocation } from "../models/measurementsBySensor";
 
 import { Box } from "@mui/material";
 import { MultiSensorGraph } from "./MultiSensorGraph";
 import { useApiHook } from "../hooks/apiHook";
 import moment from "moment";
-import { LocationModel } from "../models/location";
+import { type LocationModel } from "../models/location";
 import { ChartJsColorsPluginMaxDatasets } from "../models/applicationConstants";
 
 export const DashboardLocationGraph: React.FC<{

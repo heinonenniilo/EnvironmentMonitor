@@ -3,7 +3,7 @@ import React from "react";
 
 import { DesktopMenu } from "./DesktopMenu";
 import { MobileMenu } from "./MobileMenu";
-import { User } from "../models/user";
+import type { User } from "../models/user";
 
 export interface MenuBarProps {
   handleLogOut: () => void;

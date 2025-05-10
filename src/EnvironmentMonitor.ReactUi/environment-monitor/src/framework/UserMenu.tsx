@@ -8,7 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
-import { User } from "../models/user";
+import type { User } from "../models/user";
 
 export interface UserMenuProps {
   handleLogOut: () => void;

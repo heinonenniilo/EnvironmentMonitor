@@ -6,7 +6,7 @@ import {
   Typography,
   useMediaQuery,
 } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, type JSX } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { LeftMenu } from "./LefMenu";

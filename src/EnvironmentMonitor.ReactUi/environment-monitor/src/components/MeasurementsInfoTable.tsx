@@ -7,11 +7,11 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { Measurement } from "../models/measurement";
 import { formatMeasurement } from "../utilities/measurementUtils";
-import { Device } from "../models/device";
-import { Sensor } from "../models/sensor";
 import { getFormattedDate } from "../utilities/datetimeUtils";
+import type { Measurement } from "../models/measurement";
+import type { Device } from "../models/device";
+import type { Sensor } from "../models/sensor";
 
 export interface MeasurementsInfoTableProps {
   infoRows: MeasurementInfo[];

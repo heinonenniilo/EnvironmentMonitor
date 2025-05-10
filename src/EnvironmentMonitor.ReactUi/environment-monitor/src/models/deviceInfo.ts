@@ -1,5 +1,5 @@
-import { Device } from "./device";
-import { DeviceAttachment } from "./deviceAttachment";
+import type { Device } from "./device";
+import type { DeviceAttachment } from "./deviceAttachment";
 
 export interface DeviceInfo {
   device: Device;

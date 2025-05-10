@@ -2,7 +2,6 @@ import { Box, IconButton, Menu, MenuItem } from "@mui/material";
 import React from "react";
 import { ArrowRight, Menu as MenuIcon } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { User } from "../models/user";
 import { routes } from "../utilities/routes";
 import { UserMenu } from "./UserMenu";
 import { AuthorizedComponent } from "../components/AuthorizedComponent";
@@ -12,6 +11,7 @@ import {
   toggleLeftMenuOpen,
 } from "../reducers/userInterfaceReducer";
 import { getLocations } from "../reducers/measurementReducer";
+import type { User } from "../models/user";
 
 export interface MobileMenuProps {
   onNavigate: (route: string) => void;
@@ -22,7 +22,6 @@ export interface MobileMenuProps {
 
 export const MobileMenu: React.FC<MobileMenuProps> = ({
   onNavigate,
-  onLogin,
   onLogOut,
   user,
 }) => {
@@ -49,7 +48,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 
   const handleClick = (
     route: string,
-    event: React.MouseEvent<HTMLLIElement, MouseEvent>
+    _event: React.MouseEvent<HTMLLIElement, MouseEvent>
   ) => {
     setAnchorEl(null);
     onNavigate(route);

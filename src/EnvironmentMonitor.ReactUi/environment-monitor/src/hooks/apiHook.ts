@@ -1,20 +1,21 @@
-import axios, { AxiosResponse } from "axios";
-import { User } from "../models/user";
-import { Device } from "../models/device";
-import { Sensor } from "../models/sensor";
 import qs from "qs";
-import {
-  MeasurementsByLocationModel,
-  MeasurementsModel,
-  MeasurementsViewModel,
-} from "../models/measurementsBySensor";
 import moment from "moment";
-import { DeviceInfo } from "../models/deviceInfo";
-import { DeviceEvent } from "../models/deviceEvent";
 import { useDispatch } from "react-redux";
 import { addNotification } from "../reducers/userInterfaceReducer";
-import { LocationModel } from "../models/location";
-import { DeviceStatusModel } from "../models/deviceStatus";
+import type { User } from "../models/user";
+import type { LocationModel } from "../models/location";
+import type { AxiosResponse } from "axios";
+import type { Device } from "../models/device";
+import type { DeviceEvent } from "../models/deviceEvent";
+import type { DeviceInfo } from "../models/deviceInfo";
+import type { DeviceStatusModel } from "../models/deviceStatus";
+import type {
+  MeasurementsModel,
+  MeasurementsViewModel,
+  MeasurementsByLocationModel,
+} from "../models/measurementsBySensor";
+import type { Sensor } from "../models/sensor";
+import axios from "axios";
 
 interface ApiHook {
   userHook: userHook;

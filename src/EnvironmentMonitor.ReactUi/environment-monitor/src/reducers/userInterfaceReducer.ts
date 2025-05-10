@@ -1,7 +1,6 @@
-import { NotificationMessage } from "./../framework/NotificationsComponent";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-import { RootState } from "../setup/appStore";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import type { NotificationMessage } from "../framework/NotificationsComponent";
+import type { RootState } from "../setup/appStore";
 
 export interface SetConfirmationDialogActionPayload {
   onConfirm: () => void;

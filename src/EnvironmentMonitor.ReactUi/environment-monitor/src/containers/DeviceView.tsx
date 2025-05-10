@@ -2,7 +2,7 @@ import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useApiHook } from "../hooks/apiHook";
-import { DeviceInfo } from "../models/deviceInfo";
+import { type DeviceInfo } from "../models/deviceInfo";
 import { SensorTable } from "../components/SensorTable";
 import { DeviceTable } from "../components/DeviceTable";
 import { DeviceControlComponent } from "../components/DeviceControlComponent";
@@ -12,14 +12,14 @@ import {
   setConfirmDialog,
 } from "../reducers/userInterfaceReducer";
 import { DeviceEventTable } from "../components/DeviceEventTable";
-import { DeviceEvent } from "../models/deviceEvent";
+import { type DeviceEvent } from "../models/deviceEvent";
 import { Box } from "@mui/material";
 import { DeviceImage } from "../components/DeviceImage";
 import { Collapsible } from "../components/CollabsibleComponent";
 import { MultiSensorGraph } from "../components/MultiSensorGraph";
 import moment from "moment";
-import { MeasurementsViewModel } from "../models/measurementsBySensor";
-import { DeviceStatusModel } from "../models/deviceStatus";
+import { type MeasurementsViewModel } from "../models/measurementsBySensor";
+import { type DeviceStatusModel } from "../models/deviceStatus";
 import { MeasurementTypes } from "../enums/measurementTypes";
 
 interface PromiseInfo {
@@ -273,7 +273,7 @@ export const DeviceView: React.FC = () => {
     setIsLoading(true);
     deviceHook
       .rebootDevice(selectedDevice?.device.deviceIdentifier)
-      .then((res) => {
+      .then(() => {
         getDeviceEvents(selectedDevice?.device.deviceIdentifier);
         dispatch(
           addNotification({
@@ -317,7 +317,7 @@ export const DeviceView: React.FC = () => {
         );
       })
       .catch((ex) => {
-        console.error("Failed to upload image");
+        console.error("Failed to upload image.", ex);
       })
       .finally(() => {
         setIsLoading(false);
@@ -343,7 +343,7 @@ export const DeviceView: React.FC = () => {
         );
       })
       .catch((er) => {
-        //
+        console.error(er);
       })
       .finally(() => {
         setIsLoading(false);
@@ -369,7 +369,9 @@ export const DeviceView: React.FC = () => {
           })
         );
       })
-      .catch((ex) => {})
+      .catch((ex) => {
+        console.error(ex);
+      })
       .finally(() => {
         setIsLoading(false);
       });

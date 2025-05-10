@@ -52,10 +52,10 @@ export const DeviceImageDialog: React.FC<DeviceImageDialogProps> = ({
           src={imageUrl}
           alt="Preview"
           sx={{
-              width: "100%",
-              height: "auto",
-              borderRadius: 1,
-              display: "block"
+            width: "100%",
+            height: "auto",
+            borderRadius: 1,
+            display: "block",
           }}
         />
       </DialogContent>

@@ -1,5 +1,5 @@
 import { Box, Drawer, Typography } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, type JSX } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export interface LeftMenuProps {

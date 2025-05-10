@@ -1,5 +1,5 @@
-import { Measurement } from "./measurement";
-import { Sensor } from "./sensor";
+import type { Measurement } from "./measurement";
+import type { Sensor } from "./sensor";
 
 export interface MeasurementsViewModel {
   measurements: MeasurementsBySensor[];

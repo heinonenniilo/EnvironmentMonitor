@@ -5,7 +5,6 @@ import styled from "styled-components";
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { routes } from "../utilities/routes";
 import { UserMenu } from "./UserMenu";
-import { User } from "../models/user";
 import { AuthorizedComponent } from "../components/AuthorizedComponent";
 import { RoleNames } from "../enums/roleNames";
 import {
@@ -14,6 +13,7 @@ import {
 } from "../reducers/userInterfaceReducer";
 import { ArrowDropDownIcon } from "@mui/x-date-pickers";
 import { getLocations } from "../reducers/measurementReducer";
+import type { User } from "../models/user";
 
 export interface DesktopMenuProps {
   onNavigate: (route: string) => void;
@@ -37,7 +37,6 @@ const MenuArea = styled.div`
 
 export const DesktopMenu: React.FC<DesktopMenuProps> = ({
   onNavigate,
-  onLogin,
   onLogOut,
   user,
 }) => {

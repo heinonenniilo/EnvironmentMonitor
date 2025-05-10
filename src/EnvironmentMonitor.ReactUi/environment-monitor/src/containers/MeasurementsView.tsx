@@ -11,10 +11,10 @@ import {
   toggleAutoScale,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
-import { Device } from "../models/device";
-import { MeasurementsViewModel } from "../models/measurementsBySensor";
+import { type Device } from "../models/device";
+import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { MultiSensorGraph } from "../components/MultiSensorGraph";
-import { Sensor } from "../models/sensor";
+import { type Sensor } from "../models/sensor";
 import { useParams } from "react-router";
 import moment from "moment";
 
