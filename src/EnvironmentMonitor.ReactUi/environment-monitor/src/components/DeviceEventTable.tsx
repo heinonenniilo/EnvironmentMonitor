@@ -21,7 +21,6 @@ export interface DeviceEventTableProps {
 export const DeviceEventTable: React.FC<DeviceEventTableProps> = ({
   events,
   title,
-  maxHeight,
 }) => {
   return (
     <Box marginTop={2} display={"flex"} flexDirection={"column"} flexGrow={"1"}>
@@ -43,7 +42,7 @@ export const DeviceEventTable: React.FC<DeviceEventTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {events.map((event, idx) => (
+            {events.map((event) => (
               <TableRow
                 key={event.id}
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}

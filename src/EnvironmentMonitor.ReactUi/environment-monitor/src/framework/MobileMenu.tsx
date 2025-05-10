@@ -22,7 +22,6 @@ export interface MobileMenuProps {
 
 export const MobileMenu: React.FC<MobileMenuProps> = ({
   onNavigate,
-  onLogin,
   onLogOut,
   user,
 }) => {
@@ -49,7 +48,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 
   const handleClick = (
     route: string,
-    event: React.MouseEvent<HTMLLIElement, MouseEvent>
+    _event: React.MouseEvent<HTMLLIElement, MouseEvent>
   ) => {
     setAnchorEl(null);
     onNavigate(route);

@@ -290,7 +290,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             control={
               <Checkbox
                 checked={autoScale}
-                onChange={(e, c) => {
+                onChange={(_e, c) => {
                   setAutoScale(c);
                   if (onSetAutoScale) {
                     onSetAutoScale(c);
@@ -370,7 +370,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                       forceOverride: true,
                     },
                 legend: {
-                  onClick: (event, legendItem, legend) => {
+                  onClick: (_event, legendItem, legend) => {
                     if (legendItem.datasetIndex !== undefined) {
                       if (!legendItem.hidden) {
                         legend.chart.hide(legendItem.datasetIndex);

@@ -37,7 +37,6 @@ const MenuArea = styled.div`
 
 export const DesktopMenu: React.FC<DesktopMenuProps> = ({
   onNavigate,
-  onLogin,
   onLogOut,
   user,
 }) => {

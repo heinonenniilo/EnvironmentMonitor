@@ -79,7 +79,7 @@ export const App: React.FC<AppProps> = (props) => {
           dispath(storeUserInfo(res));
         })
         .catch((ex) => {
-          console.error("Failed to fetch user information");
+          console.error("Failed to fetch user information", ex);
           dispath(storeUserInfo(undefined));
         })
         .finally(() => {
@@ -108,14 +108,11 @@ export const App: React.FC<AppProps> = (props) => {
     if (!devices || devices.length === 0) {
       dispath(setSensors([]));
     } else {
-      console.log(devices);
-      /*
       measurementApiHook
         .getSensors(devices.map((x) => x.deviceIdentifier))
         .then((res) => {
           dispath(setSensors(res));
         });
-        */
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [devices, dispath]);

@@ -29,7 +29,7 @@ export const NotificationsComponent: React.FC<NotificationMessageProps> = ({
       open={messages.length > 0}
       autoHideDuration={6000}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
-      onClose={(x, y) => {
+      onClose={(_x, y) => {
         handleClose(y);
       }}
     >
@@ -37,7 +37,7 @@ export const NotificationsComponent: React.FC<NotificationMessageProps> = ({
         {messages.map((r) => {
           return (
             <Alert
-              onClose={(x) => {
+              onClose={(_x) => {
                 handleClose(undefined, r.id);
               }}
               severity={r.severity}

@@ -72,6 +72,7 @@ export const DevicesView: React.FC = () => {
         }
       })
       .catch((er) => {
+        console.error(er);
         dispatch(
           addNotification({
             title: `Sending message failed`,

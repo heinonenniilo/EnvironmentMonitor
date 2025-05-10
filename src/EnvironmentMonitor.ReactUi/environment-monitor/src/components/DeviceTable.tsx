@@ -47,7 +47,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           {(params?.row as DeviceInfo)?.device.name}
         </Link>
       ),
-      valueGetter: (value, row) => {
+      valueGetter: (_value, row) => {
         if (!row) {
           return "";
         }
@@ -105,7 +105,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       field: "visible",
       headerName: "Visible",
       width: 60,
-      valueGetter: (value, row) => {
+      valueGetter: (_value, row) => {
         if (!row) {
           return false;
         }
@@ -128,7 +128,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       type: "dateTime",
       flex: 1,
       minWidth: 170,
-      valueGetter: (value, row) => {
+      valueGetter: (_value, row) => {
         if (row) {
           const data = row as DeviceInfo;
           if (data.onlineSince) {
@@ -137,7 +137,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         }
         return null;
       },
-      valueFormatter: (value, row) => {
+      valueFormatter: (_value, row) => {
         return formatDate((row as DeviceInfo)?.onlineSince);
       },
     },
@@ -147,7 +147,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       type: "dateTime",
       flex: 1,
       minWidth: 170,
-      valueGetter: (value, row) => {
+      valueGetter: (_value, row) => {
         if (row) {
           const data = row as DeviceInfo;
           if (data.rebootedOn) {
@@ -156,7 +156,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         }
         return null;
       },
-      valueFormatter: (value, row) => {
+      valueFormatter: (_value, row) => {
         return formatDate((row as DeviceInfo)?.rebootedOn);
       },
     },
@@ -166,7 +166,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       type: "dateTime",
       flex: 1,
       minWidth: 170,
-      valueGetter: (value, row) => {
+      valueGetter: (_value, row) => {
         if (row) {
           const data = row as DeviceInfo;
           if (data.lastMessage) {
@@ -175,7 +175,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         }
         return null;
       },
-      valueFormatter: (value, row) => {
+      valueFormatter: (_value, row) => {
         return formatDate((row as DeviceInfo)?.lastMessage);
       },
       renderCell: (params) => {

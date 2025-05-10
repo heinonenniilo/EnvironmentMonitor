@@ -34,11 +34,9 @@ export interface DeviceImageProps {
 
 export const DeviceImage: React.FC<DeviceImageProps> = ({
   device,
-  title,
   onUploadImage,
   onDeleteImage,
   onSetDefaultImage,
-  ver,
 }) => {
   const [isLoadingImage, setIsLoadingImage] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
