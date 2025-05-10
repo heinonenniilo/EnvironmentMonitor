@@ -234,7 +234,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   };
 
   const isTouchDevice = () => {
-    return window.matchMedia("(hover: none)").matches;
+    return window.matchMedia("(pointer: coarse)").matches;
   };
 
   return (
