@@ -15,7 +15,7 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "https://localhost:7135", // Your backend server
+        target: "https://localhost:7135",
         changeOrigin: true,
         secure: false,
       },
