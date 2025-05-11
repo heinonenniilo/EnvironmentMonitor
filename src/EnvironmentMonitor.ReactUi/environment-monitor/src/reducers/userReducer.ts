@@ -1,7 +1,7 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { User } from "../models/user";
-import { RootState } from "../setup/appStore";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { RoleNames } from "../enums/roleNames";
+import type { User } from "../models/user";
+import type { RootState } from "../setup/appStore";
 
 export interface UserState {
   user: User | undefined;

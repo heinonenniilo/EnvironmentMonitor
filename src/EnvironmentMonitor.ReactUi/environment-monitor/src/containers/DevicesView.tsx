@@ -1,8 +1,8 @@
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useEffect, useState } from "react";
-import { Device } from "../models/device";
+import { type Device } from "../models/device";
 import { useApiHook } from "../hooks/apiHook";
-import { DeviceInfo } from "../models/deviceInfo";
+import { type DeviceInfo } from "../models/deviceInfo";
 import { DeviceTable } from "../components/DeviceTable";
 import { dateTimeSort } from "../utilities/datetimeUtils";
 import { useDispatch } from "react-redux";
@@ -72,6 +72,7 @@ export const DevicesView: React.FC = () => {
         }
       })
       .catch((er) => {
+        console.error(er);
         dispatch(
           addNotification({
             title: `Sending message failed`,

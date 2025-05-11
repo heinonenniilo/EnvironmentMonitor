@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Device } from "../models/device";
-import { Sensor } from "../models/sensor";
-import { MeasurementsViewModel } from "../models/measurementsBySensor";
+import { type Device } from "../models/device";
+import { type Sensor } from "../models/sensor";
+import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getDeviceAutoScale,

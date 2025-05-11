@@ -46,16 +46,18 @@ jobs:
           dotnet test tests/EnvironmentMonitor.Tests/EnvironmentMonitor.Tests.csproj
 
       - name: Install dependencies for React UI
-        run: yarn install --cwd src/EnvironmentMonitor.ReactUi/environment-monitor --network-timeout 500000
-
-      - name: Build React UI
         run: |
           cd src/EnvironmentMonitor.ReactUi/environment-monitor
-          yarn build
+          npm install
 
-      - name: Copy React build to .NET wwwroot
+      - name: Build React UI (Vite)
         run: |
-          cp -r src/EnvironmentMonitor.ReactUi/environment-monitor/build/ src/EnvironmentMonitor.WebApi/wwwroot/
+          cd src/EnvironmentMonitor.ReactUi/environment-monitor
+          npm run build
+
+      - name: Copy Vite build to .NET wwwroot
+        run: |
+          cp -r src/EnvironmentMonitor.ReactUi/environment-monitor/dist/ src/EnvironmentMonitor.WebApi/wwwroot/
 
       - name: dotnet publish (WebApi)
         run: dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -o "${{env.DOTNET_ROOT}}/env-monitor-web-api"

@@ -1,6 +1,6 @@
 import { LineChart } from "@mui/x-charts";
 import { MeasurementTypes } from "../enums/measurementTypes";
-import { Sensor } from "../models/sensor";
+import { type Sensor } from "../models/sensor";
 import {
   Box,
   Table,
@@ -11,9 +11,9 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { MeasurementsBySensor } from "../models/measurementsBySensor";
+import { type MeasurementsBySensor } from "../models/measurementsBySensor";
 import { formatMeasurement } from "../utilities/measurementUtils";
-import { Device } from "../models/device";
+import { type Device } from "../models/device";
 
 export interface MeasurementGraphProps {
   sensor: Sensor | undefined;

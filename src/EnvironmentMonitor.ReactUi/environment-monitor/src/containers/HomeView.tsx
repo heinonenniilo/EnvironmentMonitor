@@ -2,17 +2,17 @@ import { useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
 import { getDevices, getSensors } from "../reducers/measurementReducer";
-import { MeasurementsViewModel } from "../models/measurementsBySensor";
 import { useApiHook } from "../hooks/apiHook";
 import moment from "moment";
 import {
-  MeasurementInfo,
   MeasurementsInfoTable,
+  type MeasurementInfo,
 } from "../components/MeasurementsInfoTable";
 import { MeasurementTypes } from "../enums/measurementTypes";
 import { getDatasetLabel } from "../utilities/measurementUtils";
 import { getUserInfo } from "../reducers/userReducer";
 import { dateTimeSort } from "../utilities/datetimeUtils";
+import type { MeasurementsViewModel } from "../models/measurementsBySensor";
 
 export const HomeView: React.FC = () => {
   const sensors = useSelector(getSensors);

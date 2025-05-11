@@ -1,9 +1,9 @@
 import { createSelector, createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
-import { Device } from "../models/device";
-import { Sensor } from "../models/sensor";
-import { RootState } from "../setup/appStore";
-import { LocationModel } from "../models/location";
+import type { Device } from "../models/device";
+import type { Sensor } from "../models/sensor";
+import type { LocationModel } from "../models/location";
+import type { RootState } from "../setup/appStore";
 
 export interface MeasurementState {
   devices: Device[];

@@ -5,7 +5,6 @@ import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { CookiesProvider } from "react-cookie";
 import { MenuBar } from "./MenuBar";
-import { User } from "../models/user";
 import {
   getIsLoggedIn,
   getUserInfo,
@@ -28,6 +27,7 @@ import {
 } from "../reducers/userInterfaceReducer";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { NotificationsComponent } from "./NotificationsComponent";
+import type { User } from "../models/user";
 
 interface AppProps {
   children: React.ReactNode;
@@ -79,7 +79,7 @@ export const App: React.FC<AppProps> = (props) => {
           dispath(storeUserInfo(res));
         })
         .catch((ex) => {
-          console.error("Failed to fetch user information");
+          console.error("Failed to fetch user information", ex);
           dispath(storeUserInfo(undefined));
         })
         .finally(() => {
@@ -105,7 +105,7 @@ export const App: React.FC<AppProps> = (props) => {
   }, [isLoggedIn, dispath, inited]);
 
   useEffect(() => {
-    if (devices.length === 0) {
+    if (!devices || devices.length === 0) {
       dispath(setSensors([]));
     } else {
       measurementApiHook
@@ -166,7 +166,7 @@ export const App: React.FC<AppProps> = (props) => {
             ) : (
               <LoginPage
                 onLoggedIn={async () => {
-                  let res = await apiHook.userHook.getUserInfo();
+                  const res = await apiHook.userHook.getUserInfo();
                   dispath(storeUserInfo(res));
                 }}
                 onLogInWithGoogle={loginWithGoogleAuthCode}
