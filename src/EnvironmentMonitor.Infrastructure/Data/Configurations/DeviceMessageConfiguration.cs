@@ -14,8 +14,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<DeviceMessage> builder)
         {
             builder.HasKey(d => d.Id);
-
             builder.HasMany(x => x.Measurements).WithOne(x => x.DeviceMessage).IsRequired(false);
+            builder.HasIndex(x => new { x.DeviceId, x.TimeStamp });
+            builder.HasIndex(x => x.TimeStamp);
         }
     }
 }
