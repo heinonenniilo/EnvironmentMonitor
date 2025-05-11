@@ -63,18 +63,18 @@ jobs:
         run: dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -r win-x86 -o "${{env.DOTNET_ROOT}}/env-monitor-web-api"
 
       - name: dotnet publish (Function)
-        run: dotnet publish src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj -c Release -o "${{env.DOTNET_ROOT}}/env-monitor-function"
+        run: dotnet publish src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj -c Release -r win-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-function"
 
       - name: Upload web api artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .env-monitor-web-api
+          name: .env-monitor-web-api_x86
           path: ${{env.DOTNET_ROOT}}/env-monitor-web-api
 
       - name: Upload function artifact
         uses: actions/upload-artifact@v4
         with:
-          name: .env-monitor-function
+          name: .env-monitor-function_x64
           path: ${{env.DOTNET_ROOT}}/env-monitor-function
           include-hidden-files: true
   deploy:
@@ -92,13 +92,13 @@ jobs:
       - name: Download WEB API artifacts
         uses: actions/download-artifact@v4
         with:
-          name: .env-monitor-web-api
+          name: .env-monitor-web-api_x86
           path: "./env-monitor-web-api"
 
       - name: Download HubObserver artifacts
         uses: actions/download-artifact@v4
         with:
-          name: .env-monitor-function
+          name: .env-monitor-function_x64
           path: "./env-monitor-function"
 
       - name: Login to Azure
