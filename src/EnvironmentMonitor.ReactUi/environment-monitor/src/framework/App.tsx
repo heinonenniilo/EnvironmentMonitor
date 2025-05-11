@@ -166,7 +166,7 @@ export const App: React.FC<AppProps> = (props) => {
             ) : (
               <LoginPage
                 onLoggedIn={async () => {
-                  let res = await apiHook.userHook.getUserInfo();
+                  const res = await apiHook.userHook.getUserInfo();
                   dispath(storeUserInfo(res));
                 }}
                 onLogInWithGoogle={loginWithGoogleAuthCode}
