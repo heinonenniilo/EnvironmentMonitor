@@ -248,7 +248,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
             bool statusToSet;
             var device = await _context.Devices.FirstOrDefaultAsync(x => x.Id == model.DeviceId) ?? throw new EntityNotFoundException();
             var latestStatus = await _context.DeviceStatusChanges.Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
-            var latestMessage = await _context.Measurements.Where(x => x.Sensor.DeviceId == device.Id).OrderByDescending(x => x.Timestamp).FirstOrDefaultAsync();
+            var latestMessage = await _context.Measurements.Where(x => 
+                x.Sensor.DeviceId == device.Id
+                && x.Timestamp > _dateService.CurrentTime().AddDays(-1) // Optimization
+            ).OrderByDescending(x => x.Timestamp).FirstOrDefaultAsync();
+
             if (model.Status != null)
             {
                 statusToSet = model.Status.Value;
