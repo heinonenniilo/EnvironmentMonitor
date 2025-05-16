@@ -30,5 +30,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null);
         public Task<List<DeviceEventDto>> GetDeviceEvents(string identifier);
         public Task SetStatus(SetDeviceStatusModel model);
+
+        public Task<DeviceInfoDto> UpdateDevice(UpdateDeviceDto model);
     }
 }

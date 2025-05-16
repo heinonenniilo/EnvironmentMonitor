@@ -11,10 +11,12 @@ import { DeviceImageDialog } from "./DeviceImageDialog";
 export interface DeviceTableProps {
   devices: DeviceInfo[];
   onReboot?: (device: DeviceInfo) => void;
+  onClickVisible?: (device: DeviceInfo) => void;
   title?: string;
   disableSort?: boolean;
   showDeviceImageAsTooltip?: boolean;
   hideName?: boolean;
+  hideId?: boolean;
 }
 
 export const DeviceTable: React.FC<DeviceTableProps> = ({
@@ -22,7 +24,9 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   title,
   disableSort,
   hideName,
+  hideId,
   showDeviceImageAsTooltip,
+  onClickVisible,
 }) => {
   const formatDate = (input: Date | undefined | null) => {
     if (input) {
@@ -32,6 +36,28 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
     }
   };
   const columns: GridColDef[] = [
+    {
+      field: "id",
+      headerName: "Id",
+      hideable: true,
+      flex: 1,
+      maxWidth: 70,
+      renderCell: (params) => (
+        <Link
+          to={`${routes.devices}/${
+            (params?.row as DeviceInfo)?.device.deviceIdentifier
+          }`}
+        >
+          {(params?.row as DeviceInfo)?.device.id}
+        </Link>
+      ),
+      valueGetter: (_value, row) => {
+        if (!row) {
+          return "";
+        }
+        return (row as DeviceInfo)?.device.id;
+      },
+    },
     {
       field: "name",
       headerName: "Name",
@@ -43,6 +69,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           to={`${routes.devices}/${
             (params?.row as DeviceInfo)?.device.deviceIdentifier
           }`}
+          onClick={() => {}}
         >
           {(params?.row as DeviceInfo)?.device.name}
         </Link>
@@ -112,13 +139,32 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         return (row as DeviceInfo).device.visible;
       },
       renderCell: (params) => {
-        return (
+        const checkBox = (
           <Checkbox
             checked={(params?.row as DeviceInfo)?.device.visible}
             size="small"
             disabled
-            sx={{ padding: "0px" }}
+            sx={{
+              padding: "0px",
+              cursor: "pointer",
+            }}
           />
+        );
+        if (!onClickVisible) {
+          return checkBox;
+        }
+        return (
+          <IconButton
+            onClick={() => {
+              if (onClickVisible) {
+                onClickVisible(params.row as DeviceInfo);
+              } else {
+                console.info("No data");
+              }
+            }}
+          >
+            {checkBox}
+          </IconButton>
         );
       },
     },
@@ -244,11 +290,13 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           hideFooter
           initialState={{
             columns: {
-              columnVisibilityModel: hideName
-                ? {
-                    name: false,
-                  }
-                : undefined,
+              columnVisibilityModel:
+                hideName || hideId
+                  ? {
+                      name: hideName ?? false,
+                      id: hideId ?? false,
+                    }
+                  : undefined,
             },
             sorting: disableSort
               ? undefined
