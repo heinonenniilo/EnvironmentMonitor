@@ -139,18 +139,19 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         return (row as DeviceInfo).device.visible;
       },
       renderCell: (params) => {
+        const checkBox = (
+          <Checkbox
+            checked={(params?.row as DeviceInfo)?.device.visible}
+            size="small"
+            disabled
+            sx={{
+              padding: "0px",
+              cursor: "pointer",
+            }}
+          />
+        );
         if (!onClickVisible) {
-          return (
-            <Checkbox
-              checked={(params?.row as DeviceInfo)?.device.visible}
-              size="small"
-              disabled
-              sx={{
-                padding: "0px",
-                cursor: "pointer",
-              }}
-            />
-          );
+          return checkBox;
         }
         return (
           <IconButton
@@ -162,15 +163,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
               }
             }}
           >
-            <Checkbox
-              checked={(params?.row as DeviceInfo)?.device.visible}
-              size="small"
-              disabled
-              sx={{
-                padding: "0px",
-                cursor: "pointer",
-              }}
-            />
+            {checkBox}
           </IconButton>
         );
       },
