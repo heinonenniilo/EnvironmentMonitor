@@ -203,6 +203,13 @@ export const DeviceView: React.FC = () => {
       .updateDevice({ ...device.device, visible: !device.device.visible })
       .then((res) => {
         setSelectedDevice(res);
+        dispatch(
+          addNotification({
+            title: `Visibility status updated for ${res.device.name}`,
+            body: "_",
+            severity: "success",
+          })
+        );
       })
       .catch((er) => {
         console.error(er);
