@@ -179,7 +179,7 @@ namespace EnvironmentMonitor.Application.Services
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, $"Failed to fetch blob info for attachment: '{matchingAttachment.Name }'");
+                            _logger.LogError(ex, $"Failed to fetch blob info for attachment: '{matchingAttachment.Name}'");
                         }
                     }
 
@@ -278,6 +278,22 @@ namespace EnvironmentMonitor.Application.Services
                 DeviceStatuses = _mapper.Map<List<DeviceStatusDto>>(returnList),
 
             };
+        }
+
+        public async Task<DeviceInfoDto> UpdateDevice(UpdateDeviceDto model)
+        {
+            if (model.Device.Id <= 0 && !_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            else if (!_userService.HasAccessToDevice(model.Device.Id, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var device = (await _deviceRepository.GetDevices([model.Device.Id])).FirstOrDefault();
+            var updateModel = _mapper.Map<Device>(model.Device);
+            var info = await _deviceRepository.AddOrUpdate(updateModel, true);
+            return _mapper.Map<DeviceInfoDto>(info);
         }
     }
 }

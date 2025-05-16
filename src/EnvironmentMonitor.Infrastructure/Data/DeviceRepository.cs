@@ -309,5 +309,38 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }));
             return listToReturn;
         }
+
+        public async Task<DeviceInfo> AddOrUpdate(Device device, bool saveChanges)
+        {
+            var deviceInDb = await _context.Devices.FirstOrDefaultAsync(x => x.Id == device.Id);
+            Device deviceToUpdate;
+            if (device.Id > 0 && deviceInDb == null)
+            {
+                throw new EntityNotFoundException();
+            }
+            if (deviceInDb != null)
+            {
+                deviceToUpdate = deviceInDb;
+            }
+            else
+            {
+                deviceToUpdate = new Device() { Name = device.Name, DeviceIdentifier = device.DeviceIdentifier };
+            }
+            deviceToUpdate.Name = string.IsNullOrEmpty(device.Name) ?  deviceToUpdate.Name : device.Name;
+            deviceToUpdate.DeviceIdentifier = string.IsNullOrEmpty(device.DeviceIdentifier) ? deviceToUpdate.DeviceIdentifier : device.DeviceIdentifier ;
+            deviceToUpdate.Visible = device.Visible;
+
+            if (deviceInDb == null)
+            {
+                _logger.LogInformation($"Adding device named: '{deviceToUpdate.Name}'");
+                _context.Devices.Add(deviceToUpdate);
+            }
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+            var toReturn = (await GetDeviceInfo([deviceToUpdate.Id], false, true)).FirstOrDefault();
+            return toReturn ?? throw new EntityNotFoundException();
+        }
     }
 }
