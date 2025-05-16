@@ -197,7 +197,6 @@ export const DeviceView: React.FC = () => {
   };
 
   const updateVisible = (device: DeviceInfo) => {
-    console.log("Update");
     setIsLoading(true);
     deviceHook
       .updateDevice({ ...device.device, visible: !device.device.visible })

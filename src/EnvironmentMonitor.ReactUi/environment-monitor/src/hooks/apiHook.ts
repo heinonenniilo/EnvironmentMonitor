@@ -246,7 +246,6 @@ export const useApiHook = (): ApiHook => {
         latestOnly?: boolean
       ) => {
         try {
-          console.log(sensorIds);
           const res = await apiClient.get<
             any,
             AxiosResponse<MeasurementsByLocationModel>
