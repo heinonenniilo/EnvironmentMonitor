@@ -90,6 +90,7 @@ interface deviceHook {
     from: moment.Moment,
     to?: moment.Moment
   ) => Promise<DeviceStatusModel>;
+  updateDevice: (device: Device) => Promise<DeviceInfo>;
 }
 
 const apiClient = axios.create({
@@ -163,7 +164,7 @@ export const useApiHook = (): ApiHook => {
     measureHook: {
       getDevices: async () => {
         try {
-          let res = await apiClient.get<any, AxiosResponse<Device[]>>(
+          const res = await apiClient.get<any, AxiosResponse<Device[]>>(
             "/api/devices"
           );
           return res.data;
@@ -175,7 +176,7 @@ export const useApiHook = (): ApiHook => {
       },
       getSensors: async (deviceIds: string[]) => {
         try {
-          let res = await apiClient.get<any, AxiosResponse<Sensor[]>>(
+          const res = await apiClient.get<any, AxiosResponse<Sensor[]>>(
             `/api/devices/sensors/`,
             {
               params: {
@@ -196,16 +197,16 @@ export const useApiHook = (): ApiHook => {
         to?: moment.Moment
       ) => {
         try {
-          let res = await apiClient.get<any, AxiosResponse<MeasurementsModel>>(
-            "/api/Measurements",
-            {
-              params: {
-                SensorIds: sensorIds,
-                from: from.toISOString(),
-                to: to ? to.toISOString() : undefined,
-              },
-            }
-          );
+          const res = await apiClient.get<
+            any,
+            AxiosResponse<MeasurementsModel>
+          >("/api/Measurements", {
+            params: {
+              SensorIds: sensorIds,
+              from: from.toISOString(),
+              to: to ? to.toISOString() : undefined,
+            },
+          });
           return res.data;
         } catch (ex: any) {
           console.error(ex);
@@ -220,7 +221,7 @@ export const useApiHook = (): ApiHook => {
         latestOnly?: boolean
       ) => {
         try {
-          let res = await apiClient.get<
+          const res = await apiClient.get<
             any,
             AxiosResponse<MeasurementsViewModel>
           >("/api/Measurements/bysensor", {
@@ -246,7 +247,7 @@ export const useApiHook = (): ApiHook => {
       ) => {
         try {
           console.log(sensorIds);
-          let res = await apiClient.get<
+          const res = await apiClient.get<
             any,
             AxiosResponse<MeasurementsByLocationModel>
           >("/api/Measurements/bylocation", {
@@ -266,9 +267,22 @@ export const useApiHook = (): ApiHook => {
       },
     },
     deviceHook: {
+      updateDevice: async (device: Device) => {
+        try {
+          const res = await apiClient.put("/api/devices/update", {
+            device: device,
+          });
+
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          showError("Failed to update device");
+          throw ex;
+        }
+      },
       rebootDevice: async (deviceIdentifier: string) => {
         try {
-          let res = await apiClient.post("/api/devices/reboot", {
+          const res = await apiClient.post("/api/devices/reboot", {
             deviceIdentifier: deviceIdentifier,
           });
 
@@ -278,13 +292,14 @@ export const useApiHook = (): ApiHook => {
             return false;
           }
         } catch (ex: any) {
+          console.error(ex);
           showError();
           return false;
         }
       },
       getDeviceInfos: async () => {
         try {
-          let res = await apiClient.get<any, AxiosResponse<DeviceInfo[]>>(
+          const res = await apiClient.get<any, AxiosResponse<DeviceInfo[]>>(
             "/api/devices/info"
           );
           return res.data;
@@ -295,50 +310,59 @@ export const useApiHook = (): ApiHook => {
         }
       },
       getDeviceInfo: async (identifier: string) => {
-        let res = await apiClient.get<any, AxiosResponse<DeviceInfo>>(
+        const res = await apiClient.get<any, AxiosResponse<DeviceInfo>>(
           `/api/devices/info/${identifier}`
         );
         return res.data;
       },
       setMotionControlState: async (identifier: string, state: number) => {
         try {
-          let res = await apiClient.post("/api/devices/motion-control-status", {
-            deviceIdentifier: identifier,
-            mode: state,
-          });
+          const res = await apiClient.post(
+            "/api/devices/motion-control-status",
+            {
+              deviceIdentifier: identifier,
+              mode: state,
+            }
+          );
           if (res.status === 200) {
             return true;
           } else {
             return false;
           }
         } catch (ex) {
+          console.error(ex);
           showError();
           return false;
         }
       },
       setMotionControlDelay: async (identifier: string, delayMs: number) => {
         try {
-          let res = await apiClient.post("/api/devices/motion-control-delay", {
-            deviceIdentifier: identifier,
-            DelayMs: delayMs,
-          });
+          const res = await apiClient.post(
+            "/api/devices/motion-control-delay",
+            {
+              deviceIdentifier: identifier,
+              DelayMs: delayMs,
+            }
+          );
           if (res.status === 200) {
             return true;
           } else {
             return false;
           }
         } catch (ex) {
+          console.error(ex);
           showError();
           return false;
         }
       },
       getDeviceEvents: async (identifier: string) => {
         try {
-          let res = await apiClient.get<any, AxiosResponse<DeviceEvent[]>>(
+          const res = await apiClient.get<any, AxiosResponse<DeviceEvent[]>>(
             `/api/devices/events/${identifier}`
           );
           return res.data;
         } catch (ex) {
+          console.error(ex);
           showError();
           return [];
         }
@@ -348,14 +372,14 @@ export const useApiHook = (): ApiHook => {
         formData.append("file", file);
         formData.append("deviceId", identifier);
         try {
-          let res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
+          const res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
             `/api/devices/attachment/`,
             formData
           );
           return res.data;
-        } catch (Ex) {
+        } catch (ex) {
           showError("Failed to upload image");
-          throw Ex;
+          throw ex;
         }
       },
       deleteAttachment: async (
@@ -363,13 +387,13 @@ export const useApiHook = (): ApiHook => {
         attachmentIdentifier: string
       ) => {
         try {
-          let res = await apiClient.delete<any, AxiosResponse<DeviceInfo>>(
+          const res = await apiClient.delete<any, AxiosResponse<DeviceInfo>>(
             `/api/devices/attachment/${deviceIdentifier}/${attachmentIdentifier}`
           );
           return res.data;
-        } catch (Ex) {
+        } catch (ex) {
           showError("Deleting attachment failed");
-          throw Ex;
+          throw ex;
         }
       },
       setDefaultImage: async (
@@ -377,7 +401,7 @@ export const useApiHook = (): ApiHook => {
         attachmentIdentifier: string
       ) => {
         try {
-          let res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
+          const res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
             `/api/devices/default-image`,
             {
               attachmentGuid: attachmentIdentifier,
@@ -385,9 +409,9 @@ export const useApiHook = (): ApiHook => {
             }
           );
           return res.data;
-        } catch (Ex) {
+        } catch (ex) {
           showError("Setting default attachment failed");
-          throw Ex;
+          throw ex;
         }
       },
       getDeviceStatus: async (
@@ -396,31 +420,32 @@ export const useApiHook = (): ApiHook => {
         to?: moment.Moment
       ) => {
         try {
-          let res = await apiClient.get<any, AxiosResponse<DeviceStatusModel>>(
-            `/api/devices/status`,
-            {
-              params: {
-                deviceIds: deviceIds,
-                from: from.toISOString(),
-                to: to ? to.toISOString() : undefined,
-              },
-            }
-          );
+          const res = await apiClient.get<
+            any,
+            AxiosResponse<DeviceStatusModel>
+          >(`/api/devices/status`, {
+            params: {
+              deviceIds: deviceIds,
+              from: from.toISOString(),
+              to: to ? to.toISOString() : undefined,
+            },
+          });
           return res.data;
-        } catch (Ex) {
+        } catch (ex) {
           showError("Failed to fetch device status");
-          throw Ex;
+          throw ex;
         }
       },
     },
     locationHook: {
       getLocations: async () => {
         try {
-          let res = await apiClient.get<any, AxiosResponse<LocationModel[]>>(
+          const res = await apiClient.get<any, AxiosResponse<LocationModel[]>>(
             `/api/locations/`
           );
           return res.data;
         } catch (ex) {
+          console.error(ex);
           showError("Failed to get locations");
           return [];
         }
@@ -428,10 +453,3 @@ export const useApiHook = (): ApiHook => {
     },
   };
 };
-/*
-  getDeviceStatus: (
-    deviceIds: number[],
-    from: Date,
-    to?: Date
-  ) => Promise<DeviceStatusModel>;
-*/

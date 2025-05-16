@@ -196,6 +196,22 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const updateVisible = (device: DeviceInfo) => {
+    console.log("Update");
+    setIsLoading(true);
+    deviceHook
+      .updateDevice({ ...device.device, visible: !device.device.visible })
+      .then((res) => {
+        setSelectedDevice(res);
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   const setMotionControlState = (state: number, message?: string) => {
     if (!selectedDevice) {
       return;
@@ -391,6 +407,21 @@ export const DeviceView: React.FC = () => {
         <Collapsible title="Info" isOpen={true}>
           <DeviceTable
             hideName
+            onClickVisible={(device) => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    updateVisible(device);
+                  },
+                  title: "Update visible status",
+                  body: `Visible status will be ${!device.device.visible} for ${
+                    device.device.name
+                  }`,
+                })
+              );
+
+              //
+            }}
             devices={selectedDevice ? [selectedDevice] : []}
             disableSort
           />
