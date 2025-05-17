@@ -88,10 +88,8 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
             sx={{
               border: 0,
               minWidth: 600,
+              maxHeight: "100%",
             }}
-            pagination={undefined}
-            pageSizeOptions={[]}
-            hideFooter
             initialState={{
               sorting: {
                 sortModel: [{ field: "timestamp", sort: "desc" }],
