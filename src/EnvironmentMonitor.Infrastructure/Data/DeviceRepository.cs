@@ -84,11 +84,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return await query.ToListAsync();
         }
 
-        public async Task<List<Device>> GetDevicesByLocation(List<int> locationIds)
-        {
-            return await _context.Devices.Where(x => locationIds.Contains(x.LocationId)).ToListAsync();
-        }
-
         public async Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges)
         {
             var device = await _context.Devices.Include(x => x.Attachments).FirstAsync(x => x.Id == deviceId);
@@ -115,37 +110,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
             return deviceAttachment.Attachment;
         }
+
         public async Task SaveChanges()
         {
             await _context.SaveChangesAsync();
-        }
-
-        private async Task<List<DeviceInfo>> GetDeviceInfos(IEnumerable<Device> devices)
-        {
-            var returnList = new List<DeviceInfo>();
-            var deviceIds = devices.Select(x => x.Id).ToList();
-            var query = await _context.DeviceEvents.Where(x => deviceIds.Contains(x.DeviceId)).GroupBy(x => new { x.DeviceId, x.TypeId }).Select(x => new
-            {
-                x.Key.DeviceId,
-                x.Key.TypeId,
-                TimeStamp = x.Max(d => d.TimeStamp)
-            }).ToListAsync();
-
-            var latestMessages = await _context.Measurements.Where(
-                x => deviceIds.Contains(x.Sensor.DeviceId)
-                && x.Timestamp > _dateService.CurrentTime().AddDays(-1 * ApplicationConstants.DeviceLastMessageFetchLimitIndays)
-             ).GroupBy(x => x.Sensor.DeviceId).Select(d => new { DeviceId = d.Key, Latest = d.Max(x => x.Timestamp) }).ToListAsync();
-
-
-            var defaultImages = await _context.DeviceAttachments.Where(x => x.IsDefaultImage && deviceIds.Contains(x.DeviceId)).ToListAsync();
-            return devices.Select(device => new DeviceInfo()
-            {
-                Device = device,
-                OnlineSince = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.Online)?.TimeStamp,
-                RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
-                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest,
-                DefaultImageGuid = defaultImages.FirstOrDefault(x => x.DeviceId == device.Id)?.Guid
-            }).ToList();
         }
 
         public async Task DeleteAttachment(int deviceId, Guid attachmentIdentifier, bool saveChanges)
@@ -321,6 +289,34 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => model.LocationIds.Contains(x.LocationId));
             }
             return query;
+        }
+
+        private async Task<List<DeviceInfo>> GetDeviceInfos(IEnumerable<Device> devices)
+        {
+            var returnList = new List<DeviceInfo>();
+            var deviceIds = devices.Select(x => x.Id).ToList();
+            var query = await _context.DeviceEvents.Where(x => deviceIds.Contains(x.DeviceId)).GroupBy(x => new { x.DeviceId, x.TypeId }).Select(x => new
+            {
+                x.Key.DeviceId,
+                x.Key.TypeId,
+                TimeStamp = x.Max(d => d.TimeStamp)
+            }).ToListAsync();
+
+            var latestMessages = await _context.Measurements.Where(
+                x => deviceIds.Contains(x.Sensor.DeviceId)
+                && x.Timestamp > _dateService.CurrentTime().AddDays(-1 * ApplicationConstants.DeviceLastMessageFetchLimitIndays)
+             ).GroupBy(x => x.Sensor.DeviceId).Select(d => new { DeviceId = d.Key, Latest = d.Max(x => x.Timestamp) }).ToListAsync();
+
+
+            var defaultImages = await _context.DeviceAttachments.Where(x => x.IsDefaultImage && deviceIds.Contains(x.DeviceId)).ToListAsync();
+            return devices.Select(device => new DeviceInfo()
+            {
+                Device = device,
+                OnlineSince = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.Online)?.TimeStamp,
+                RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
+                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest,
+                DefaultImageGuid = defaultImages.FirstOrDefault(x => x.DeviceId == device.Id)?.Guid
+            }).ToList();
         }
     }
 }
