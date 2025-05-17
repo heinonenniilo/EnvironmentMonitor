@@ -22,7 +22,10 @@ import {
   Tooltip,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { getDatasetLabel } from "../utilities/measurementUtils";
+import {
+  getDatasetLabel,
+  getMeasurementUnit,
+} from "../utilities/measurementUtils";
 import {
   type MeasurementInfo,
   MeasurementsInfoTable,
@@ -33,6 +36,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { stringSort } from "../utilities/stringUtils";
 import { getColor } from "../utilities/graphUtils";
 import zoomPlugin from "chartjs-plugin-zoom";
+import { MeasurementsDialog } from "./MeasurementsDialog";
+import type { Measurement } from "../models/measurement";
 
 Chart.register(
   TimeScale,
@@ -100,6 +105,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
 
   const [autoScale, setAutoScale] = useState(false);
   const [hiddenDatasetIds, setHiddenDatasetIds] = useState<number[]>([]);
+  const [measurementsToShow, setMeasurementsToShow] = useState<Measurement[]>(
+    []
+  );
+  const [dialogTitle, setDialogTitle] = useState("");
   const chartRef = useRef<any>(null); // Types?
 
   useEffect(() => {
@@ -179,8 +188,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           returnArray.push({
             min: m.minValues[val],
             max: m.maxValues[val],
+            sensor: sensors?.find((s) => s.id === m.sensorId),
             latest: m.latestValues[val],
             label: getSensorLabel(m.sensorId, val),
+            type: val,
           });
         }
       }
@@ -254,6 +265,14 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       sx={{ maxHeight: "100%", width: "100%" }}
       position={"relative"}
     >
+      <MeasurementsDialog
+        isOpen={measurementsToShow.length > 0}
+        measurements={measurementsToShow}
+        onClose={() => {
+          setMeasurementsToShow([]);
+        }}
+        title={dialogTitle}
+      />
       {isLoading && (
         <Box
           position="absolute"
@@ -479,7 +498,32 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       </Box>
       {!hideInfo ? (
         <Box width={"100%"} maxHeight={"200px"} overflow={"auto"}>
-          <MeasurementsInfoTable infoRows={getInfoValues()} />
+          <MeasurementsInfoTable
+            onClick={(row) => {
+              const toShow = model?.measurements.find(
+                (s) => s.sensorId === row.sensor?.id
+              );
+
+              if (toShow) {
+                const matchingSensor = sensors?.find(
+                  (s) => s.id == toShow.sensorId
+                );
+                const matchingDevice = devices?.find(
+                  (d) => d.id === matchingSensor?.deviceId
+                );
+
+                setDialogTitle(
+                  `${matchingDevice?.displayName} / ${matchingSensor?.name}:${
+                    row.type ? getMeasurementUnit(row.type) : ""
+                  }`
+                );
+                setMeasurementsToShow(
+                  toShow.measurements.filter((m) => m.typeId === row.type)
+                );
+              }
+            }}
+            infoRows={getInfoValues()}
+          />
         </Box>
       ) : null}
     </Box>
