@@ -23,10 +23,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
             _dateService = dateService;
             _logger = logger;
         }
-        public async Task<Device?> GetDeviceByIdentifier(string deviceId)
-        {
-            return await _context.Devices.Include(x => x.Sensors).FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
-        }
 
         public async Task<List<Device>> GetDevices(GetDeviceModel model)
         {
@@ -95,7 +91,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<List<DeviceInfo>> GetDeviceInfo(GetDeviceModel model)
         {
-            IQueryable<Device> query = GetFilteredQuery(model);
+            IQueryable<Device> query = GetFilteredDeviceQuery(model);
             query = query.Include(x => x.Sensors);
             return await GetDeviceInfos(query);
         }
@@ -103,17 +99,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public async Task<List<DeviceEvent>> GetDeviceEvents(int id)
         {
             var query = _context.DeviceEvents.Where(x => x.DeviceId == id).OrderByDescending(x => x.TimeStamp).Take(100);
-            return await query.ToListAsync();
-        }
-
-        public async Task<List<DeviceEvent>> GetDeviceEvents(string deviceIdentifier)
-        {
-            var device = await GetDeviceByIdentifier(deviceIdentifier);
-            if (device == null)
-            {
-                return [];
-            }
-            var query = _context.DeviceEvents.Include(x => x.Type).Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).Take(100);
             return await query.ToListAsync();
         }
 
@@ -330,7 +315,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return toReturn ?? throw new EntityNotFoundException();
         }
 
-        private IQueryable<Device> GetFilteredQuery(GetDeviceModel model)
+        private IQueryable<Device> GetFilteredDeviceQuery(GetDeviceModel model)
         {
             IQueryable<Device> query = _context.Devices;
             if (model.GetAttachments)

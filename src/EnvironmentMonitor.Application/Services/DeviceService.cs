@@ -45,7 +45,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier) ?? throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
+            var device = (await _deviceRepository.GetDevices(new GetDeviceModel() { DeviceIdentifiers = [deviceIdentifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
             _logger.LogInformation($"Trying to reboot device with identifier '{deviceIdentifier}'");
             await _messageService.SendMessageToDevice(deviceIdentifier, "REBOOT");
             await AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true);
@@ -57,7 +57,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
+            var device = (await _deviceRepository.GetDevices(new GetDeviceModel() { DeviceIdentifiers = [deviceIdentifier] })).FirstOrDefault();
             if (device == null)
             {
                 throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
@@ -74,7 +74,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
+            var device = (await _deviceRepository.GetDevices(new GetDeviceModel() { DeviceIdentifiers = [deviceIdentifier] })).FirstOrDefault();
             if (device == null)
             {
                 throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
@@ -107,8 +107,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel)
         {
-            var device = await _deviceRepository.GetDeviceByIdentifier(deviceIdentifier);
-
+            var device = (await _deviceRepository.GetDevices(new GetDeviceModel() { DeviceIdentifiers = [deviceIdentifier] })).FirstOrDefault();
             if (device == null || !_userService.HasAccessToDevice(device.Id, accessLevel))
             {
                 throw new UnauthorizedAccessException();
@@ -195,7 +194,7 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<List<DeviceEventDto>> GetDeviceEvents(string identifier)
         {
             var device = await GetDevice(identifier, AccessLevels.Read) ?? throw new UnauthorizedAccessException();
-            var events = await _deviceRepository.GetDeviceEvents(identifier);
+            var events = await _deviceRepository.GetDeviceEvents(device.Id);
             return _mapper.Map<List<DeviceEventDto>>(events);
         }
 

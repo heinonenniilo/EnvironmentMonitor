@@ -12,7 +12,6 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IDeviceRepository
     {
-        Task<Device?> GetDeviceByIdentifier(string deviceId);
 
         Task<List<Device>> GetDevices(GetDeviceModel model);
 
@@ -21,7 +20,6 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<Attachment> GetAttachment(int deviceId, Guid attachmentIdentifier);
 
         Task<List<DeviceEvent>> GetDeviceEvents(int id);
-        Task<List<DeviceEvent>> GetDeviceEvents(string deviceIdentifier);
 
         Task<IEnumerable<Sensor>> GetSensors(GetDeviceModel model);
 
