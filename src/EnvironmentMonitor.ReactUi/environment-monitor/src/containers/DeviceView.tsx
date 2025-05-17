@@ -21,6 +21,7 @@ import moment from "moment";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { type DeviceStatusModel } from "../models/deviceStatus";
 import { MeasurementTypes } from "../enums/measurementTypes";
+import { setDevices } from "../reducers/measurementReducer";
 
 interface PromiseInfo {
   type: string;
@@ -209,6 +210,17 @@ export const DeviceView: React.FC = () => {
             severity: "success",
           })
         );
+        // Update devices
+        measurementApiHook
+          .getDevices()
+          .then((res) => {
+            if (res) {
+              dispatch(setDevices(res));
+            }
+          })
+          .catch((ex) => {
+            console.error(ex);
+          });
       })
       .catch((er) => {
         console.error(er);
