@@ -136,7 +136,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var existingSensorIdsInClaims = claims.Where(x => x.Type == EntityRoles.Sensor.ToString()).Select(x => int.Parse(x.Value)).ToList();
 
             var deviceIdsAsClaims = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => int.Parse(x.Value)).ToList();
-            var deviceIdsMatchingsLocations = (await _deviceRepository.GetDevicesByLocation(locationIdsAsClaims)).Select(x => x.Id).ToList();
+            var deviceIdsMatchingsLocations = (await _deviceRepository.GetDevices(new GetDeviceModel() { LocationIds = locationIdsAsClaims })).Select(x => x.Id).ToList();
 
             var deviceIds = new List<int>(deviceIdsAsClaims);
             deviceIds.AddRange(deviceIdsMatchingsLocations);

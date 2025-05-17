@@ -87,7 +87,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<List<DeviceDto>> GetDevices()
         {
-            var devices = await _deviceRepository.GetDevices(_userService.IsAdmin ? null : _userService.GetDevices());
+            var devices = await _deviceRepository.GetDevices(new GetDeviceModel() { Ids = _userService.IsAdmin ? null : _userService.GetDevices() });
             return _mapper.Map<List<DeviceDto>>(devices);
         }
 
@@ -141,7 +141,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var devices = await _deviceRepository.GetDevices([deviceId], false);
+            var devices = await _deviceRepository.GetDevices(new GetDeviceModel() { Ids = [deviceId], OnlyVisible = false });
             var device = devices.FirstOrDefault();
             if (device == null)
             {
@@ -157,13 +157,17 @@ namespace EnvironmentMonitor.Application.Services
             var infos = new List<DeviceInfo>();
             if (identifiers?.Any() == true)
             {
-                infos = (await _deviceRepository.GetDeviceInfo(identifiers, onlyVisible, getAttachments)).Where(d => _userService.HasAccessToDevice(d.Device.Id, AccessLevels.Read)).ToList();
+                infos = (await _deviceRepository.GetDeviceInfo(new GetDeviceModel() { DeviceIdentifiers = identifiers, OnlyVisible = onlyVisible, GetAttachments = getAttachments })).Where(d => _userService.HasAccessToDevice(d.Device.Id, AccessLevels.Read)).ToList();
             }
             else
             {
-                infos = await _deviceRepository.GetDeviceInfo(_userService.IsAdmin ? null : _userService.GetDevices(), onlyVisible, getAttachments);
+                infos = await _deviceRepository.GetDeviceInfo(new GetDeviceModel()
+                {
+                    Ids = _userService.IsAdmin ? null : _userService.GetDevices(),
+                    OnlyVisible = onlyVisible,
+                    GetAttachments = getAttachments
+                });
             }
-
             var listToReturn = _mapper.Map<List<DeviceInfoDto>>(infos);
             foreach (var info in listToReturn)
             {
@@ -239,7 +243,7 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<AttachmentDownloadModel?> GetDefaultImage(string deviceIdentifier)
         {
             var device = await GetDevice(deviceIdentifier, AccessLevels.Read);
-            var deviceInfo = (await _deviceRepository.GetDeviceInfo([device.Id], false, true)).FirstOrDefault();
+            var deviceInfo = (await _deviceRepository.GetDeviceInfo(new GetDeviceModel() { Ids = [device.Id], GetAttachments = true, OnlyVisible = false })).FirstOrDefault();
             var attachment = deviceInfo?.Device.Attachments.FirstOrDefault(x => x.IsDefaultImage);
             if (attachment == null)
             {
@@ -290,7 +294,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var device = (await _deviceRepository.GetDevices([model.Device.Id])).FirstOrDefault();
+            var device = (await _deviceRepository.GetDevices(new GetDeviceModel() { Ids = [model.Device.Id] })).FirstOrDefault();
             var updateModel = _mapper.Map<Device>(model.Device);
             var info = await _deviceRepository.AddOrUpdate(updateModel, true);
             return _mapper.Map<DeviceInfoDto>(info);

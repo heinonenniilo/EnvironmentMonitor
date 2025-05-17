@@ -113,7 +113,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<List<DeviceInfoDto>> GetDeviceInfos()
         {
-            var result = await _deviceService.GetDeviceInfos(false, null); // Also the ones marked as non-visible
+            var result = await _deviceService.GetDeviceInfos(false, null); 
             return result;
         }
 
@@ -121,7 +121,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> GetDeviceInfo(string identifier)
         {
-            var result = await _deviceService.GetDeviceInfos(false, [identifier], true); // Also the ones marked as non-visible
+            var result = await _deviceService.GetDeviceInfos(false, [identifier], true);
             return result.First();
         }
 

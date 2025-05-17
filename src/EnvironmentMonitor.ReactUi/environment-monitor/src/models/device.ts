@@ -7,4 +7,5 @@ export interface Device {
   visible: boolean;
   hasMotionSensor: boolean;
   sensors: Sensor[];
+  locationId?: number;
 }

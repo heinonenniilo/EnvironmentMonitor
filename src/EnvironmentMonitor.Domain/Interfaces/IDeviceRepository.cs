@@ -14,12 +14,9 @@ namespace EnvironmentMonitor.Domain.Interfaces
     {
         Task<Device?> GetDeviceByIdentifier(string deviceId);
 
-        Task<List<Device>> GetDevices(List<int>? ids = null, bool onlyVisible = true);
-        Task<List<Device>> GetDevices(List<string>? identifiers = null, bool onlyVisible = true);
-        Task<List<Device>> GetDevicesByLocation(List<int> locationIds);
+        Task<List<Device>> GetDevices(GetDeviceModel model);
 
-        Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible, bool getAttachments = false);
-        Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible, bool getAttachments = false);
+        Task<List<DeviceInfo>> GetDeviceInfo(GetDeviceModel model);
 
         Task<Attachment> GetAttachment(int deviceId, Guid attachmentIdentifier);
 

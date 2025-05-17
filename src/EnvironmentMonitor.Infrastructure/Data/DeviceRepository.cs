@@ -28,27 +28,28 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return await _context.Devices.Include(x => x.Sensors).FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
         }
 
-        public async Task<Device?> GetDeviceByIdentifier(string deviceId, params Expression<Func<Device, object>>[] includes)
+        public async Task<List<Device>> GetDevices(GetDeviceModel model)
         {
             IQueryable<Device> query = _context.Devices;
-
-            foreach (var include in includes)
+            if (model.Identifiers != null)
             {
-                query = query.Include(include);
+                query = query.Where(x => model.Identifiers.Contains(x.Identifier));
+            }
+            if (model.Ids != null)
+            {
+                query = query.Where(x => model.Ids.Contains(x.Id));
             }
 
-            return await query.FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
-        }
+            if (model.DeviceIdentifiers != null)
+            {
+                query = query.Where(x => model.DeviceIdentifiers.Contains(x.DeviceIdentifier));
+            }
 
-        public async Task<List<Device>> GetDevices(List<int>? ids = null, bool onlyVisible = true)
-        {
-            var devices = await _context.Devices.Where(d => (ids == null || ids.Contains(d.Id)) && (!onlyVisible || d.Visible)).ToListAsync();
-            return devices;
-        }
-
-        public async Task<List<Device>> GetDevices(List<string>? identifiers = null, bool onlyVisible = true)
-        {
-            var devices = await _context.Devices.Where(d => (identifiers == null || identifiers.Contains(d.DeviceIdentifier)) && (!onlyVisible || d.Visible)).ToListAsync();
+            if (model.OnlyVisible)
+            {
+                query = query.Where(x => x.Visible);
+            }
+            var devices = await query.ToListAsync();
             return devices;
         }
 
@@ -94,29 +95,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return toAdd;
         }
 
-        public async Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible, bool getAttachments = false)
+        public async Task<List<DeviceInfo>> GetDeviceInfo(GetDeviceModel model)
         {
-            IQueryable<Device> query = _context.Devices;
-            if (getAttachments)
-            {
-                query = query.Include(x => x.Attachments).ThenInclude(a => a.Attachment);
-            }
+            IQueryable<Device> query = GetFilteredQuery(model);
             query = query.Include(x => x.Sensors);
-            var devices = query.Where(x => ids == null || ids.Contains(x.Id));
-            return await GetDeviceInfos(devices);
-        }
-
-        public async Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible, bool getAttachments = false)
-        {
-            IQueryable<Device> query = _context.Devices;
-            if (getAttachments)
-            {
-                query = query.Include(x => x.Attachments).ThenInclude(a => a.Attachment);
-            }
-
-            query = query.Include(x => x.Sensors);
-            var devices = query.Where(x => identifiers == null || identifiers.Contains(x.DeviceIdentifier));
-            return await GetDeviceInfos(devices);
+            return await GetDeviceInfos(query);
         }
 
         public async Task<List<DeviceEvent>> GetDeviceEvents(int id)
@@ -326,8 +309,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 deviceToUpdate = new Device() { Name = device.Name, DeviceIdentifier = device.DeviceIdentifier };
             }
-            deviceToUpdate.Name = string.IsNullOrEmpty(device.Name) ?  deviceToUpdate.Name : device.Name;
-            deviceToUpdate.DeviceIdentifier = string.IsNullOrEmpty(device.DeviceIdentifier) ? deviceToUpdate.DeviceIdentifier : device.DeviceIdentifier ;
+            deviceToUpdate.Name = string.IsNullOrEmpty(device.Name) ? deviceToUpdate.Name : device.Name;
+            deviceToUpdate.DeviceIdentifier = string.IsNullOrEmpty(device.DeviceIdentifier) ? deviceToUpdate.DeviceIdentifier : device.DeviceIdentifier;
             deviceToUpdate.Visible = device.Visible;
 
             if (deviceInDb == null)
@@ -339,8 +322,40 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 await _context.SaveChangesAsync();
             }
-            var toReturn = (await GetDeviceInfo([deviceToUpdate.Id], false, true)).FirstOrDefault();
+            var toReturn = (await GetDeviceInfo(new GetDeviceModel()
+            {
+                Ids = [deviceToUpdate.Id],
+                GetAttachments = true,
+                OnlyVisible = false
+            }))
+            .FirstOrDefault();
             return toReturn ?? throw new EntityNotFoundException();
+        }
+
+        private IQueryable<Device> GetFilteredQuery(GetDeviceModel model)
+        {
+            IQueryable<Device> query = _context.Devices;
+            if (model.GetAttachments)
+            {
+                query = query.Include(x => x.Attachments).ThenInclude(a => a.Attachment);
+            }
+            if (model.Ids != null)
+            {
+                query = query.Where(x => model.Ids.Contains(x.Id));
+            }
+            if (model.DeviceIdentifiers != null)
+            {
+                query = query.Where(x => model.DeviceIdentifiers.Contains(x.DeviceIdentifier));
+            }
+            if (model.OnlyVisible)
+            {
+                query = query.Where(x => x.Visible);
+            }
+            if (model.LocationIds != null)
+            {
+                query = query.Where(x => model.LocationIds.Contains(x.LocationId));
+            }
+            return query;
         }
     }
 }
