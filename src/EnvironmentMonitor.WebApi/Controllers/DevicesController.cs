@@ -33,7 +33,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpPut("update")]
-        public async Task<DeviceInfoDto> Reboot([FromBody] UpdateDeviceDto model) => await _deviceService.UpdateDevice(model);
+        public async Task<DeviceInfoDto> Update([FromBody] UpdateDeviceDto model) => await _deviceService.UpdateDevice(model);
 
         [HttpPost("reboot")]
         [Authorize(Roles = "Admin")]
@@ -49,7 +49,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> UploadAttachment([FromForm] string deviceId, IFormFile file)
+        public async Task<DeviceInfoDto> UploadAttachment([FromForm] Guid deviceId, IFormFile file)
         {
             var maxFileSize = _fileUploadSettings.MaxImageUploadSizeMb * 1024 * 1024;
             if (file == null || file.Length > maxFileSize)
@@ -69,7 +69,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet("attachment/{deviceId}/{identifier}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "image/jpeg")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAttachment([FromRoute] string deviceId, [FromRoute] Guid identifier)
+        public async Task<IActionResult> GetAttachment([FromRoute] Guid deviceId, [FromRoute] Guid identifier)
         {
             var stream = await _deviceService.GetAttachment(deviceId, identifier);
             return stream == null ? NotFound() : new FileStreamResult(stream.Stream, stream.ContentType);
@@ -78,7 +78,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet("default-image/{deviceId}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "image/jpeg")]
         [Authorize(Roles = "Admin")]
-        public async Task<FileStreamResult?> GetDefaultImage([FromRoute] string deviceId)
+        public async Task<FileStreamResult?> GetDefaultImage([FromRoute] Guid deviceId)
         {
             var stream = await _deviceService.GetDefaultImage(deviceId);
             return stream == null ? null : new FileStreamResult(stream.Stream, stream.ContentType);
@@ -95,7 +95,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpDelete("attachment/{deviceId}/{attachmentIdentifier}")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> DeleteAttachment([FromRoute] string deviceId, [FromRoute] Guid attachmentIdentifier)
+        public async Task<DeviceInfoDto> DeleteAttachment([FromRoute] Guid deviceId, [FromRoute] Guid attachmentIdentifier)
         {
             await _deviceService.DeleteAttachment(deviceId, attachmentIdentifier);
             var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId], true);
@@ -103,51 +103,30 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<List<DeviceDto>> GetDevices()
-        {
-            var result = await _deviceService.GetDevices();
-            return result;
-        }
+        public async Task<List<DeviceDto>> GetDevices() => await _deviceService.GetDevices(true, true);
 
         [HttpGet(template: "info")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos()
-        {
-            var result = await _deviceService.GetDeviceInfos(false, null); // Also the ones marked as non-visible
-            return result;
-        }
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos() => await _deviceService.GetDeviceInfos(false, null, false, true);
 
         [HttpGet(template: "info/{identifier}")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> GetDeviceInfo(string identifier)
+        public async Task<DeviceInfoDto> GetDeviceInfo(Guid identifier)
         {
-            var result = await _deviceService.GetDeviceInfos(false, [identifier], true); // Also the ones marked as non-visible
+            var result = await _deviceService.GetDeviceInfos(false, [identifier], true, true);
             return result.First();
         }
 
         [HttpGet(template: "{identifier}")]
-        public async Task<DeviceDto> GetDevice([FromRoute] string identifier)
-        {
-            return await _deviceService.GetDevice(identifier, AccessLevels.Read);
-        }
+        public async Task<DeviceDto> GetDevice([FromRoute] string identifier) => await _deviceService.GetDevice(identifier, AccessLevels.Read);
 
         [HttpGet(template: "events/{identifier}")]
-        public async Task<List<DeviceEventDto>> GetDeviceEvents([FromRoute] string identifier)
-        {
-            return await _deviceService.GetDeviceEvents(identifier);
-        }
+        public async Task<List<DeviceEventDto>> GetDeviceEvents([FromRoute] Guid identifier) => await _deviceService.GetDeviceEvents(identifier);
 
         [HttpGet("sensors")]
-        public async Task<List<SensorDto>> GetSensors([FromQuery] List<string> deviceIds)
-        {
-            var result = await _deviceService.GetSensors(deviceIds);
-            return result;
-        }
+        public async Task<List<SensorDto>> GetSensors([FromQuery] List<Guid> deviceIds) => await _deviceService.GetSensors(deviceIds);
 
         [HttpGet("status")]
-        public async Task<DeviceStatusModel> GetDeviceStatus([FromQuery] GetDeviceStatusModel model)
-        {
-            return await _deviceService.GetDeviceStatus(model);
-        }
+        public async Task<DeviceStatusModel> GetDeviceStatus([FromQuery] GetDeviceStatusModel model) => await _deviceService.GetDeviceStatus(model);
     }
 }

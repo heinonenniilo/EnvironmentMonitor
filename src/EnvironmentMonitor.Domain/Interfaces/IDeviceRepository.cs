@@ -12,23 +12,16 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IDeviceRepository
     {
-        Task<Device?> GetDeviceByIdentifier(string deviceId);
 
-        Task<List<Device>> GetDevices(List<int>? ids = null, bool onlyVisible = true);
-        Task<List<Device>> GetDevices(List<string>? identifiers = null, bool onlyVisible = true);
-        Task<List<Device>> GetDevicesByLocation(List<int> locationIds);
+        Task<List<Device>> GetDevices(GetDevicesModel model);
 
-        Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible, bool getAttachments = false);
-        Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible, bool getAttachments = false);
+        Task<List<DeviceInfo>> GetDeviceInfo(GetDevicesModel model);
 
         Task<Attachment> GetAttachment(int deviceId, Guid attachmentIdentifier);
 
         Task<List<DeviceEvent>> GetDeviceEvents(int id);
-        Task<List<DeviceEvent>> GetDeviceEvents(string deviceIdentifier);
 
-        Task<IEnumerable<Sensor>> GetSensorsByDeviceIdsAsync(List<int> deviceId);
-        Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers);
-        public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);
+        Task<IEnumerable<Sensor>> GetSensors(GetSensorsModel model);
 
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);
         public Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges);

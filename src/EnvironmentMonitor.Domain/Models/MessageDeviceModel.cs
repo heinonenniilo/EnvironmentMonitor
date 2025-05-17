@@ -8,7 +8,7 @@ namespace EnvironmentMonitor.Domain.Models
 {
     public class MessageDeviceModel
     {
-        public required string DeviceIdentifier { get; set; }
+        public required Guid DeviceIdentifier { get; set; }
     }
 
     public class SetMotionControlStatusMessage : MessageDeviceModel

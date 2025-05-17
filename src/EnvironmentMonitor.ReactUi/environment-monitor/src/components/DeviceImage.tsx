@@ -108,7 +108,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
       return "";
     }
 
-    return `/api/devices/attachment/${device?.device.deviceIdentifier}/${activeAttachment.guid}`;
+    return `/api/devices/attachment/${device?.device.identifier}/${activeAttachment.guid}`;
   };
 
   return !device ? (

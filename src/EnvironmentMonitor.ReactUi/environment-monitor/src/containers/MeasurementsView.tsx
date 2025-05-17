@@ -53,9 +53,9 @@ export const MeasurementsView: React.FC = () => {
   };
 
   const toggleDeviceSelection = (deviceId: string) => {
-    const matchingDevice = devices.find((d) => d.deviceIdentifier === deviceId);
+    const matchingDevice = devices.find((d) => d.identifier === deviceId);
 
-    if (!selectedDevices.some((s) => s.deviceIdentifier === deviceId)) {
+    if (!selectedDevices.some((s) => s.identifier === deviceId)) {
       if (matchingDevice) {
         setSelectedDevices([...selectedDevices, matchingDevice]);
       }
@@ -64,16 +64,14 @@ export const MeasurementsView: React.FC = () => {
         selectedSensors.filter((s) => s.deviceId !== matchingDevice?.id)
       );
       setSelectedDevices(
-        selectedDevices.filter((s) => s.deviceIdentifier !== deviceId)
+        selectedDevices.filter((s) => s.identifier !== deviceId)
       );
     }
   };
 
   useEffect(() => {
     if (deviceId !== undefined && devices.length > 0) {
-      const matchingDevice = devices.find(
-        (d) => d.deviceIdentifier === deviceId
-      );
+      const matchingDevice = devices.find((d) => d.identifier === deviceId);
       if (matchingDevice) {
         setSelectedDevices([matchingDevice]);
         const sensorIds = sensors

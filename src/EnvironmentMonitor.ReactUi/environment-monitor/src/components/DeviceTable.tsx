@@ -7,6 +7,7 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { CheckCircle, Photo, WarningAmber } from "@mui/icons-material";
 import { useState } from "react";
 import { DeviceImageDialog } from "./DeviceImageDialog";
+import { getDeviceTitle } from "../utilities/deviceUtils";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
@@ -17,6 +18,7 @@ export interface DeviceTableProps {
   showDeviceImageAsTooltip?: boolean;
   hideName?: boolean;
   hideId?: boolean;
+  renderLink?: boolean;
 }
 
 export const DeviceTable: React.FC<DeviceTableProps> = ({
@@ -26,6 +28,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   hideName,
   hideId,
   showDeviceImageAsTooltip,
+  renderLink,
   onClickVisible,
 }) => {
   const formatDate = (input: Date | undefined | null) => {
@@ -42,15 +45,18 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       hideable: true,
       flex: 1,
       maxWidth: 70,
-      renderCell: (params) => (
-        <Link
-          to={`${routes.devices}/${
-            (params?.row as DeviceInfo)?.device.deviceIdentifier
-          }`}
-        >
-          {(params?.row as DeviceInfo)?.device.id}
-        </Link>
-      ),
+      renderCell: (params) =>
+        renderLink ? (
+          <Link
+            to={`${routes.devices}/${
+              (params?.row as DeviceInfo)?.device.identifier
+            }`}
+          >
+            {(params?.row as DeviceInfo)?.device.id}
+          </Link>
+        ) : (
+          (params?.row as DeviceInfo)?.device.id
+        ),
       valueGetter: (_value, row) => {
         if (!row) {
           return "";
@@ -64,21 +70,26 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       hideable: true,
       flex: 1,
       minWidth: 200,
-      renderCell: (params) => (
-        <Link
-          to={`${routes.devices}/${
-            (params?.row as DeviceInfo)?.device.deviceIdentifier
-          }`}
-          onClick={() => {}}
-        >
-          {(params?.row as DeviceInfo)?.device.name}
-        </Link>
-      ),
+      renderCell: (params) => {
+        const text = getDeviceTitle((params?.row as DeviceInfo).device);
+        return renderLink ? (
+          <Link
+            to={`${routes.devices}/${
+              (params?.row as DeviceInfo)?.device.identifier
+            }`}
+            onClick={() => {}}
+          >
+            {text}
+          </Link>
+        ) : (
+          text
+        );
+      },
       valueGetter: (_value, row) => {
         if (!row) {
           return "";
         }
-        return (row as DeviceInfo)?.device.name;
+        return getDeviceTitle((row as DeviceInfo)?.device);
       },
     },
     {
@@ -92,11 +103,11 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         if (!device.defaultImageGuid) {
           return null;
         }
-        const imageUrl = `/api/Devices/default-image/${device.device.deviceIdentifier}`;
+        const imageUrl = `/api/Devices/default-image/${device.device.identifier}`;
         const iconButtonToRender = (
           <IconButton
             onClick={() => {
-              setSelectedDeviceIdentifier(device.device.deviceIdentifier);
+              setSelectedDeviceIdentifier(device.device.identifier);
             }}
           >
             <Photo />
@@ -247,9 +258,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
 
   const selectedDevice =
     selectedDeviceIdentifier !== undefined
-      ? devices.find(
-          (d) => d.device.deviceIdentifier === selectedDeviceIdentifier
-        )
+      ? devices.find((d) => d.device.identifier === selectedDeviceIdentifier)
       : undefined;
 
   return (
@@ -293,8 +302,8 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
               columnVisibilityModel:
                 hideName || hideId
                   ? {
-                      name: hideName ?? false,
-                      id: hideId ?? false,
+                      name: hideName ? false : true,
+                      id: hideId ? false : true,
                     }
                   : undefined,
             },

@@ -117,7 +117,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         devices.length > 1 &&
         devices.find((d) => d.id === matchingSensor?.deviceId);
       if (device) {
-        sensorName = `${device.name}: ${sensorName}`;
+        sensorName = device.displayName
+          ? `${device.displayName}: ${sensorName}`
+          : `${device.name}: ${sensorName}`;
       }
 
       return getDatasetLabel(sensorName, typeId as MeasurementTypes);
@@ -197,6 +199,11 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         return "";
       }
     }
+
+    if (singleDevice.displayName) {
+      return singleDevice.displayName;
+    }
+
     return `${singleDevice?.name} / (${singleDevice?.id})`;
   };
 
@@ -274,7 +281,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         alignItems="center" // Align children vertically
       >
         {titleAsLink ? (
-          <Link to={`${routes.measurements}/${singleDevice?.deviceIdentifier}`}>
+          <Link to={`${routes.measurements}/${singleDevice?.identifier}`}>
             <Typography align="left" gutterBottom>
               {getTitle()}
             </Typography>

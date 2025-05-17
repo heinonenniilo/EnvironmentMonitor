@@ -12,6 +12,7 @@ import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { type Device } from "../models/device";
 import { type Sensor } from "../models/sensor";
 import { stringSort } from "../utilities/stringUtils";
+import { getDeviceTitle } from "../utilities/deviceUtils";
 
 export interface MeasurementsLeftViewProps {
   onSearch: (
@@ -58,7 +59,9 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   const getSensorText = (sensor: Sensor) => {
     if (selectedDevices && selectedDevices.length > 1) {
       const matchingDevice = devices.find((d) => d.id === sensor.deviceId);
-      return `${matchingDevice?.name}: ${sensor.name}`;
+      return `${matchingDevice?.displayName ?? matchingDevice?.name}: ${
+        sensor.name
+      }`;
     }
     return sensor.name;
   };
@@ -107,24 +110,26 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
             value={
               selectedDevices
                 ? selectedDevices.map((s) => {
-                    return s.deviceIdentifier;
+                    return s.identifier;
                   })
                 : []
             }
             label="Device"
             multiple
           >
-            {devices.map((y) => (
-              <MenuItem
-                value={y.deviceIdentifier}
-                key={`device-${y.deviceIdentifier}`}
-                onClick={() => {
-                  onSelectDevice(y.deviceIdentifier);
-                }}
-              >
-                {y.name}
-              </MenuItem>
-            ))}
+            {[...devices]
+              .sort((a, b) => stringSort(getDeviceTitle(a), getDeviceTitle(b)))
+              .map((y) => (
+                <MenuItem
+                  value={y.identifier}
+                  key={`device-${y.identifier}`}
+                  onClick={() => {
+                    onSelectDevice(y.identifier);
+                  }}
+                >
+                  {getDeviceTitle(y)}
+                </MenuItem>
+              ))}
           </Select>
         </FormControl>
       </Box>

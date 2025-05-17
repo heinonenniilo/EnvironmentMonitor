@@ -41,7 +41,11 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
     if (!row.device) {
       return null;
     }
-    return <TableCell>{`${row.device.name}`}</TableCell>;
+    return (
+      <TableCell>
+        {row.device.displayName ? row.device.displayName : `${row.device.name}`}
+      </TableCell>
+    );
   };
 
   const hasDevices = () => {

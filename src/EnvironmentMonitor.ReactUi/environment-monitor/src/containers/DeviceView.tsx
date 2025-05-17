@@ -21,6 +21,8 @@ import moment from "moment";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { type DeviceStatusModel } from "../models/deviceStatus";
 import { MeasurementTypes } from "../enums/measurementTypes";
+import { setDevices } from "../reducers/measurementReducer";
+import { getDeviceTitle } from "../utilities/deviceUtils";
 
 interface PromiseInfo {
   type: string;
@@ -209,6 +211,17 @@ export const DeviceView: React.FC = () => {
             severity: "success",
           })
         );
+        // Update devices
+        measurementApiHook
+          .getDevices()
+          .then((res) => {
+            if (res) {
+              dispatch(setDevices(res));
+            }
+          })
+          .catch((ex) => {
+            console.error(ex);
+          });
       })
       .catch((er) => {
         console.error(er);
@@ -224,10 +237,10 @@ export const DeviceView: React.FC = () => {
     }
     setIsLoading(true);
     deviceHook
-      .setMotionControlState(selectedDevice.device.deviceIdentifier, state)
+      .setMotionControlState(selectedDevice.device.identifier, state)
       .then((res) => {
         if (res) {
-          getDeviceEvents(selectedDevice.device.deviceIdentifier);
+          getDeviceEvents(selectedDevice.device.identifier);
           dispatch(
             addNotification({
               title: message ?? "Message sent to device",
@@ -260,10 +273,10 @@ export const DeviceView: React.FC = () => {
     }
     setIsLoading(true);
     deviceHook
-      .setMotionControlDelay(selectedDevice.device.deviceIdentifier, delayMs)
+      .setMotionControlDelay(selectedDevice.device.identifier, delayMs)
       .then((res) => {
         if (res) {
-          getDeviceEvents(selectedDevice.device.deviceIdentifier);
+          getDeviceEvents(selectedDevice.device.identifier);
           dispatch(
             addNotification({
               title: message ?? "Message sent to device",
@@ -294,9 +307,9 @@ export const DeviceView: React.FC = () => {
     }
     setIsLoading(true);
     deviceHook
-      .rebootDevice(selectedDevice?.device.deviceIdentifier)
+      .rebootDevice(selectedDevice?.device.identifier)
       .then(() => {
-        getDeviceEvents(selectedDevice?.device.deviceIdentifier);
+        getDeviceEvents(selectedDevice?.device.identifier);
         dispatch(
           addNotification({
             title: message ?? "Message sent to device",
@@ -326,7 +339,7 @@ export const DeviceView: React.FC = () => {
     setIsLoading(true);
 
     deviceHook
-      .uploadImage(selectedDevice?.device.deviceIdentifier, file)
+      .uploadImage(selectedDevice?.device.identifier, file)
       .then((res) => {
         setSelectedDevice(res);
         setDefaultImageVer(defaultImageVer + 1);
@@ -353,7 +366,7 @@ export const DeviceView: React.FC = () => {
     setIsLoading(true);
 
     deviceHook
-      .deleteAttachment(selectedDevice.device.deviceIdentifier, identifier)
+      .deleteAttachment(selectedDevice.device.identifier, identifier)
       .then((res) => {
         setSelectedDevice(res);
         dispatch(
@@ -380,7 +393,7 @@ export const DeviceView: React.FC = () => {
     setIsLoading(true);
 
     deviceHook
-      .setDefaultImage(selectedDevice?.device.deviceIdentifier, identifier)
+      .setDefaultImage(selectedDevice?.device.identifier, identifier)
       .then((res) => {
         setSelectedDevice(res);
         dispatch(
@@ -401,7 +414,7 @@ export const DeviceView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      title={`${selectedDevice?.device?.name ?? ""}`}
+      title={getDeviceTitle(selectedDevice?.device)}
       isLoading={isLoading}
     >
       <Box

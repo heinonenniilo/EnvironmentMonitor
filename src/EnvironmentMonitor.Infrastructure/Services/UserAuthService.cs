@@ -136,13 +136,19 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var existingSensorIdsInClaims = claims.Where(x => x.Type == EntityRoles.Sensor.ToString()).Select(x => int.Parse(x.Value)).ToList();
 
             var deviceIdsAsClaims = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => int.Parse(x.Value)).ToList();
-            var deviceIdsMatchingsLocations = (await _deviceRepository.GetDevicesByLocation(locationIdsAsClaims)).Select(x => x.Id).ToList();
+            var deviceIdsMatchingsLocations = (await _deviceRepository.GetDevices(new GetDevicesModel() { LocationIds = locationIdsAsClaims })).Select(x => x.Id).ToList();
 
             var deviceIds = new List<int>(deviceIdsAsClaims);
             deviceIds.AddRange(deviceIdsMatchingsLocations);
 
             var claimsToReturn = new List<Claim>();
-            var sensorIdsMatchingDevices = (await _deviceRepository.GetSensorsByDeviceIdsAsync(deviceIds)).Select(x => x.Id).ToList();
+            var sensorIdsMatchingDevices = (await _deviceRepository.GetSensors(new GetSensorsModel()
+            {
+                DevicesModel = new GetDevicesModel()
+                {
+                    Ids = deviceIds
+                }
+            })).Select(x => x.Id).ToList();
 
             claimsToReturn.AddRange(sensorIdsMatchingDevices
                 .Where(x => !existingSensorIdsInClaims.Contains(x))

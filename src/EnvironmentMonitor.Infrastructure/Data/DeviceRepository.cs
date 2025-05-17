@@ -23,51 +23,30 @@ namespace EnvironmentMonitor.Infrastructure.Data
             _dateService = dateService;
             _logger = logger;
         }
-        public async Task<Device?> GetDeviceByIdentifier(string deviceId)
+
+        public async Task<List<Device>> GetDevices(GetDevicesModel model)
         {
-            return await _context.Devices.Include(x => x.Sensors).FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
+            IQueryable<Device> query = GetFilteredDeviceQuery(model);
+            var devices = await query.ToListAsync();
+            return devices;
         }
 
-        public async Task<Device?> GetDeviceByIdentifier(string deviceId, params Expression<Func<Device, object>>[] includes)
+        public async Task<IEnumerable<Sensor>> GetSensors(GetSensorsModel model)
         {
-            IQueryable<Device> query = _context.Devices;
-
-            foreach (var include in includes)
+            var query = _context.Sensors.Where(x =>
+                (model.DevicesModel.DeviceIdentifiers == null || model.DevicesModel.DeviceIdentifiers.Contains(x.Device.DeviceIdentifier))
+                && (model.DevicesModel.Ids == null || model.DevicesModel.Ids.Contains(x.Device.Id))
+                && (model.DevicesModel.Identifiers == null || model.DevicesModel.Identifiers.Contains(x.Device.Identifier))
+                );
+            if (model.Ids != null)
             {
-                query = query.Include(include);
+                query = query.Where(x => model.Ids.Contains(x.Id));
             }
-
-            return await query.FirstOrDefaultAsync(x => x.DeviceIdentifier == deviceId);
-        }
-
-        public async Task<List<Device>> GetDevices(List<int>? ids = null, bool onlyVisible = true)
-        {
-            var devices = await _context.Devices.Where(d => (ids == null || ids.Contains(d.Id)) && (!onlyVisible || d.Visible)).ToListAsync();
-            return devices;
-        }
-
-        public async Task<List<Device>> GetDevices(List<string>? identifiers = null, bool onlyVisible = true)
-        {
-            var devices = await _context.Devices.Where(d => (identifiers == null || identifiers.Contains(d.DeviceIdentifier)) && (!onlyVisible || d.Visible)).ToListAsync();
-            return devices;
-        }
-
-        public async Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal)
-        {
-            var sensor = await _context.Sensors.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.SensorId == sensorIdInternal);
-            return sensor;
-        }
-
-        public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdsAsync(List<int> deviceIds)
-        {
-            var sensors = await _context.Sensors.Where(x => deviceIds.Contains(x.DeviceId)).ToListAsync();
-            return sensors;
-        }
-
-        public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers)
-        {
-            var sensors = await _context.Sensors.Where(x => deviceIdentifiers.Contains(x.Device.DeviceIdentifier)).ToListAsync();
-            return sensors;
+            if (model.SensorIds != null)
+            {
+                query = query.Where(x => model.SensorIds.Contains(x.SensorId));
+            }
+            return await query.ToListAsync();
         }
 
         public async Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? dateTimeUtc)
@@ -94,51 +73,17 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return toAdd;
         }
 
-        public async Task<List<DeviceInfo>> GetDeviceInfo(List<int>? ids, bool onlyVisible, bool getAttachments = false)
+        public async Task<List<DeviceInfo>> GetDeviceInfo(GetDevicesModel model)
         {
-            IQueryable<Device> query = _context.Devices;
-            if (getAttachments)
-            {
-                query = query.Include(x => x.Attachments).ThenInclude(a => a.Attachment);
-            }
+            IQueryable<Device> query = GetFilteredDeviceQuery(model);
             query = query.Include(x => x.Sensors);
-            var devices = query.Where(x => ids == null || ids.Contains(x.Id));
-            return await GetDeviceInfos(devices);
-        }
-
-        public async Task<List<DeviceInfo>> GetDeviceInfo(List<string>? identifiers, bool onlyVisible, bool getAttachments = false)
-        {
-            IQueryable<Device> query = _context.Devices;
-            if (getAttachments)
-            {
-                query = query.Include(x => x.Attachments).ThenInclude(a => a.Attachment);
-            }
-
-            query = query.Include(x => x.Sensors);
-            var devices = query.Where(x => identifiers == null || identifiers.Contains(x.DeviceIdentifier));
-            return await GetDeviceInfos(devices);
+            return await GetDeviceInfos(query);
         }
 
         public async Task<List<DeviceEvent>> GetDeviceEvents(int id)
         {
-            var query = _context.DeviceEvents.Where(x => x.DeviceId == id).OrderByDescending(x => x.TimeStamp).Take(100);
+            var query = _context.DeviceEvents.Include(x => x.Type).Where(x => x.DeviceId == id).OrderByDescending(x => x.TimeStamp).Take(100);
             return await query.ToListAsync();
-        }
-
-        public async Task<List<DeviceEvent>> GetDeviceEvents(string deviceIdentifier)
-        {
-            var device = await GetDeviceByIdentifier(deviceIdentifier);
-            if (device == null)
-            {
-                return [];
-            }
-            var query = _context.DeviceEvents.Include(x => x.Type).Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).Take(100);
-            return await query.ToListAsync();
-        }
-
-        public async Task<List<Device>> GetDevicesByLocation(List<int> locationIds)
-        {
-            return await _context.Devices.Where(x => locationIds.Contains(x.LocationId)).ToListAsync();
         }
 
         public async Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges)
@@ -167,37 +112,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
             return deviceAttachment.Attachment;
         }
+
         public async Task SaveChanges()
         {
             await _context.SaveChangesAsync();
-        }
-
-        private async Task<List<DeviceInfo>> GetDeviceInfos(IEnumerable<Device> devices)
-        {
-            var returnList = new List<DeviceInfo>();
-            var deviceIds = devices.Select(x => x.Id).ToList();
-            var query = await _context.DeviceEvents.Where(x => deviceIds.Contains(x.DeviceId)).GroupBy(x => new { x.DeviceId, x.TypeId }).Select(x => new
-            {
-                x.Key.DeviceId,
-                x.Key.TypeId,
-                TimeStamp = x.Max(d => d.TimeStamp)
-            }).ToListAsync();
-
-            var latestMessages = await _context.Measurements.Where(
-                x => deviceIds.Contains(x.Sensor.DeviceId)
-                && x.Timestamp > _dateService.CurrentTime().AddDays(-1 * ApplicationConstants.DeviceLastMessageFetchLimitIndays)
-             ).GroupBy(x => x.Sensor.DeviceId).Select(d => new { DeviceId = d.Key, Latest = d.Max(x => x.Timestamp) }).ToListAsync();
-
-
-            var defaultImages = await _context.DeviceAttachments.Where(x => x.IsDefaultImage && deviceIds.Contains(x.DeviceId)).ToListAsync();
-            return devices.Select(device => new DeviceInfo()
-            {
-                Device = device,
-                OnlineSince = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.Online)?.TimeStamp,
-                RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
-                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest,
-                DefaultImageGuid = defaultImages.FirstOrDefault(x => x.DeviceId == device.Id)?.Guid
-            }).ToList();
         }
 
         public async Task DeleteAttachment(int deviceId, Guid attachmentIdentifier, bool saveChanges)
@@ -326,8 +244,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 deviceToUpdate = new Device() { Name = device.Name, DeviceIdentifier = device.DeviceIdentifier };
             }
-            deviceToUpdate.Name = string.IsNullOrEmpty(device.Name) ?  deviceToUpdate.Name : device.Name;
-            deviceToUpdate.DeviceIdentifier = string.IsNullOrEmpty(device.DeviceIdentifier) ? deviceToUpdate.DeviceIdentifier : device.DeviceIdentifier ;
+            deviceToUpdate.Name = string.IsNullOrEmpty(device.Name) ? deviceToUpdate.Name : device.Name;
+            deviceToUpdate.DeviceIdentifier = string.IsNullOrEmpty(device.DeviceIdentifier) ? deviceToUpdate.DeviceIdentifier : device.DeviceIdentifier;
             deviceToUpdate.Visible = device.Visible;
 
             if (deviceInDb == null)
@@ -339,8 +257,81 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 await _context.SaveChangesAsync();
             }
-            var toReturn = (await GetDeviceInfo([deviceToUpdate.Id], false, true)).FirstOrDefault();
+            var toReturn = (await GetDeviceInfo(new GetDevicesModel()
+            {
+                Ids = [deviceToUpdate.Id],
+                GetAttachments = true,
+                OnlyVisible = false
+            }))
+            .FirstOrDefault();
             return toReturn ?? throw new EntityNotFoundException();
+        }
+
+        private IQueryable<Device> GetFilteredDeviceQuery(GetDevicesModel model)
+        {
+            IQueryable<Device> query = _context.Devices;
+            if (model.GetAttachments)
+            {
+                query = query.Include(x => x.Attachments).ThenInclude(a => a.Attachment);
+            }
+
+            if (model.GetLocation)
+            {
+                query = query.Include(x => x.Location);
+            }
+
+            if (model.Ids != null)
+            {
+                query = query.Where(x => model.Ids.Contains(x.Id));
+            }
+            if (model.DeviceIdentifiers != null)
+            {
+                query = query.Where(x => model.DeviceIdentifiers.Contains(x.DeviceIdentifier));
+            }
+
+            if (model.Identifiers != null)
+            {
+                query = query.Where(x => model.Identifiers.Contains(x.Identifier));
+            }
+
+            if (model.OnlyVisible)
+            {
+                query = query.Where(x => x.Visible);
+            }
+
+            if (model.LocationIds != null)
+            {
+                query = query.Where(x => model.LocationIds.Contains(x.LocationId));
+            }
+            return query;
+        }
+
+        private async Task<List<DeviceInfo>> GetDeviceInfos(IEnumerable<Device> devices)
+        {
+            var returnList = new List<DeviceInfo>();
+            var deviceIds = devices.Select(x => x.Id).ToList();
+            var query = await _context.DeviceEvents.Where(x => deviceIds.Contains(x.DeviceId)).GroupBy(x => new { x.DeviceId, x.TypeId }).Select(x => new
+            {
+                x.Key.DeviceId,
+                x.Key.TypeId,
+                TimeStamp = x.Max(d => d.TimeStamp)
+            }).ToListAsync();
+
+            var latestMessages = await _context.Measurements.Where(
+                x => deviceIds.Contains(x.Sensor.DeviceId)
+                && x.Timestamp > _dateService.CurrentTime().AddDays(-1 * ApplicationConstants.DeviceLastMessageFetchLimitIndays)
+             ).GroupBy(x => x.Sensor.DeviceId).Select(d => new { DeviceId = d.Key, Latest = d.Max(x => x.Timestamp) }).ToListAsync();
+
+
+            var defaultImages = await _context.DeviceAttachments.Where(x => x.IsDefaultImage && deviceIds.Contains(x.DeviceId)).ToListAsync();
+            return devices.Select(device => new DeviceInfo()
+            {
+                Device = device,
+                OnlineSince = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.Online)?.TimeStamp,
+                RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
+                LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest,
+                DefaultImageGuid = defaultImages.FirstOrDefault(x => x.DeviceId == device.Id)?.Guid
+            }).ToList();
         }
     }
 }

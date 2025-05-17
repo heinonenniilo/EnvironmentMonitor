@@ -81,6 +81,25 @@ export const DashboardView: React.FC = () => {
     });
   }, [devices, sensors, viewModel]);
 
+  const list = measurementsModel
+    .slice()
+    .sort((a, b) => {
+      const locA = a.device.locationId ?? 0;
+      const locB = b.device.locationId ?? 0;
+      return locA - locB;
+    })
+    .map(({ device, sensors, model }) => {
+      return (
+        <DashboardDeviceGraph
+          device={device}
+          model={model}
+          sensors={sensors}
+          key={device.id}
+          timeRange={timeRange}
+        />
+      );
+    });
+
   return (
     <AppContentWrapper
       title="Dashboard - Devices"
@@ -114,17 +133,7 @@ export const DashboardView: React.FC = () => {
             height: "100%",
           }}
         >
-          {measurementsModel.map(({ device, sensors, model }) => {
-            return (
-              <DashboardDeviceGraph
-                device={device}
-                model={model}
-                sensors={sensors}
-                key={device.id}
-                timeRange={timeRange}
-              />
-            );
-          })}
+          {list}
         </Box>
       </Box>
     </AppContentWrapper>

@@ -47,7 +47,7 @@ export const DevicesView: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    const deviceIdentifier = device.deviceIdentifier;
+    const deviceIdentifier = device.identifier;
 
     deviceHook
       .rebootDevice(deviceIdentifier)
@@ -93,6 +93,7 @@ export const DevicesView: React.FC = () => {
     <AppContentWrapper title="Devices" isLoading={isLoading}>
       <DeviceTable
         devices={sorted}
+        renderLink
         onReboot={(device) => {
           dispatch(
             setConfirmDialog({
@@ -100,7 +101,7 @@ export const DevicesView: React.FC = () => {
                 rebootDevice(device.device);
               },
               title: `Reboot ${device.device.name}?`,
-              body: `Reboot command will be sent to ${device.device.name}.  Id: ${device.device.id}, Identifier: '${device.device.deviceIdentifier}'`,
+              body: `Reboot command will be sent to ${device.device.name}.  Id: ${device.device.id}, Identifier: '${device.device.identifier}'`,
             })
           );
         }}
