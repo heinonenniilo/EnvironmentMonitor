@@ -280,6 +280,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => model.DeviceIdentifiers.Contains(x.DeviceIdentifier));
             }
+
+            if (model.Identifiers != null)
+            {
+                query = query.Where(x => model.Identifiers.Contains(x.Identifier));
+            }
+
             if (model.OnlyVisible)
             {
                 query = query.Where(x => x.Visible);
