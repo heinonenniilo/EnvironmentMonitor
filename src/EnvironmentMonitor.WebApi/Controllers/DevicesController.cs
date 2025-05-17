@@ -113,7 +113,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<List<DeviceInfoDto>> GetDeviceInfos()
         {
-            var result = await _deviceService.GetDeviceInfos(false, null); 
+            var result = await _deviceService.GetDeviceInfos(false, null, false, true);
             return result;
         }
 

@@ -69,24 +69,22 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       hideable: true,
       flex: 1,
       minWidth: 200,
-      renderCell: (params) =>
-        renderLink ? (
+      renderCell: (params) => {
+        const text =
+          (params?.row as DeviceInfo)?.device.displayName ??
+          (params?.row as DeviceInfo)?.device.name;
+        return renderLink ? (
           <Link
             to={`${routes.devices}/${
               (params?.row as DeviceInfo)?.device.identifier
             }`}
             onClick={() => {}}
           >
-            {(params?.row as DeviceInfo)?.device.name}
+            {text}
           </Link>
         ) : (
-          (params?.row as DeviceInfo)?.device.name
-        ),
-      valueGetter: (_value, row) => {
-        if (!row) {
-          return "";
-        }
-        return (row as DeviceInfo)?.device.name;
+          text
+        );
       },
     },
     {

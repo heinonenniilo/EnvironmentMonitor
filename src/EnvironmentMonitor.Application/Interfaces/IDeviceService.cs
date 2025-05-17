@@ -19,7 +19,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<DeviceDto> GetDevice(Guid identifier, AccessLevels accessLevel);
 
         public Task<List<DeviceDto>> GetDevices(bool onlyVisible, bool getLocation);
-        public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false);
+        public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false);
         public Task<List<SensorDto>> GetSensors(List<Guid> identifiers);
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
 

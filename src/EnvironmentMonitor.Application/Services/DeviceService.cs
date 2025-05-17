@@ -185,13 +185,20 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
 
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false)
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false)
         {
             _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
             var infos = new List<DeviceInfo>();
             if (identifiers?.Any() == true)
             {
-                infos = (await _deviceRepository.GetDeviceInfo(new GetDevicesModel() { Identifiers = identifiers, OnlyVisible = onlyVisible, GetAttachments = getAttachments })).Where(d => _userService.HasAccessToDevice(d.Device.Id, AccessLevels.Read)).ToList();
+                infos = (await _deviceRepository.GetDeviceInfo(new GetDevicesModel()
+                {
+                    Identifiers = identifiers,
+                    OnlyVisible = onlyVisible,
+                    GetAttachments = getAttachments,
+                    GetLocation = getLocation
+                }))
+                .Where(d => _userService.HasAccessToDevice(d.Device.Id, AccessLevels.Read)).ToList();
             }
             else
             {
@@ -199,7 +206,8 @@ namespace EnvironmentMonitor.Application.Services
                 {
                     Ids = _userService.IsAdmin ? null : _userService.GetDevices(),
                     OnlyVisible = onlyVisible,
-                    GetAttachments = getAttachments
+                    GetAttachments = getAttachments,
+                    GetLocation = getLocation
                 });
             }
             var listToReturn = _mapper.Map<List<DeviceInfoDto>>(infos);
