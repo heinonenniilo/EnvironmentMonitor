@@ -22,6 +22,7 @@ import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { type DeviceStatusModel } from "../models/deviceStatus";
 import { MeasurementTypes } from "../enums/measurementTypes";
 import { setDevices } from "../reducers/measurementReducer";
+import { getDeviceTitle } from "../utilities/deviceUtils";
 
 interface PromiseInfo {
   type: string;
@@ -413,7 +414,7 @@ export const DeviceView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      title={`${selectedDevice?.device?.name ?? ""}`}
+      title={getDeviceTitle(selectedDevice?.device)}
       isLoading={isLoading}
     >
       <Box

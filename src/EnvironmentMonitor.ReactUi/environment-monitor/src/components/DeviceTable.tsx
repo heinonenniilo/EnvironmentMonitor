@@ -7,6 +7,7 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { CheckCircle, Photo, WarningAmber } from "@mui/icons-material";
 import { useState } from "react";
 import { DeviceImageDialog } from "./DeviceImageDialog";
+import { getDeviceTitle } from "../utilities/deviceUtils";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
@@ -70,9 +71,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       flex: 1,
       minWidth: 200,
       renderCell: (params) => {
-        const text =
-          (params?.row as DeviceInfo)?.device.displayName ??
-          (params?.row as DeviceInfo)?.device.name;
+        const text = getDeviceTitle((params?.row as DeviceInfo).device);
         return renderLink ? (
           <Link
             to={`${routes.devices}/${
