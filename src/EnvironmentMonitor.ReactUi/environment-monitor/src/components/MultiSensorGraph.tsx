@@ -170,10 +170,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   }, [model]);
 
   const getInfoValues = () => {
-    let returnArray: MeasurementInfo[] = [];
+    const returnArray: MeasurementInfo[] = [];
     model?.measurements.forEach((m) => {
-      for (let item in MeasurementTypes) {
-        let val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
+      for (const item in MeasurementTypes) {
+        const val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
 
         if (m.minValues[val] !== undefined) {
           returnArray.push({
@@ -211,7 +211,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     if (autoScale) {
       return undefined;
     }
-    let minScales =
+    const minScales =
       sensors
         ?.filter((d) => d.scaleMin !== undefined)
         .map((d) => d.scaleMin ?? 0) ?? [];
@@ -224,7 +224,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     if (autoScale) {
       return undefined;
     }
-    let maxScales =
+    const maxScales =
       sensors
         ?.filter((d) => d.scaleMax !== undefined)
         .map((d) => d.scaleMax ?? 0) ?? [];
