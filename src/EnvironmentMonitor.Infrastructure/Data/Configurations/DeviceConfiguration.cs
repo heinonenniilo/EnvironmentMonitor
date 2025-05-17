@@ -22,7 +22,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
             builder.Property(x => x.DeviceIdentifier).IsRequired();
             builder.HasIndex(x => x.DeviceIdentifier).IsUnique();
 
-            builder.HasIndex(d => d.Name).IsUnique();
+            builder.HasIndex(d => new { d.Name, d.LocationId }).IsUnique();
 
             builder.Property(x => x.Visible).HasDefaultValue(true);
 
