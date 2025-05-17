@@ -274,7 +274,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         alignItems="center" // Align children vertically
       >
         {titleAsLink ? (
-          <Link to={`${routes.measurements}/${singleDevice?.deviceIdentifier}`}>
+          <Link to={`${routes.measurements}/${singleDevice?.identifier}`}>
             <Typography align="left" gutterBottom>
               {getTitle()}
             </Typography>

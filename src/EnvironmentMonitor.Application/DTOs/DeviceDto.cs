@@ -12,7 +12,7 @@ namespace EnvironmentMonitor.Application.DTOs
     public class DeviceDto : IMapFrom<Device>
     {
         public int Id { get; set; }
-        public Guid DeviceIdentifier { get; set; }
+        public Guid Identifier { get; set; }
         public string Name { get; set; }
         public List<SensorDto> Sensors { get; set; } = [];
         public bool Visible { get; set; }
@@ -22,7 +22,6 @@ namespace EnvironmentMonitor.Application.DTOs
         public void Mapping(Profile profile)
         {
             profile.CreateMap<Device, DeviceDto>()
-                .ForMember(x => x.DeviceIdentifier, opt => opt.MapFrom(x => x.Identifier))
                 .ReverseMap();
         }
     }

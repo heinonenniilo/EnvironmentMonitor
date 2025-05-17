@@ -1,7 +1,7 @@
 import type { Sensor } from "./sensor";
 
 export interface Device {
-  deviceIdentifier: string;
+  identifier: string;
   id: number;
   name: string;
   visible: boolean;

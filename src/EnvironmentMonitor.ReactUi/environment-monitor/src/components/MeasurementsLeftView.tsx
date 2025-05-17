@@ -107,7 +107,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
             value={
               selectedDevices
                 ? selectedDevices.map((s) => {
-                    return s.deviceIdentifier;
+                    return s.identifier;
                   })
                 : []
             }
@@ -116,10 +116,10 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
           >
             {devices.map((y) => (
               <MenuItem
-                value={y.deviceIdentifier}
-                key={`device-${y.deviceIdentifier}`}
+                value={y.identifier}
+                key={`device-${y.identifier}`}
                 onClick={() => {
-                  onSelectDevice(y.deviceIdentifier);
+                  onSelectDevice(y.identifier);
                 }}
               >
                 {y.name}

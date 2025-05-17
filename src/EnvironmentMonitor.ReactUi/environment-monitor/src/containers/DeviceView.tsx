@@ -224,10 +224,10 @@ export const DeviceView: React.FC = () => {
     }
     setIsLoading(true);
     deviceHook
-      .setMotionControlState(selectedDevice.device.deviceIdentifier, state)
+      .setMotionControlState(selectedDevice.device.identifier, state)
       .then((res) => {
         if (res) {
-          getDeviceEvents(selectedDevice.device.deviceIdentifier);
+          getDeviceEvents(selectedDevice.device.identifier);
           dispatch(
             addNotification({
               title: message ?? "Message sent to device",
@@ -260,10 +260,10 @@ export const DeviceView: React.FC = () => {
     }
     setIsLoading(true);
     deviceHook
-      .setMotionControlDelay(selectedDevice.device.deviceIdentifier, delayMs)
+      .setMotionControlDelay(selectedDevice.device.identifier, delayMs)
       .then((res) => {
         if (res) {
-          getDeviceEvents(selectedDevice.device.deviceIdentifier);
+          getDeviceEvents(selectedDevice.device.identifier);
           dispatch(
             addNotification({
               title: message ?? "Message sent to device",
@@ -294,9 +294,9 @@ export const DeviceView: React.FC = () => {
     }
     setIsLoading(true);
     deviceHook
-      .rebootDevice(selectedDevice?.device.deviceIdentifier)
+      .rebootDevice(selectedDevice?.device.identifier)
       .then(() => {
-        getDeviceEvents(selectedDevice?.device.deviceIdentifier);
+        getDeviceEvents(selectedDevice?.device.identifier);
         dispatch(
           addNotification({
             title: message ?? "Message sent to device",
@@ -326,7 +326,7 @@ export const DeviceView: React.FC = () => {
     setIsLoading(true);
 
     deviceHook
-      .uploadImage(selectedDevice?.device.deviceIdentifier, file)
+      .uploadImage(selectedDevice?.device.identifier, file)
       .then((res) => {
         setSelectedDevice(res);
         setDefaultImageVer(defaultImageVer + 1);
@@ -353,7 +353,7 @@ export const DeviceView: React.FC = () => {
     setIsLoading(true);
 
     deviceHook
-      .deleteAttachment(selectedDevice.device.deviceIdentifier, identifier)
+      .deleteAttachment(selectedDevice.device.identifier, identifier)
       .then((res) => {
         setSelectedDevice(res);
         dispatch(
@@ -380,7 +380,7 @@ export const DeviceView: React.FC = () => {
     setIsLoading(true);
 
     deviceHook
-      .setDefaultImage(selectedDevice?.device.deviceIdentifier, identifier)
+      .setDefaultImage(selectedDevice?.device.identifier, identifier)
       .then((res) => {
         setSelectedDevice(res);
         dispatch(

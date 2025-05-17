@@ -205,7 +205,7 @@ namespace EnvironmentMonitor.Application.Services
         {
             var device = await GetDevice(identifier, AccessLevels.Write);
             var extension = Path.GetExtension(fileModel.FileName);
-            var fileNameToSave = $"{device.DeviceIdentifier}_{Guid.NewGuid()}{extension}";
+            var fileNameToSave = $"{device.Identifier}_{Guid.NewGuid()}{extension}";
             var res = await _storageClient.Upload(new UploadAttachmentModel()
             {
                 FileName = fileNameToSave,

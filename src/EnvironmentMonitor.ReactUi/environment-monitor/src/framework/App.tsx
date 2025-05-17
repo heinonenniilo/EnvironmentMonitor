@@ -109,7 +109,7 @@ export const App: React.FC<AppProps> = (props) => {
       dispath(setSensors([]));
     } else {
       measurementApiHook
-        .getSensors(devices.map((x) => x.deviceIdentifier))
+        .getSensors(devices.map((x) => x.identifier))
         .then((res) => {
           dispath(setSensors(res));
         });
