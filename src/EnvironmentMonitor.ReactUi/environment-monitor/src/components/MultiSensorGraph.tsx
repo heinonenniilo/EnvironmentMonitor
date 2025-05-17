@@ -117,7 +117,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         devices.length > 1 &&
         devices.find((d) => d.id === matchingSensor?.deviceId);
       if (device) {
-        sensorName = `${device.name}: ${sensorName}`;
+        sensorName = device.displayName
+          ? `${device.displayName}: ${sensorName}`
+          : `${device.name}: ${sensorName}`;
       }
 
       return getDatasetLabel(sensorName, typeId as MeasurementTypes);

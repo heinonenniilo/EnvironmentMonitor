@@ -58,7 +58,9 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   const getSensorText = (sensor: Sensor) => {
     if (selectedDevices && selectedDevices.length > 1) {
       const matchingDevice = devices.find((d) => d.id === sensor.deviceId);
-      return `${matchingDevice?.name}: ${sensor.name}`;
+      return `${matchingDevice?.displayName ?? matchingDevice?.name}: ${
+        sensor.name
+      }`;
     }
     return sensor.name;
   };
@@ -122,7 +124,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                   onSelectDevice(y.identifier);
                 }}
               >
-                {y.name}
+                {y.displayName ?? y.name}
               </MenuItem>
             ))}
           </Select>
