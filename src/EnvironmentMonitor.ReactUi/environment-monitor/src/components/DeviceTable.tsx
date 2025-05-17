@@ -17,6 +17,7 @@ export interface DeviceTableProps {
   showDeviceImageAsTooltip?: boolean;
   hideName?: boolean;
   hideId?: boolean;
+  renderLink?: boolean;
 }
 
 export const DeviceTable: React.FC<DeviceTableProps> = ({
@@ -26,6 +27,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   hideName,
   hideId,
   showDeviceImageAsTooltip,
+  renderLink,
   onClickVisible,
 }) => {
   const formatDate = (input: Date | undefined | null) => {
@@ -42,15 +44,18 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       hideable: true,
       flex: 1,
       maxWidth: 70,
-      renderCell: (params) => (
-        <Link
-          to={`${routes.devices}/${
-            (params?.row as DeviceInfo)?.device.identifier
-          }`}
-        >
-          {(params?.row as DeviceInfo)?.device.id}
-        </Link>
-      ),
+      renderCell: (params) =>
+        renderLink ? (
+          <Link
+            to={`${routes.devices}/${
+              (params?.row as DeviceInfo)?.device.identifier
+            }`}
+          >
+            {(params?.row as DeviceInfo)?.device.id}
+          </Link>
+        ) : (
+          (params?.row as DeviceInfo)?.device.id
+        ),
       valueGetter: (_value, row) => {
         if (!row) {
           return "";
@@ -64,16 +69,19 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       hideable: true,
       flex: 1,
       minWidth: 200,
-      renderCell: (params) => (
-        <Link
-          to={`${routes.devices}/${
-            (params?.row as DeviceInfo)?.device.identifier
-          }`}
-          onClick={() => {}}
-        >
-          {(params?.row as DeviceInfo)?.device.name}
-        </Link>
-      ),
+      renderCell: (params) =>
+        renderLink ? (
+          <Link
+            to={`${routes.devices}/${
+              (params?.row as DeviceInfo)?.device.identifier
+            }`}
+            onClick={() => {}}
+          >
+            {(params?.row as DeviceInfo)?.device.name}
+          </Link>
+        ) : (
+          (params?.row as DeviceInfo)?.device.name
+        ),
       valueGetter: (_value, row) => {
         if (!row) {
           return "";
@@ -291,8 +299,8 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
               columnVisibilityModel:
                 hideName || hideId
                   ? {
-                      name: hideName ?? false,
-                      id: hideId ?? false,
+                      name: hideName ? false : true,
+                      id: hideId ? false : true,
                     }
                   : undefined,
             },

@@ -93,6 +93,7 @@ export const DevicesView: React.FC = () => {
     <AppContentWrapper title="Devices" isLoading={isLoading}>
       <DeviceTable
         devices={sorted}
+        renderLink
         onReboot={(device) => {
           dispatch(
             setConfirmDialog({
