@@ -26,25 +26,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<List<Device>> GetDevices(GetDevicesModel model)
         {
-            IQueryable<Device> query = _context.Devices;
-            if (model.Identifiers != null)
-            {
-                query = query.Where(x => model.Identifiers.Contains(x.Identifier));
-            }
-            if (model.Ids != null)
-            {
-                query = query.Where(x => model.Ids.Contains(x.Id));
-            }
-
-            if (model.DeviceIdentifiers != null)
-            {
-                query = query.Where(x => model.DeviceIdentifiers.Contains(x.DeviceIdentifier));
-            }
-
-            if (model.OnlyVisible)
-            {
-                query = query.Where(x => x.Visible);
-            }
+            IQueryable<Device> query = GetFilteredDeviceQuery(model);
             var devices = await query.ToListAsync();
             return devices;
         }
