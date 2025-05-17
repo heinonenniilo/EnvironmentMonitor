@@ -513,9 +513,13 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                 );
 
                 setDialogTitle(
-                  `${matchingDevice?.displayName} / ${matchingSensor?.name}:${
-                    row.type ? getMeasurementUnit(row.type) : ""
-                  }`
+                  matchingDevice
+                    ? `${matchingDevice?.displayName} / ${
+                        matchingSensor?.name
+                      } ${row.type ? getMeasurementUnit(row.type) : ""}`
+                    : `${matchingSensor?.name} ${
+                        row.type ? getMeasurementUnit(row.type) : ""
+                      }`
                 );
                 setMeasurementsToShow(
                   toShow.measurements.filter((m) => m.typeId === row.type)
