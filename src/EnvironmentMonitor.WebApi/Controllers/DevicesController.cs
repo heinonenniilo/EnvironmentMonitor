@@ -103,19 +103,11 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<List<DeviceDto>> GetDevices()
-        {
-            var result = await _deviceService.GetDevices(true, true);
-            return result;
-        }
+        public async Task<List<DeviceDto>> GetDevices() => await _deviceService.GetDevices(true, true);
 
         [HttpGet(template: "info")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos()
-        {
-            var result = await _deviceService.GetDeviceInfos(false, null, false, true);
-            return result;
-        }
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos() => await _deviceService.GetDeviceInfos(false, null, false, true);
 
         [HttpGet(template: "info/{identifier}")]
         [Authorize(Roles = "Admin")]
@@ -126,28 +118,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet(template: "{identifier}")]
-        public async Task<DeviceDto> GetDevice([FromRoute] string identifier)
-        {
-            return await _deviceService.GetDevice(identifier, AccessLevels.Read);
-        }
+        public async Task<DeviceDto> GetDevice([FromRoute] string identifier) => await _deviceService.GetDevice(identifier, AccessLevels.Read);
 
         [HttpGet(template: "events/{identifier}")]
-        public async Task<List<DeviceEventDto>> GetDeviceEvents([FromRoute] Guid identifier)
-        {
-            return await _deviceService.GetDeviceEvents(identifier);
-        }
+        public async Task<List<DeviceEventDto>> GetDeviceEvents([FromRoute] Guid identifier) => await _deviceService.GetDeviceEvents(identifier);
 
         [HttpGet("sensors")]
-        public async Task<List<SensorDto>> GetSensors([FromQuery] List<Guid> deviceIds)
-        {
-            var result = await _deviceService.GetSensors(deviceIds);
-            return result;
-        }
+        public async Task<List<SensorDto>> GetSensors([FromQuery] List<Guid> deviceIds) => await _deviceService.GetSensors(deviceIds);
 
         [HttpGet("status")]
-        public async Task<DeviceStatusModel> GetDeviceStatus([FromQuery] GetDeviceStatusModel model)
-        {
-            return await _deviceService.GetDeviceStatus(model);
-        }
+        public async Task<DeviceStatusModel> GetDeviceStatus([FromQuery] GetDeviceStatusModel model) => await _deviceService.GetDeviceStatus(model);
     }
 }
