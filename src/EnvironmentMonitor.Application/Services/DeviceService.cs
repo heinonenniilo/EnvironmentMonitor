@@ -77,9 +77,14 @@ namespace EnvironmentMonitor.Application.Services
             await AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control delay set to: {(int)delayMs} ms", true);
         }
 
-        public async Task<List<DeviceDto>> GetDevices(bool onlyVisible)
+        public async Task<List<DeviceDto>> GetDevices(bool onlyVisible, bool getLocation)
         {
-            var devices = await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = _userService.IsAdmin ? null : _userService.GetDevices(), OnlyVisible = true });
+            var devices = await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Ids = _userService.IsAdmin ? null : _userService.GetDevices(),
+                OnlyVisible = onlyVisible,
+                GetLocation = getLocation
+            });
             return _mapper.Map<List<DeviceDto>>(devices);
         }
 

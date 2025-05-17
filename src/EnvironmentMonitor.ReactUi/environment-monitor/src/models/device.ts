@@ -8,4 +8,5 @@ export interface Device {
   hasMotionSensor: boolean;
   sensors: Sensor[];
   locationId?: number;
+  displayName?: string;
 }

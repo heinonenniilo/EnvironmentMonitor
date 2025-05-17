@@ -197,6 +197,11 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         return "";
       }
     }
+
+    if (singleDevice.displayName) {
+      return singleDevice.displayName;
+    }
+
     return `${singleDevice?.name} / (${singleDevice?.id})`;
   };
 

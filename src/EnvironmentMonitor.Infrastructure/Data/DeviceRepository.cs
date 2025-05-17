@@ -274,6 +274,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Include(x => x.Attachments).ThenInclude(a => a.Attachment);
             }
+
+            if (model.GetLocation)
+            {
+                query = query.Include(x => x.Location);
+            }
+
             if (model.Ids != null)
             {
                 query = query.Where(x => model.Ids.Contains(x.Id));
@@ -292,6 +298,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => x.Visible);
             }
+
             if (model.LocationIds != null)
             {
                 query = query.Where(x => model.LocationIds.Contains(x.LocationId));

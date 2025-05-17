@@ -16,6 +16,7 @@ namespace EnvironmentMonitor.Domain.Models
         public List<int>? LocationIds { get; set; }
         public bool OnlyVisible { get; set; }
         public bool GetAttachments { get; set; }
+        public bool GetLocation { get; set; }
     }
 
     public class GetSensorsModel
