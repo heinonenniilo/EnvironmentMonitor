@@ -105,7 +105,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet]
         public async Task<List<DeviceDto>> GetDevices()
         {
-            var result = await _deviceService.GetDevices();
+            var result = await _deviceService.GetDevices(true);
             return result;
         }
 
