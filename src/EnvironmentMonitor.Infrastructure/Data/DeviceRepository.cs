@@ -98,7 +98,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<List<DeviceEvent>> GetDeviceEvents(int id)
         {
-            var query = _context.DeviceEvents.Where(x => x.DeviceId == id).OrderByDescending(x => x.TimeStamp).Take(100);
+            var query = _context.DeviceEvents.Include(x => x.Type).Where(x => x.DeviceId == id).OrderByDescending(x => x.TimeStamp).Take(100);
             return await query.ToListAsync();
         }
 

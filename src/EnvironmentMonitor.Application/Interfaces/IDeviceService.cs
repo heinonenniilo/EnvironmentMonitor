@@ -11,24 +11,29 @@ namespace EnvironmentMonitor.Application.Interfaces
 {
     public interface IDeviceService
     {
-        public Task Reboot(string deviceIdentifier);
-        public Task SetMotionControlStatus(string deviceIdentifier, MotionControlStatus status);
-        public Task SetMotionControlDelay(string deviceIdentifier, long delayMs);
+        public Task Reboot(Guid identifier);
+        public Task SetMotionControlStatus(Guid identifier, MotionControlStatus status);
+        public Task SetMotionControlDelay(Guid identifier, long delayMs);
+
         public Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel);
+        public Task<DeviceDto> GetDevice(Guid identifier, AccessLevels accessLevel);
+
         public Task<List<DeviceDto>> GetDevices();
-        public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<string>? identifiers, bool getAttachments = false);
-        public Task<List<SensorDto>> GetSensors(List<string> deviceIdentifiers);
+        public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false);
+        public Task<List<SensorDto>> GetSensors(List<Guid> identifiers);
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
+
         public Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
+
         public Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model);
-        public Task AddAttachment(string deviceIdentifier, UploadAttachmentModel fileModel);
-        public Task DeleteAttachment(string deviceIdentifier, Guid attachmentIdentifier);
-        public Task<AttachmentDownloadModel?> GetAttachment(string deviceIdentifier, Guid attachmentIdentifier);
-        public Task<AttachmentDownloadModel?> GetDefaultImage(string deviceIdentifier);
-        public Task SetDefaultImage(string deviceIdentifier, Guid attachmentGuid);
+        public Task AddAttachment(Guid identifier, UploadAttachmentModel fileModel);
+        public Task DeleteAttachment(Guid identifier, Guid attachmentIdentifier);
+        public Task<AttachmentDownloadModel?> GetAttachment(Guid identifier, Guid attachmentIdentifier);
+        public Task<AttachmentDownloadModel?> GetDefaultImage(Guid identifier);
+        public Task SetDefaultImage(Guid identifier, Guid attachmentGuid);
 
         public Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null);
-        public Task<List<DeviceEventDto>> GetDeviceEvents(string identifier);
+        public Task<List<DeviceEventDto>> GetDeviceEvents(Guid identifier);
         public Task SetStatus(SetDeviceStatusModel model);
 
         public Task<DeviceInfoDto> UpdateDevice(UpdateDeviceDto model);
