@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Models
 {
-    public class GetDeviceModel
+    public class GetDevicesModel
     {
         public List<int>? Ids { get; set; }
         public List<string>? DeviceIdentifiers { get; set; }

@@ -13,15 +13,15 @@ namespace EnvironmentMonitor.Domain.Interfaces
     public interface IDeviceRepository
     {
 
-        Task<List<Device>> GetDevices(GetDeviceModel model);
+        Task<List<Device>> GetDevices(GetDevicesModel model);
 
-        Task<List<DeviceInfo>> GetDeviceInfo(GetDeviceModel model);
+        Task<List<DeviceInfo>> GetDeviceInfo(GetDevicesModel model);
 
         Task<Attachment> GetAttachment(int deviceId, Guid attachmentIdentifier);
 
         Task<List<DeviceEvent>> GetDeviceEvents(int id);
 
-        Task<IEnumerable<Sensor>> GetSensors(GetDeviceModel model);
+        Task<IEnumerable<Sensor>> GetSensors(GetDevicesModel model);
 
         public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);
 

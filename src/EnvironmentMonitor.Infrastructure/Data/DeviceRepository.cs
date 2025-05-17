@@ -24,7 +24,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             _logger = logger;
         }
 
-        public async Task<List<Device>> GetDevices(GetDeviceModel model)
+        public async Task<List<Device>> GetDevices(GetDevicesModel model)
         {
             IQueryable<Device> query = _context.Devices;
             if (model.Identifiers != null)
@@ -55,7 +55,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return sensor;
         }
 
-        public async Task<IEnumerable<Sensor>> GetSensors(GetDeviceModel model)
+        public async Task<IEnumerable<Sensor>> GetSensors(GetDevicesModel model)
         {
             var sensors = await _context.Sensors.Where(x =>
                 (model.DeviceIdentifiers == null || model.DeviceIdentifiers.Contains(x.Device.DeviceIdentifier))
@@ -89,7 +89,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return toAdd;
         }
 
-        public async Task<List<DeviceInfo>> GetDeviceInfo(GetDeviceModel model)
+        public async Task<List<DeviceInfo>> GetDeviceInfo(GetDevicesModel model)
         {
             IQueryable<Device> query = GetFilteredDeviceQuery(model);
             query = query.Include(x => x.Sensors);
@@ -305,7 +305,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 await _context.SaveChangesAsync();
             }
-            var toReturn = (await GetDeviceInfo(new GetDeviceModel()
+            var toReturn = (await GetDeviceInfo(new GetDevicesModel()
             {
                 Ids = [deviceToUpdate.Id],
                 GetAttachments = true,
@@ -315,7 +315,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return toReturn ?? throw new EntityNotFoundException();
         }
 
-        private IQueryable<Device> GetFilteredDeviceQuery(GetDeviceModel model)
+        private IQueryable<Device> GetFilteredDeviceQuery(GetDevicesModel model)
         {
             IQueryable<Device> query = _context.Devices;
             if (model.GetAttachments)
