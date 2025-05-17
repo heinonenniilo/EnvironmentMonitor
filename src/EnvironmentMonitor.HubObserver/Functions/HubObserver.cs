@@ -77,7 +77,6 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Adding measurements failed");
-                    throw;
                 }
             }
             _logger.LogInformation($"Total of {processedMessaged} processed");
