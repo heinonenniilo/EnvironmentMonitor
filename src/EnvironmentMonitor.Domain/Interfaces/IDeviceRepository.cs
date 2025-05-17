@@ -23,8 +23,8 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<List<DeviceEvent>> GetDeviceEvents(int id);
         Task<List<DeviceEvent>> GetDeviceEvents(string deviceIdentifier);
 
-        Task<IEnumerable<Sensor>> GetSensorsByDeviceIdsAsync(List<int> deviceId);
-        Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers);
+        Task<IEnumerable<Sensor>> GetSensors(GetDeviceModel model);
+
         public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);
 
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);

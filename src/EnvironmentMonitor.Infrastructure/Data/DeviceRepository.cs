@@ -59,15 +59,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return sensor;
         }
 
-        public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdsAsync(List<int> deviceIds)
+        public async Task<IEnumerable<Sensor>> GetSensors(GetDeviceModel model)
         {
-            var sensors = await _context.Sensors.Where(x => deviceIds.Contains(x.DeviceId)).ToListAsync();
-            return sensors;
-        }
-
-        public async Task<IEnumerable<Sensor>> GetSensorsByDeviceIdentifiers(List<string> deviceIdentifiers)
-        {
-            var sensors = await _context.Sensors.Where(x => deviceIdentifiers.Contains(x.Device.DeviceIdentifier)).ToListAsync();
+            var sensors = await _context.Sensors.Where(x =>
+                (model.DeviceIdentifiers == null || model.DeviceIdentifiers.Contains(x.Device.DeviceIdentifier))
+                && (model.Ids == null || model.Ids.Contains(x.Device.Id))
+                && (model.Identifiers == null || model.Identifiers.Contains(x.Device.Identifier))
+                ).ToListAsync();
             return sensors;
         }
 

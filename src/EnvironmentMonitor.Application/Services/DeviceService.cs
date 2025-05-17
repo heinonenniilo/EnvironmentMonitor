@@ -93,7 +93,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<List<SensorDto>> GetSensors(List<string> deviceIdentifiers)
         {
-            var sensors = await _deviceRepository.GetSensorsByDeviceIdentifiers(deviceIdentifiers);
+            var sensors = await _deviceRepository.GetSensors(new GetDeviceModel() { DeviceIdentifiers = deviceIdentifiers });
             sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Id, AccessLevels.Read));
             return _mapper.Map<List<SensorDto>>(sensors);
         }
@@ -101,8 +101,8 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<List<SensorDto>> GetSensors(List<int> deviceIds)
         {
             var sensors = new List<SensorDto>();
-            var res = await _deviceRepository.GetSensorsByDeviceIdsAsync(deviceIds.Where(d => _userService.HasAccessToDevice(d, AccessLevels.Read)).ToList());
-            return _mapper.Map<List<SensorDto>>(res);
+            var res = await _deviceRepository.GetSensors(new GetDeviceModel() { Ids = deviceIds.Where(d => _userService.HasAccessToDevice(d, AccessLevels.Read)).ToList() });
+            return _mapper.Map<List<SensorDto>>(res.ToList());
         }
 
         public async Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel)

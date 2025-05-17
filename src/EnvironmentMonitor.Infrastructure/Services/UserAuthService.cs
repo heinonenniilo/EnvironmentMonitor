@@ -142,7 +142,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
             deviceIds.AddRange(deviceIdsMatchingsLocations);
 
             var claimsToReturn = new List<Claim>();
-            var sensorIdsMatchingDevices = (await _deviceRepository.GetSensorsByDeviceIdsAsync(deviceIds)).Select(x => x.Id).ToList();
+            var sensorIdsMatchingDevices = (await _deviceRepository.GetSensors(new GetDeviceModel()
+            {
+                Ids = deviceIds
+            })).Select(x => x.Id).ToList();
 
             claimsToReturn.AddRange(sensorIdsMatchingDevices
                 .Where(x => !existingSensorIdsInClaims.Contains(x))
