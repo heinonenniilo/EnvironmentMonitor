@@ -85,6 +85,12 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           text
         );
       },
+      valueGetter: (_value, row) => {
+        if (!row) {
+          return "";
+        }
+        return getDeviceTitle((row as DeviceInfo)?.device);
+      },
     },
     {
       field: "image",
