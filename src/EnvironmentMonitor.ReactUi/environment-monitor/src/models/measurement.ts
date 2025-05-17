@@ -3,4 +3,5 @@ export interface Measurement {
   sensorValue: number;
   typeId: number;
   timestamp: Date;
+  id?: number;
 }

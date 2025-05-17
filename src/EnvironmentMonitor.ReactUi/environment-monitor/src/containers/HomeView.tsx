@@ -38,8 +38,8 @@ export const HomeView: React.FC = () => {
 
     const returnRows: MeasurementInfo[] = [];
     model.measurements.forEach((m) => {
-      for (let item in MeasurementTypes) {
-        let val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
+      for (const item in MeasurementTypes) {
+        const val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
         if (m.measurements.some((m) => m.typeId === val)) {
           const matchingSensor = sensors.find((s) => s.id === m.sensorId);
           const matchingDevice = devices.find(
