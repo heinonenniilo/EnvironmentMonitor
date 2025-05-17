@@ -21,9 +21,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
 
         Task<List<DeviceEvent>> GetDeviceEvents(int id);
 
-        Task<IEnumerable<Sensor>> GetSensors(GetDevicesModel model);
-
-        public Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal);
+        Task<IEnumerable<Sensor>> GetSensors(GetSensorsModel model);
 
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);
         public Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges);

@@ -18,10 +18,12 @@ namespace EnvironmentMonitor.Application.DTOs
         public bool Visible { get; set; }
         public bool HasMotionSensor { get; set; }
         public int LocationId { get; set; }
+        public string? DisplayName { get; set; }
 
         public void Mapping(Profile profile)
         {
             profile.CreateMap<Device, DeviceDto>()
+                .ForMember(x => x.DisplayName, opt => opt.MapFrom(x => x.Location != null ? $"{x.Location.Name} - {x.Name}" : x.Name))
                 .ReverseMap();
         }
     }

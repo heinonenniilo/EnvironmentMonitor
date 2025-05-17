@@ -83,9 +83,15 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceDto>>(devices);
         }
 
-        public async Task<List<SensorDto>> GetSensors(List<Guid> identifiers )
+        public async Task<List<SensorDto>> GetSensors(List<Guid> identifiers)
         {
-            var sensors = await _deviceRepository.GetSensors(new GetDevicesModel() { Identifiers = identifiers });
+            var sensors = await _deviceRepository.GetSensors(new GetSensorsModel()
+            {
+                DevicesModel = new GetDevicesModel()
+                {
+                    Identifiers = identifiers
+                }
+            });
             sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Id, AccessLevels.Read));
             return _mapper.Map<List<SensorDto>>(sensors);
         }
@@ -93,7 +99,13 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<List<SensorDto>> GetSensors(List<int> deviceIds)
         {
             var sensors = new List<SensorDto>();
-            var res = await _deviceRepository.GetSensors(new GetDevicesModel() { Ids = deviceIds.Where(d => _userService.HasAccessToDevice(d, AccessLevels.Read)).ToList() });
+            var res = await _deviceRepository.GetSensors(new GetSensorsModel()
+            {
+                DevicesModel = new GetDevicesModel()
+                {
+                    Ids = deviceIds.Where(d => _userService.HasAccessToDevice(d, AccessLevels.Read)).ToList()
+                }
+            });
             return _mapper.Map<List<SensorDto>>(res.ToList());
         }
 
@@ -121,7 +133,22 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel)
         {
-            var sensor = await _deviceRepository.GetSensor(deviceId, sensorIdInternal);
+            var sensors = await _deviceRepository.GetSensors(new GetSensorsModel()
+            {
+
+                DevicesModel = new GetDevicesModel()
+                {
+                    Ids = [deviceId]
+                },
+                SensorIds = [sensorIdInternal]
+            });
+
+            if (sensors.Count() > 1)
+            {
+                _logger.LogError("More than one sensor found");
+                return null;
+            }
+            var sensor = sensors.FirstOrDefault();
             if (sensor == null || !_userService.HasAccessToSensor(sensor.Id, accessLevel))
             {
                 if (sensor == null)

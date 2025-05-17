@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Models
 {
+
+
     public class GetDevicesModel
     {
         public List<int>? Ids { get; set; }
@@ -14,5 +16,12 @@ namespace EnvironmentMonitor.Domain.Models
         public List<int>? LocationIds { get; set; }
         public bool OnlyVisible { get; set; }
         public bool GetAttachments { get; set; }
+    }
+
+    public class GetSensorsModel
+    {
+        public required GetDevicesModel DevicesModel { get; set; }
+        public List<int>? Ids { get; set; }
+        public List<int>? SensorIds { get; set; }
     }
 }

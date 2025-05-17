@@ -31,20 +31,22 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return devices;
         }
 
-        public async Task<Sensor?> GetSensor(int deviceId, int sensorIdInternal)
+        public async Task<IEnumerable<Sensor>> GetSensors(GetSensorsModel model)
         {
-            var sensor = await _context.Sensors.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.SensorId == sensorIdInternal);
-            return sensor;
-        }
-
-        public async Task<IEnumerable<Sensor>> GetSensors(GetDevicesModel model)
-        {
-            var sensors = await _context.Sensors.Where(x =>
-                (model.DeviceIdentifiers == null || model.DeviceIdentifiers.Contains(x.Device.DeviceIdentifier))
-                && (model.Ids == null || model.Ids.Contains(x.Device.Id))
-                && (model.Identifiers == null || model.Identifiers.Contains(x.Device.Identifier))
-                ).ToListAsync();
-            return sensors;
+            var query = _context.Sensors.Where(x =>
+                (model.DevicesModel.DeviceIdentifiers == null || model.DevicesModel.DeviceIdentifiers.Contains(x.Device.DeviceIdentifier))
+                && (model.DevicesModel.Ids == null || model.DevicesModel.Ids.Contains(x.Device.Id))
+                && (model.DevicesModel.Identifiers == null || model.DevicesModel.Identifiers.Contains(x.Device.Identifier))
+                );
+            if (model.Ids != null)
+            {
+                query = query.Where(x => model.Ids.Contains(x.Id));
+            }
+            if (model.SensorIds != null)
+            {
+                query = query.Where(x => model.SensorIds.Contains(x.SensorId));
+            }
+            return await query.ToListAsync();
         }
 
         public async Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? dateTimeUtc)
