@@ -12,11 +12,13 @@ import { getFormattedDate } from "../utilities/datetimeUtils";
 import type { Measurement } from "../models/measurement";
 import type { Device } from "../models/device";
 import type { Sensor } from "../models/sensor";
+import type { MeasurementTypes } from "../enums/measurementTypes";
 
 export interface MeasurementsInfoTableProps {
   infoRows: MeasurementInfo[];
   hideMin?: boolean;
   hideMax?: boolean;
+  onClick?: (info: MeasurementInfo) => void;
 }
 
 export interface MeasurementInfo {
@@ -26,15 +28,30 @@ export interface MeasurementInfo {
   label: string;
   device?: Device;
   sensor?: Sensor;
+  type?: MeasurementTypes;
 }
 
 export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
   infoRows,
   hideMax,
   hideMin,
+  onClick,
 }) => {
   const getLabel = (row: MeasurementInfo) => {
-    return <TableCell>{row.label}</TableCell>;
+    return (
+      <TableCell
+        onClick={
+          onClick
+            ? () => {
+                onClick(row);
+              }
+            : undefined
+        }
+        sx={{ cursor: onClick ? "pointer" : undefined }}
+      >
+        {row.label}
+      </TableCell>
+    );
   };
 
   const getDeviceLabel = (row: MeasurementInfo) => {
