@@ -75,6 +75,24 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, DeviceMessage? deviceMessage = null)
         {
+
+            if (deviceMessage != null && !string.IsNullOrEmpty(deviceMessage.Identifier))
+            {
+                var existingDeviceMessage = await _context.DeviceMessages.FirstOrDefaultAsync(x => !string.IsNullOrEmpty(x.Identifier) && x.Identifier == deviceMessage.Identifier && x.DeviceId == deviceMessage.DeviceId);
+                if (existingDeviceMessage != null)
+                {
+                    _logger.LogError($"Message with identifier: '{existingDeviceMessage.Identifier}' already exists. Will not add measurements, just saving the device message.");
+                    deviceMessage.IsDuplicate = true;
+                    await _context.DeviceMessages.AddAsync(deviceMessage);
+                    if (saveChanges)
+                    {
+                        _logger.LogInformation("Saving changes");
+                        await _context.SaveChangesAsync();
+                    }
+                    return [];
+                }
+            }
+
             await _context.Measurements.AddRangeAsync(measurements.Select(m =>
             {
                 m.DeviceMessage = deviceMessage;

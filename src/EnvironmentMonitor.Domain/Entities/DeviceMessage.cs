@@ -17,11 +17,10 @@ namespace EnvironmentMonitor.Domain.Entities
         public IList<DeviceStatus> DeviceStatuses { get; set; } = [];
         public long? SequenceNumber { get; set; }
         public bool FirstMessage { get; set; }
-
         public long? Uptime { get; set; }
-
         public string? Identifier { get; set; }
         public long? LoopCount { get; set; }
         public long? MessageCount { get; set; }
+        public bool IsDuplicate { get; set; }
     }
 }
