@@ -267,8 +267,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Identifier")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<long?>("LoopCount")
                         .HasColumnType("bigint");

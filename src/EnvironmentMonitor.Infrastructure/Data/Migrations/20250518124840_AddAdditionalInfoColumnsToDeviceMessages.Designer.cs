@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    [Migration("20250518115528_AddAdditionalInfoColumnsToDeviceMessages")]
+    [Migration("20250518124840_AddAdditionalInfoColumnsToDeviceMessages")]
     partial class AddAdditionalInfoColumnsToDeviceMessages
     {
         /// <inheritdoc />
@@ -270,8 +270,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Identifier")
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<long?>("LoopCount")
                         .HasColumnType("bigint");

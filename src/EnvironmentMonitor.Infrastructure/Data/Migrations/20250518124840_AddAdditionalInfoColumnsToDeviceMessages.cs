@@ -13,8 +13,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
             migrationBuilder.AddColumn<string>(
                 name: "Identifier",
                 table: "DeviceMessages",
-                type: "nvarchar(512)",
-                maxLength: 512,
+                type: "nvarchar(128)",
+                maxLength: 128,
                 nullable: true);
 
             migrationBuilder.AddColumn<long>(
