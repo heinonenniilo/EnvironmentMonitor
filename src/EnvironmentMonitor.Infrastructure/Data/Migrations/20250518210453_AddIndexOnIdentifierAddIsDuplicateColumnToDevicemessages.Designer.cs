@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    [Migration("20250518191444_AddIndexOnIdentifierAddIsDuplicateColumnToDevicemessages")]
+    [Migration("20250518210453_AddIndexOnIdentifierAddIsDuplicateColumnToDevicemessages")]
     partial class AddIndexOnIdentifierAddIsDuplicateColumnToDevicemessages
     {
         /// <inheritdoc />
@@ -300,7 +300,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasIndex("DeviceId", "TimeStamp");
 
-                    b.HasIndex("Identifier", "DeviceId");
+                    b.HasIndex("Identifier", "DeviceId")
+                        .IsUnique()
+                        .HasFilter("[Identifier] IS NOT NULL AND [IsDuplicate] = 0");
 
                     b.ToTable("DeviceMessages");
                 });

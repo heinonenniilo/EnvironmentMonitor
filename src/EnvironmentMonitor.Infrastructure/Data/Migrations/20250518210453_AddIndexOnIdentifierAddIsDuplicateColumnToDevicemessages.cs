@@ -20,7 +20,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_DeviceMessages_Identifier_DeviceId",
                 table: "DeviceMessages",
-                columns: new[] { "Identifier", "DeviceId" });
+                columns: new[] { "Identifier", "DeviceId" },
+                unique: true,
+                filter: "[Identifier] IS NOT NULL AND [IsDuplicate] = 0");
         }
 
         /// <inheritdoc />
