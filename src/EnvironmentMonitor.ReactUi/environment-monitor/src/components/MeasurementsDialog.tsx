@@ -30,6 +30,9 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
       headerName: "Timestamp",
       type: "dateTime",
       minWidth: 150,
+      align: "left",
+      flex: 1,
+      headerAlign: "left",
       valueFormatter: (_value, row) => {
         return getFormattedDate((row as Measurement).timestamp, true);
       },
@@ -38,8 +41,10 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
       field: "sensorValue",
       headerName: "Value",
       type: "number",
+      minWidth: 120,
+      align: "left",
       flex: 1,
-      minWidth: 150,
+      headerAlign: "left",
       valueFormatter: (_value, row) => {
         return formatMeasurement(row, true);
       },
