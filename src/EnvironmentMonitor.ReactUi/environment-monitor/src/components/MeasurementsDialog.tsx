@@ -80,7 +80,7 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
         <Box
           sx={{
             overflow: "auto",
-            maxHeight: "min(80vh, 600px)",
+            maxHeight: "calc(100vh - 200px)",
 
             width: "100%",
             display: "flex",
