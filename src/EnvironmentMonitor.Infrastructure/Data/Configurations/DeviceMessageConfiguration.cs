@@ -17,6 +17,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
             builder.HasMany(x => x.Measurements).WithOne(x => x.DeviceMessage).IsRequired(false);
             builder.Property(x => x.Identifier).HasMaxLength(128);
             builder.HasIndex(x => new { x.DeviceId, x.TimeStamp });
+            builder.HasIndex(x => new { x.Identifier, x.DeviceId });
             builder.HasIndex(x => x.TimeStamp);
         }
     }
