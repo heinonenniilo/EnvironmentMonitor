@@ -105,6 +105,9 @@ namespace EnvironmentMonitor.Application.Services
                     SequenceNumber = measurement.SequenceNumber,
                     FirstMessage = measurement.FirstMessage,
                     Created = _dateService.CurrentTime(),
+                    Uptime = measurement.Uptime,
+                    MessageCount = measurement.MessageCount,
+                    Identifier = measurement.Identifier
                 };
             }
             if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
