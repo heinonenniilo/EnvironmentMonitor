@@ -39,6 +39,7 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
       headerName: "Value",
       type: "number",
       flex: 1,
+      minWidth: 150,
       valueFormatter: (_value, row) => {
         return formatMeasurement(row, true);
       },
