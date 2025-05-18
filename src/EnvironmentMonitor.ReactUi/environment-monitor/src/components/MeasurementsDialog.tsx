@@ -26,6 +26,15 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
 }) => {
   const columns: GridColDef[] = [
     {
+      field: "timestamp",
+      headerName: "Timestamp",
+      type: "dateTime",
+      minWidth: 150,
+      valueFormatter: (_value, row) => {
+        return getFormattedDate((row as Measurement).timestamp, true);
+      },
+    },
+    {
       field: "sensorValue",
       headerName: "Value",
       type: "number",
@@ -34,19 +43,9 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
         return formatMeasurement(row, true);
       },
     },
-    {
-      field: "timestamp",
-      headerName: "Timestamp",
-      type: "dateTime",
-      flex: 1,
-      minWidth: 170,
-      valueFormatter: (_value, row) => {
-        return getFormattedDate((row as Measurement).timestamp, true);
-      },
-    },
   ];
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="xl">
+    <Dialog open={isOpen} onClose={onClose}>
       <DialogTitle
         sx={{
           display: "flex",
@@ -72,7 +71,16 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
       </DialogTitle>
 
       <DialogContent>
-        <Box sx={{ overflow: "auto", maxHeight: "600px" }}>
+        <Box
+          sx={{
+            overflow: "auto",
+            maxHeight: "min(80vh, 600px)",
+
+            width: "100%",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
           <DataGrid
             rows={measurements.map((m, idx) => {
               return { ...m, id: idx };
@@ -84,11 +92,6 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
                 return (row as Measurement).id ?? 0;
               }
               return "";
-            }}
-            sx={{
-              border: 0,
-              minWidth: 600,
-              maxHeight: "100%",
             }}
             initialState={{
               sorting: {
