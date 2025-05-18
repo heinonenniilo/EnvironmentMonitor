@@ -81,7 +81,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 var existingDeviceMessage = await _context.DeviceMessages.FirstOrDefaultAsync(x => !string.IsNullOrEmpty(x.Identifier) && x.Identifier == deviceMessage.Identifier && x.DeviceId == deviceMessage.DeviceId);
                 if (existingDeviceMessage != null)
                 {
-                    _logger.LogError($"Message with identifier: '{existingDeviceMessage.Identifier}' already exists. Will not add measurements, just saving the device message.");
+                    _logger.LogError($"Message with identifier: '{existingDeviceMessage.Identifier}' already exists. Will not add measurements, just saving the device message. {measurements.Count} measurements skipped. ");
                     deviceMessage.IsDuplicate = true;
                     await _context.DeviceMessages.AddAsync(deviceMessage);
                     if (saveChanges)
