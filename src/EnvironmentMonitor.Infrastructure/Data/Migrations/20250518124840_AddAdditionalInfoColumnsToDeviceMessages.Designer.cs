@@ -4,6 +4,7 @@ using EnvironmentMonitor.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    partial class MeasurementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250518124840_AddAdditionalInfoColumnsToDeviceMessages")]
+    partial class AddAdditionalInfoColumnsToDeviceMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -270,9 +273,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
 
-                    b.Property<bool>("IsDuplicate")
-                        .HasColumnType("bit");
-
                     b.Property<long?>("LoopCount")
                         .HasColumnType("bigint");
 
@@ -296,10 +296,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("TimeStamp");
 
                     b.HasIndex("DeviceId", "TimeStamp");
-
-                    b.HasIndex("Identifier", "DeviceId")
-                        .IsUnique()
-                        .HasFilter("[Identifier] IS NOT NULL AND [IsDuplicate] = 0");
 
                     b.ToTable("DeviceMessages");
                 });

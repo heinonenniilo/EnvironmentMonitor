@@ -15,7 +15,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
         {
             builder.HasKey(d => d.Id);
             builder.HasMany(x => x.Measurements).WithOne(x => x.DeviceMessage).IsRequired(false);
+            builder.Property(x => x.Identifier).HasMaxLength(128);
             builder.HasIndex(x => new { x.DeviceId, x.TimeStamp });
+            builder.HasIndex(x => new { x.Identifier, x.DeviceId }).IsUnique().HasFilter("[Identifier] IS NOT NULL AND [IsDuplicate] = 0");
             builder.HasIndex(x => x.TimeStamp);
         }
     }

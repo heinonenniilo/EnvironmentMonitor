@@ -13,5 +13,13 @@ namespace EnvironmentMonitor.Application.DTOs
         public bool FirstMessage { get; set; }
         public DateTime? EnqueuedUtc { get; set; }
         public long? SequenceNumber { get; set; }
+
+        /// <summary>
+        /// Uptime in ms (=millis())
+        /// </summary>
+        public long? Uptime { get; set; }
+        public string? Identifier { get; set; }
+        public long? LoopCount { get; set; }
+        public int? MessageCount { get; set; }
     }
 }
