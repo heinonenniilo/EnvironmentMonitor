@@ -60,17 +60,17 @@ jobs:
         run: |
           cp -r src/EnvironmentMonitor.ReactUi/environment-monitor/dist/ src/EnvironmentMonitor.WebApi/wwwroot/
 
-      - name: dotnet publish (WebApi) (win-x86)
-        run: dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -r win-x86 -o "${{env.DOTNET_ROOT}}/env-monitor-web-api_x86"
+      - name: Publish WEB API (WIN-X86, WIN-X64, LINUX-X64)
+        run: |
+          dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -r win-x86 -o "${{env.DOTNET_ROOT}}/env-monitor-web-api_x86"
+          dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -r win-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-web-api_x64"
+          dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -r linux-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-web-api_linux-x64"
 
-      - name: dotnet publish (WebApi) (win-x64)
-        run: dotnet publish src/EnvironmentMonitor.WebApi/EnvironmentMonitor.WebApi.csproj -c Release -r win-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-web-api_x64"
-
-      - name: dotnet publish (Function) (win-x86)
-        run: dotnet publish src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj -c Release -r win-x86 -o "${{env.DOTNET_ROOT}}/env-monitor-function_x86"
-
-      - name: dotnet publish (Function) (win-x64)
-        run: dotnet publish src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj -c Release -r win-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-function_x64"
+      - name: Publish Function app (WIN-X86, WIN-X64, LINUX-X64)
+        run: |
+          dotnet publish src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj -c Release -r win-x86 -o "${{env.DOTNET_ROOT}}/env-monitor-function_x86"
+          dotnet publish src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj -c Release -r win-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-function_x64"
+          dotnet publish src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj -c Release -r linux-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-function_linux-x64"
 
       - name: Upload web api artifact (win-x86)
         uses: actions/upload-artifact@v4
@@ -83,6 +83,12 @@ jobs:
         with:
           name: .env-monitor-web-api_x64
           path: ${{env.DOTNET_ROOT}}/env-monitor-web-api_x64
+
+      - name: Upload web api artifact (linux-x64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: .env-monitor-web-api_linux-x64
+          path: ${{env.DOTNET_ROOT}}/env-monitor-web-api_linux-x64
 
       - name: Upload function artifact (win-x86)
         uses: actions/upload-artifact@v4
@@ -109,13 +115,19 @@ jobs:
       contents: read
 
     steps:
-      - name: Download WEB API artifacts
+      - name: Download WEB API artifacts (WIN-X86)
         uses: actions/download-artifact@v4
         with:
           name: .env-monitor-web-api_x86
           path: "./env-monitor-web-api"
 
-      - name: Download HubObserver artifacts
+      - name: Download WEB API artifacts (LINUX-X64)
+        uses: actions/download-artifact@v4
+        with:
+          name: .env-monitor-web-api_linux-x64
+          path: "./env-monitor-web-api_linux-x64"
+
+      - name: Download Function artifacts (WIN-X64)
         uses: actions/download-artifact@v4
         with:
           name: .env-monitor-function_x64
@@ -135,6 +147,14 @@ jobs:
           app-name: "env-monitor"
           slot-name: "Production"
           package: "./env-monitor-web-api"
+
+      - name: Deploy Environment Monitoring Web API (LINUX)
+        id: deploy-to-webapp-linux
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "environment-monitoring"
+          slot-name: "Production"
+          package: "./env-monitor-web-api_linux-x64"
 
       - name: "Deploy HubObserver (Azure function)"
         uses: Azure/functions-action@v1
