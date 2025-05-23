@@ -14,10 +14,12 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model);
         public Task<MeasurementType?> GetMeasurementType(int id);
         Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, DeviceMessage? deviceMessage = null);
+        Task<DeviceMessage?> GetDeviceMessage(string messageIdentifier, int deviceId);
+        Task<DeviceMessage> AddDeviceMessage(DeviceMessage deviceMessage, bool saveChanges);
 
         public Task<IEnumerable<Measurement>> Get(
             Expression<Func<Measurement, bool>> filter = null,
             Func<IQueryable<Measurement>, IOrderedQueryable<Measurement>> orderBy = null,
             string includeProperties = "");
-    }
+    } 
 }

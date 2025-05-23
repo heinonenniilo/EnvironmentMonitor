@@ -59,6 +59,38 @@ namespace EnvironmentMonitor.Application.Services
             }
             _logger.LogInformation($"Found device with ID: {device.Id} for device identifier '{measurement.DeviceId}'");
             var measurementsToAdd = new List<Measurement>();
+            DeviceMessage? deviceMessage = null;
+            if (measurement.EnqueuedUtc != null)
+            {
+                deviceMessage = new DeviceMessage()
+                {
+                    TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
+                    TimeStampUtc = measurement.EnqueuedUtc.Value,
+                    DeviceId = device.Id,
+                    SequenceNumber = measurement.SequenceNumber,
+                    FirstMessage = measurement.FirstMessage,
+                    Created = _dateService.CurrentTime(),
+                    Uptime = measurement.Uptime,
+                    MessageCount = measurement.MessageCount,
+                    Identifier = measurement.Identifier,
+                    LoopCount = measurement.LoopCount,
+                };
+            }
+            var isDuplicate = false;
+            if (!string.IsNullOrEmpty(measurement.Identifier) && deviceMessage != null)
+            {
+                var existingMessage = await _measurementRepository.GetDeviceMessage(measurement.Identifier, device.Id);
+                isDuplicate = existingMessage != null;
+                deviceMessage.IsDuplicate = existingMessage != null;
+                await _measurementRepository.AddDeviceMessage(deviceMessage, !isDuplicate);
+            }
+
+            if (isDuplicate)
+            {
+                _logger.LogWarning($"Duplicate message. Identifier: '{measurement.Identifier}'. Returning.");
+                return;
+            }
+
             foreach (var row in measurement.Measurements)
             {
                 var sensor = await _deviceService.GetSensor(device.Id, row.SensorId, AccessLevels.Write);
@@ -93,23 +125,6 @@ namespace EnvironmentMonitor.Application.Services
             if (measurement.FirstMessage)
             {
                 await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
-            }
-            DeviceMessage? deviceMessage = null;
-            if (measurement.EnqueuedUtc != null)
-            {
-                deviceMessage = new DeviceMessage()
-                {
-                    TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
-                    TimeStampUtc = measurement.EnqueuedUtc.Value,
-                    DeviceId = device.Id,
-                    SequenceNumber = measurement.SequenceNumber,
-                    FirstMessage = measurement.FirstMessage,
-                    Created = _dateService.CurrentTime(),
-                    Uptime = measurement.Uptime,
-                    MessageCount = measurement.MessageCount,
-                    Identifier = measurement.Identifier,
-                    LoopCount = measurement.LoopCount,
-                };
             }
             if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
             {
