@@ -25,7 +25,9 @@ export const DashboardLocationGraph: React.FC<{
     if (model) {
       setMeasurementModel(undefined);
     }
-  }, [model]);
+    onRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange]);
 
   const onRefresh = () => {
     setIsLoading(true);
