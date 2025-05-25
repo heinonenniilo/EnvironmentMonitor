@@ -13,12 +13,13 @@ if (!AppDomain.CurrentDomain.FriendlyName.Contains("ef"))
           .Build();
 
     var services = new ServiceCollection();
+    var timeout = configuration.GetSection("Timeout").Get<int?>();
     services.AddInfrastructureServices(configuration);
     var serviceProvider = services.BuildServiceProvider();
-    await ApplyMigrationsAsync(serviceProvider);
+    await ApplyMigrationsAsync(serviceProvider, timeout ?? 300);
 }
 
-static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider)
+static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider, int timeout)
 {
     using (var scope = serviceProvider.CreateScope())
     {
@@ -33,7 +34,8 @@ static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider)
 
             if (Console.ReadLine()?.ToLower() == "y")
             {
-                measureDbContext.Database.SetCommandTimeout(180);
+                measureDbContext.Database.SetCommandTimeout(timeout);
+                applicationDbContext.Database.SetCommandTimeout(timeout);
                 Console.WriteLine("Migrating measurements db context");
                 await measureDbContext.Database.MigrateAsync();
                 Console.WriteLine("Migrating ApplicationDbContex");
