@@ -28,10 +28,15 @@ export const DashboardDeviceGraph: React.FC<{
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (model) {
-      setDeviceModel(undefined);
+    if (!timeRange) {
+      return;
     }
-  }, [model]);
+    if (!sensors || sensors.length === 0) {
+      return;
+    }
+    onRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange]);
   const dispatch = useDispatch();
 
   const onRefresh = () => {
