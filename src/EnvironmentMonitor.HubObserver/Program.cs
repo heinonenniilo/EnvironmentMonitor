@@ -18,17 +18,5 @@ var host = new HostBuilder()
         services.AddInfrastructureServices(opt.Configuration, opt.Configuration.GetValue<string>("DefaultConnection"));
         services.AddApplicationServices(opt.Configuration);
     })
-   .ConfigureLogging(logging =>
-        {
-            logging.Services.Configure<LoggerFilterOptions>(options =>
-            {
-                LoggerFilterRule defaultRule = options.Rules.FirstOrDefault(rule => rule.ProviderName
-                    == "Microsoft.Extensions.Logging.ApplicationInsights.ApplicationInsightsLoggerProvider");
-                if (defaultRule is not null)
-                {
-                    options.Rules.Remove(defaultRule);
-                }
-            });
-        })
     .Build();
 host.Run();

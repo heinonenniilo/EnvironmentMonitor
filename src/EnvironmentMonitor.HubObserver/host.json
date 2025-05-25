@@ -6,6 +6,9 @@
         "excludedTypes": "Request",
         "isEnabled": true
       },
+      "logLevel": {
+        "Default": "Warning"
+      },
       "enableLiveMetricsFilters": true
     },
     "logLevel": {
