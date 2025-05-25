@@ -58,6 +58,7 @@ export const DashboardLocationGraph: React.FC<{
         justifyContent: "center",
         alignItems: "center",
         position: "relative",
+        maxHeight: "650px",
       }}
     >
       <MultiSensorGraph

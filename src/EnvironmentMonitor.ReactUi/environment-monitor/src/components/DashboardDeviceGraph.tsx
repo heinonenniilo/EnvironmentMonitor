@@ -81,6 +81,7 @@ export const DashboardDeviceGraph: React.FC<{
         justifyContent: "center",
         alignItems: "center",
         position: "relative",
+        maxHeight: "600px",
       }}
     >
       <MultiSensorGraph
