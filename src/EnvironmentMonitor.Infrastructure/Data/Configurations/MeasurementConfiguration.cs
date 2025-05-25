@@ -20,7 +20,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
             builder.Property(m => m.CreatedAt).IsRequired().HasDefaultValueSql("GETDATE()");
             builder.HasIndex(x => x.Timestamp);
             builder.HasIndex(x => x.SensorId);
-            builder.HasIndex(x => new { x.SensorId, x.Timestamp });
+            builder.HasIndex(x => new { x.SensorId, x.Timestamp }).IncludeProperties("Value", "TypeId", "TimestampUtc");
             builder.Property(m => m.Value)
                 .IsRequired();
         }

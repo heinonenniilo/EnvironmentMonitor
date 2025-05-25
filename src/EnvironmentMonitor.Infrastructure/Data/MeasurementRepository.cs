@@ -35,7 +35,17 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     {
                         Id = d.Max(x => x.Id),
                     }).ToListAsync();
-                var latestMeasurements = _context.Measurements.Where(x => grouped.Select(g => g.Id).Contains(x.Id)).OrderByDescending(x => x.Timestamp);
+                var latestMeasurements = _context.Measurements.
+                    Where(x => grouped.Select(g => g.Id).Contains(x.Id))
+                    .Select(x => new Measurement()
+                    {
+                        TypeId = x.TypeId,
+                        Value = x.Value,
+                        Timestamp = x.Timestamp,
+                        TimestampUtc = x.TimestampUtc,
+                        SensorId = x.SensorId
+                    })
+                    .OrderByDescending(x => x.Timestamp);
                 return await latestMeasurements.ToListAsync();
             }
             else
@@ -68,7 +78,14 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     }
                     return rows;
                 }
-                query = query.OrderBy(x => x.Timestamp);
+                query = query.Select(x => new Measurement()
+                {
+                    TypeId = x.TypeId,
+                    Value = x.Value,
+                    Timestamp = x.Timestamp,
+                    TimestampUtc = x.TimestampUtc,
+                    SensorId = x.SensorId
+                }).OrderBy(x => x.Timestamp);
             }
             return await query.ToListAsync();
         }
