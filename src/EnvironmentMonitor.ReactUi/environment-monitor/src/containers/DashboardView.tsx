@@ -27,35 +27,36 @@ export const DashboardView: React.FC = () => {
   const timeRange = useSelector(getDashboardTimeRange);
 
   const handleTimeRangeChange = (selection: number) => {
-    dispatch(setDashboardTimeRange(selection));
+    setTimeout(() => {
+      dispatch(setDashboardTimeRange(selection));
+    }, 10);
   };
 
   const measurementsModel: DeviceDashboardModel[] = useMemo(() => {
-    return devices.map((device) => {
-      const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
+    return [...devices]
+      .sort((a, b) => {
+        const locA = a.locationId ?? 0;
+        const locB = b.locationId ?? 0;
+        return locA - locB;
+      })
+      .map((device) => {
+        const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
 
-      return { device, sensors: deviceSensors };
-    });
+        return { device, sensors: deviceSensors };
+      });
   }, [devices, sensors]);
 
-  const list = measurementsModel
-    .slice()
-    .sort((a, b) => {
-      const locA = a.device.locationId ?? 0;
-      const locB = b.device.locationId ?? 0;
-      return locA - locB;
-    })
-    .map(({ device, sensors }) => {
-      return (
-        <DashboardDeviceGraph
-          device={device}
-          model={undefined}
-          sensors={sensors}
-          key={device.id}
-          timeRange={timeRange}
-        />
-      );
-    });
+  const list = measurementsModel.map(({ device, sensors }) => {
+    return (
+      <DashboardDeviceGraph
+        device={device}
+        model={undefined}
+        sensors={sensors}
+        key={device.id}
+        timeRange={timeRange}
+      />
+    );
+  });
 
   return (
     <AppContentWrapper
