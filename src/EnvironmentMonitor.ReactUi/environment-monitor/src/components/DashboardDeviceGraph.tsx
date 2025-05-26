@@ -3,6 +3,7 @@ import { type Device } from "../models/device";
 import { type Sensor } from "../models/sensor";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { useDispatch, useSelector } from "react-redux";
+import { useInView } from "react-intersection-observer";
 import {
   getDeviceAutoScale,
   toggleAutoScale,
@@ -24,19 +25,31 @@ export const DashboardDeviceGraph: React.FC<{
   const [deviceModel, setDeviceModel] = useState<
     MeasurementsViewModel | undefined
   >(undefined);
-
   const [isLoading, setIsLoading] = useState(false);
+  const [lastRange, setLastRange] = useState<number | undefined>(undefined);
+
+  const { ref, inView } = useInView({
+    triggerOnce: false,
+    threshold: 0.5,
+  });
 
   useEffect(() => {
+    if (!inView) {
+      return;
+    }
     if (!timeRange) {
       return;
     }
     if (!sensors || sensors.length === 0) {
       return;
     }
+
+    if (timeRange === lastRange) {
+      return;
+    }
     onRefresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange]);
+  }, [timeRange, inView]);
   const dispatch = useDispatch();
 
   const onRefresh = () => {
@@ -56,6 +69,7 @@ export const DashboardDeviceGraph: React.FC<{
         undefined
       )
       .then((res) => {
+        setLastRange(timeRange);
         setDeviceModel(res);
       })
       .catch((er) => {
@@ -83,6 +97,7 @@ export const DashboardDeviceGraph: React.FC<{
         position: "relative",
         maxHeight: "600px",
       }}
+      ref={ref}
     >
       <MultiSensorGraph
         sensors={sensors}
