@@ -81,8 +81,8 @@ namespace EnvironmentMonitor.Application.Services
             {
                 var existingMessage = await _measurementRepository.GetDeviceMessage(measurement.Identifier, device.Id);
                 isDuplicate = existingMessage != null;
-                deviceMessage.IsDuplicate = existingMessage != null;
-                await _measurementRepository.AddDeviceMessage(deviceMessage, !isDuplicate);
+                deviceMessage.IsDuplicate = isDuplicate;
+                await _measurementRepository.AddDeviceMessage(deviceMessage, isDuplicate);
             }
 
             if (isDuplicate)
