@@ -47,12 +47,12 @@ export const DashboardDeviceGraph: React.FC<{
     if (timeRange === lastRange) {
       return;
     }
-    onRefresh();
+    onFetchMeasurements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, inView]);
   const dispatch = useDispatch();
 
-  const onRefresh = () => {
+  const onFetchMeasurements = () => {
     if (sensors.length === 0) {
       return;
     }
@@ -109,7 +109,7 @@ export const DashboardDeviceGraph: React.FC<{
         onSetAutoScale={(state) =>
           dispatch(toggleAutoScale({ deviceId: device.id, state }))
         }
-        onRefresh={onRefresh}
+        onRefresh={onFetchMeasurements}
         isLoading={isLoading}
       />
     </Box>

@@ -7,6 +7,7 @@ import { useApiHook } from "../hooks/apiHook";
 import moment from "moment";
 import { type LocationModel } from "../models/location";
 import { ChartJsColorsPluginMaxDatasets } from "../models/applicationConstants";
+import { useInView } from "react-intersection-observer";
 
 export const DashboardLocationGraph: React.FC<{
   location: LocationModel;
@@ -16,20 +17,31 @@ export const DashboardLocationGraph: React.FC<{
   const measurementApiHook = useApiHook().measureHook;
 
   const [isLoading, setIsLoading] = useState(false);
+  const [lastTimeRange, setLastTimeRange] = useState<number | undefined>(
+    undefined
+  );
 
   const [measurementModel, setMeasurementModel] = useState<
     MeasurementsByLocation | undefined
   >(undefined);
 
+  const { ref, inView } = useInView({
+    triggerOnce: false,
+    threshold: 0.5,
+  });
+
   useEffect(() => {
     if (model) {
       setMeasurementModel(undefined);
     }
-    onRefresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange]);
 
-  const onRefresh = () => {
+    if (inView && timeRange !== lastTimeRange) {
+      fetchMeasurements();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange, inView]);
+
+  const fetchMeasurements = () => {
     setIsLoading(true);
     const momentStart = moment()
       .local(true)
@@ -38,6 +50,7 @@ export const DashboardLocationGraph: React.FC<{
     measurementApiHook
       .getMeasurementsByLocation([location.id], momentStart)
       .then((res) => {
+        setLastTimeRange(timeRange);
         setMeasurementModel(res?.measurements[0]);
       })
       .finally(() => {
@@ -60,6 +73,7 @@ export const DashboardLocationGraph: React.FC<{
         position: "relative",
         maxHeight: "650px",
       }}
+      ref={ref}
     >
       <MultiSensorGraph
         sensors={measurementModel?.sensors ?? model?.sensors}
@@ -67,7 +81,7 @@ export const DashboardLocationGraph: React.FC<{
         model={measurementModel ?? model}
         minHeight={400}
         isLoading={isLoading}
-        onRefresh={onRefresh}
+        onRefresh={fetchMeasurements}
         useAutoScale={true}
         title={location.name}
         useDynamicColors={
