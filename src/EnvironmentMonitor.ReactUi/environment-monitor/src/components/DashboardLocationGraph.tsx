@@ -37,6 +37,9 @@ export const DashboardLocationGraph: React.FC<{
 
     if (inView && timeRange !== lastTimeRange) {
       fetchMeasurements();
+    } else if (!inView && timeRange !== lastTimeRange) {
+      setMeasurementModel(undefined); // Clears the "old" measurements
+      setLastTimeRange(undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, inView]);

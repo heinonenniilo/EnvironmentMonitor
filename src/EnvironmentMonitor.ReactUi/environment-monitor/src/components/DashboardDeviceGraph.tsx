@@ -26,7 +26,9 @@ export const DashboardDeviceGraph: React.FC<{
     MeasurementsViewModel | undefined
   >(undefined);
   const [isLoading, setIsLoading] = useState(false);
-  const [lastRange, setLastRange] = useState<number | undefined>(undefined);
+  const [lastTimeRange, setLastTimeRange] = useState<number | undefined>(
+    undefined
+  );
 
   const { ref, inView } = useInView({
     triggerOnce: false,
@@ -34,25 +36,21 @@ export const DashboardDeviceGraph: React.FC<{
   });
 
   useEffect(() => {
-    if (!inView) {
-      return;
-    }
-    if (!timeRange) {
-      return;
-    }
     if (!sensors || sensors.length === 0) {
       return;
     }
 
-    if (timeRange === lastRange) {
-      return;
+    if (inView && timeRange !== lastTimeRange) {
+      fetchMeasurements();
+    } else if (!inView && timeRange !== lastTimeRange) {
+      setDeviceModel(undefined);
+      setLastTimeRange(undefined);
     }
-    onFetchMeasurements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange, inView]);
   const dispatch = useDispatch();
 
-  const onFetchMeasurements = () => {
+  const fetchMeasurements = () => {
     if (sensors.length === 0) {
       return;
     }
@@ -69,7 +67,7 @@ export const DashboardDeviceGraph: React.FC<{
         undefined
       )
       .then((res) => {
-        setLastRange(timeRange);
+        setLastTimeRange(timeRange);
         setDeviceModel(res);
       })
       .catch((er) => {
@@ -109,7 +107,7 @@ export const DashboardDeviceGraph: React.FC<{
         onSetAutoScale={(state) =>
           dispatch(toggleAutoScale({ deviceId: device.id, state }))
         }
-        onRefresh={onFetchMeasurements}
+        onRefresh={fetchMeasurements}
         isLoading={isLoading}
       />
     </Box>
