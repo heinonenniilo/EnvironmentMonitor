@@ -19,10 +19,10 @@ export const TimeRangeSelectorComponent: React.FC<
   };
 
   const handleClose = (value?: number) => {
+    setAnchorEl(null);
     if (value !== undefined) {
       onSelectTimeRange(value);
     }
-    setAnchorEl(null);
   };
 
   return (

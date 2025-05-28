@@ -1,34 +1,25 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   getDashboardTimeRange,
   getDevices,
   getSensors,
   setDashboardTimeRange,
 } from "../reducers/measurementReducer";
-import { useApiHook } from "../hooks/apiHook";
 import { Box } from "@mui/material";
-import moment from "moment";
-import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 import { DashboardDeviceGraph } from "../components/DashboardDeviceGraph";
 import { type Sensor } from "../models/sensor";
 import { type Device } from "../models/device";
 
 interface DeviceDashboardModel {
-  model: MeasurementsViewModel | undefined;
   sensors: Sensor[];
   device: Device;
 }
 
 export const DashboardView: React.FC = () => {
-  const measurementApiHook = useApiHook().measureHook;
   const dispatch = useDispatch();
-  const [viewModel, setViewModel] = useState<MeasurementsViewModel | undefined>(
-    undefined
-  );
-  const [isLoading, setIsLoading] = useState(false);
 
   const sensors = useSelector(getSensors);
   const devices = useSelector(getDevices);
@@ -36,74 +27,41 @@ export const DashboardView: React.FC = () => {
   const timeRange = useSelector(getDashboardTimeRange);
 
   const handleTimeRangeChange = (selection: number) => {
-    dispatch(setDashboardTimeRange(selection));
+    setTimeout(() => {
+      dispatch(setDashboardTimeRange(selection));
+    }, 10);
   };
 
-  useEffect(() => {
-    if (!sensors || sensors.length === 0) {
-      return;
-    }
-    const momentStart = moment()
-      .local(true)
-      .add(-1 * timeRange, "hour")
-      .utc(true);
-    setIsLoading(true);
-    measurementApiHook
-      .getMeasurementsBySensor(
-        sensors.map((x) => x.id),
-        momentStart,
-        undefined
-      )
-      .then((res) => {
-        setViewModel(res); // Set to false once the model is formed
-      })
-      .catch((er) => {
-        console.error(er);
-        setViewModel(undefined);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange]);
-
   const measurementsModel: DeviceDashboardModel[] = useMemo(() => {
-    return devices.map((device) => {
-      const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
-      const measurementsModel: MeasurementsViewModel | undefined = viewModel
-        ? {
-            measurements: viewModel.measurements.filter((m) =>
-              deviceSensors.some((s) => s.id === m.sensorId)
-            ),
-          }
-        : undefined;
-      return { device, sensors: deviceSensors, model: measurementsModel };
-    });
-  }, [devices, sensors, viewModel]);
+    return [...devices]
+      .sort((a, b) => {
+        const locA = a.locationId ?? 0;
+        const locB = b.locationId ?? 0;
+        return locA - locB;
+      })
+      .map((device) => {
+        const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
 
-  const list = measurementsModel
-    .slice()
-    .sort((a, b) => {
-      const locA = a.device.locationId ?? 0;
-      const locB = b.device.locationId ?? 0;
-      return locA - locB;
-    })
-    .map(({ device, sensors, model }) => {
-      return (
-        <DashboardDeviceGraph
-          device={device}
-          model={model}
-          sensors={sensors}
-          key={device.id}
-          timeRange={timeRange}
-        />
-      );
-    });
+        return { device, sensors: deviceSensors };
+      });
+  }, [devices, sensors]);
+
+  const list = measurementsModel.map(({ device, sensors }) => {
+    return (
+      <DashboardDeviceGraph
+        device={device}
+        model={undefined}
+        sensors={sensors}
+        key={device.id}
+        timeRange={timeRange}
+        autoFetch
+      />
+    );
+  });
 
   return (
     <AppContentWrapper
       title="Dashboard - Devices"
-      isLoading={isLoading}
       titleComponent={
         <TimeRangeSelectorComponent
           timeRange={timeRange}

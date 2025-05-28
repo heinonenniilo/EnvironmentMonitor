@@ -7,27 +7,45 @@ import { useApiHook } from "../hooks/apiHook";
 import moment from "moment";
 import { type LocationModel } from "../models/location";
 import { ChartJsColorsPluginMaxDatasets } from "../models/applicationConstants";
+import { useInView } from "react-intersection-observer";
 
 export const DashboardLocationGraph: React.FC<{
   location: LocationModel;
   model: MeasurementsByLocation | undefined;
   timeRange: number;
-}> = ({ location, model, timeRange }) => {
+  autoFetch: boolean;
+}> = ({ location, model, timeRange, autoFetch }) => {
   const measurementApiHook = useApiHook().measureHook;
 
   const [isLoading, setIsLoading] = useState(false);
+  const [lastTimeRange, setLastTimeRange] = useState<number | undefined>(
+    undefined
+  );
 
   const [measurementModel, setMeasurementModel] = useState<
     MeasurementsByLocation | undefined
   >(undefined);
 
-  useEffect(() => {
-    if (model) {
-      setMeasurementModel(undefined);
-    }
-  }, [model]);
+  const { ref, inView } = useInView({
+    triggerOnce: false,
+    threshold: 0.5,
+  });
 
-  const onRefresh = () => {
+  useEffect(() => {
+    if (!autoFetch) {
+      return;
+    }
+
+    if (inView && timeRange !== lastTimeRange) {
+      fetchMeasurements();
+    } else if (!inView && timeRange !== lastTimeRange) {
+      setMeasurementModel(undefined); // Clears the "old" measurements
+      setLastTimeRange(undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange, inView, autoFetch]);
+
+  const fetchMeasurements = () => {
     setIsLoading(true);
     const momentStart = moment()
       .local(true)
@@ -36,6 +54,7 @@ export const DashboardLocationGraph: React.FC<{
     measurementApiHook
       .getMeasurementsByLocation([location.id], momentStart)
       .then((res) => {
+        setLastTimeRange(timeRange);
         setMeasurementModel(res?.measurements[0]);
       })
       .finally(() => {
@@ -56,15 +75,17 @@ export const DashboardLocationGraph: React.FC<{
         justifyContent: "center",
         alignItems: "center",
         position: "relative",
+        maxHeight: "650px",
       }}
+      ref={ref}
     >
       <MultiSensorGraph
-        sensors={model?.sensors}
+        sensors={measurementModel?.sensors ?? model?.sensors}
         devices={undefined}
         model={measurementModel ?? model}
         minHeight={400}
         isLoading={isLoading}
-        onRefresh={onRefresh}
+        onRefresh={fetchMeasurements}
         useAutoScale={true}
         title={location.name}
         useDynamicColors={

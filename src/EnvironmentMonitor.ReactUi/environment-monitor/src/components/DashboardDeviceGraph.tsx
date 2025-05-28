@@ -3,6 +3,7 @@ import { type Device } from "../models/device";
 import { type Sensor } from "../models/sensor";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { useDispatch, useSelector } from "react-redux";
+import { useInView } from "react-intersection-observer";
 import {
   getDeviceAutoScale,
   toggleAutoScale,
@@ -17,24 +18,44 @@ export const DashboardDeviceGraph: React.FC<{
   sensors: Sensor[];
   model: MeasurementsViewModel | undefined;
   timeRange: number;
-}> = ({ device, sensors, model, timeRange }) => {
+  autoFetch: boolean;
+}> = ({ device, sensors, model, timeRange, autoFetch }) => {
   const useAutoScale = useSelector(getDeviceAutoScale(device.id));
   const measurementApiHook = useApiHook().measureHook;
 
   const [deviceModel, setDeviceModel] = useState<
     MeasurementsViewModel | undefined
   >(undefined);
-
   const [isLoading, setIsLoading] = useState(false);
+  const [lastTimeRange, setLastTimeRange] = useState<number | undefined>(
+    undefined
+  );
+
+  const { ref, inView } = useInView({
+    triggerOnce: false,
+    threshold: 0.5,
+  });
 
   useEffect(() => {
-    if (model) {
-      setDeviceModel(undefined);
+    if (!autoFetch) {
+      return;
     }
-  }, [model]);
+
+    if (!sensors || sensors.length === 0) {
+      return;
+    }
+
+    if (inView && timeRange !== lastTimeRange) {
+      fetchMeasurements();
+    } else if (!inView && timeRange !== lastTimeRange) {
+      setDeviceModel(undefined);
+      setLastTimeRange(undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange, inView, autoFetch]);
   const dispatch = useDispatch();
 
-  const onRefresh = () => {
+  const fetchMeasurements = () => {
     if (sensors.length === 0) {
       return;
     }
@@ -51,6 +72,7 @@ export const DashboardDeviceGraph: React.FC<{
         undefined
       )
       .then((res) => {
+        setLastTimeRange(timeRange);
         setDeviceModel(res);
       })
       .catch((er) => {
@@ -76,7 +98,9 @@ export const DashboardDeviceGraph: React.FC<{
         justifyContent: "center",
         alignItems: "center",
         position: "relative",
+        maxHeight: "600px",
       }}
+      ref={ref}
     >
       <MultiSensorGraph
         sensors={sensors}
@@ -88,7 +112,7 @@ export const DashboardDeviceGraph: React.FC<{
         onSetAutoScale={(state) =>
           dispatch(toggleAutoScale({ deviceId: device.id, state }))
         }
-        onRefresh={onRefresh}
+        onRefresh={fetchMeasurements}
         isLoading={isLoading}
       />
     </Box>
