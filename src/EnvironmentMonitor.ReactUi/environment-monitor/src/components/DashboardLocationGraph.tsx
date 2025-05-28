@@ -13,7 +13,8 @@ export const DashboardLocationGraph: React.FC<{
   location: LocationModel;
   model: MeasurementsByLocation | undefined;
   timeRange: number;
-}> = ({ location, model, timeRange }) => {
+  autoFetch: boolean;
+}> = ({ location, model, timeRange, autoFetch }) => {
   const measurementApiHook = useApiHook().measureHook;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -31,8 +32,8 @@ export const DashboardLocationGraph: React.FC<{
   });
 
   useEffect(() => {
-    if (model) {
-      setMeasurementModel(undefined);
+    if (!autoFetch) {
+      return;
     }
 
     if (inView && timeRange !== lastTimeRange) {
@@ -42,7 +43,7 @@ export const DashboardLocationGraph: React.FC<{
       setLastTimeRange(undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange, inView]);
+  }, [timeRange, inView, autoFetch]);
 
   const fetchMeasurements = () => {
     setIsLoading(true);

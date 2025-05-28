@@ -54,6 +54,7 @@ export const DashboardView: React.FC = () => {
         sensors={sensors}
         key={device.id}
         timeRange={timeRange}
+        autoFetch
       />
     );
   });

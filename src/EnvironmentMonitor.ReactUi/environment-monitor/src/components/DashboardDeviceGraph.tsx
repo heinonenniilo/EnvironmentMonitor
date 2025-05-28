@@ -18,7 +18,8 @@ export const DashboardDeviceGraph: React.FC<{
   sensors: Sensor[];
   model: MeasurementsViewModel | undefined;
   timeRange: number;
-}> = ({ device, sensors, model, timeRange }) => {
+  autoFetch: boolean;
+}> = ({ device, sensors, model, timeRange, autoFetch }) => {
   const useAutoScale = useSelector(getDeviceAutoScale(device.id));
   const measurementApiHook = useApiHook().measureHook;
 
@@ -36,6 +37,10 @@ export const DashboardDeviceGraph: React.FC<{
   });
 
   useEffect(() => {
+    if (!autoFetch) {
+      return;
+    }
+
     if (!sensors || sensors.length === 0) {
       return;
     }
@@ -47,7 +52,7 @@ export const DashboardDeviceGraph: React.FC<{
       setLastTimeRange(undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange, inView]);
+  }, [timeRange, inView, autoFetch]);
   const dispatch = useDispatch();
 
   const fetchMeasurements = () => {

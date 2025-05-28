@@ -55,6 +55,7 @@ export const DashbordLocationsView: React.FC = () => {
               timeRange={timeRange}
               model={undefined}
               key={m.id}
+              autoFetch
             />
           );
         })}
