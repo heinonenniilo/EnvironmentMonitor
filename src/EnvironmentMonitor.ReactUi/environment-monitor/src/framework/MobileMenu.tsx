@@ -29,7 +29,11 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
   const locations = useSelector(getLocations);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [manageAchor, setManageAnchor] = React.useState<null | HTMLElement>(
+    null
+  );
   const open = Boolean(anchorEl);
+  const manageOpen = Boolean(manageAchor);
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -137,6 +141,39 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
               }}
             >
               Devices
+            </MenuItem>
+          </AuthorizedComponent>
+          <Menu
+            anchorEl={manageAchor}
+            open={manageOpen}
+            onClose={() => {
+              setManageAnchor(null);
+            }}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+          >
+            <MenuItem
+              onClick={(event) => {
+                handleClick(routes.devices, event);
+              }}
+            >
+              Devices
+            </MenuItem>
+            <MenuItem
+              onClick={(event) => {
+                handleClick(routes.deviceMessages, event);
+              }}
+            >
+              Device messages
+            </MenuItem>
+          </Menu>
+          <AuthorizedComponent requiredRole={RoleNames.Admin}>
+            <MenuItem
+              onClick={(event) => {
+                setManageAnchor(event.currentTarget);
+              }}
+            >
+              Manage <ArrowRight sx={{ mr: 1 }} />
             </MenuItem>
           </AuthorizedComponent>
           <MenuItem

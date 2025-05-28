@@ -30,13 +30,6 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   >(undefined);
 
   useEffect(() => {
-    if (onLoadingChange) {
-      onLoadingChange(isLoading);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading]);
-
-  useEffect(() => {
     setGetModel({
       ...model,
       pageNumber: 1,
@@ -55,6 +48,9 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   useEffect(() => {
     if (!getModel) {
       return;
+    }
+    if (onLoadingChange) {
+      onLoadingChange(isLoading);
     }
     setIsLoading(true);
     hook
@@ -131,7 +127,10 @@ export const DeviceMessagesTable: React.FC<Props> = ({
           console.log(newModel);
           setGetModel((prev) => ({
             ...prev,
-            pageNumber: newModel.page,
+            pageNumber:
+              newModel.pageSize !== paginationModel?.pageSize
+                ? 1
+                : newModel.page,
             pageSize: newModel.pageSize,
             from: model?.from
               ? model.from
