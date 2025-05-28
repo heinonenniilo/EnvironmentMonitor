@@ -7,6 +7,10 @@ import { Box } from "@mui/material";
 import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
 import { DeviceMessagesTable } from "../components/DeviceMessageTable";
 import { DeviceMessagesLeftView } from "../components/DeviceMessagesLeftView";
+export const defaultStart = moment()
+  .local(true)
+  .add(-1 * 7, "day")
+  .utc(true);
 
 export const DeviceMessagesView: React.FC = () => {
   const devices = useSelector(getDevices);
@@ -17,14 +21,10 @@ export const DeviceMessagesView: React.FC = () => {
   );
 
   useEffect(() => {
-    const defaultStart = moment()
-      .local(true)
-      .add(-1 * 7, "day")
-      .utc(true);
     setGetModel({
       deviceIds: devices.map((d) => d.id),
       pageNumber: 1,
-      pageSize: 25,
+      pageSize: 50,
       isDescending: true,
       from: defaultStart,
     });

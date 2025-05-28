@@ -2,6 +2,7 @@ import { Box, Button, Checkbox, FormControlLabel } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
+import { defaultStart } from "../containers/DeviceMessagesView";
 
 export interface DeviceMessagesLeftViewProps {
   onSearch: (model: GetDeviceMessagesModel) => void;
@@ -22,6 +23,13 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
     }
   }, [model]);
 
+  const fromValue = () => {
+    if (innerModel) {
+      return innerModel.from;
+    }
+    return defaultStart;
+  };
+
   return (
     <Box
       display={"flex"}
@@ -33,7 +41,7 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
         <DesktopDatePicker
           label="From"
           format="DD.MM.YYYY"
-          value={innerModel?.from}
+          value={fromValue()}
           onChange={(value) => {
             if (value && innerModel) {
               setModel({ ...innerModel, from: value.utc(true).startOf("day") });
@@ -42,22 +50,6 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
         ></DesktopDatePicker>
       </Box>
 
-      <Box mt={2}>
-        <DesktopDatePicker
-          label="To"
-          format="DD.MM.YYYY"
-          value={innerModel?.to}
-          slotProps={{ field: { clearable: true } }}
-          onChange={(value) => {
-            if (innerModel) {
-              setModel({
-                ...innerModel,
-                to: value ? value.utc(true).endOf("day") : undefined,
-              });
-            }
-          }}
-        />
-      </Box>
       <Box mt={2}>
         <DesktopDatePicker
           label="To"

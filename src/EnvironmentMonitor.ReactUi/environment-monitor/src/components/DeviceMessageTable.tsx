@@ -4,7 +4,7 @@ import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
 import type { PaginatedResult } from "../models/paginatedResult";
 import type { DeviceMessage } from "../models/deviceMessage";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import { Box, Checkbox } from "@mui/material";
+import { Box, Checkbox, useMediaQuery, useTheme } from "@mui/material";
 import moment from "moment";
 import { useSelector } from "react-redux";
 import { getDevices, getLocations } from "../reducers/measurementReducer";
@@ -28,6 +28,8 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   const [paginationModel, setPaginationModel] = useState<
     PaginatedResult<DeviceMessage> | undefined
   >(undefined);
+  const theme = useTheme();
+  const drawDesktop = useMediaQuery(theme.breakpoints.up("lg"));
 
   useEffect(() => {
     setGetModel({
@@ -89,7 +91,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
     },
     {
       field: "isDuplicate",
-      headerName: "Device ",
+      headerName: "Duplicate ",
       flex: 1,
       sortable: false,
       renderCell: (params) => (
@@ -122,6 +124,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
           page: paginationModel?.pageNumber ?? 1,
           pageSize: paginationModel?.pageSize ?? 50,
         }}
+        getRowHeight={drawDesktop ? undefined : () => "auto"}
         density="compact"
         onPaginationModelChange={(newModel) => {
           console.log(newModel);
