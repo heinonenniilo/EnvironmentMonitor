@@ -28,10 +28,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _logger.LogInformation("Total coutn checked");
 
             if (!string.IsNullOrWhiteSpace(parameters.OrderBy))
-            {
+            {              
                 var ordering = parameters.IsDescending
                     ? $"{parameters.OrderBy} descending"
                     : parameters.OrderBy;
+                _logger.LogInformation($"Applying sort: {ordering}");
                 source = source.OrderBy(ordering);
             }
            

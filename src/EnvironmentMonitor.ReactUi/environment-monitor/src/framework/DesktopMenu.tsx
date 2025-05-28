@@ -47,7 +47,9 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
   // const user = useSelector(getUserInfo);
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorE2, setAnchorE2] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const manageMenuOpen = Boolean(anchorE2);
 
   const handleDashboardClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -137,12 +139,47 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
             </MenuItem>
           </AuthorizedComponent>
           <AuthorizedComponent requiredRole={RoleNames.Admin}>
-            <MenuItem
-              onClick={() => {
-                onNavigate(routes.devices);
+            <Menu
+              anchorEl={anchorE2}
+              open={manageMenuOpen}
+              onClose={() => {
+                setAnchorE2(null);
+              }}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "left",
               }}
             >
-              Devices
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  setAnchorE2(null);
+                  onNavigate(routes.devices);
+                }}
+              >
+                Devices
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  setAnchorE2(null);
+                  onNavigate(routes.deviceMessages);
+                }}
+              >
+                Device messages
+              </MenuItem>
+            </Menu>
+            <MenuItem
+              onClick={(event) => {
+                setAnchorE2(event.currentTarget);
+              }}
+            >
+              Manage
+              <ArrowDropDownIcon />
             </MenuItem>
           </AuthorizedComponent>
         </MenuArea>

@@ -15,6 +15,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public string? Identifier { get; set; }
         public int DeviceId { get; set; }
         public DateTime TimeStamp{ get; set; }
+        public int Id { get; set; }
 
         public long? Uptime { get; set; }
 
