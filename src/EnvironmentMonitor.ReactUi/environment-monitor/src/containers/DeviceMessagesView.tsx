@@ -6,6 +6,7 @@ import moment from "moment";
 import { Box } from "@mui/material";
 import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
 import { DeviceMessagesTable } from "../components/DeviceMessageTable";
+import { DeviceMessagesLeftView } from "../components/DeviceMessagesLeftView";
 
 export const DeviceMessagesView: React.FC = () => {
   const devices = useSelector(getDevices);
@@ -30,7 +31,20 @@ export const DeviceMessagesView: React.FC = () => {
   }, [devices]);
 
   return (
-    <AppContentWrapper title={"Device message"} isLoading={isLoading}>
+    <AppContentWrapper
+      title={"Device message"}
+      isLoading={isLoading}
+      leftMenu={
+        getModel && (
+          <DeviceMessagesLeftView
+            onSearch={(model) => {
+              setGetModel(model);
+            }}
+            model={getModel}
+          />
+        )
+      }
+    >
       <Box
         display="flex"
         flexDirection="column"
