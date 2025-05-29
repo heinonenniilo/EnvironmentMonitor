@@ -120,6 +120,16 @@ export const DeviceMessagesTable: React.FC<Props> = ({
         <Checkbox checked={Boolean(params.value)} disabled />
       ),
     },
+    {
+      field: "firstMessage",
+      headerName: "First message",
+      flex: 1,
+      sortable: false,
+      minWidth: 80,
+      renderCell: (params) => (
+        <Checkbox checked={Boolean(params.value)} disabled />
+      ),
+    },
   ];
 
   return (

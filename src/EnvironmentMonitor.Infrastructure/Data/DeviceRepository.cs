@@ -283,6 +283,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => x.IsDuplicate == model.IsDuplicate);
             }
 
+            if (model.IsFirstMessage != null)
+            {
+                query = query.Where(x => x.FirstMessage == model.IsFirstMessage);
+            }
+
             if (model.From != null)
             {
                 query = query.Where(x => x.TimeStamp >= model.From);

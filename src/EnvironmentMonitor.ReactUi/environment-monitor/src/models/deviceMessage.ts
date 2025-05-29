@@ -6,4 +6,5 @@ export interface DeviceMessage {
   uptime: number;
   id: number;
   messageCount: number;
+  firstMessage: boolean;
 }

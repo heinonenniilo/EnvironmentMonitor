@@ -1,9 +1,7 @@
 import {
   Box,
   Button,
-  Checkbox,
   FormControl,
-  FormControlLabel,
   InputLabel,
   MenuItem,
   Select,
@@ -110,24 +108,67 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
         </FormControl>
       </Box>
       <Box mt={2}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={innerModel?.isDuplicate ?? false}
-              onChange={(event) => {
-                if (innerModel) {
-                  setModel({
-                    ...innerModel,
-                    isDuplicate: event.target.checked,
-                  });
-                }
-              }}
-            />
-          }
-          label="Is duplicate"
-        />
+        <FormControl fullWidth size="small">
+          <InputLabel id="is-duplicate-label">Is duplicate</InputLabel>
+          <Select
+            labelId="is-duplicate-label"
+            value={
+              innerModel === undefined || innerModel.isDuplicate === undefined
+                ? "-1"
+                : innerModel.isDuplicate
+                ? "1"
+                : "0"
+            }
+            label="Is duplicate"
+            onChange={(event) => {
+              if (!innerModel) {
+                return;
+              }
+              const val = event.target.value;
+              setModel({
+                ...innerModel,
+                isDuplicate: val === "-1" ? undefined : val === "1",
+              });
+            }}
+          >
+            <MenuItem value={"-1"}>No filter</MenuItem>
+            <MenuItem value={"1"}>True</MenuItem>
+            <MenuItem value={"0"}>False</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
+      <Box mt={2}>
+        <FormControl fullWidth size="small">
+          <InputLabel id="is-first-label">First Message</InputLabel>
+          <Select
+            labelId="is-first-label"
+            value={
+              innerModel === undefined ||
+              innerModel.isFirstMessage === undefined
+                ? "-1"
+                : innerModel.isFirstMessage
+                ? "1"
+                : "0"
+            }
+            label="First Message"
+            onChange={(event) => {
+              if (!innerModel) {
+                return;
+              }
+              const val = event.target.value;
+              setModel({
+                ...innerModel,
+                isFirstMessage: val === "-1" ? undefined : val === "1",
+              });
+            }}
+          >
+            <MenuItem value={"-1"}>No filter</MenuItem>
+            <MenuItem value={"1"}>True</MenuItem>
+            <MenuItem value={"0"}>False</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
       <Box mt={2}>
         <Button
           variant="outlined"
