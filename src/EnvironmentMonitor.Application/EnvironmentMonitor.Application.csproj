@@ -17,8 +17,4 @@
     <ProjectReference Include="..\EnvironmentMonitor.Domain\EnvironmentMonitor.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="DTOs\ReturnModels\" />
-  </ItemGroup>
-
 </Project>

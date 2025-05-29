@@ -5,10 +5,10 @@ import type { PaginatedResult } from "../models/paginatedResult";
 import type { DeviceMessage } from "../models/deviceMessage";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { Box, Checkbox, useMediaQuery, useTheme } from "@mui/material";
-import moment from "moment";
 import { useSelector } from "react-redux";
 import { getDevices, getLocations } from "../reducers/measurementReducer";
 import { getFormattedDate } from "../utilities/datetimeUtils";
+import { defaultStart } from "../containers/DeviceMessagesView";
 
 interface Props {
   model: GetDeviceMessagesModel | undefined;
@@ -39,7 +39,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
     setGetModel({
       ...model,
       pageNumber: 0,
-      pageSize: paginationModel?.pageSize ?? 50,
+      pageSize: paginationModel?.pageSize ?? model.pageSize,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model]);
@@ -84,6 +84,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
       headerName: "Timestamp",
       flex: 1,
       sortable: false,
+      minWidth: 150,
       valueFormatter: (value) => {
         if (!value) {
           return "";
@@ -91,12 +92,19 @@ export const DeviceMessagesTable: React.FC<Props> = ({
         return getFormattedDate(value as Date, true, true);
       },
     },
-    { field: "identifier", headerName: "Identifier", flex: 1, sortable: false },
+    {
+      field: "identifier",
+      headerName: "Identifier",
+      minWidth: 200,
+      flex: 1,
+      sortable: false,
+    },
     {
       field: "deviceId",
       headerName: "Device ",
       flex: 1,
       sortable: false,
+      minWidth: 150,
       valueGetter: (_value, row) => {
         const deviceMessageRow = row as DeviceMessage;
         return getDeviceLabel(deviceMessageRow.deviceId);
@@ -107,6 +115,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
       headerName: "Duplicate ",
       flex: 1,
       sortable: false,
+      minWidth: 80,
       renderCell: (params) => (
         <Checkbox checked={Boolean(params.value)} disabled />
       ),
@@ -145,17 +154,12 @@ export const DeviceMessagesTable: React.FC<Props> = ({
             ...prev,
             pageNumber:
               newModel.pageSize !== paginationModel?.pageSize
-                ? 1
+                ? 0
                 : newModel.page,
             pageSize: newModel.pageSize,
-            from: model?.from
-              ? model.from
-              : moment()
-                  .local(true)
-                  .add(-1 * 7, "day")
-                  .utc(true),
+            from: model?.from ? model.from : defaultStart,
             to: model?.to,
-            isDescending: true,
+            isDescending: model?.isDescending ?? true,
           }));
         }}
       />

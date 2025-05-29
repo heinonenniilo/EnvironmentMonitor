@@ -282,6 +282,17 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => x.IsDuplicate == model.IsDuplicate);
             }
+
+            if (model.From != null)
+            {
+                query = query.Where(x => x.TimeStamp >= model.From);
+            }
+
+            if (model.To != null)
+            {
+                query = query.Where(x => x.TimeStamp < model.To);
+            }
+
             var res = await _paginationService.PaginateAsync(query, new PaginationParams()
             {
                 PageNumber = model.PageNumber,
