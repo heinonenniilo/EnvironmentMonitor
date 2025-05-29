@@ -23,7 +23,7 @@ export const DeviceMessagesView: React.FC = () => {
   useEffect(() => {
     setGetModel({
       deviceIds: devices.map((d) => d.id),
-      pageNumber: 1,
+      pageNumber: 0,
       pageSize: 50,
       isDescending: true,
       from: defaultStart,
@@ -32,7 +32,7 @@ export const DeviceMessagesView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      title={"Device message"}
+      title={"Device messages"}
       isLoading={isLoading}
       leftMenu={
         getModel && (

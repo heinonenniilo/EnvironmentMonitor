@@ -8,6 +8,7 @@ import { Box, Checkbox, useMediaQuery, useTheme } from "@mui/material";
 import moment from "moment";
 import { useSelector } from "react-redux";
 import { getDevices, getLocations } from "../reducers/measurementReducer";
+import { getFormattedDate } from "../utilities/datetimeUtils";
 
 interface Props {
   model: GetDeviceMessagesModel | undefined;
@@ -32,17 +33,13 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   const drawDesktop = useMediaQuery(theme.breakpoints.up("lg"));
 
   useEffect(() => {
+    if (!model) {
+      return;
+    }
     setGetModel({
       ...model,
-      pageNumber: 1,
+      pageNumber: 0,
       pageSize: paginationModel?.pageSize ?? 50,
-      from:
-        model?.from ??
-        moment()
-          .local(true)
-          .add(-1 * 7, "day")
-          .utc(true),
-      isDescending: model?.isDescending ?? true,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model]);
@@ -52,7 +49,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
       return;
     }
     if (onLoadingChange) {
-      onLoadingChange(isLoading);
+      onLoadingChange(true);
     }
     setIsLoading(true);
     hook
@@ -61,7 +58,12 @@ export const DeviceMessagesTable: React.FC<Props> = ({
         setPaginationModel(res);
       })
       .catch(console.error)
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        setIsLoading(false);
+        if (onLoadingChange) {
+          onLoadingChange(false);
+        }
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getModel]);
 
@@ -77,7 +79,18 @@ export const DeviceMessagesTable: React.FC<Props> = ({
       : deviceId;
   };
   const columns: GridColDef[] = [
-    { field: "timeStamp", headerName: "Timestamp", flex: 1, sortable: false },
+    {
+      field: "timeStamp",
+      headerName: "Timestamp",
+      flex: 1,
+      sortable: false,
+      valueFormatter: (value) => {
+        if (!value) {
+          return "";
+        }
+        return getFormattedDate(value as Date, true, true);
+      },
+    },
     { field: "identifier", headerName: "Identifier", flex: 1, sortable: false },
     {
       field: "deviceId",
@@ -121,8 +134,8 @@ export const DeviceMessagesTable: React.FC<Props> = ({
         paginationMode="server"
         sortingMode="server"
         paginationModel={{
-          page: paginationModel?.pageNumber ?? 1,
-          pageSize: paginationModel?.pageSize ?? 50,
+          page: paginationModel ? paginationModel.pageNumber : 0,
+          pageSize: paginationModel ? paginationModel.pageSize : 50,
         }}
         getRowHeight={drawDesktop ? undefined : () => "auto"}
         density="compact"
