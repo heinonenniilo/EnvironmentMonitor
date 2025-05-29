@@ -38,7 +38,7 @@ export const DeviceMessagesView: React.FC = () => {
         getModel && (
           <DeviceMessagesLeftView
             onSearch={(model) => {
-              setGetModel(model);
+              setGetModel({ ...model });
             }}
             model={getModel}
             devices={devices}
