@@ -41,6 +41,7 @@ export const DeviceMessagesView: React.FC = () => {
               setGetModel(model);
             }}
             model={getModel}
+            devices={devices}
           />
         )
       }
