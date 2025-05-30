@@ -1,6 +1,8 @@
 ﻿using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.GetModels;
+using EnvironmentMonitor.Domain.Models.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,8 +24,8 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false);
         public Task<List<SensorDto>> GetSensors(List<Guid> identifiers);
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
-
         public Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
+        public Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model);
 
         public Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model);
         public Task AddAttachment(Guid identifier, UploadAttachmentModel fileModel);

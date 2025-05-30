@@ -14,6 +14,8 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using EnvironmentMonitor.Application.Services;
+using EnvironmentMonitor.Domain.Models.Pagination;
+using EnvironmentMonitor.Domain.Models.GetModels;
 
 namespace EnvironmentMonitor.WebApi.Controllers
 {
@@ -128,5 +130,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpGet("status")]
         public async Task<DeviceStatusModel> GetDeviceStatus([FromQuery] GetDeviceStatusModel model) => await _deviceService.GetDeviceStatus(model);
+
+        [HttpGet("device-messages")]
+        [Authorize(Roles = "Viewer, Admin")]
+        public async Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages([FromQuery] GetDeviceMessagesModel model) => await _deviceService.GetDeviceMessages(model);
     }
 }

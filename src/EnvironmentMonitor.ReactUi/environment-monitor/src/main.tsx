@@ -12,6 +12,7 @@ import { MeasurementsView } from "./containers/MeasurementsView";
 import { DevicesView } from "./containers/DevicesView";
 import { DeviceView } from "./containers/DeviceView";
 import { store } from "./setup/appStore";
+import { DeviceMessagesView } from "./containers/DeviceMessagesView";
 
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
@@ -34,6 +35,10 @@ createRoot(document.getElementById("root")!).render(
             <Route
               path={routes.deviceView}
               element={<DeviceView></DeviceView>}
+            />
+            <Route
+              path={routes.deviceMessages}
+              element={<DeviceMessagesView />}
             />
           </Routes>
         </App>

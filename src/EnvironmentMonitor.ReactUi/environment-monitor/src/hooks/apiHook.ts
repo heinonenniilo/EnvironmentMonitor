@@ -16,6 +16,9 @@ import type {
 } from "../models/measurementsBySensor";
 import type { Sensor } from "../models/sensor";
 import axios from "axios";
+import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
+import type { PaginatedResult } from "../models/paginatedResult";
+import type { DeviceMessage } from "../models/deviceMessage";
 
 interface ApiHook {
   userHook: userHook;
@@ -91,6 +94,9 @@ interface deviceHook {
     to?: moment.Moment
   ) => Promise<DeviceStatusModel>;
   updateDevice: (device: Device) => Promise<DeviceInfo>;
+  getDeviceMessage: (
+    model: GetDeviceMessagesModel
+  ) => Promise<PaginatedResult<DeviceMessage>>;
 }
 
 const apiClient = axios.create({
@@ -432,6 +438,25 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           showError("Failed to fetch device status");
+          throw ex;
+        }
+      },
+      getDeviceMessage: async (model: GetDeviceMessagesModel) => {
+        try {
+          const res = await apiClient.get<
+            any,
+            AxiosResponse<PaginatedResult<DeviceMessage>>
+          >(`/api/devices/device-messages`, {
+            params: {
+              ...model,
+              from: model.from.toISOString(),
+              to: model.to ? model.to.toISOString() : undefined,
+            },
+          });
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to get device messages");
           throw ex;
         }
       },

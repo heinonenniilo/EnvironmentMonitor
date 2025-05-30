@@ -6,4 +6,5 @@ export const routes = {
   locationDashboard: "/dashboard/location",
   devices: "/devices",
   deviceView: "/devices/:deviceId",
+  deviceMessages: "/devices/messages",
 };

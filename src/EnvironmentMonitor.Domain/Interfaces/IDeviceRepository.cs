@@ -1,6 +1,8 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.GetModels;
+using EnvironmentMonitor.Domain.Models.Pagination;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,22 +16,18 @@ namespace EnvironmentMonitor.Domain.Interfaces
     {
 
         Task<List<Device>> GetDevices(GetDevicesModel model);
-
         Task<List<DeviceInfo>> GetDeviceInfo(GetDevicesModel model);
-
         Task<Attachment> GetAttachment(int deviceId, Guid attachmentIdentifier);
-
         Task<List<DeviceEvent>> GetDeviceEvents(int id);
-
         Task<IEnumerable<Sensor>> GetSensors(GetSensorsModel model);
+        Task<PaginatedResult<DeviceMessage>> GetDeviceMessages(GetDeviceMessagesModel model);
 
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);
-        public Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges);
-
-        public Task<DeviceInfo> AddOrUpdate(Device device, bool saveChanges);
-
+        public Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges);       
         public Task DeleteAttachment(int deviceId, Guid attachmentIdentifier, bool saveChanges);
         public Task SetDefaultImage(int deviceId, Guid attachmentIdentifier);
+
+        public Task<DeviceInfo> AddOrUpdate(Device device, bool saveChanges);
 
         public Task SetStatus(SetDeviceStatusModel status, bool saveChanges);
         public Task SaveChanges();

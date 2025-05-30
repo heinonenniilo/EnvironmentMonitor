@@ -13,6 +13,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EnvironmentMonitor.Domain;
+using EnvironmentMonitor.Domain.Models.GetModels;
+using EnvironmentMonitor.Domain.Models.Pagination;
 
 namespace EnvironmentMonitor.Application.Services
 {
@@ -340,6 +342,38 @@ namespace EnvironmentMonitor.Application.Services
             var updateModel = _mapper.Map<Device>(model.Device);
             var info = await _deviceRepository.AddOrUpdate(updateModel, true);
             return _mapper.Map<DeviceInfoDto>(info);
+        }
+
+        public async Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model)
+        {
+            List<int>? toFilter = null;
+            if (model.DeviceIds?.Any() == true)
+            {
+                if (!_userService.HasAccessToDevices(model.DeviceIds, AccessLevels.Read))
+                {
+                    _logger.LogWarning($"No access to devices: {model.DeviceIds}");
+                    throw new UnauthorizedAccessException();
+                }
+                toFilter = model.DeviceIds;
+            }
+
+            if (toFilter == null && !_userService.IsAdmin)
+            {
+                var deviceIds = _userService.GetDevices();
+                _logger.LogInformation($"User has access to: {deviceIds} devices");
+                if (deviceIds.Count == 0)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            var res = await _deviceRepository.GetDeviceMessages(model);
+            return new PaginatedResult<DeviceMessageDto>()
+            {
+                Items = _mapper.Map<List<DeviceMessageDto>>(res.Items),
+                PageNumber = res.PageNumber,
+                PageSize = res.PageSize,
+                TotalCount = res.TotalCount,
+            };
         }
     }
 }

@@ -4,6 +4,8 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.GetModels;
+using EnvironmentMonitor.Domain.Models.Pagination;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
@@ -17,11 +19,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
         private readonly MeasurementDbContext _context;
         private readonly IDateService _dateService;
         private readonly ILogger<DeviceRepository> _logger;
-        public DeviceRepository(MeasurementDbContext context, IDateService dateService, ILogger<DeviceRepository> logger)
+        private readonly IPaginationService _paginationService;
+        public DeviceRepository(MeasurementDbContext context, IDateService dateService, IPaginationService paginationService, ILogger<DeviceRepository> logger)
         {
             _context = context;
             _dateService = dateService;
             _logger = logger;
+            _paginationService = paginationService;
         }
 
         public async Task<List<Device>> GetDevices(GetDevicesModel model)
@@ -267,6 +271,43 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return toReturn ?? throw new EntityNotFoundException();
         }
 
+        public async Task<PaginatedResult<DeviceMessage>> GetDeviceMessages(GetDeviceMessagesModel model)
+        {
+            IQueryable<DeviceMessage> query = _context.DeviceMessages;
+            if (model.DeviceIds != null)
+            {
+                query = query.Where(x => model.DeviceIds.Contains(x.DeviceId));
+            }
+            if (model.IsDuplicate != null)
+            {
+                query = query.Where(x => x.IsDuplicate == model.IsDuplicate);
+            }
+
+            if (model.IsFirstMessage != null)
+            {
+                query = query.Where(x => x.FirstMessage == model.IsFirstMessage);
+            }
+
+            if (model.From != null)
+            {
+                query = query.Where(x => x.TimeStamp >= model.From);
+            }
+
+            if (model.To != null)
+            {
+                query = query.Where(x => x.TimeStamp < model.To);
+            }
+
+            var res = await _paginationService.PaginateAsync(query, new PaginationParams()
+            {
+                PageNumber = model.PageNumber,
+                PageSize = model.PageSize,
+                OrderBy = model.OrderBy ?? "Timestamp",
+                IsDescending = model.IsDescending,
+            });
+            return res;
+        }
+
         private IQueryable<Device> GetFilteredDeviceQuery(GetDevicesModel model)
         {
             IQueryable<Device> query = _context.Devices;
@@ -317,6 +358,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 TimeStamp = x.Max(d => d.TimeStamp)
             }).ToListAsync();
 
+
             var latestMessages = await _context.Measurements.Where(
                 x => deviceIds.Contains(x.Sensor.DeviceId)
                 && x.Timestamp > _dateService.CurrentTime().AddDays(-1 * ApplicationConstants.DeviceLastMessageFetchLimitIndays)
@@ -333,5 +375,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 DefaultImageGuid = defaultImages.FirstOrDefault(x => x.DeviceId == device.Id)?.Guid
             }).ToList();
         }
+
     }
 }
