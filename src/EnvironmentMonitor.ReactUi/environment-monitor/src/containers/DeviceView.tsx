@@ -23,6 +23,7 @@ import { type DeviceStatusModel } from "../models/deviceStatus";
 import { MeasurementTypes } from "../enums/measurementTypes";
 import { setDevices } from "../reducers/measurementReducer";
 import { getDeviceTitle } from "../utilities/deviceUtils";
+import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 
 interface PromiseInfo {
   type: string;
@@ -45,6 +46,9 @@ export const DeviceView: React.FC = () => {
   const [model, setModel] = useState<MeasurementsViewModel | undefined>(
     undefined
   );
+
+  const [statusTimeRange, setStatusTimeRange] = useState(7 * 24);
+
   const [defaultImageVer, setDefaultImageVer] = useState(0);
   const dispatch = useDispatch();
 
@@ -112,7 +116,7 @@ export const DeviceView: React.FC = () => {
     }
     const momentStart = moment()
       .local(true)
-      .add(-1 * 7, "day")
+      .add(statusTimeRange ? -1 * statusTimeRange : -24, "hour")
       .utc(true);
     setIsLoadingDeviceStatus(true);
     deviceHook
@@ -127,7 +131,7 @@ export const DeviceView: React.FC = () => {
         setIsLoadingDeviceStatus(false);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDevice]);
+  }, [selectedDevice, statusTimeRange]);
 
   useEffect(() => {
     if (deviceId && !hasFetched) {
@@ -498,6 +502,13 @@ export const DeviceView: React.FC = () => {
           />
         </Collapsible>
         <Collapsible title="Online status">
+          <TimeRangeSelectorComponent
+            timeRange={statusTimeRange}
+            onSelectTimeRange={setStatusTimeRange}
+            options={[7 * 24, 30 * 24]}
+            labels={["7 days", "30 days"]}
+            selectedText={`${(statusTimeRange ?? 7 * 24) / 24} days`}
+          />
           <MultiSensorGraph
             title="Last 7 days"
             sensors={
