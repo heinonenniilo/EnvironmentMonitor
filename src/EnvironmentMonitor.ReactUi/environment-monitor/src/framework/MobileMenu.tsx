@@ -52,6 +52,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
 
   const handleClick = (
     route: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _event: React.MouseEvent<HTMLLIElement, MouseEvent>
   ) => {
     setAnchorEl(null);
@@ -132,15 +133,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
               }}
             >
               Measurements
-            </MenuItem>
-          </AuthorizedComponent>
-          <AuthorizedComponent requiredRole={RoleNames.Admin}>
-            <MenuItem
-              onClick={() => {
-                onNavigate(routes.devices);
-              }}
-            >
-              Devices
             </MenuItem>
           </AuthorizedComponent>
           <Menu
