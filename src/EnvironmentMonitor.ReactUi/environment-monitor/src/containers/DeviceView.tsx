@@ -30,6 +30,8 @@ interface PromiseInfo {
   data: any | undefined;
 }
 
+const timeRangeDefaultDays = 7;
+
 export const DeviceView: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | undefined>(
     undefined
@@ -47,7 +49,9 @@ export const DeviceView: React.FC = () => {
     undefined
   );
 
-  const [statusTimeRange, setStatusTimeRange] = useState(7 * 24);
+  const [statusTimeRange, setStatusTimeRange] = useState(
+    timeRangeDefaultDays * 24
+  );
 
   const [defaultImageVer, setDefaultImageVer] = useState(0);
   const dispatch = useDispatch();
@@ -505,9 +509,9 @@ export const DeviceView: React.FC = () => {
           <TimeRangeSelectorComponent
             timeRange={statusTimeRange}
             onSelectTimeRange={setStatusTimeRange}
-            options={[7 * 24, 30 * 24, 90 * 24]}
-            labels={["7 days", "30 days", "90 days"]}
-            selectedText={`${(statusTimeRange ?? 7 * 24) / 24} days`}
+            options={[3 * 24, 7 * 24, 30 * 24, 90 * 24]}
+            labels={["3 days", "7 days", "30 days", "90 days"]}
+            selectedText={`${statusTimeRange / 24} days`}
           />
           <MultiSensorGraph
             title="Last 7 days"
