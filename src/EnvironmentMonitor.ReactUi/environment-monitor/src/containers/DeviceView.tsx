@@ -505,8 +505,8 @@ export const DeviceView: React.FC = () => {
           <TimeRangeSelectorComponent
             timeRange={statusTimeRange}
             onSelectTimeRange={setStatusTimeRange}
-            options={[7 * 24, 30 * 24]}
-            labels={["7 days", "30 days"]}
+            options={[7 * 24, 30 * 24, 90 * 24]}
+            labels={["7 days", "30 days", "90 days"]}
             selectedText={`${(statusTimeRange ?? 7 * 24) / 24} days`}
           />
           <MultiSensorGraph
