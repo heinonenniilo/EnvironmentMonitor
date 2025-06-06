@@ -514,7 +514,7 @@ export const DeviceView: React.FC = () => {
             selectedText={`${statusTimeRange / 24} days`}
           />
           <MultiSensorGraph
-            title="Last 7 days"
+            title="Status"
             sensors={
               selectedDevice
                 ? [
