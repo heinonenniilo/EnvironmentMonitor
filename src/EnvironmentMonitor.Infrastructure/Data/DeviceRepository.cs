@@ -209,10 +209,15 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var listToReturn = new List<DeviceStatus>();
             foreach (var deviceId in model.DeviceIds)
             {
-                var latestStatusBeforeTimeRangeStart = await _context.DeviceStatusChanges.Where(x => x.DeviceId == deviceId && x.TimeStamp < model.From).OrderBy(x => x.TimeStamp).FirstOrDefaultAsync();
+                var latestStatusBeforeTimeRangeStart = await _context.DeviceStatusChanges.Where(x => x.DeviceId == deviceId && x.TimeStamp < model.From).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
                 if (latestStatusBeforeTimeRangeStart != null)
                 {
-                    listToReturn.Add(latestStatusBeforeTimeRangeStart);
+                    listToReturn.Add(new DeviceStatus()
+                    {
+                        DeviceId = latestStatusBeforeTimeRangeStart.DeviceId,
+                        TimeStamp = model.From,
+                        Status = latestStatusBeforeTimeRangeStart.Status,
+                    });
                 }
             }
 

@@ -68,7 +68,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return deviceInfos.First();
         }
 
-        [HttpGet("attachment/{deviceId}/{identifier}")]
+        [HttpGet("{deviceId}/attachment/{identifier}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "image/jpeg")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAttachment([FromRoute] Guid deviceId, [FromRoute] Guid identifier)
@@ -77,7 +77,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return stream == null ? NotFound() : new FileStreamResult(stream.Stream, stream.ContentType);
         }
 
-        [HttpGet("default-image/{deviceId}")]
+        [HttpGet("{deviceId}/default-image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "image/jpeg")]
         [Authorize(Roles = "Admin")]
         public async Task<FileStreamResult?> GetDefaultImage([FromRoute] Guid deviceId)
@@ -95,7 +95,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return res.FirstOrDefault();
         }
 
-        [HttpDelete("attachment/{deviceId}/{attachmentIdentifier}")]
+        [HttpDelete("{deviceId}/attachment/{attachmentIdentifier}")]
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> DeleteAttachment([FromRoute] Guid deviceId, [FromRoute] Guid attachmentIdentifier)
         {
@@ -111,7 +111,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<List<DeviceInfoDto>> GetDeviceInfos() => await _deviceService.GetDeviceInfos(false, null, false, true);
 
-        [HttpGet(template: "info/{identifier}")]
+        [HttpGet(template: "{identifier}/info")]
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> GetDeviceInfo(Guid identifier)
         {
@@ -122,7 +122,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet(template: "{identifier}")]
         public async Task<DeviceDto> GetDevice([FromRoute] string identifier) => await _deviceService.GetDevice(identifier, AccessLevels.Read);
 
-        [HttpGet(template: "events/{identifier}")]
+        [HttpGet(template: "{identifier}/events")]
         public async Task<List<DeviceEventDto>> GetDeviceEvents([FromRoute] Guid identifier) => await _deviceService.GetDeviceEvents(identifier);
 
         [HttpGet("sensors")]

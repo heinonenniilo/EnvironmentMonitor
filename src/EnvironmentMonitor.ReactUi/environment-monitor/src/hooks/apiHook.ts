@@ -316,7 +316,7 @@ export const useApiHook = (): ApiHook => {
       },
       getDeviceInfo: async (identifier: string) => {
         const res = await apiClient.get<any, AxiosResponse<DeviceInfo>>(
-          `/api/devices/info/${identifier}`
+          `/api/devices/${identifier}/info`
         );
         return res.data;
       },
@@ -363,7 +363,7 @@ export const useApiHook = (): ApiHook => {
       getDeviceEvents: async (identifier: string) => {
         try {
           const res = await apiClient.get<any, AxiosResponse<DeviceEvent[]>>(
-            `/api/devices/events/${identifier}`
+            `/api/devices/${identifier}/events`
           );
           return res.data;
         } catch (ex) {
