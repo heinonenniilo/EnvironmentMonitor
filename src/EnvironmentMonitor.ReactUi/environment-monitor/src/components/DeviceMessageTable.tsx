@@ -13,11 +13,13 @@ import { defaultStart } from "../containers/DeviceMessagesView";
 interface Props {
   model: GetDeviceMessagesModel | undefined;
   onLoadingChange?: (state: boolean) => void;
+  onRowClick?: (message: DeviceMessage) => void;
 }
 
 export const DeviceMessagesTable: React.FC<Props> = ({
   model,
   onLoadingChange,
+  onRowClick,
 }) => {
   const hook = useApiHook().deviceHook;
   const [getModel, setGetModel] = useState<GetDeviceMessagesModel | undefined>(
@@ -158,6 +160,16 @@ export const DeviceMessagesTable: React.FC<Props> = ({
         }}
         getRowHeight={drawDesktop ? undefined : () => "auto"}
         density="compact"
+        onRowClick={
+          onRowClick
+            ? (row) => {
+                const data = row.row as DeviceMessage;
+                if (!data.isDuplicate) {
+                  onRowClick(data);
+                }
+              }
+            : undefined
+        }
         onPaginationModelChange={(newModel) => {
           console.log(newModel);
           setGetModel((prev) => ({
@@ -172,6 +184,11 @@ export const DeviceMessagesTable: React.FC<Props> = ({
             isDescending: model?.isDescending ?? true,
           }));
         }}
+        getRowClassName={(params) =>
+          !(params.row as DeviceMessage).isDuplicate && onRowClick
+            ? "clickable-row"
+            : ""
+        }
       />
     </Box>
   );
