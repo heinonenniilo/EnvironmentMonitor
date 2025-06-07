@@ -8,7 +8,8 @@ namespace EnvironmentMonitor.Domain.Models
 {
     public class GetMeasurementsModel
     {
-        public List<int> SensorIds { get; set; } = new List<int>();
+        public List<int> SensorIds { get; set; } = [];
+        public List<long>? DeviceMessageIds { get; set; }
         public DateTime From { get; set; }
         public DateTime? To { get; set; }
         public bool? LatestOnly { get; set; }

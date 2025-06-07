@@ -19,6 +19,7 @@ import axios from "axios";
 import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
 import type { PaginatedResult } from "../models/paginatedResult";
 import type { DeviceMessage } from "../models/deviceMessage";
+import type { GetMeasurementsModel } from "../models/getMeasurementsModel";
 
 interface ApiHook {
   userHook: userHook;
@@ -45,9 +46,7 @@ interface measureHook {
   getDevices: () => Promise<Device[] | undefined>;
   getSensors: (deviceId: string[]) => Promise<Sensor[]>;
   getMeasurements: (
-    sensorIds: number[],
-    from: moment.Moment,
-    to?: moment.Moment
+    model: GetMeasurementsModel
   ) => Promise<MeasurementsModel | undefined>;
   getMeasurementsBySensor: (
     sensorIds: number[],
@@ -197,20 +196,16 @@ export const useApiHook = (): ApiHook => {
           return [];
         }
       },
-      getMeasurements: async (
-        sensorIds: number[],
-        from: moment.Moment,
-        to?: moment.Moment
-      ) => {
+      getMeasurements: async (model: GetMeasurementsModel) => {
         try {
           const res = await apiClient.get<
             any,
             AxiosResponse<MeasurementsModel>
           >("/api/Measurements", {
             params: {
-              SensorIds: sensorIds,
-              from: from.toISOString(),
-              to: to ? to.toISOString() : undefined,
+              ...model,
+              from: model.from ? model.from.toISOString() : undefined,
+              to: model.to ? model.to.toISOString() : undefined,
             },
           });
           return res.data;

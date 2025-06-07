@@ -147,6 +147,11 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
+
+            if (!_userService.IsAdmin && model.SensorIds.Count == 0)
+            {
+                model.SensorIds = _userService.GetDevices();
+            }
             var rows = _mapper.Map<List<MeasurementDto>>(await _measurementRepository.GetMeasurements(model));
             return new MeasurementsModel()
             {
