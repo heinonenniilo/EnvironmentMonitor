@@ -111,7 +111,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<List<DeviceInfoDto>> GetDeviceInfos() => await _deviceService.GetDeviceInfos(false, null, false, true);
 
-        [HttpGet(template: "info/{identifier}")]
+        [HttpGet(template: "{identifier}/info")]
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> GetDeviceInfo(Guid identifier)
         {
@@ -122,7 +122,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet(template: "{identifier}")]
         public async Task<DeviceDto> GetDevice([FromRoute] string identifier) => await _deviceService.GetDevice(identifier, AccessLevels.Read);
 
-        [HttpGet(template: "events/{identifier}")]
+        [HttpGet(template: "{identifier}/events")]
         public async Task<List<DeviceEventDto>> GetDeviceEvents([FromRoute] Guid identifier) => await _deviceService.GetDeviceEvents(identifier);
 
         [HttpGet("sensors")]
