@@ -7,7 +7,10 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { CheckCircle, Photo, WarningAmber } from "@mui/icons-material";
 import { useState } from "react";
 import { DeviceImageDialog } from "./DeviceImageDialog";
-import { getDeviceTitle } from "../utilities/deviceUtils";
+import {
+  getDeviceDefaultImageUrl,
+  getDeviceTitle,
+} from "../utilities/deviceUtils";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
@@ -103,7 +106,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         if (!device.defaultImageGuid) {
           return null;
         }
-        const imageUrl = `/api/Devices/default-image/${device.device.identifier}`;
+        const imageUrl = getDeviceDefaultImageUrl(device.device.identifier);
         const iconButtonToRender = (
           <IconButton
             onClick={() => {
@@ -273,7 +276,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           selectedDeviceIdentifier !== undefined &&
           selectedDeviceIdentifier.length > 0
         }
-        imageUrl={`/api/Devices/default-image/${selectedDeviceIdentifier}`}
+        imageUrl={getDeviceDefaultImageUrl(selectedDeviceIdentifier ?? "")}
         onClose={() => {
           setSelectedDeviceIdentifier("");
         }}

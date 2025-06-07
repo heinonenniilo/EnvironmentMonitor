@@ -22,6 +22,7 @@ import { useDropzone } from "react-dropzone";
 import { DeviceImageDialog } from "./DeviceImageDialog";
 import { dateTimeSort, getFormattedDate } from "../utilities/datetimeUtils";
 import { formatBytes } from "../utilities/stringUtils";
+import { getDeviceImageUrl } from "../utilities/deviceUtils";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -104,11 +105,10 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   };
 
   const getCurrentAttachmentUrl = () => {
-    if (!activeAttachment) {
+    if (!activeAttachment || !device) {
       return "";
     }
-
-    return `/api/devices/attachment/${device?.device.identifier}/${activeAttachment.guid}`;
+    return getDeviceImageUrl(device.device.identifier, activeAttachment.guid);
   };
 
   return !device ? (

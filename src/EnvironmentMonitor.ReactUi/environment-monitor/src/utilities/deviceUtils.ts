@@ -6,3 +6,11 @@ export const getDeviceTitle = (device: Device | undefined): string => {
   }
   return device.displayName ?? device.name;
 };
+
+export const getDeviceDefaultImageUrl = (identifier: string) => {
+  return `/api/Devices/${identifier}/default-image`;
+};
+
+export const getDeviceImageUrl = (deviceId: string, attachmentId: string) => {
+  return `/api/devices/${deviceId}/attachment/${attachmentId}`;
+};
