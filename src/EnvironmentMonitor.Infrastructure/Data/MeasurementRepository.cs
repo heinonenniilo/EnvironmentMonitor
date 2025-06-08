@@ -25,12 +25,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public async Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model)
         {
             IQueryable<Measurement> query = _context.Measurements;
-
-            if (model.SensorIds.Count != 0)
-            {
-                query = query.Where(x => model.SensorIds.Contains(x.SensorId));
-            }
-
+            query = query.Where(x => model.SensorIds.Contains(x.SensorId));
             if (model.DeviceMessageIds?.Any() == true)
             {
                 query = query.Where(x => x.DeviceMessageId != null && model.DeviceMessageIds.Contains(x.DeviceMessageId.Value));
