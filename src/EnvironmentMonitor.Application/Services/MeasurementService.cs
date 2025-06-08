@@ -150,7 +150,7 @@ namespace EnvironmentMonitor.Application.Services
 
             if (!_userService.IsAdmin && model.SensorIds.Count == 0)
             {
-                model.SensorIds = _userService.GetDevices();
+                throw new InvalidOperationException("SensorIds must be defined");
             }
             var rows = _mapper.Map<List<MeasurementDto>>(await _measurementRepository.GetMeasurements(model));
             return new MeasurementsModel()
@@ -169,6 +169,10 @@ namespace EnvironmentMonitor.Application.Services
 
             var locations = await _locationRepository.GetLocations(model.SensorIds, true);
             var locationSensors = locations.Select(x => x.LocationSensors).ToList();
+            if (locationSensors.Count == 0)
+            {
+                throw new InvalidOperationException();
+            }
             var sensorIds = locationSensors.SelectMany(x => x).Select(d => d.SensorId).ToList();
             var res = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
             {
@@ -214,7 +218,10 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
             var accessibleSensorIds = model.SensorIds.Where(d => _userService.HasAccessToSensor(d, AccessLevels.Read)).ToList();
-
+            if (!_userService.IsAdmin && !accessibleSensorIds.Any())
+            {
+                throw new InvalidOperationException("No accessible sensors");
+            }
             var result = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
             {
                 SensorIds = accessibleSensorIds,
