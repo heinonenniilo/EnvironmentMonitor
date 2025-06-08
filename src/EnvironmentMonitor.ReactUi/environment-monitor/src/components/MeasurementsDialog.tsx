@@ -29,20 +29,10 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
 }) => {
   const columns: GridColDef[] = [
     {
-      field: "timestamp",
-      headerName: "Timestamp",
-      type: "dateTime",
-      minWidth: 150,
-      align: "left",
-      flex: 1,
-      headerAlign: "left",
-      valueFormatter: (_value, row) => {
-        return getFormattedDate((row as Measurement).timestamp, true);
-      },
-    },
-    {
       field: "sensorId",
       headerName: "Sensor",
+      minWidth: 130,
+      flex: 1,
       valueFormatter: (value, row) => {
         const matchingSensor = sensors?.find(
           (s) => s.id === (row as Measurement).sensorId
@@ -52,6 +42,18 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
           return matchingSensor.name;
         }
         return value;
+      },
+    },
+    {
+      field: "timestamp",
+      headerName: "Timestamp",
+      type: "dateTime",
+      minWidth: 150,
+      align: "left",
+      flex: 1,
+      headerAlign: "left",
+      valueFormatter: (_value, row) => {
+        return getFormattedDate((row as Measurement).timestamp, true);
       },
     },
     {
