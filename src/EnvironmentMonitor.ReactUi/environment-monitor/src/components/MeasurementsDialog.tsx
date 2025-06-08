@@ -10,12 +10,14 @@ import { Close } from "@mui/icons-material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { formatMeasurement } from "../utilities/measurementUtils";
+import type { Sensor } from "../models/sensor";
 
 export interface MeasurementsDialogProps {
   measurements: Measurement[];
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  sensors?: Sensor[];
 }
 
 export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
@@ -23,8 +25,25 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
   isOpen,
   onClose,
   title,
+  sensors,
 }) => {
   const columns: GridColDef[] = [
+    {
+      field: "sensorId",
+      headerName: "Sensor",
+      minWidth: 130,
+      flex: 1,
+      valueFormatter: (value, row) => {
+        const matchingSensor = sensors?.find(
+          (s) => s.id === (row as Measurement).sensorId
+        );
+
+        if (matchingSensor) {
+          return matchingSensor.name;
+        }
+        return value;
+      },
+    },
     {
       field: "timestamp",
       headerName: "Timestamp",
@@ -104,6 +123,7 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
                 sortModel: [{ field: "timestamp", sort: "desc" }],
               },
             }}
+            columnVisibilityModel={!sensors ? { sensorId: false } : undefined}
           />
         </Box>
       </DialogContent>
