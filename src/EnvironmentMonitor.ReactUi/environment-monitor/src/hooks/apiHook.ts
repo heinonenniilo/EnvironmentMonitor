@@ -388,7 +388,7 @@ export const useApiHook = (): ApiHook => {
       ) => {
         try {
           const res = await apiClient.delete<any, AxiosResponse<DeviceInfo>>(
-            `/api/devices/attachment/${deviceIdentifier}/${attachmentIdentifier}`
+            `/api/devices/${deviceIdentifier}/attachment/${attachmentIdentifier}`
           );
           return res.data;
         } catch (ex) {
