@@ -13,10 +13,12 @@ import { defaultStart } from "../containers/DeviceMessagesView";
 import type { Device } from "../models/device";
 import { stringSort } from "../utilities/stringUtils";
 import { getDeviceTitle } from "../utilities/deviceUtils";
+import type { LocationModel } from "../models/location";
 
 export interface DeviceMessagesLeftViewProps {
   onSearch: (model: GetDeviceMessagesModel) => void;
   devices: Device[];
+  locations: LocationModel[];
   model: GetDeviceMessagesModel;
 }
 
@@ -24,6 +26,7 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
   onSearch,
   model,
   devices,
+  locations,
 }) => {
   const [innerModel, setModel] = useState<GetDeviceMessagesModel | undefined>(
     undefined
@@ -80,6 +83,41 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
       </Box>
       <Box mt={2}>
         <FormControl fullWidth>
+          <InputLabel id="device-select-label">Location</InputLabel>
+          <Select
+            labelId="location-select-label"
+            id="location-select"
+            value={innerModel?.locationIds ?? []}
+            label="Location"
+            onChange={(event) => {
+              if (innerModel) {
+                const selectedLocationIds = event.target.value as number[];
+
+                setModel({
+                  ...innerModel,
+                  locationIds: selectedLocationIds,
+                  deviceIds: devices
+                    .filter((device) =>
+                      selectedLocationIds.some((x) => device.locationId === x)
+                    )
+                    .map((d) => d.id),
+                });
+              }
+            }}
+            multiple
+          >
+            {[...locations]
+              .sort((a, b) => stringSort(a.name, b.name))
+              .map((y) => (
+                <MenuItem value={y.id} key={`location-${y.id}`}>
+                  {y.name}
+                </MenuItem>
+              ))}
+          </Select>
+        </FormControl>
+      </Box>
+      <Box mt={2}>
+        <FormControl fullWidth>
           <InputLabel id="device-select-label">Device</InputLabel>
           <Select
             labelId="device-select-label"
@@ -97,7 +135,11 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
             }}
             multiple
           >
-            {[...devices]
+            {[
+              ...devices.filter((d) =>
+                (innerModel?.locationIds ?? []).some((l) => d.locationId === l)
+              ),
+            ]
               .sort((a, b) => stringSort(getDeviceTitle(a), getDeviceTitle(b)))
               .map((y) => (
                 <MenuItem value={y.id} key={`device-${y.id}`}>
@@ -107,6 +149,7 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
           </Select>
         </FormControl>
       </Box>
+
       <Box mt={2}>
         <FormControl fullWidth size="small">
           <InputLabel id="is-duplicate-label">Is duplicate</InputLabel>
