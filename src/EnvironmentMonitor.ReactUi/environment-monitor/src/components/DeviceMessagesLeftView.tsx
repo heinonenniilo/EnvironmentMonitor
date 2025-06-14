@@ -89,27 +89,55 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
             id="location-select"
             value={innerModel?.locationIds ?? []}
             label="Location"
-            onChange={(event) => {
-              if (innerModel) {
-                const selectedLocationIds = event.target.value as number[];
-
-                setModel({
-                  ...innerModel,
-                  locationIds: selectedLocationIds,
-                  deviceIds: devices
-                    .filter((device) =>
-                      selectedLocationIds.some((x) => device.locationId === x)
-                    )
-                    .map((d) => d.id),
-                });
-              }
-            }}
             multiple
           >
             {[...locations]
               .sort((a, b) => stringSort(a.name, b.name))
               .map((y) => (
-                <MenuItem value={y.id} key={`location-${y.id}`}>
+                <MenuItem
+                  value={y.id}
+                  key={`location-${y.id}`}
+                  onClick={() => {
+                    if (!innerModel) {
+                      return;
+                    }
+                    const prevSelected = innerModel.locationIds?.some(
+                      (s) => s === y.id
+                    );
+
+                    if (prevSelected) {
+                      setModel({
+                        ...innerModel,
+                        locationIds: innerModel.locationIds?.filter(
+                          (s) => s !== y.id
+                        ),
+                        deviceIds: innerModel.deviceIds
+                          ? innerModel.deviceIds.filter((id) => {
+                              const matchingDevice = devices.find(
+                                (d) => d.id === id
+                              );
+                              return matchingDevice?.locationId !== y.id;
+                            })
+                          : undefined,
+                      });
+                    } else {
+                      const locationIdsToSet = innerModel.locationIds
+                        ? [...innerModel.locationIds, y.id]
+                        : [y.id];
+
+                      const deviceIdsToSelect = devices
+                        .filter((d) => d.locationId === y.id)
+                        .map((d) => d.id);
+                      setModel({
+                        ...innerModel,
+                        locationIds: locationIdsToSet,
+                        deviceIds: innerModel.deviceIds
+                          ? [...innerModel.deviceIds, ...deviceIdsToSelect]
+                          : deviceIdsToSelect,
+                      });
+                    }
+                  }}
+                >
                   {y.name}
                 </MenuItem>
               ))}
