@@ -45,6 +45,40 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
     return defaultStart;
   };
 
+  const toggleLocation = (id: number) => {
+    if (!innerModel) {
+      return;
+    }
+    const prevSelected = innerModel.locationIds?.some((s) => s === id);
+    if (prevSelected) {
+      setModel({
+        ...innerModel,
+        locationIds: innerModel.locationIds?.filter((s) => s !== id),
+        deviceIds: innerModel.deviceIds
+          ? innerModel.deviceIds.filter((deviceId) => {
+              const matchingDevice = devices.find((d) => d.id === deviceId);
+              return matchingDevice?.locationId !== id;
+            })
+          : undefined,
+      });
+    } else {
+      const locationIdsToSet = innerModel.locationIds
+        ? [...innerModel.locationIds, id]
+        : [id];
+
+      const deviceIdsToSelect = devices
+        .filter((d) => d.locationId === id)
+        .map((d) => d.id);
+      setModel({
+        ...innerModel,
+        locationIds: locationIdsToSet,
+        deviceIds: innerModel.deviceIds
+          ? [...innerModel.deviceIds, ...deviceIdsToSelect]
+          : deviceIdsToSelect,
+      });
+    }
+  };
+
   return (
     <Box
       display={"flex"}
@@ -97,46 +131,7 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
                 <MenuItem
                   value={y.id}
                   key={`location-${y.id}`}
-                  onClick={() => {
-                    if (!innerModel) {
-                      return;
-                    }
-                    const prevSelected = innerModel.locationIds?.some(
-                      (s) => s === y.id
-                    );
-
-                    if (prevSelected) {
-                      setModel({
-                        ...innerModel,
-                        locationIds: innerModel.locationIds?.filter(
-                          (s) => s !== y.id
-                        ),
-                        deviceIds: innerModel.deviceIds
-                          ? innerModel.deviceIds.filter((id) => {
-                              const matchingDevice = devices.find(
-                                (d) => d.id === id
-                              );
-                              return matchingDevice?.locationId !== y.id;
-                            })
-                          : undefined,
-                      });
-                    } else {
-                      const locationIdsToSet = innerModel.locationIds
-                        ? [...innerModel.locationIds, y.id]
-                        : [y.id];
-
-                      const deviceIdsToSelect = devices
-                        .filter((d) => d.locationId === y.id)
-                        .map((d) => d.id);
-                      setModel({
-                        ...innerModel,
-                        locationIds: locationIdsToSet,
-                        deviceIds: innerModel.deviceIds
-                          ? [...innerModel.deviceIds, ...deviceIdsToSelect]
-                          : deviceIdsToSelect,
-                      });
-                    }
-                  }}
+                  onClick={() => toggleLocation(y.id)}
                 >
                   {y.name}
                 </MenuItem>
