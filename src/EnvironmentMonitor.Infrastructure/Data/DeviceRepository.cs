@@ -283,6 +283,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => model.DeviceIds.Contains(x.DeviceId));
             }
+
+            if (model.LocationIds != null)
+            {
+                query = query.Where(x => model.LocationIds.Contains(x.Device.LocationId));
+            }
+
             if (model.IsDuplicate != null)
             {
                 query = query.Where(x => x.IsDuplicate == model.IsDuplicate);

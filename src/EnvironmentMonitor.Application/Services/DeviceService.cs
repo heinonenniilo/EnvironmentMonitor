@@ -346,7 +346,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model)
         {
-            List<int>? toFilter = null;
+            List<int>? deviceIdFilter = null;
             if (model.DeviceIds?.Any() == true)
             {
                 if (!_userService.HasAccessToDevices(model.DeviceIds, AccessLevels.Read))
@@ -354,14 +354,20 @@ namespace EnvironmentMonitor.Application.Services
                     _logger.LogWarning($"No access to devices: {model.DeviceIds}");
                     throw new UnauthorizedAccessException();
                 }
-                toFilter = model.DeviceIds;
+                deviceIdFilter = model.DeviceIds;
             }
-
-            if (toFilter == null && !_userService.IsAdmin)
+            if (deviceIdFilter == null && !_userService.IsAdmin)
             {
                 var deviceIds = _userService.GetDevices();
                 _logger.LogInformation($"User has access to: {deviceIds} devices");
                 if (deviceIds.Count == 0)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            if (model.LocationIds?.Any() == true)
+            {
+                if (!_userService.HasAccessToLocations(model.LocationIds, AccessLevels.Read))
                 {
                     throw new UnauthorizedAccessException();
                 }

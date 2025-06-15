@@ -1,7 +1,11 @@
 import { useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
-import { getDevices, getSensors } from "../reducers/measurementReducer";
+import {
+  getDevices,
+  getLocations,
+  getSensors,
+} from "../reducers/measurementReducer";
 import moment from "moment";
 import { Box } from "@mui/material";
 import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
@@ -18,6 +22,7 @@ export const defaultStart = moment()
 
 export const DeviceMessagesView: React.FC = () => {
   const devices = useSelector(getDevices);
+  const locations = useSelector(getLocations);
   const apiHook = useApiHook();
   const [isLoading, setIsLoading] = useState(false);
   const sensors = useSelector(getSensors);
@@ -33,12 +38,13 @@ export const DeviceMessagesView: React.FC = () => {
   useEffect(() => {
     setGetModel({
       deviceIds: devices.map((d) => d.id),
+      locationIds: locations.map((l) => l.id),
       pageNumber: 0,
       pageSize: 50,
       isDescending: true,
       from: defaultStart,
     });
-  }, [devices]);
+  }, [devices, locations]);
 
   const handleClickRow = (message: DeviceMessage) => {
     setIsLoading(true);
@@ -77,6 +83,7 @@ export const DeviceMessagesView: React.FC = () => {
             }}
             model={getModel}
             devices={devices}
+            locations={locations}
           />
         )
       }

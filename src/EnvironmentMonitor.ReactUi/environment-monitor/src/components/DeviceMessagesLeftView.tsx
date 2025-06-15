@@ -13,10 +13,12 @@ import { defaultStart } from "../containers/DeviceMessagesView";
 import type { Device } from "../models/device";
 import { stringSort } from "../utilities/stringUtils";
 import { getDeviceTitle } from "../utilities/deviceUtils";
+import type { LocationModel } from "../models/location";
 
 export interface DeviceMessagesLeftViewProps {
   onSearch: (model: GetDeviceMessagesModel) => void;
   devices: Device[];
+  locations: LocationModel[];
   model: GetDeviceMessagesModel;
 }
 
@@ -24,6 +26,7 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
   onSearch,
   model,
   devices,
+  locations,
 }) => {
   const [innerModel, setModel] = useState<GetDeviceMessagesModel | undefined>(
     undefined
@@ -40,6 +43,40 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
       return innerModel.from;
     }
     return defaultStart;
+  };
+
+  const toggleLocation = (locationId: number) => {
+    if (!innerModel) {
+      return;
+    }
+    const prevSelected = innerModel.locationIds?.some((s) => s === locationId);
+    if (prevSelected) {
+      setModel({
+        ...innerModel,
+        locationIds: innerModel.locationIds?.filter((s) => s !== locationId),
+        deviceIds: innerModel.deviceIds
+          ? innerModel.deviceIds.filter((deviceId) => {
+              const matchingDevice = devices.find((d) => d.id === deviceId);
+              return matchingDevice?.locationId !== locationId;
+            })
+          : undefined,
+      });
+    } else {
+      const locationIdsToSet = innerModel.locationIds
+        ? [...innerModel.locationIds, locationId]
+        : [locationId];
+
+      const deviceIdsToSelect = devices
+        .filter((d) => d.locationId === locationId)
+        .map((d) => d.id);
+      setModel({
+        ...innerModel,
+        locationIds: locationIdsToSet,
+        deviceIds: innerModel.deviceIds
+          ? [...innerModel.deviceIds, ...deviceIdsToSelect]
+          : deviceIdsToSelect,
+      });
+    }
   };
 
   return (
@@ -80,6 +117,30 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
       </Box>
       <Box mt={2}>
         <FormControl fullWidth>
+          <InputLabel id="device-select-label">Location</InputLabel>
+          <Select
+            labelId="location-select-label"
+            id="location-select"
+            value={innerModel?.locationIds ?? []}
+            label="Location"
+            multiple
+          >
+            {[...locations]
+              .sort((a, b) => stringSort(a.name, b.name))
+              .map((y) => (
+                <MenuItem
+                  value={y.id}
+                  key={`location-${y.id}`}
+                  onClick={() => toggleLocation(y.id)}
+                >
+                  {y.name}
+                </MenuItem>
+              ))}
+          </Select>
+        </FormControl>
+      </Box>
+      <Box mt={2}>
+        <FormControl fullWidth>
           <InputLabel id="device-select-label">Device</InputLabel>
           <Select
             labelId="device-select-label"
@@ -97,7 +158,11 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
             }}
             multiple
           >
-            {[...devices]
+            {[
+              ...devices.filter((d) =>
+                (innerModel?.locationIds ?? []).some((l) => d.locationId === l)
+              ),
+            ]
               .sort((a, b) => stringSort(getDeviceTitle(a), getDeviceTitle(b)))
               .map((y) => (
                 <MenuItem value={y.id} key={`device-${y.id}`}>
@@ -107,6 +172,7 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
           </Select>
         </FormControl>
       </Box>
+
       <Box mt={2}>
         <FormControl fullWidth size="small">
           <InputLabel id="is-duplicate-label">Is duplicate</InputLabel>
