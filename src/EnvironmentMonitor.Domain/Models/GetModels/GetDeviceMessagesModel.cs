@@ -9,6 +9,7 @@ namespace EnvironmentMonitor.Domain.Models.GetModels
     public class GetDeviceMessagesModel : Paginated
     {
         public List<int>? DeviceIds { get; set; }
+        public List<int>? LocationIds { get; set; }
         public bool? IsDuplicate { get; set; }
         public bool? IsFirstMessage { get; set; }
         public DateTime? From { get; set; }
