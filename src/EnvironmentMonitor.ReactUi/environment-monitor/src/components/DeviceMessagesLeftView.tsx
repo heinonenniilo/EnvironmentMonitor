@@ -45,29 +45,29 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
     return defaultStart;
   };
 
-  const toggleLocation = (id: number) => {
+  const toggleLocation = (locationId: number) => {
     if (!innerModel) {
       return;
     }
-    const prevSelected = innerModel.locationIds?.some((s) => s === id);
+    const prevSelected = innerModel.locationIds?.some((s) => s === locationId);
     if (prevSelected) {
       setModel({
         ...innerModel,
-        locationIds: innerModel.locationIds?.filter((s) => s !== id),
+        locationIds: innerModel.locationIds?.filter((s) => s !== locationId),
         deviceIds: innerModel.deviceIds
           ? innerModel.deviceIds.filter((deviceId) => {
               const matchingDevice = devices.find((d) => d.id === deviceId);
-              return matchingDevice?.locationId !== id;
+              return matchingDevice?.locationId !== locationId;
             })
           : undefined,
       });
     } else {
       const locationIdsToSet = innerModel.locationIds
-        ? [...innerModel.locationIds, id]
-        : [id];
+        ? [...innerModel.locationIds, locationId]
+        : [locationId];
 
       const deviceIdsToSelect = devices
-        .filter((d) => d.locationId === id)
+        .filter((d) => d.locationId === locationId)
         .map((d) => d.id);
       setModel({
         ...innerModel,
