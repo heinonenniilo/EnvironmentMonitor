@@ -4,4 +4,5 @@ export enum MeasurementTypes {
   Humidity = 2,
   Light = 3,
   Motion = 4,
+  Online = 99, // Not in DB, to be checked.
 }

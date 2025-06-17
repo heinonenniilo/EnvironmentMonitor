@@ -36,7 +36,10 @@ export const getMeasurementUnit = (type: MeasurementTypes) => {
 };
 
 const formatMeasurementValue = (measurement: Measurement) => {
-  if (measurement.typeId === MeasurementTypes.Motion) {
+  if (
+    measurement.typeId === MeasurementTypes.Motion ||
+    measurement.typeId === MeasurementTypes.Online
+  ) {
     return measurement.sensorValue > 0 ? "ON" : "OFF";
   } else {
     return measurement.sensorValue.toFixed(2);

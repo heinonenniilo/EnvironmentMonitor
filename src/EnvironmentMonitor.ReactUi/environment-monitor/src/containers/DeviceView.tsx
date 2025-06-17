@@ -551,7 +551,7 @@ export const DeviceView: React.FC = () => {
                               return {
                                 sensorId: selectedDevice.device.id,
                                 sensorValue: d.status ? 1 : 0,
-                                typeId: MeasurementTypes.Undefined,
+                                typeId: MeasurementTypes.Online,
                                 timestamp: d.timestamp,
                               };
                             })
