@@ -1,5 +1,5 @@
 export interface DeviceStatus {
-  status: number;
+  status: boolean;
   deviceId: number;
   timestamp: Date;
 }

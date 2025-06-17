@@ -65,6 +65,7 @@ export interface MultiSensorGraphProps {
   zoomable?: boolean;
   hideUseAutoScale?: boolean;
   highlightPoints?: boolean;
+  showMeasurementsOnDatasetClick?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
 }
@@ -81,6 +82,7 @@ interface GraphDataset {
   borderColor?: string;
   backgroundColor?: string;
   stepped?: boolean;
+  sensorId: number;
 }
 
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
@@ -99,6 +101,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   stepped,
   zoomable,
   hideUseAutoScale,
+  showMeasurementsOnDatasetClick,
   highlightPoints,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
@@ -136,6 +139,29 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     [sensors, devices]
   );
 
+  const showMeasurementsInDialog = (
+    sensorId: number,
+    type?: MeasurementTypes
+  ) => {
+    const toShow = model?.measurements.find((s) => s.sensorId === sensorId);
+    if (toShow) {
+      const matchingSensor = sensors?.find((s) => s.id == toShow.sensorId);
+      const matchingDevice = devices?.find(
+        (d) => d.id === matchingSensor?.deviceId
+      );
+      setDialogTitle(
+        matchingDevice
+          ? `${matchingDevice?.displayName} / ${matchingSensor?.name} ${
+              type ? getMeasurementUnit(type) : ""
+            }`
+          : `${matchingSensor?.name} ${type ? getMeasurementUnit(type) : ""}`
+      );
+      setMeasurementsToShow(
+        toShow.measurements.filter((m) => m.typeId === type)
+      );
+    }
+  };
+
   const handleResetZoom = () => {
     chartRef.current?.resetZoom();
   };
@@ -157,6 +183,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             yAxisID: yAxisId,
             measurementType: val,
             stepped: stepped,
+            sensorId: measurementsBySensor.sensorId,
             data: measurementsBySensor.measurements
               .filter((d) => d.typeId === val)
               .map((d) => ({ x: d.timestamp, y: d.sensorValue })),
@@ -397,26 +424,36 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                     },
                 legend: {
                   onClick: (_event, legendItem, legend) => {
-                    if (legendItem.datasetIndex !== undefined) {
-                      if (!legendItem.hidden) {
-                        legend.chart.hide(legendItem.datasetIndex);
-                        if (legendItem.datasetIndex !== undefined) {
-                          const datasetIndex = legendItem.datasetIndex;
-                          setHiddenDatasetIds((prev) => [
-                            ...prev,
-                            datasetIndex,
-                          ]);
-                        }
-                        legend.chart.update("hide");
-                      } else {
-                        legend.chart.show(legendItem.datasetIndex);
-                        setHiddenDatasetIds(
-                          hiddenDatasetIds.filter(
-                            (d) => d !== legendItem.datasetIndex
-                          )
+                    if (legendItem.datasetIndex === undefined) {
+                      return;
+                    }
+                    if (showMeasurementsOnDatasetClick) {
+                      if (memoSets.length > legendItem.datasetIndex) {
+                        const matchingDataset =
+                          memoSets[legendItem.datasetIndex];
+                        showMeasurementsInDialog(
+                          matchingDataset.sensorId,
+                          matchingDataset.measurementType
                         );
-                        legend.chart.update("show");
                       }
+                      return;
+                    }
+
+                    if (!legendItem.hidden) {
+                      legend.chart.hide(legendItem.datasetIndex);
+                      if (legendItem.datasetIndex !== undefined) {
+                        const datasetIndex = legendItem.datasetIndex;
+                        setHiddenDatasetIds((prev) => [...prev, datasetIndex]);
+                      }
+                      legend.chart.update("hide");
+                    } else {
+                      legend.chart.show(legendItem.datasetIndex);
+                      setHiddenDatasetIds(
+                        hiddenDatasetIds.filter(
+                          (d) => d !== legendItem.datasetIndex
+                        )
+                      );
+                      legend.chart.update("show");
                     }
                   },
                   onHover: (event) => {
@@ -500,31 +537,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         <Box width={"100%"} maxHeight={"200px"} overflow={"auto"}>
           <MeasurementsInfoTable
             onClick={(row) => {
-              const toShow = model?.measurements.find(
-                (s) => s.sensorId === row.sensor?.id
-              );
-
-              if (toShow) {
-                const matchingSensor = sensors?.find(
-                  (s) => s.id == toShow.sensorId
-                );
-                const matchingDevice = devices?.find(
-                  (d) => d.id === matchingSensor?.deviceId
-                );
-
-                setDialogTitle(
-                  matchingDevice
-                    ? `${matchingDevice?.displayName} / ${
-                        matchingSensor?.name
-                      } ${row.type ? getMeasurementUnit(row.type) : ""}`
-                    : `${matchingSensor?.name} ${
-                        row.type ? getMeasurementUnit(row.type) : ""
-                      }`
-                );
-                setMeasurementsToShow(
-                  toShow.measurements.filter((m) => m.typeId === row.type)
-                );
+              if (!row.sensor) {
+                return;
               }
+              showMeasurementsInDialog(row.sensor.id, row.type);
             }}
             infoRows={getInfoValues()}
           />

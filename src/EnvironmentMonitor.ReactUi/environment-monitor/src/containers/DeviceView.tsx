@@ -536,6 +536,7 @@ export const DeviceView: React.FC = () => {
             highlightPoints
             minHeight={400}
             isLoading={isLoadingDeviceStatus}
+            showMeasurementsOnDatasetClick
             model={
               selectedDevice
                 ? {
@@ -549,7 +550,7 @@ export const DeviceView: React.FC = () => {
                           ? deviceStatusModel.deviceStatuses.map((d) => {
                               return {
                                 sensorId: selectedDevice.device.id,
-                                sensorValue: d.status,
+                                sensorValue: d.status ? 1 : 0,
                                 typeId: MeasurementTypes.Undefined,
                                 timestamp: d.timestamp,
                               };
