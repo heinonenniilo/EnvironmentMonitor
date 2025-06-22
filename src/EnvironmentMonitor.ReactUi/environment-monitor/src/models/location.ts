@@ -4,4 +4,5 @@ export interface LocationModel {
   name: string;
   locationSensors: Sensor[];
   id: number;
+  visible: boolean;
 }

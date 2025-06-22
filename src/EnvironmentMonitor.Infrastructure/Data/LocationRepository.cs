@@ -1,5 +1,6 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models.GetModels;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -18,18 +19,23 @@ namespace EnvironmentMonitor.Infrastructure.Data
             _context = context;
             _dateService = dateService;
         }
-        public async Task<List<Location>> GetLocations(List<int>? ids, bool includeLocationSensors)
+        public async Task<List<Location>> GetLocations(GetLocationsModel model)
         {
             IQueryable<Location> query = _context.Locations;
-            if (ids != null)
+            if (model.Ids != null)
             {
-                query = query.Where(x => ids.Contains(x.Id));
+                query = query.Where(x => model.Ids.Contains(x.Id));
             }
-
-            if (includeLocationSensors)
+            if (model.IncludeLocationSensors)
             {
                 query = query.Include(x => x.LocationSensors).ThenInclude(ls => ls.Sensor);
             }
+
+            if (model.Visible != null)
+            {
+                query = query.Where(x => x.Visible == model.Visible.Value);
+            }
+
             query = query.Where(x => x.Id > 0);
             return await query.ToListAsync();
         }

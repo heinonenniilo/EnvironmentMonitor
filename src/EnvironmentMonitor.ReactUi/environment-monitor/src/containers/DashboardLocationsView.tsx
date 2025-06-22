@@ -21,6 +21,7 @@ export const DashbordLocationsView: React.FC = () => {
     dispatch(setDashboardTimeRange(selection));
   };
 
+  const visibleLocations = locations.filter((l) => l.visible);
   return (
     <AppContentWrapper
       title="Dashboard - Locations"
@@ -35,7 +36,7 @@ export const DashbordLocationsView: React.FC = () => {
         sx={{
           display: "grid",
           gridTemplateColumns:
-            locations && locations.length > 3
+            visibleLocations && visibleLocations.length > 3
               ? {
                   xs: "1fr",
                   lg: "1fr 1fr",
@@ -47,7 +48,7 @@ export const DashbordLocationsView: React.FC = () => {
           height: "100%",
         }}
       >
-        {locations?.map((m) => {
+        {visibleLocations?.map((m) => {
           const location = locations.find((l) => l.id === m.id);
           return (
             <DashboardLocationGraph
