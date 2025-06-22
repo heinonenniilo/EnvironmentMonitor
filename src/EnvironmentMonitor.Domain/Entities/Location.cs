@@ -13,5 +13,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public Guid Identifier { get; set; }
         public IList<Device> Devices { get; set; }
         public IList<LocationSensor> LocationSensors { get; set; }
+        public bool Visible { get; set; } = true;
     }
 }

@@ -24,6 +24,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
             builder.HasIndex(d => d.Name).IsUnique();
             builder.HasIndex(d => d.Identifier).IsUnique();
             builder.HasMany(x => x.LocationSensors).WithOne(x => x.Location);
+            builder.Property(x => x.Visible).HasDefaultValue(true);
         }
     }
 }

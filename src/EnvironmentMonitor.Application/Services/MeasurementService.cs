@@ -6,6 +6,7 @@ using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.GetModels;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -167,7 +168,7 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
 
-            var locations = await _locationRepository.GetLocations(model.SensorIds, true);
+            var locations = await _locationRepository.GetLocations(new GetLocationsModel() { Ids = model.SensorIds, IncludeLocationSensors = true} );
             var locationSensors = locations.Select(x => x.LocationSensors).ToList();
             if (locationSensors.Count == 0)
             {
