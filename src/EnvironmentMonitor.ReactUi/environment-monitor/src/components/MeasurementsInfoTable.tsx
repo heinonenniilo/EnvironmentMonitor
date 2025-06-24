@@ -57,10 +57,10 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
   };
 
   const getDeviceLabel = (row: MeasurementInfo) => {
-    if (!row.device || row.hideDevice) {
-      return <TableCell />;
+    if (!row.device) {
+      return null;
     }
-    const label = row.device.displayName;
+    const label = row.hideDevice ? "" : row.device.displayName;
     return <TableCell>{row.boldDevice ? <b>{label}</b> : label}</TableCell>;
   };
 
