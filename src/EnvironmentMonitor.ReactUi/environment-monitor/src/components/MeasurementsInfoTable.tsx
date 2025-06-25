@@ -29,6 +29,8 @@ export interface MeasurementInfo {
   device?: Device;
   sensor?: Sensor;
   type?: MeasurementTypes;
+  boldDevice?: boolean;
+  hideDevice?: boolean;
 }
 
 export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
@@ -58,11 +60,8 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
     if (!row.device) {
       return null;
     }
-    return (
-      <TableCell>
-        {row.device.displayName ? row.device.displayName : `${row.device.name}`}
-      </TableCell>
-    );
+    const label = row.hideDevice ? "" : row.device.displayName;
+    return <TableCell>{row.boldDevice ? <b>{label}</b> : label}</TableCell>;
   };
 
   const hasDevices = () => {

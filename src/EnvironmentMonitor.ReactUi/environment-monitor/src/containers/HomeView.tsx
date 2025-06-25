@@ -11,8 +11,9 @@ import {
 import { MeasurementTypes } from "../enums/measurementTypes";
 import { getDatasetLabel } from "../utilities/measurementUtils";
 import { getUserInfo } from "../reducers/userReducer";
-import { dateTimeSort } from "../utilities/datetimeUtils";
 import type { MeasurementsViewModel } from "../models/measurementsBySensor";
+import type { Device } from "../models/device";
+import { dateTimeSort } from "../utilities/datetimeUtils";
 
 export const HomeView: React.FC = () => {
   const sensors = useSelector(getSensors);
@@ -59,6 +60,15 @@ export const HomeView: React.FC = () => {
     const sorted = [...returnRows].sort((a, b) =>
       dateTimeSort(a.latest.timestamp, b.latest.timestamp)
     );
+    let lastDevice: Device | undefined;
+    for (const row of sorted) {
+      if (row.device?.id !== lastDevice?.id) {
+        row.boldDevice = true;
+      } else {
+        row.hideDevice = true;
+      }
+      lastDevice = row.device;
+    }
     return sorted;
   };
 
