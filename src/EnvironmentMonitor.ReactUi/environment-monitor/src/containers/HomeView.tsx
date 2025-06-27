@@ -64,6 +64,7 @@ export const HomeView: React.FC = () => {
     for (const row of sorted) {
       if (row.device?.id !== lastDevice?.id) {
         row.boldDevice = true;
+        row.renderLinkToDevice = true;
       } else {
         row.hideDevice = true;
       }

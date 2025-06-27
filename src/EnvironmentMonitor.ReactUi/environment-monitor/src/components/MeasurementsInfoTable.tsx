@@ -13,6 +13,8 @@ import type { Measurement } from "../models/measurement";
 import type { Device } from "../models/device";
 import type { Sensor } from "../models/sensor";
 import type { MeasurementTypes } from "../enums/measurementTypes";
+import { Link } from "react-router";
+import { routes } from "../utilities/routes";
 
 export interface MeasurementsInfoTableProps {
   infoRows: MeasurementInfo[];
@@ -31,6 +33,7 @@ export interface MeasurementInfo {
   type?: MeasurementTypes;
   boldDevice?: boolean;
   hideDevice?: boolean;
+  renderLinkToDevice?: boolean;
 }
 
 export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
@@ -61,7 +64,19 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
       return null;
     }
     const label = row.hideDevice ? "" : row.device.displayName;
-    return <TableCell>{row.boldDevice ? <b>{label}</b> : label}</TableCell>;
+    const labelElement = row.boldDevice ? <b>{label}</b> : label;
+
+    return (
+      <TableCell>
+        {row.renderLinkToDevice ? (
+          <Link to={`${routes.measurements}/${row.device.identifier}`}>
+            {labelElement}
+          </Link>
+        ) : (
+          labelElement
+        )}
+      </TableCell>
+    );
   };
 
   const hasDevices = () => {
