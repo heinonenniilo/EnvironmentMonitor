@@ -41,7 +41,8 @@ export const DeviceMessagesView: React.FC = () => {
   const [dialogTitle, setDialogTitle] = useState<string | undefined>(undefined);
   const location = useLocation();
 
-  const { deviceId } = location.state as DeviceMessagesLocationState;
+  const deviceId = (location.state as DeviceMessagesLocationState | null)
+    ?.deviceId;
 
   useEffect(() => {
     const selectedDevice =
