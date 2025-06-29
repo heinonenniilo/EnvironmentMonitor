@@ -15,10 +15,15 @@ import { useApiHook } from "../hooks/apiHook";
 import type { DeviceMessage } from "../models/deviceMessage";
 import type { MeasurementsModel } from "../models/measurementsBySensor";
 import { MeasurementsDialog } from "../components/MeasurementsDialog";
+import { useLocation } from "react-router";
 export const defaultStart = moment()
   .local(true)
   .add(-1 * 7, "day")
   .utc(true);
+
+export interface DeviceMessagesLocationState {
+  deviceId?: number;
+}
 
 export const DeviceMessagesView: React.FC = () => {
   const devices = useSelector(getDevices);
@@ -34,17 +39,33 @@ export const DeviceMessagesView: React.FC = () => {
   >(undefined);
 
   const [dialogTitle, setDialogTitle] = useState<string | undefined>(undefined);
+  const location = useLocation();
+
+  const { deviceId } = location.state as DeviceMessagesLocationState;
 
   useEffect(() => {
+    const selectedDevice =
+      deviceId !== undefined
+        ? devices.find((d) => d.id === deviceId)
+        : undefined;
+
+    const selectedLocation = locations.find(
+      (l) => l.id === selectedDevice?.locationId
+    );
+
     setGetModel({
-      deviceIds: devices.map((d) => d.id),
-      locationIds: locations.map((l) => l.id),
+      deviceIds: selectedDevice
+        ? [selectedDevice.id]
+        : devices.map((d) => d.id),
+      locationIds: selectedLocation
+        ? [selectedLocation.id]
+        : locations.map((l) => l.id),
       pageNumber: 0,
       pageSize: 50,
       isDescending: true,
       from: defaultStart,
     });
-  }, [devices, locations]);
+  }, [devices, locations, deviceId]);
 
   const handleClickRow = (message: DeviceMessage) => {
     setIsLoading(true);
