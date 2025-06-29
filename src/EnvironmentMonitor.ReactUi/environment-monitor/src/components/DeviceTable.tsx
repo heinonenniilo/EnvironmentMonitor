@@ -11,6 +11,7 @@ import {
   getDeviceDefaultImageUrl,
   getDeviceTitle,
 } from "../utilities/deviceUtils";
+import type { DeviceMessagesLocationState } from "../containers/DeviceMessagesView";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
@@ -254,8 +255,11 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           </Box>
         );
 
+        const stateToSet: DeviceMessagesLocationState = {
+          deviceId: row.device.id,
+        };
         return renderLinkToDeviceMessages ? (
-          <Link to={routes.deviceMessages} state={{ deviceId: row.device.id }}>
+          <Link to={routes.deviceMessages} state={stateToSet}>
             {contentToRender}
           </Link>
         ) : (
