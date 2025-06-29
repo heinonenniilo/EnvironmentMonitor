@@ -94,6 +94,7 @@ export const DevicesView: React.FC = () => {
       <DeviceTable
         devices={sorted}
         renderLink
+        renderLinkToDeviceMessages
         onReboot={(device) => {
           dispatch(
             setConfirmDialog({
