@@ -449,6 +449,7 @@ export const DeviceView: React.FC = () => {
             }}
             devices={selectedDevice ? [selectedDevice] : []}
             disableSort
+            renderLinkToDeviceMessages
           />
         </Collapsible>
 

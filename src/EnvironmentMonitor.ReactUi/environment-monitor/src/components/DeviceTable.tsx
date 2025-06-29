@@ -11,6 +11,7 @@ import {
   getDeviceDefaultImageUrl,
   getDeviceTitle,
 } from "../utilities/deviceUtils";
+import type { DeviceMessagesLocationState } from "../containers/DeviceMessagesView";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
@@ -22,6 +23,7 @@ export interface DeviceTableProps {
   hideName?: boolean;
   hideId?: boolean;
   renderLink?: boolean;
+  renderLinkToDeviceMessages?: boolean;
 }
 
 export const DeviceTable: React.FC<DeviceTableProps> = ({
@@ -33,6 +35,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   showDeviceImageAsTooltip,
   renderLink,
   onClickVisible,
+  renderLinkToDeviceMessages,
 }) => {
   const formatDate = (input: Date | undefined | null) => {
     if (input) {
@@ -241,7 +244,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       renderCell: (params) => {
         const row = params.row as DeviceInfo;
 
-        return (
+        const contentToRender = (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             {row.showWarning ? (
               <WarningAmber color="warning" />
@@ -250,6 +253,17 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
             )}
             <span>{formatDate(params.row.lastMessage)}</span>
           </Box>
+        );
+
+        const stateToSet: DeviceMessagesLocationState = {
+          deviceId: row.device.id,
+        };
+        return renderLinkToDeviceMessages ? (
+          <Link to={routes.deviceMessages} state={stateToSet}>
+            {contentToRender}
+          </Link>
+        ) : (
+          contentToRender
         );
       },
     },

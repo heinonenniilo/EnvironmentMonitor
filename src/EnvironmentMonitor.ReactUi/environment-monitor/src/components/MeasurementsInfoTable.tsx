@@ -21,6 +21,7 @@ export interface MeasurementsInfoTableProps {
   hideMin?: boolean;
   hideMax?: boolean;
   onClick?: (info: MeasurementInfo) => void;
+  showSeconds?: boolean;
 }
 
 export interface MeasurementInfo {
@@ -41,6 +42,7 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
   hideMax,
   hideMin,
   onClick,
+  showSeconds,
 }) => {
   const getLabel = (row: MeasurementInfo) => {
     return (
@@ -117,7 +119,9 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
                   {formatMeasurement(r.latest, showOnlyLatest)}
                 </TableCell>
                 {showOnlyLatest ? (
-                  <TableCell>{getFormattedDate(r.latest.timestamp)} </TableCell>
+                  <TableCell>
+                    {getFormattedDate(r.latest.timestamp, false, showSeconds)}
+                  </TableCell>
                 ) : null}
               </TableRow>
             );
