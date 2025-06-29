@@ -105,7 +105,12 @@ export const HomeView: React.FC = () => {
   return (
     <AppContentWrapper title={getTitle()} isLoading={isLoading}>
       <p>Latest measurements</p>
-      <MeasurementsInfoTable infoRows={getInfoRows()} hideMax hideMin />
+      <MeasurementsInfoTable
+        infoRows={getInfoRows()}
+        hideMax
+        hideMin
+        showSeconds
+      />
     </AppContentWrapper>
   );
 };
