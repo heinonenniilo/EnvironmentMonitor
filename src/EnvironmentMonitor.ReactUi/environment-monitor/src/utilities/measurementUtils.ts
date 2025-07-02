@@ -4,7 +4,8 @@ import { getFormattedDate } from "./datetimeUtils";
 
 export const formatMeasurement = (
   measurement: Measurement,
-  onlyValue?: boolean
+  onlyValue?: boolean,
+  includeSeconds?: boolean
 ) => {
   const formattedValue =
     measurement.typeId === MeasurementTypes.Motion
@@ -15,7 +16,11 @@ export const formatMeasurement = (
   if (onlyValue) {
     return `${formattedValue}`;
   }
-  const formattedDate = getFormattedDate(measurement.timestamp);
+  const formattedDate = getFormattedDate(
+    measurement.timestamp,
+    false,
+    includeSeconds
+  );
 
   return `${formattedValue} (${formattedDate})`;
 };
