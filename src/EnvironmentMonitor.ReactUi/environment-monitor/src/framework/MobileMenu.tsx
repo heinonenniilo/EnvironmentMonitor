@@ -12,6 +12,7 @@ import {
 } from "../reducers/userInterfaceReducer";
 import { getLocations } from "../reducers/measurementReducer";
 import type { User } from "../models/user";
+import logo from "../assets/logo.png";
 
 export interface MobileMenuProps {
   onNavigate: (route: string) => void;
@@ -199,6 +200,20 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           }}
         >
           <MenuIcon />
+        </IconButton>
+        <IconButton>
+          <Box
+            component="img"
+            src={logo}
+            alt="Logo"
+            sx={{
+              height: 30,
+              marginRight: 2,
+              cursor: "pointer",
+              display: "flex",
+            }}
+            onClick={() => onNavigate(routes.main)}
+          />
         </IconButton>
         {drawMenu()}
       </Box>
