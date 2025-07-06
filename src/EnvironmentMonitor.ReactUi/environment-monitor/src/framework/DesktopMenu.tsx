@@ -217,7 +217,7 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
         </MenuArea>
         <Box>
           <MenuArea>
-            <UserMenu user={user} handleLogOut={onLogOut} />
+            <UserMenu user={user} handleLogOut={onLogOut} drawUserInMenu />
           </MenuArea>
         </Box>
       </MenuItemsContainer>
