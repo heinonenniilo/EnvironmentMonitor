@@ -14,12 +14,14 @@ export interface UserMenuProps {
   handleLogOut: () => void;
   user: User | undefined;
   isMobile?: boolean;
+  drawUserInMenu?: boolean;
 }
 
 export const UserMenu: React.FC<UserMenuProps> = ({
   user,
   handleLogOut,
   isMobile,
+  drawUserInMenu,
 }) => {
   const [userMenuAcnhor, setUserMenuAcnhor] =
     React.useState<null | HTMLElement>(null);
@@ -35,13 +37,16 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   if (user) {
     return (
       <Box sx={{ display: "flex", flexDirection: "row" }}>
-        <Typography
-          variant={!isMobile ? "h6" : "body1"}
-          marginTop={"auto"}
-          marginBottom={"auto"}
-        >
-          {user.email}
-        </Typography>
+        {drawUserInMenu && (
+          <Typography
+            variant={!isMobile ? "h6" : "body1"}
+            marginTop={"auto"}
+            marginBottom={"auto"}
+          >
+            {user.email}
+          </Typography>
+        )}
+
         <IconButton
           size="large"
           aria-label="account of current user"
@@ -67,6 +72,14 @@ export const UserMenu: React.FC<UserMenuProps> = ({
           open={Boolean(userMenuAcnhor)}
           onClose={handleClose}
         >
+          {!drawUserInMenu && (
+            <Box sx={{ alignItems: "center", margin: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                {user.email}
+              </Typography>
+            </Box>
+          )}
+
           <MenuItem>
             <Button
               color="inherit"

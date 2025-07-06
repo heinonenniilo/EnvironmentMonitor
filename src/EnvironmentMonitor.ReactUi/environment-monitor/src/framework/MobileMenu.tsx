@@ -1,4 +1,12 @@
-import { Box, IconButton, Menu, MenuItem, Typography } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import React from "react";
 import { ArrowRight, Menu as MenuIcon } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,6 +38,9 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
   const locations = useSelector(getLocations);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const theme = useTheme();
+  const drawUserInMenu = useMediaQuery(theme.breakpoints.up("sm"));
   const [manageAchor, setManageAnchor] = React.useState<null | HTMLElement>(
     null
   );
@@ -223,7 +234,12 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
       </Box>
 
       <Box sx={{ marginLeft: "auto" }}>
-        <UserMenu user={user} handleLogOut={onLogOut} isMobile />
+        <UserMenu
+          user={user}
+          handleLogOut={onLogOut}
+          isMobile
+          drawUserInMenu={drawUserInMenu}
+        />
       </Box>
     </Box>
   );
