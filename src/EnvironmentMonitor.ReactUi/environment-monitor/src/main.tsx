@@ -14,7 +14,7 @@ import { DeviceView } from "./containers/DeviceView";
 import { store } from "./setup/appStore";
 import { DeviceMessagesView } from "./containers/DeviceMessagesView";
 import { ThemeProvider } from "@mui/material";
-import { baseTheme } from "./utilities/theme";
+import { baseTheme } from "./utilities/baseTheme";
 
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
