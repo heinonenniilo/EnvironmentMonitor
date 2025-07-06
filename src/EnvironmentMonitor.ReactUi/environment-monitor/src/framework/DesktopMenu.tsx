@@ -71,18 +71,7 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
     <Container maxWidth={"xl"}>
       <MenuItemsContainer>
         <MenuArea>
-          <IconButton
-            size="large"
-            edge="start"
-            color="inherit"
-            aria-label="menu"
-            onClick={() => {
-              dispath(toggleLeftMenuOpen(!isLeftMenuOpen));
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <MenuItem>
+          <MenuItem sx={{ pl: 0 }}>
             <Box
               component="img"
               src={logo}
@@ -107,6 +96,17 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               Environment Monitor
             </Typography>
           </Box>
+          <IconButton
+            size="large"
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            onClick={() => {
+              dispath(toggleLeftMenuOpen(!isLeftMenuOpen));
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
           <MenuItem
             onClick={() => {
               onNavigate(routes.main);
