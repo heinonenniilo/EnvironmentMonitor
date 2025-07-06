@@ -1,4 +1,4 @@
-import { Box, IconButton, Menu, MenuItem } from "@mui/material";
+import { Box, IconButton, Menu, MenuItem, Typography } from "@mui/material";
 import React from "react";
 import { ArrowRight, Menu as MenuIcon } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
@@ -208,13 +208,17 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             alt="Logo"
             sx={{
               height: 30,
-              marginRight: 2,
               cursor: "pointer",
               display: "flex",
             }}
             onClick={() => onNavigate(routes.main)}
           />
         </IconButton>
+        <Box sx={{ marginTop: "auto", marginBottom: "auto" }}>
+          <Typography color="text.secondary" variant="subtitle2">
+            Environment Monitor
+          </Typography>
+        </Box>
         {drawMenu()}
       </Box>
 

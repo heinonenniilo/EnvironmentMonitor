@@ -71,6 +71,31 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
     <Container maxWidth={"xl"}>
       <MenuItemsContainer>
         <MenuArea>
+          <MenuItem sx={{ pl: 0 }}>
+            <Box
+              component="img"
+              src={logo}
+              alt="Logo"
+              sx={{
+                height: 30,
+                cursor: "pointer",
+                display: "flex",
+              }}
+              onClick={() => onNavigate(routes.main)}
+            />
+          </MenuItem>
+          <Box
+            sx={{
+              alignItems: "center",
+              marginTop: "auto",
+              marginBottom: "auto",
+              marginRight: 2,
+            }}
+          >
+            <Typography variant="subtitle1" color="text.secondary">
+              Environment Monitor
+            </Typography>
+          </Box>
           <IconButton
             size="large"
             edge="start"
@@ -82,23 +107,6 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
           >
             <MenuIcon />
           </IconButton>
-          <MenuItem>
-            <Box
-              component="img"
-              src={logo}
-              alt="Logo"
-              sx={{
-                height: 30,
-                marginRight: 2,
-                cursor: "pointer",
-                display: "flex",
-              }}
-              onClick={() => onNavigate(routes.main)}
-            />
-            <Typography variant="subtitle1" color="text.secondary">
-              Environment Monitor
-            </Typography>
-          </MenuItem>
           <MenuItem
             onClick={() => {
               onNavigate(routes.main);
