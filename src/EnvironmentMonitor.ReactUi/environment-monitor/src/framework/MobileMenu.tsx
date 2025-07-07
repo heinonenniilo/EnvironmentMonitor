@@ -200,7 +200,19 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   return (
     <Box sx={{ width: "100%", display: "flex", flexDirection: "row" }}>
       <Box sx={{ display: "flex", flexDirection: "row", pl: 1.5 }}>
-        <IconButton sx={{ pl: 0 }}>
+        <IconButton
+          size="large"
+          edge="start"
+          color="inherit"
+          aria-label="menu"
+          id="mobileHamburger"
+          onClick={(event) => {
+            setAnchorEl(event.currentTarget);
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
+        <IconButton>
           <Box
             component="img"
             src={logo}
@@ -218,19 +230,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             Environment Monitor
           </Typography>
         </Box>
-        <IconButton
-          size="large"
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          id="mobileHamburger"
-          onClick={(event) => {
-            setAnchorEl(event.currentTarget);
-          }}
-        >
-          <MenuIcon />
-        </IconButton>
-
         {drawMenu()}
       </Box>
 
