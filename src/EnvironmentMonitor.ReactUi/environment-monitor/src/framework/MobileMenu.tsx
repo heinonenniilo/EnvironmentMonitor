@@ -1,4 +1,12 @@
-import { Box, IconButton, Menu, MenuItem } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 import React from "react";
 import { ArrowRight, Menu as MenuIcon } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,6 +20,7 @@ import {
 } from "../reducers/userInterfaceReducer";
 import { getLocations } from "../reducers/measurementReducer";
 import type { User } from "../models/user";
+import logo from "../assets/logo.png";
 
 export interface MobileMenuProps {
   onNavigate: (route: string) => void;
@@ -29,6 +38,9 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
   const locations = useSelector(getLocations);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
+  const theme = useTheme();
+  const drawUserInMenu = useMediaQuery(theme.breakpoints.up("sm"));
   const [manageAchor, setManageAnchor] = React.useState<null | HTMLElement>(
     null
   );
@@ -200,11 +212,34 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
         >
           <MenuIcon />
         </IconButton>
+        <IconButton>
+          <Box
+            component="img"
+            src={logo}
+            alt="Logo"
+            sx={{
+              height: 30,
+              cursor: "pointer",
+              display: "flex",
+            }}
+            onClick={() => onNavigate(routes.main)}
+          />
+        </IconButton>
+        <Box sx={{ marginTop: "auto", marginBottom: "auto", mr: 2 }}>
+          <Typography color="text.secondary" variant="subtitle2">
+            Environment Monitor
+          </Typography>
+        </Box>
         {drawMenu()}
       </Box>
 
       <Box sx={{ marginLeft: "auto" }}>
-        <UserMenu user={user} handleLogOut={onLogOut} isMobile />
+        <UserMenu
+          user={user}
+          handleLogOut={onLogOut}
+          isMobile
+          drawUserInMenu={drawUserInMenu}
+        />
       </Box>
     </Box>
   );

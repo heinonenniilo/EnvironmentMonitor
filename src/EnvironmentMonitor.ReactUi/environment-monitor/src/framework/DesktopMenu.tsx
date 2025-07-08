@@ -1,4 +1,11 @@
-import { Box, Container, IconButton, Menu, MenuItem } from "@mui/material";
+import {
+  Box,
+  Container,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+} from "@mui/material";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -14,6 +21,7 @@ import {
 import { ArrowDropDownIcon } from "@mui/x-date-pickers";
 import { getLocations } from "../reducers/measurementReducer";
 import type { User } from "../models/user";
+import logo from "../assets/logo.png";
 
 export interface DesktopMenuProps {
   onNavigate: (route: string) => void;
@@ -68,13 +76,37 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
             edge="start"
             color="inherit"
             aria-label="menu"
-            sx={{ mr: 2 }}
             onClick={() => {
               dispath(toggleLeftMenuOpen(!isLeftMenuOpen));
             }}
           >
             <MenuIcon />
           </IconButton>
+          <MenuItem sx={{ pl: 1, pr: 1 }}>
+            <Box
+              component="img"
+              src={logo}
+              alt="Logo"
+              sx={{
+                height: 30,
+                cursor: "pointer",
+                display: "flex",
+              }}
+              onClick={() => onNavigate(routes.main)}
+            />
+          </MenuItem>
+          <Box
+            sx={{
+              alignItems: "center",
+              marginTop: "auto",
+              marginBottom: "auto",
+              marginRight: 2,
+            }}
+          >
+            <Typography variant="subtitle1" color="text.secondary">
+              Environment Monitor
+            </Typography>
+          </Box>
           <MenuItem
             onClick={() => {
               onNavigate(routes.main);
@@ -185,7 +217,7 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
         </MenuArea>
         <Box>
           <MenuArea>
-            <UserMenu user={user} handleLogOut={onLogOut} />
+            <UserMenu user={user} handleLogOut={onLogOut} drawUserInMenu />
           </MenuArea>
         </Box>
       </MenuItemsContainer>
