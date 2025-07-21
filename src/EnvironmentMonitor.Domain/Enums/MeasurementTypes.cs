@@ -13,6 +13,7 @@ namespace EnvironmentMonitor.Domain.Enums
         Temperature = 1,
         Humidity = 2,
         Light = 3,
-        Motion = 4
+        Motion = 4,
+        Pressure = 5
     }
 }
