@@ -85,6 +85,8 @@ interface GraphDataset {
   sensorId: number;
 }
 
+const dynamicColorLimit = 7;
+
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   sensors,
   model,
@@ -417,11 +419,12 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                   text: "Chart.js Time Scale",
                   display: true,
                 },
-                colors: useDynamicColors
-                  ? undefined
-                  : {
-                      forceOverride: true,
-                    },
+                colors:
+                  useDynamicColors || memoSets.length > dynamicColorLimit
+                    ? undefined
+                    : {
+                        forceOverride: true,
+                      },
                 legend: {
                   onClick: (_event, legendItem, legend) => {
                     if (legendItem.datasetIndex === undefined) {
