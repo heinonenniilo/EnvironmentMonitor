@@ -434,6 +434,7 @@ export const DeviceView: React.FC = () => {
         <Collapsible title="Info" isOpen={true}>
           <DeviceTable
             hideName
+            showDeviceIdentifier
             onClickVisible={(device) => {
               dispatch(
                 setConfirmDialog({
