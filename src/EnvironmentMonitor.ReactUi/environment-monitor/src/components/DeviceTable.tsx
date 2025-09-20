@@ -274,10 +274,10 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   if (showDeviceIdentifier) {
     columns.splice(1, 0, {
       field: "deviceIdentifier",
-      headerName: "Device Identifier",
+      headerName: "Identifier",
       hideable: true,
       flex: 1,
-      minWidth: 200,
+      minWidth: 150,
       valueGetter: (_value, row) => (row as DeviceInfo).deviceIdentifier,
     });
   }
