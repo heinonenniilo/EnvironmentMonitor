@@ -277,7 +277,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       headerName: "Identifier",
       hideable: true,
       flex: 1,
-      minWidth: 150,
+      minWidth: 200,
       valueGetter: (_value, row) => (row as DeviceInfo).deviceIdentifier,
     });
   }
