@@ -14,6 +14,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public DateTime? LastMessage { get; set; }
         public List<DeviceAttachmentDto> Attachments { get; set; } = [];
         public Guid? DefaultImageGuid { get; set; }
+        public string DeviceIdentifier { get; set; }
 
         public bool ShowWarning { get; set; }
         public void Mapping(Profile profile)
@@ -21,6 +22,7 @@ namespace EnvironmentMonitor.Application.DTOs
             profile.CreateMap<DeviceInfo, DeviceInfoDto>()
                 .ForMember(x => x.ShowWarning, opt => opt.MapFrom<ShowDeviceWarningResolver>())
                 .ForMember(x => x.Attachments, opt => opt.MapFrom(x => x.Device.Attachments ?? new List<DeviceAttachment>()))
+                .ForMember(x => x.DeviceIdentifier, opt => opt.MapFrom(x => x.Device.DeviceIdentifier))
                 .ReverseMap();
         }
     }

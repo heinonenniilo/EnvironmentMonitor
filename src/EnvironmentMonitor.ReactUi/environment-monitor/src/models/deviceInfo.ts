@@ -9,4 +9,5 @@ export interface DeviceInfo {
   showWarning?: boolean;
   attachments: DeviceAttachment[];
   defaultImageGuid: string;
+  deviceIdentifier: string;
 }

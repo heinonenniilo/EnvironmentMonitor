@@ -24,6 +24,7 @@ export interface DeviceTableProps {
   hideId?: boolean;
   renderLink?: boolean;
   renderLinkToDeviceMessages?: boolean;
+  showDeviceIdentifier?: boolean;
 }
 
 export const DeviceTable: React.FC<DeviceTableProps> = ({
@@ -36,6 +37,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   renderLink,
   onClickVisible,
   renderLinkToDeviceMessages,
+  showDeviceIdentifier,
 }) => {
   const formatDate = (input: Date | undefined | null) => {
     if (input) {
@@ -268,6 +270,17 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       },
     },
   ];
+
+  if (showDeviceIdentifier) {
+    columns.splice(1, 0, {
+      field: "deviceIdentifier",
+      headerName: "Identifier",
+      hideable: true,
+      flex: 1,
+      minWidth: 200,
+      valueGetter: (_value, row) => (row as DeviceInfo).deviceIdentifier,
+    });
+  }
 
   const [selectedDeviceIdentifier, setSelectedDeviceIdentifier] = useState<
     string | undefined
