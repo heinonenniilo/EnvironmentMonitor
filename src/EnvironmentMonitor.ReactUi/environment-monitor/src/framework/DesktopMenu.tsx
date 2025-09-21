@@ -46,6 +46,7 @@ const MenuArea = styled.div`
 export const DesktopMenu: React.FC<DesktopMenuProps> = ({
   onNavigate,
   onLogOut,
+  onLogin,
   user,
 }) => {
   const isLeftMenuOpen = useSelector(getIsLeftMenuOpen);
@@ -107,13 +108,15 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               Environment Monitor
             </Typography>
           </Box>
-          <MenuItem
-            onClick={() => {
-              onNavigate(routes.main);
-            }}
-          >
-            Home
-          </MenuItem>
+          <AuthorizedComponent requiredRole={RoleNames.User}>
+            <MenuItem
+              onClick={() => {
+                onNavigate(routes.home);
+              }}
+            >
+              Home
+            </MenuItem>
+          </AuthorizedComponent>
           <AuthorizedComponent requiredRole={RoleNames.User}>
             {locations.length > 0 ? (
               <Menu
@@ -217,7 +220,12 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
         </MenuArea>
         <Box>
           <MenuArea>
-            <UserMenu user={user} handleLogOut={onLogOut} drawUserInMenu />
+            <UserMenu
+              user={user}
+              handleLogOut={onLogOut}
+              drawUserInMenu
+              handleLogIn={onLogin}
+            />
           </MenuArea>
         </Box>
       </MenuItemsContainer>

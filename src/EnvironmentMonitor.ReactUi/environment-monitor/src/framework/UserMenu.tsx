@@ -12,6 +12,7 @@ import type { User } from "../models/user";
 
 export interface UserMenuProps {
   handleLogOut: () => void;
+  handleLogIn: () => void;
   user: User | undefined;
   isMobile?: boolean;
   drawUserInMenu?: boolean;
@@ -22,6 +23,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   handleLogOut,
   isMobile,
   drawUserInMenu,
+  handleLogIn,
 }) => {
   const [userMenuAcnhor, setUserMenuAcnhor] =
     React.useState<null | HTMLElement>(null);
@@ -100,7 +102,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         <Button
           variant="contained"
           onClick={() => {
-            //
+            handleLogIn();
           }}
         >
           Login

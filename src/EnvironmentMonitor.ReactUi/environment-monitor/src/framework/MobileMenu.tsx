@@ -32,6 +32,7 @@ export interface MobileMenuProps {
 export const MobileMenu: React.FC<MobileMenuProps> = ({
   onNavigate,
   onLogOut,
+  onLogin,
   user,
 }) => {
   const dispath = useDispatch();
@@ -91,7 +92,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           <MenuItem
             selected={false}
             onClick={(event) => {
-              handleClick(routes.main, event);
+              handleClick(routes.home, event);
             }}
           >
             Home
@@ -239,6 +240,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           handleLogOut={onLogOut}
           isMobile
           drawUserInMenu={drawUserInMenu}
+          handleLogIn={onLogin}
         />
       </Box>
     </Box>

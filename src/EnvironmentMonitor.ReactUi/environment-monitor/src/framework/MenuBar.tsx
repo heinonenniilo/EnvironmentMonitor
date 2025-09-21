@@ -4,6 +4,7 @@ import React from "react";
 import { DesktopMenu } from "./DesktopMenu";
 import { MobileMenu } from "./MobileMenu";
 import type { User } from "../models/user";
+import { routes } from "../utilities/routes";
 
 export interface MenuBarProps {
   handleLogOut: () => void;
@@ -28,7 +29,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
         <MobileMenu
           onNavigate={handleNavigateTo}
           onLogin={() => {
-            //
+            handleNavigateTo(routes.login);
           }}
           onLogOut={handleLogOut}
           user={user}
@@ -37,7 +38,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
         <DesktopMenu
           onNavigate={handleNavigateTo}
           onLogin={() => {
-            //
+            handleNavigateTo(routes.login);
           }}
           onLogOut={handleLogOut}
           user={user}

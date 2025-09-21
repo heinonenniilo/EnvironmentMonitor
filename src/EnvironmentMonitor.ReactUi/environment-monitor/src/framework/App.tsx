@@ -10,7 +10,6 @@ import {
   getUserInfo,
   storeUserInfo,
 } from "../reducers/userReducer";
-import LoginPage from "../components/LoginPage";
 import { useApiHook } from "../hooks/apiHook";
 import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
@@ -57,14 +56,6 @@ export const App: React.FC<AppProps> = (props) => {
       dispath(setDevices([]));
       dispath(storeUserInfo(undefined));
     });
-  };
-
-  const loginWithGoogleAuthCode = (persistent: boolean) => {
-    if (process.env.NODE_ENV === "production") {
-      window.location.href = `api/authentication/google?persistent=${persistent}`;
-    } else {
-      window.location.href = `https://localhost:7135/api/authentication/google?persistent=${persistent}`;
-    }
   };
 
   const handleNavigate = (route: string) => {
@@ -142,15 +133,14 @@ export const App: React.FC<AppProps> = (props) => {
             }}
           />
           <NotificationsComponent messages={notifications} />
-          {isLoggedIn ? (
-            <Container maxWidth={"xl"} sx={{ top: 0 }}>
-              <MenuBar
-                handleLogOut={handleLogOut}
-                handleNavigateTo={handleNavigate}
-                user={user}
-              />
-            </Container>
-          ) : null}
+
+          <Container maxWidth={"xl"} sx={{ top: 0 }}>
+            <MenuBar
+              handleLogOut={handleLogOut}
+              handleNavigateTo={handleNavigate}
+              user={user}
+            />
+          </Container>
 
           <Box
             sx={{
@@ -161,17 +151,7 @@ export const App: React.FC<AppProps> = (props) => {
               marginTop: "60px",
             }}
           >
-            {isLoggedIn ? (
-              props.children
-            ) : (
-              <LoginPage
-                onLoggedIn={async () => {
-                  const res = await apiHook.userHook.getUserInfo();
-                  dispath(storeUserInfo(res));
-                }}
-                onLogInWithGoogle={loginWithGoogleAuthCode}
-              />
-            )}
+            {props.children}
           </Box>
         </>
       </LocalizationProvider>
