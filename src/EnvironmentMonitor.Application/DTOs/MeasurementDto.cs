@@ -27,6 +27,7 @@ namespace EnvironmentMonitor.Application.DTOs
     public class MeasurementsBySensorModel
     {
         public List<MeasurementsBySensorDto> Measurements { get; set; } = new List<MeasurementsBySensorDto> { };
+        public List<SensorDto> Sensors { get; set; } = new List<SensorDto> { };
     }
 
     public class MeasurementsModel

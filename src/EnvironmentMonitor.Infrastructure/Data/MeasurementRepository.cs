@@ -126,6 +126,14 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return type;
         }
 
+        public async Task<List<PublicSensor>> GetPublicSensors()
+        {
+            return await _context.PublicSensors
+                .Include(ps => ps.Sensor)
+                .Include(ps => ps.MeasurementType)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Measurement>> Get(
             Expression<Func<Measurement, bool>> filter = null,
             Func<IQueryable<Measurement>, IOrderedQueryable<Measurement>> orderBy = null,

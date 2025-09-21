@@ -10,8 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace EnvironmentMonitor.WebApi.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    [Authorize(Roles = "Admin, Viewer, User")]
+    [Route("api/[controller]")] 
     public class MeasurementsController : ControllerBase
     {
         private readonly IMeasurementService _measurementService;
@@ -23,7 +22,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
             _measurementService = measurementService;
         }
 
-        [HttpGet()]        
+
+        [HttpGet()]
+        [Authorize(Roles = "Admin, Viewer, User")]
         public async Task<MeasurementsModel> GetMeasurements([FromQuery] GetMeasurementsModel model)
         {
             var result = await _measurementService.GetMeasurements(model);
@@ -31,15 +32,24 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet("bysensor")]
+        [Authorize(Roles = "Admin, Viewer, User")]
         public async Task<MeasurementsBySensorModel> GetMeasurementsBySensor([FromQuery] GetMeasurementsModel model)
         {
             return await _measurementService.GetMeasurementsBySensor(model);
         }
 
         [HttpGet("bylocation")]
+        [Authorize(Roles = "Admin, Viewer, User")]
         public async Task<MeasurementsByLocationModel> GetMeasurementsByLocation([FromQuery] GetMeasurementsModel model)
         {
             return await _measurementService.GetMeasurementsByLocation(model);
+        }
+
+        [HttpGet("public")]
+        [AllowAnonymous]
+        public async Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensor([FromQuery] GetMeasurementsModel model)
+        {
+            return await _measurementService.GetMeasurementsByPublicSensor(model);
         }
     }
 }

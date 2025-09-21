@@ -251,6 +251,46 @@ namespace EnvironmentMonitor.Application.Services
             };
         }
 
+        public async Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensor(GetMeasurementsModel model)
+        {
+
+            var publicSensors = await _measurementRepository.GetPublicSensors();
+
+            if (publicSensors.Count == 0)
+            {
+                return new MeasurementsBySensorModel();
+            }
+
+            var sensorIds = publicSensors.Select(ps => ps.SensorId).ToList();
+            var res = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
+            {
+                From = model.From,
+                To = model.To,
+                SensorIds = sensorIds,
+                LatestOnly = model.LatestOnly
+            });
+            var measurements = _mapper.Map<List<MeasurementDto>>(res);
+            var info = GetMeasurementInfo(measurements, sensorIds);
+
+            var returnModel = new MeasurementsBySensorModel()
+            {
+                Sensors = _mapper.Map<List<SensorDto>>(publicSensors),
+            };
+            foreach (var sensorId in sensorIds)
+            {
+                var rowToAdd = new MeasurementsBySensorDto()
+                {
+                    SensorId = sensorId,
+                    Measurements = measurements.Where(x => x.SensorId == sensorId).ToList(),
+                    LatestValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.LatestValues ?? [],
+                    MaxValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MaxValues ?? [],
+                    MinValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MinValues ?? []
+                };
+                returnModel.Measurements.Add(rowToAdd);
+            }
+            return returnModel;
+        }
+
         private List<MeasurementsInfoDto> GetMeasurementInfo(List<MeasurementDto> measurements, List<int> sensorIds)
         {
             var returnList = new List<MeasurementsInfoDto>();

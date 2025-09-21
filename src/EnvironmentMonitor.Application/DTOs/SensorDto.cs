@@ -26,6 +26,11 @@ namespace EnvironmentMonitor.Application.DTOs
                 .ForMember(x => x.ScaleMin, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMin : null))
                 .ForMember(x => x.ScaleMax, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMax : null))
                 .ReverseMap();
+            profile.CreateMap<PublicSensor, SensorDto>()
+                .ForMember(x => x.ScaleMin, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMin : null))
+                .ForMember(x => x.ScaleMax, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMax : null))
+                .ForMember(x => x.SensorId, opt => opt.MapFrom(x => x.Id))
+                .ReverseMap();
         }
     }
 }
