@@ -27,6 +27,7 @@ import {
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { NotificationsComponent } from "./NotificationsComponent";
 import type { User } from "../models/user";
+import { routes } from "../utilities/routes";
 
 interface AppProps {
   children: React.ReactNode;
@@ -50,11 +51,11 @@ export const App: React.FC<AppProps> = (props) => {
   const confirmationDialogProps = useSelector(getConfirmationDialog);
 
   const handleLogOut = () => {
-    console.info("Handling log out");
     apiHook.userHook.logOut().then(() => {
       dispath(setSensors([]));
       dispath(setDevices([]));
       dispath(storeUserInfo(undefined));
+      navigate(routes.main);
     });
   };
 
