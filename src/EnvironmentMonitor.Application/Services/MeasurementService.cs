@@ -276,15 +276,16 @@ namespace EnvironmentMonitor.Application.Services
             {
                 Sensors = _mapper.Map<List<SensorDto>>(publicSensors),
             };
-            foreach (var sensorId in sensorIds)
+            foreach (var publicSensor in publicSensors)
             {
+                var sensorIdToCheck = publicSensor.SensorId;
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
-                    SensorId = sensorId,
-                    Measurements = measurements.Where(x => x.SensorId == sensorId).ToList(),
-                    LatestValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.LatestValues ?? [],
-                    MaxValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MaxValues ?? [],
-                    MinValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MinValues ?? []
+                    SensorId = publicSensor.Id,
+                    Measurements = measurements.Where(x => x.SensorId == sensorIdToCheck && (publicSensor.TypeId == null || x.TypeId == publicSensor.TypeId) ).ToList(),
+                    LatestValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.LatestValues ?? [],
+                    MaxValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.MaxValues ?? [],
+                    MinValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.MinValues ?? []
                 };
                 returnModel.Measurements.Add(rowToAdd);
             }
