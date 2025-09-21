@@ -60,6 +60,12 @@ interface measureHook {
     to?: moment.Moment,
     latestOnly?: boolean
   ) => Promise<MeasurementsByLocationModel | undefined>;
+
+  getPublicMeasurements: (
+    from: moment.Moment,
+    to?: moment.Moment,
+    latestOnly?: boolean
+  ) => Promise<MeasurementsViewModel | undefined>;
 }
 
 interface deviceHook {
@@ -253,6 +259,30 @@ export const useApiHook = (): ApiHook => {
           >("/api/Measurements/bylocation", {
             params: {
               SensorIds: sensorIds,
+              from: from.toISOString(),
+              to: to ? to.toISOString() : undefined,
+              latestOnly: latestOnly,
+            },
+          });
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          showError("Fetching measurements failed");
+          return undefined;
+        }
+      },
+      getPublicMeasurements: async (
+        from: moment.Moment,
+        to?: moment.Moment,
+        latestOnly?: boolean
+      ) => {
+        try {
+          const res = await apiClient.get<
+            any,
+            AxiosResponse<MeasurementsViewModel>
+          >("/api/Measurements/public", {
+            params: {
+              SensorIds: [],
               from: from.toISOString(),
               to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,
