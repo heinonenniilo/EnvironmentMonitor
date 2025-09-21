@@ -25,6 +25,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model)
         {
+
+            if (((model.To ?? _dateService.CurrentTime()) - model.From).TotalDays > ApplicationConstants.MeasurementMaxLimitInDays)
+            {
+                throw new InvalidOperationException("Too long time range");
+            } 
+
             IQueryable<Measurement> query = _context.Measurements;
             if (model.SensorIds.Any())
             {

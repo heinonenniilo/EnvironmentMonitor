@@ -255,6 +255,10 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensor(GetMeasurementsModel model)
         {
 
+            if ( ( (model.To ?? _dateService.CurrentTime()) - model.From).TotalDays > ApplicationConstants.PublicMeasurementMaxLimitInDays)
+            {
+                throw new InvalidOperationException($"Max query range is {ApplicationConstants.PublicMeasurementMaxLimitInDays} days");
+            }
             var publicSensors = await _measurementRepository.GetPublicSensors();
 
             if (publicSensors.Count == 0)
