@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build-backend": "tsc -b && vite build && rimraf ../../EnvironmentMonitor.WebApi/wwwroot && cpx \"dist/**/*\" ../../EnvironmentMonitor.WebApi/wwwroot",
     "lint": "eslint .",
     "preview": "vite preview"
   },
@@ -47,10 +48,12 @@
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@vitejs/plugin-react": "^4.4.1",
+    "cpx": "^1.5.0",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
+    "rimraf": "^6.0.1",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.30.1",
     "vite": "^6.3.5",
