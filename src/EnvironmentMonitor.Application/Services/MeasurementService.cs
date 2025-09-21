@@ -223,6 +223,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new InvalidOperationException("No accessible sensors");
             }
+
             var result = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
             {
                 SensorIds = accessibleSensorIds,
@@ -262,13 +263,22 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             var sensorIds = publicSensors.Select(ps => ps.SensorId).ToList();
+
+            var sensorFilterDictionary = new Dictionary<int, List<MeasurementTypes>?>();
+
+            foreach(var publicSensor in publicSensors)
+            {
+                sensorFilterDictionary.Add(publicSensor.SensorId, publicSensor.TypeId == null ? null : new List<MeasurementTypes>() { (MeasurementTypes)publicSensor.TypeId });
+            }
+
             var res = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
             {
                 From = model.From,
                 To = model.To,
-                SensorIds = sensorIds,
+                SensorsByTypeFilter = sensorFilterDictionary,
                 LatestOnly = model.LatestOnly
             });
+
             var measurements = _mapper.Map<List<MeasurementDto>>(res);
             var info = GetMeasurementInfo(measurements, sensorIds);
 

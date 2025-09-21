@@ -3,6 +3,7 @@ using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
@@ -29,6 +30,21 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => model.SensorIds.Contains(x.SensorId));
             }
+            else if (model.SensorsByTypeFilter != null)
+            {
+                _logger.LogInformation("Dynamically building condition for measurement query (sensors with types defined)");
+                var predicate = PredicateBuilder.New<Measurement>(false);
+                foreach (var filter in model.SensorsByTypeFilter)
+                {
+                    predicate = predicate.Or(x =>
+                        x.SensorId == filter.Key &&
+                        (filter.Value == null || filter.Value.Count == 0 || filter.Value.Contains((MeasurementTypes)x.TypeId))
+                    );
+                }
+                query = query.Where(predicate);
+            }
+
+
             if (model.DeviceMessageIds?.Any() == true)
             {
                 query = query.Where(x => x.DeviceMessageId != null && model.DeviceMessageIds.Contains(x.DeviceMessageId.Value));
