@@ -282,7 +282,7 @@ namespace EnvironmentMonitor.Application.Services
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
                     SensorId = publicSensor.Id,
-                    Measurements = measurements.Where(x => x.SensorId == sensorIdToCheck && (publicSensor.TypeId == null || x.TypeId == publicSensor.TypeId) ).ToList(),
+                    Measurements = measurements.Where(x => x.SensorId == sensorIdToCheck && (publicSensor.TypeId == null || x.TypeId == publicSensor.TypeId)).ToList(),
                     LatestValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.LatestValues ?? [],
                     MaxValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.MaxValues ?? [],
                     MinValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.MinValues ?? []
