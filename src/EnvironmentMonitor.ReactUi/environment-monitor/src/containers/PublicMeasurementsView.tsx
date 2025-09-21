@@ -13,17 +13,12 @@ import { MultiSensorGraph } from "../components/MultiSensorGraph";
 
 export const PublicMeasurementsView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-
   const apiHook = useApiHook().measureHook;
-
   const dispatch = useDispatch();
-
   const timeRange = useSelector(getDashboardTimeRange);
-
   const [model, setModel] = useState<MeasurementsViewModel | undefined>(
     undefined
   );
-
   const handleTimeRangeChange = (selection: number) => {
     dispatch(setDashboardTimeRange(selection));
   };
