@@ -49,7 +49,7 @@ export const PublicMeasurementsView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      title="Public Measurements"
+      title="Latest measurements"
       isLoading={isLoading}
       titleComponent={
         <TimeRangeSelectorComponent
@@ -61,7 +61,9 @@ export const PublicMeasurementsView: React.FC = () => {
       <MultiSensorGraph
         sensors={model?.sensors ?? []}
         model={model}
+        title=" "
         useAutoScale
+        hideUseAutoScale
       />
     </AppContentWrapper>
   );
