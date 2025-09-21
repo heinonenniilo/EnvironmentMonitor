@@ -22,6 +22,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
             builder.HasIndex(x => x.Name).IsUnique();
             builder.HasMany(x => x.Measurements).WithOne(x => x.Type).HasForeignKey(x => x.TypeId).IsRequired();
             builder.HasMany(x => x.LocationSensors).WithOne(x => x.MeasurementType).HasForeignKey(x => x.TypeId).IsRequired(false);
+            builder.HasMany(x => x.PublicSensors).WithOne(ps => ps.MeasurementType).HasForeignKey(ps => ps.TypeId).IsRequired(false);
 
             builder.HasData(Enum.GetValues(typeof(MeasurementTypes))
                 .Cast<MeasurementTypes>()
