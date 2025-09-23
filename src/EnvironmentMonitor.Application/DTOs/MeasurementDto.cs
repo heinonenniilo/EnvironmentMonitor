@@ -17,7 +17,6 @@ namespace EnvironmentMonitor.Application.DTOs
         {
             profile.CreateMap<Measurement, MeasurementDto>()
                 .IncludeBase<Measurement, MeasurementBaseDto>()
-                .ForMember(x => x.SensorId, opt => opt.MapFrom(d => 0))
                 .ReverseMap()
                 .IncludeBase<MeasurementBaseDto, Measurement>();
         }
