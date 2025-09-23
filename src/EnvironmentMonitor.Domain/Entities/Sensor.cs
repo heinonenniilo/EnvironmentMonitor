@@ -15,10 +15,10 @@ namespace EnvironmentMonitor.Domain.Entities
         public string Name { get; set; }
         public SensorType? Type { get; set; }
         public int? TypeId { get; set; }
-        public ICollection<Measurement> Measurements { get; set; }
-        public ICollection<LocationSensor> LocationSensors { get; set; }
-        public ICollection<PublicSensor> PublicSensors { get; set; }
+        public ICollection<Measurement> Measurements { get; set; } = [];
+        public ICollection<LocationSensor> LocationSensors { get; set; } = [];
+        public ICollection<PublicSensor> PublicSensors { get; set; } = [];
         public double? ScaleMin { get; set; }
         public double? ScaleMax { get; set; }
-    }    
+    } 
 }

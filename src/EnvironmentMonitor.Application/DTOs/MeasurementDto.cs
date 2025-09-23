@@ -10,17 +10,31 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class MeasurementDto : IMapFrom<Measurement>
+    public class MeasurementDto : MeasurementBaseDto, IMapFrom<Measurement>
     {
         public int SensorId { get; set; }
+        public new void Mapping(Profile profile)
+        {
+            profile.CreateMap<Measurement, MeasurementDto>()
+                .IncludeBase<Measurement, MeasurementBaseDto>()
+                .ForMember(x => x.SensorId, opt => opt.MapFrom(d => 0))
+                .ReverseMap()
+                .IncludeBase<MeasurementBaseDto, Measurement>();
+        }
+    }
+
+    public class MeasurementBaseDto: IMapFrom<Measurement>
+    {
         public double SensorValue { get; set; }
         public int TypeId { get; set; }
         public DateTime TimestampUtc { get; set; }
         public DateTime Timestamp { get; set; }
 
-        public void Mapping(Profile profile)
+        public virtual void Mapping(Profile profile)
         {
-            profile.CreateMap<Measurement, MeasurementDto>().ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value)).ReverseMap();
+            profile.CreateMap<Measurement, MeasurementBaseDto>()
+                .ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value))
+                .ReverseMap();
         }
     }
 
@@ -39,14 +53,14 @@ namespace EnvironmentMonitor.Application.DTOs
     public class MeasurementsInfoDto
     {
         public int SensorId { get; set; }
-        public Dictionary<int, MeasurementDto> MinValues { get; set; } = [];
-        public Dictionary<int, MeasurementDto> MaxValues { get; set; } = [];
-        public Dictionary<int, MeasurementDto> LatestValues { get; set; } = [];
+        public Dictionary<int, MeasurementBaseDto> MinValues { get; set; } = [];
+        public Dictionary<int, MeasurementBaseDto> MaxValues { get; set; } = [];
+        public Dictionary<int, MeasurementBaseDto> LatestValues { get; set; } = [];
     }
 
     public class MeasurementsBySensorDto : MeasurementsInfoDto
     {
-        public List<MeasurementDto> Measurements { get; set; } = [];
+        public List<MeasurementBaseDto> Measurements { get; set; } = [];
     }
 
     public class MeasurementsByLocationDto

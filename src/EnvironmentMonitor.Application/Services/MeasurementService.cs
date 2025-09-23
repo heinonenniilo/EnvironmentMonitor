@@ -153,11 +153,14 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new InvalidOperationException("SensorIds must be defined");
             }
+
+            var measurementRows = await _measurementRepository.GetMeasurements(model);
+
             var rows = _mapper.Map<List<MeasurementDto>>(await _measurementRepository.GetMeasurements(model));
             return new MeasurementsModel()
             {
-                Measurements = rows,
-                MeasurementsInfo = GetMeasurementInfo(rows, model.SensorIds)
+                Measurements = _mapper.Map<List<MeasurementDto>>(measurementRows),
+                MeasurementsInfo = GetMeasurementInfo(measurementRows.ToList(), model.SensorIds)
             };
         }
 
@@ -188,8 +191,9 @@ namespace EnvironmentMonitor.Application.Services
                 var measurementsInLocation = new List<MeasurementsBySensorDto>();
                 foreach (var sensor in location.LocationSensors)
                 {
-                    var measurementsBySensor = _mapper.Map<List<MeasurementDto>>(res.Where(x => x.SensorId == sensor.SensorId && x.TypeId == sensor.TypeId));
-                    var infoRow = GetMeasurementInfo(measurementsBySensor, [sensor.SensorId]).FirstOrDefault();
+                    var measurementsToCheck = res.Where(x => x.SensorId == sensor.SensorId && x.TypeId == sensor.TypeId).ToList();
+                    var measurementsBySensor = _mapper.Map<List<MeasurementBaseDto>>(measurementsToCheck);
+                    var infoRow = GetMeasurementInfo(measurementsToCheck, [sensor.SensorId]).FirstOrDefault();
                     var bySensorRow = new MeasurementsBySensorDto()
                     {
                         SensorId = sensor.SensorId,
@@ -231,15 +235,13 @@ namespace EnvironmentMonitor.Application.Services
                 From = model.From,
                 LatestOnly = model.LatestOnly,
             });
-
-            var measurements = _mapper.Map<List<MeasurementDto>>(result);
-            var info = GetMeasurementInfo(measurements, accessibleSensorIds);
+            var info = GetMeasurementInfo(result.ToList(), accessibleSensorIds);
             foreach (var sensorId in model.SensorIds)
             {
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
                     SensorId = sensorId,
-                    Measurements = measurements.Where(x => x.SensorId == sensorId).ToList(),
+                    Measurements = _mapper.Map<List<Measurement>, List<MeasurementBaseDto>>(result.Where(x => x.SensorId == sensorId).ToList()),
                     LatestValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.LatestValues ?? [],
                     MaxValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MaxValues ?? [],
                     MinValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MinValues ?? []
@@ -255,7 +257,7 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensor(GetMeasurementsModel model)
         {
 
-            if ( ( (model.To ?? _dateService.CurrentTime()) - model.From).TotalDays > ApplicationConstants.PublicMeasurementMaxLimitInDays)
+            if (((model.To ?? _dateService.CurrentTime()) - model.From).TotalDays > ApplicationConstants.PublicMeasurementMaxLimitInDays)
             {
                 throw new InvalidOperationException($"Max query range is {ApplicationConstants.PublicMeasurementMaxLimitInDays} days");
             }
@@ -267,12 +269,11 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             var sensorIds = publicSensors.Select(ps => ps.SensorId).ToList();
-
             var sensorFilterDictionary = new Dictionary<int, List<MeasurementTypes>?>();
 
-            foreach(var publicSensor in publicSensors)
+            foreach (var publicSensor in publicSensors)
             {
-                sensorFilterDictionary.Add(publicSensor.SensorId, publicSensor.TypeId == null ? null : new List<MeasurementTypes>() { (MeasurementTypes)publicSensor.TypeId });
+                sensorFilterDictionary.Add(publicSensor.SensorId, publicSensor.TypeId == null ? null : [(MeasurementTypes)publicSensor.TypeId]);
             }
 
             var res = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
@@ -283,8 +284,7 @@ namespace EnvironmentMonitor.Application.Services
                 LatestOnly = model.LatestOnly
             });
 
-            var measurements = _mapper.Map<List<MeasurementDto>>(res);
-            var info = GetMeasurementInfo(measurements, sensorIds);
+            var info = GetMeasurementInfo(res.ToList(), sensorIds);
 
             var returnModel = new MeasurementsBySensorModel()
             {
@@ -296,7 +296,7 @@ namespace EnvironmentMonitor.Application.Services
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
                     SensorId = publicSensor.Id,
-                    Measurements = measurements.Where(x => x.SensorId == sensorIdToCheck).ToList(),
+                    Measurements = _mapper.Map<List<Measurement>, List<MeasurementBaseDto>>(res.Where(x => x.SensorId == sensorIdToCheck).ToList()) ,
                     LatestValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.LatestValues ?? [],
                     MaxValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.MaxValues ?? [],
                     MinValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.MinValues ?? []
@@ -306,7 +306,7 @@ namespace EnvironmentMonitor.Application.Services
             return returnModel;
         }
 
-        private List<MeasurementsInfoDto> GetMeasurementInfo(List<MeasurementDto> measurements, List<int> sensorIds)
+        private List<MeasurementsInfoDto> GetMeasurementInfo(ICollection<Measurement> measurements, List<int> sensorIds)
         {
             var returnList = new List<MeasurementsInfoDto>();
             foreach (var sensorId in sensorIds)
@@ -319,9 +319,9 @@ namespace EnvironmentMonitor.Application.Services
                 {
                     if (measurementsToCheck.Any(x => x.TypeId == (int)type && x.SensorId == sensorId))
                     {
-                        rowToAdd.MinValues[(int)type] = measurementsToCheck.Where(x => x.TypeId == (int)type).OrderBy(x => x.SensorValue).First();
-                        rowToAdd.MaxValues[(int)type] = measurementsToCheck.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.SensorValue).First();
-                        rowToAdd.LatestValues[(int)type] = measurementsToCheck.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.Timestamp).First();
+                        rowToAdd.MinValues[(int)type] =  _mapper.Map<Measurement, MeasurementDto>(measurementsToCheck.Where(x => x.TypeId == (int)type).OrderBy(x => x.Value).First());
+                        rowToAdd.MaxValues[(int)type] = _mapper.Map<Measurement, MeasurementDto>(measurementsToCheck.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.Value).First());
+                        rowToAdd.LatestValues[(int)type] = _mapper.Map < Measurement, MeasurementDto>( measurementsToCheck.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.Timestamp).First());
                     }
                 }
                 returnList.Add(rowToAdd);
