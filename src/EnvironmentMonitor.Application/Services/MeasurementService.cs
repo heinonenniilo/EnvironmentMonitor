@@ -155,8 +155,6 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             var measurementRows = await _measurementRepository.GetMeasurements(model);
-
-            var rows = _mapper.Map<List<MeasurementDto>>(await _measurementRepository.GetMeasurements(model));
             return new MeasurementsModel()
             {
                 Measurements = _mapper.Map<List<MeasurementDto>>(measurementRows),
