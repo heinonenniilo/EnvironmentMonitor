@@ -59,6 +59,7 @@ export const PublicMeasurementsView: React.FC = () => {
         title=" "
         useAutoScale
         hideUseAutoScale
+        minHeight={500}
       />
     </AppContentWrapper>
   );
