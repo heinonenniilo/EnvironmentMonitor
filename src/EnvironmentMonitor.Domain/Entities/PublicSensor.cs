@@ -9,6 +9,7 @@ namespace EnvironmentMonitor.Domain.Entities
     public class PublicSensor
     {
         public int Id { get; set; }
+        public Guid Guid { get; set; }
         public required Sensor Sensor { get; set; }
         public int SensorId { get; set; }
         public required string Name { get; set; }

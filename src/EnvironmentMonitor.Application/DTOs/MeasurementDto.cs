@@ -2,6 +2,7 @@
 using EnvironmentMonitor.Application.Mappings;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Models.ReturnModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,19 +11,23 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class MeasurementDto : MeasurementBaseDto, IMapFrom<Measurement>
+    public class MeasurementDto : MeasurementBaseDto, IMapFrom<Measurement>, IMapFrom<MeasurementExtended>
     {
         public int SensorId { get; set; }
+        public Guid SensorGuid { get; set; }
         public new void Mapping(Profile profile)
         {
             profile.CreateMap<Measurement, MeasurementDto>()
                 .IncludeBase<Measurement, MeasurementBaseDto>()
                 .ReverseMap()
                 .IncludeBase<MeasurementBaseDto, Measurement>();
+
+            profile.CreateMap<MeasurementExtended, MeasurementDto>()
+                .ReverseMap();
         }
     }
 
-    public class MeasurementBaseDto: IMapFrom<Measurement>
+    public class MeasurementBaseDto: IMapFrom<Measurement>, IMapFrom<MeasurementExtended>
     {
         public double SensorValue { get; set; }
         public int TypeId { get; set; }
@@ -32,6 +37,10 @@ namespace EnvironmentMonitor.Application.DTOs
         public virtual void Mapping(Profile profile)
         {
             profile.CreateMap<Measurement, MeasurementBaseDto>()
+                .ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value))
+                .ReverseMap();
+
+            profile.CreateMap<MeasurementExtended, MeasurementBaseDto>()
                 .ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value))
                 .ReverseMap();
         }

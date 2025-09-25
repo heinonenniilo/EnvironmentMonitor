@@ -40,6 +40,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var query = _context.Sensors.Where(x =>
                 (model.DevicesModel.DeviceIdentifiers == null || model.DevicesModel.DeviceIdentifiers.Contains(x.Device.DeviceIdentifier))
                 && (model.DevicesModel.Ids == null || model.DevicesModel.Ids.Contains(x.Device.Id))
+                && (model.Guids == null || model.Guids.Contains(x.Guid))
                 && (model.DevicesModel.Identifiers == null || model.DevicesModel.Identifiers.Contains(x.Device.Identifier))
                 );
             if (model.Ids != null)

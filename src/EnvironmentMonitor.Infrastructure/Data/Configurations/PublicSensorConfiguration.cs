@@ -14,7 +14,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<PublicSensor> builder)
         {
             builder.HasKey(ps => ps.Id);
-            
+            builder.Property(x => x.Guid).HasDefaultValueSql("newid()").IsRequired();
             builder.Property(ps => ps.Name)
                 .IsRequired()
                 .HasMaxLength(512);

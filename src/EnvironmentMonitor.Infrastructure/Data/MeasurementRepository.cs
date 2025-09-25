@@ -3,6 +3,7 @@ using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.ReturnModel;
 using LinqKit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -23,13 +24,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
             _logger = logger;
         }
 
-        public async Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model)
+        public async Task<List<MeasurementExtended>> GetMeasurements(GetMeasurementsModel model)
         {
 
             if (((model.To ?? _dateService.CurrentTime()) - model.From).TotalDays > ApplicationConstants.MeasurementMaxLimitInDays)
             {
                 throw new InvalidOperationException("Too long time range");
-            } 
+            }
 
             IQueryable<Measurement> query = _context.Measurements;
             if (model.SensorIds.Any())
@@ -54,7 +55,16 @@ namespace EnvironmentMonitor.Infrastructure.Data
             if (model.DeviceMessageIds?.Any() == true)
             {
                 query = query.Where(x => x.DeviceMessageId != null && model.DeviceMessageIds.Contains(x.DeviceMessageId.Value));
-                return await query.OrderBy(x => x.Timestamp).ToListAsync();
+                return await query.OrderBy(x => x.Timestamp).Select(x => new MeasurementExtended()
+                {
+                    TypeId = x.TypeId,
+                    Value = x.Value,
+                    Timestamp = x.Timestamp,
+                    TimestampUtc = x.TimestampUtc,
+                    SensorId = x.SensorId,
+                    DeviceMessageId = x.DeviceMessageId,
+                    SensorGuid = x.Sensor.Guid,
+                }).ToListAsync();
             }
             if (model.LatestOnly == true)
             {
@@ -66,13 +76,14 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     }).ToListAsync();
                 var latestMeasurements = _context.Measurements.
                     Where(x => grouped.Select(g => g.Id).Contains(x.Id))
-                    .Select(x => new Measurement()
+                    .Select(x => new MeasurementExtended()
                     {
                         TypeId = x.TypeId,
                         Value = x.Value,
                         Timestamp = x.Timestamp,
                         TimestampUtc = x.TimestampUtc,
-                        SensorId = x.SensorId
+                        SensorId = x.SensorId,
+                        SensorGuid = x.Sensor.Guid,
                     })
                     .OrderByDescending(x => x.Timestamp);
                 return await latestMeasurements.ToListAsync();
@@ -84,39 +95,40 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 if (dateDiff > ApplicationConstants.MeasurementGroupByLimitInDays)
                 {
                     _logger.LogInformation($"Applying measurement grouping, date diff: {dateDiff}, limit : {ApplicationConstants.MeasurementGroupByLimitInDays}");
-                    query = query.GroupBy(x => new
+                    var extendedQuery = query.GroupBy(x => new
                     {
                         x.TypeId,
                         x.SensorId,
+                        x.Sensor.Guid,
                         x.Timestamp.Year,
                         x.Timestamp.Month,
                         x.Timestamp.Day,
                         x.Timestamp.Hour
-                    }).Select(x => new Measurement()
+                    }).Select(x => new MeasurementExtended()
                     {
                         TypeId = x.Key.TypeId,
                         TimestampUtc = DateTime.UtcNow,
                         Timestamp = x.Max(d => d.Timestamp),
                         Value = x.Key.TypeId == (int)MeasurementTypes.Motion ? x.Max(d => d.Value) : x.Average(d => d.Value),
-                        SensorId = x.Key.SensorId
+                        SensorId = x.Key.SensorId,
+                        SensorGuid = x.Key.Guid,
                     }).OrderBy(x => x.Timestamp);
-                    var rows = await query.ToListAsync();
+                    var rows = await extendedQuery.ToListAsync();
                     foreach (var item in rows)
                     {
                         item.TimestampUtc = _dateService.LocalToUtc(item.Timestamp);
                     }
                     return rows;
                 }
-                query = query.Select(x => new Measurement()
+                return await query.Select(x => new MeasurementExtended()
                 {
                     TypeId = x.TypeId,
                     Value = x.Value,
                     Timestamp = x.Timestamp,
                     TimestampUtc = x.TimestampUtc,
                     SensorId = x.SensorId
-                }).OrderBy(x => x.Timestamp);
+                }).OrderBy(x => x.Timestamp).ToListAsync();
             }
-            return await query.ToListAsync();
         }
 
         public async Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, DeviceMessage? deviceMessage = null)

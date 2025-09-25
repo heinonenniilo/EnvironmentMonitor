@@ -12,6 +12,7 @@ namespace EnvironmentMonitor.Application.DTOs
     public class SensorDto : IMapFrom<Sensor>
     {
         public int Id { get; set; }
+        public Guid Guid { get; set; }
         public string Name { get; set; }
         public int SensorId { get; set; }
         public int DeviceId { get; set; }

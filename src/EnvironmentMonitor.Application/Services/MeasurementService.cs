@@ -7,6 +7,7 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
+using EnvironmentMonitor.Domain.Models.ReturnModel;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -239,7 +240,7 @@ namespace EnvironmentMonitor.Application.Services
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
                     SensorId = sensorId,
-                    Measurements = _mapper.Map<List<Measurement>, List<MeasurementBaseDto>>(result.Where(x => x.SensorId == sensorId).ToList()),
+                    Measurements = _mapper.Map<List<MeasurementExtended>, List<MeasurementBaseDto>>(result.Where(x => x.SensorId == sensorId).ToList()),
                     LatestValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.LatestValues ?? [],
                     MaxValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MaxValues ?? [],
                     MinValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MinValues ?? []
@@ -294,7 +295,7 @@ namespace EnvironmentMonitor.Application.Services
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
                     SensorId = publicSensor.Id,
-                    Measurements = _mapper.Map<List<Measurement>, List<MeasurementBaseDto>>(res.Where(x => x.SensorId == sensorIdToCheck).ToList()) ,
+                    Measurements = _mapper.Map<List<MeasurementExtended>, List<MeasurementBaseDto>>(res.Where(x => x.SensorId == sensorIdToCheck).ToList()) ,
                     LatestValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.LatestValues ?? [],
                     MaxValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.MaxValues ?? [],
                     MinValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.MinValues ?? []
@@ -304,7 +305,7 @@ namespace EnvironmentMonitor.Application.Services
             return returnModel;
         }
 
-        private List<MeasurementsInfoDto> GetMeasurementInfo(ICollection<Measurement> measurements, List<int> sensorIds)
+        private List<MeasurementsInfoDto> GetMeasurementInfo(ICollection<MeasurementExtended> measurements, List<int> sensorIds)
         {
             var returnList = new List<MeasurementsInfoDto>();
             foreach (var sensorId in sensorIds)
