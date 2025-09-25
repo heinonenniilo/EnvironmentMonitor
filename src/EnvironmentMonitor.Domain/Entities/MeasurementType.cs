@@ -13,5 +13,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public required string Unit { get; set; }
         public List<Measurement> Measurements { get; set; }
         public IList<LocationSensor> LocationSensors { get; set; }
+        public IList<PublicSensor> PublicSensors { get; set; }
     }
 }

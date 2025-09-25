@@ -31,7 +31,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
 
     try {
       setIsLoading(true);
-      let res = await apiHook.userHook.logIn(userId, password, rememberMe);
+      const res = await apiHook.userHook.logIn(userId, password, rememberMe);
       setIsLoading(false);
       if (res) {
         onLoggedIn();

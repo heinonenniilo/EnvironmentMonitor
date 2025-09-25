@@ -52,7 +52,15 @@ builder.Services.ConfigureApplicationCookie(conf =>
         conf.Cookie.SameSite = SameSiteMode.None;
     }
     conf.Cookie.Name = "env-monitor";
+
+    // TODO TO BE REIMPLEMENTED
     conf.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        return Task.CompletedTask;
+    };
+
+    conf.Events.OnRedirectToLogin = context =>
     {
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
         return Task.CompletedTask;

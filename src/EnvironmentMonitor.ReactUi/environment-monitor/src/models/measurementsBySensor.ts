@@ -3,6 +3,7 @@ import type { Sensor } from "./sensor";
 
 export interface MeasurementsViewModel {
   measurements: MeasurementsBySensor[];
+  sensors?: Sensor[];
 }
 
 export interface MeasurementsBySensor {

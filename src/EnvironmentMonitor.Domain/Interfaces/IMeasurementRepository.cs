@@ -16,6 +16,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, DeviceMessage? deviceMessage = null);
         Task<DeviceMessage?> GetDeviceMessage(string messageIdentifier, int deviceId);
         Task<DeviceMessage> AddDeviceMessage(DeviceMessage deviceMessage, bool saveChanges);
+        Task<List<PublicSensor>> GetPublicSensors();
 
         public Task<IEnumerable<Measurement>> Get(
             Expression<Func<Measurement, bool>> filter = null,

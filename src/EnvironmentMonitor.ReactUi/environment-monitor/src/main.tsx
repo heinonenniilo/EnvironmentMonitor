@@ -15,6 +15,8 @@ import { store } from "./setup/appStore";
 import { DeviceMessagesView } from "./containers/DeviceMessagesView";
 import { ThemeProvider } from "@mui/material";
 import { baseTheme } from "./utilities/baseTheme";
+import { PublicMeasurementsView } from "./containers/PublicMeasurementsView";
+import { LoginView } from "./containers/LoginView";
 
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
@@ -23,7 +25,9 @@ createRoot(document.getElementById("root")!).render(
         <ThemeProvider theme={baseTheme}>
           <App>
             <Routes>
-              <Route path={routes.main} element={<HomeView />} />
+              <Route path={routes.main} element={<PublicMeasurementsView />} />
+              <Route path={routes.home} element={<HomeView />} />
+              <Route path={routes.login} element={<LoginView />} />
               <Route path={routes.dashboard} element={<DashboardView />} />
               <Route
                 path={routes.locationDashboard}
