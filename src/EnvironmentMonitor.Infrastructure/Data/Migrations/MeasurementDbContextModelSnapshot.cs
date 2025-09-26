@@ -551,11 +551,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<Guid>("Guid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("newid()");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(512)
@@ -587,11 +582,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.Property<int>("DeviceId")
                         .HasColumnType("int");
-
-                    b.Property<Guid>("Guid")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("newid()");
 
                     b.Property<string>("Name")
                         .IsRequired()
