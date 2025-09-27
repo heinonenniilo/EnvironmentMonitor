@@ -6,7 +6,7 @@ namespace EnvironmentMonitor.Application.DTOs
 {
     public class LocationDto : IMapFrom<Location>
     {
-        public int Id { get; set; }
+        public Guid Identifier { get; set; }
         public required string Name { get; set; }
         public bool Visible { get; set; }
         public List<SensorDto> LocationSensors { get; set; }

@@ -9,6 +9,7 @@ namespace EnvironmentMonitor.Domain.Models.GetModels
     public class GetLocationsModel
     {
         public List<int>? Ids { get; set; }
+        public List<Guid>? Identifiers { get; set; }
         public bool IncludeLocationSensors { get; set; }
         public bool? Visible { get; set; }
     }

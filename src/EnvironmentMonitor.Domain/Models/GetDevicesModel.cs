@@ -23,7 +23,7 @@ namespace EnvironmentMonitor.Domain.Models
     {
         public required GetDevicesModel DevicesModel { get; set; }
         public List<int>? Ids { get; set; }
-        public List<Guid>? Guids { get; set; }
+        public List<Guid>? Identifiers { get; set; }
         public List<int>? SensorIds { get; set; }
     }
 }

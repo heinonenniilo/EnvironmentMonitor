@@ -9,6 +9,6 @@ namespace EnvironmentMonitor.Domain.Models.ReturnModel
 {
     public class MeasurementExtended : Measurement
     {
-        public Guid SensorGuid { get; set; }
+        public Guid SensorIdentifier { get; set; }
     }
 }

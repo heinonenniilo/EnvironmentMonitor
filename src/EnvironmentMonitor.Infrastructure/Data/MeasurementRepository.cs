@@ -33,9 +33,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
 
             IQueryable<Measurement> query = _context.Measurements;
-            if (model.SensorIds.Any())
+            if (model.SensorIdentifiers.Any())
             {
-                query = query.Where(x => model.SensorIds.Contains(x.SensorId));
+                query = query.Where(x => model.SensorIdentifiers.Contains(x.Sensor.Identifier));
             }
             else if (model.SensorsByTypeFilter != null)
             {
@@ -63,7 +63,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     TimestampUtc = x.TimestampUtc,
                     SensorId = x.SensorId,
                     DeviceMessageId = x.DeviceMessageId,
-                    SensorGuid = x.Sensor.Guid,
+                    SensorIdentifier = x.Sensor.Identifier,
                 }).ToListAsync();
             }
             if (model.LatestOnly == true)
@@ -83,7 +83,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                         Timestamp = x.Timestamp,
                         TimestampUtc = x.TimestampUtc,
                         SensorId = x.SensorId,
-                        SensorGuid = x.Sensor.Guid,
+                        SensorIdentifier = x.Sensor.Identifier,
                     })
                     .OrderByDescending(x => x.Timestamp);
                 return await latestMeasurements.ToListAsync();
@@ -99,7 +99,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     {
                         x.TypeId,
                         x.SensorId,
-                        x.Sensor.Guid,
+                        x.Sensor.Identifier,
                         x.Timestamp.Year,
                         x.Timestamp.Month,
                         x.Timestamp.Day,
@@ -111,7 +111,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                         Timestamp = x.Max(d => d.Timestamp),
                         Value = x.Key.TypeId == (int)MeasurementTypes.Motion ? x.Max(d => d.Value) : x.Average(d => d.Value),
                         SensorId = x.Key.SensorId,
-                        SensorGuid = x.Key.Guid,
+                        SensorIdentifier = x.Key.Identifier,
                     }).OrderBy(x => x.Timestamp);
                     var rows = await extendedQuery.ToListAsync();
                     foreach (var item in rows)

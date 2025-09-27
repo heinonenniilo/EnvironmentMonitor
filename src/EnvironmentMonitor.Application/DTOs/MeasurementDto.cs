@@ -60,7 +60,7 @@ namespace EnvironmentMonitor.Application.DTOs
 
     public class MeasurementsInfoDto
     {
-        public int SensorId { get; set; }
+        public Guid SensorId { get; set; }
         public Dictionary<int, MeasurementBaseDto> MinValues { get; set; } = [];
         public Dictionary<int, MeasurementBaseDto> MaxValues { get; set; } = [];
         public Dictionary<int, MeasurementBaseDto> LatestValues { get; set; } = [];

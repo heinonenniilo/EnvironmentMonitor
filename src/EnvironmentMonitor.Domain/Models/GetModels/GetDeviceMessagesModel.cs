@@ -8,8 +8,8 @@ namespace EnvironmentMonitor.Domain.Models.GetModels
 {
     public class GetDeviceMessagesModel : Paginated
     {
-        public List<int>? DeviceIds { get; set; }
-        public List<int>? LocationIds { get; set; }
+        public List<Guid>? Identifiers { get; set; }
+        public List<Guid>? LocationIdentifiers { get; set; }
         public bool? IsDuplicate { get; set; }
         public bool? IsFirstMessage { get; set; }
         public DateTime? From { get; set; }

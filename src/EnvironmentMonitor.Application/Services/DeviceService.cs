@@ -83,7 +83,7 @@ namespace EnvironmentMonitor.Application.Services
         {
             var devices = await _deviceRepository.GetDevices(new GetDevicesModel()
             {
-                Ids = _userService.IsAdmin ? null : _userService.GetDevices(),
+                Identifiers = _userService.IsAdmin ? null : _userService.GetDevices(),
                 OnlyVisible = onlyVisible,
                 GetLocation = getLocation
             });
@@ -99,18 +99,29 @@ namespace EnvironmentMonitor.Application.Services
                     Identifiers = identifiers
                 }
             });
-            sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Id, AccessLevels.Read));
+            sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Identifier, AccessLevels.Read));
             return _mapper.Map<List<SensorDto>>(sensors);
         }
 
         public async Task<List<SensorDto>> GetSensors(List<int> deviceIds)
         {
             var sensors = new List<SensorDto>();
+            var devices = await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Ids = deviceIds
+            });
+
+            if (devices.Count == 0 || devices.Any(d => !_userService.HasAccessToDevice(d.Identifier, AccessLevels.Read)))
+            {
+                _logger.LogWarning($"Unauthorized access to devices: {string.Join(", ", devices.Select(x => x.Id))}");
+                throw new UnauthorizedAccessException();
+            }
+
             var res = await _deviceRepository.GetSensors(new GetSensorsModel()
             {
                 DevicesModel = new GetDevicesModel()
                 {
-                    Ids = deviceIds.Where(d => _userService.HasAccessToDevice(d, AccessLevels.Read)).ToList()
+                    Ids = devices.Select(x => x.Id).ToList()
                 }
             });
             return _mapper.Map<List<SensorDto>>(res.ToList());
@@ -119,7 +130,7 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel)
         {
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { DeviceIdentifiers = [deviceIdentifier] })).FirstOrDefault();
-            if (device == null || !_userService.HasAccessToDevice(device.Id, accessLevel))
+            if (device == null || !_userService.HasAccessToDevice(device.Identifier, accessLevel))
             {
                 throw new UnauthorizedAccessException();
             }
@@ -129,10 +140,15 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<DeviceDto> GetDevice(Guid identifier, AccessLevels accessLevel)
         {
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault();
-            if (device == null || !_userService.HasAccessToDevice(device.Id, accessLevel))
+            if (!_userService.HasAccessToDevice(identifier, accessLevel))
             {
                 throw new UnauthorizedAccessException();
+            }
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault();
+
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
             }
             var mapped = _mapper.Map<DeviceDto>(device);
             return mapped;
@@ -156,7 +172,7 @@ namespace EnvironmentMonitor.Application.Services
                 return null;
             }
             var sensor = sensors.FirstOrDefault();
-            if (sensor == null || !_userService.HasAccessToSensor(sensor.Id, accessLevel))
+            if (sensor == null || !_userService.HasAccessToSensor(sensor.Identifier, accessLevel))
             {
                 if (sensor == null)
                 {
@@ -173,12 +189,13 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null)
         {
-            if (!_userService.HasAccessToDevice(deviceId, AccessLevels.Write))
+
+            var devices = await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = [deviceId], OnlyVisible = false });
+            var device = devices.FirstOrDefault();
+            if (device == null || !_userService.HasAccessToDevice(device.Identifier, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
             }
-            var devices = await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = [deviceId], OnlyVisible = false });
-            var device = devices.FirstOrDefault();
             if (device == null)
             {
                 throw new EntityNotFoundException($"Device with id: '{deviceId}' not found");
@@ -200,13 +217,13 @@ namespace EnvironmentMonitor.Application.Services
                     GetAttachments = getAttachments,
                     GetLocation = getLocation
                 }))
-                .Where(d => _userService.HasAccessToDevice(d.Device.Id, AccessLevels.Read)).ToList();
+                .Where(d => _userService.HasAccessToDevice(d.Device.Identifier, AccessLevels.Read)).ToList();
             }
             else
             {
                 infos = await _deviceRepository.GetDeviceInfo(new GetDevicesModel()
                 {
-                    Ids = _userService.IsAdmin ? null : _userService.GetDevices(),
+                    Identifiers = _userService.IsAdmin ? null : _userService.GetDevices(),
                     OnlyVisible = onlyVisible,
                     GetAttachments = getAttachments,
                     GetLocation = getLocation
@@ -217,7 +234,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 foreach (var attachment in info.Attachments)
                 {
-                    var matchingAttachment = infos.FirstOrDefault(x => x.Device.Id == info.Device.Id)?.Device.Attachments.FirstOrDefault(a => a.Guid == attachment.Guid)?.Attachment;
+                    var matchingAttachment = infos.FirstOrDefault(x => x.Device.Identifier == info.Device.Identifier)?.Device.Attachments.FirstOrDefault(a => a.Guid == attachment.Guid)?.Attachment;
                     if (matchingAttachment != null)
                     {
                         try
@@ -238,14 +255,22 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<List<DeviceEventDto>> GetDeviceEvents(Guid identifier)
         {
-            var device = await GetDevice(identifier, AccessLevels.Read) ?? throw new UnauthorizedAccessException();
+            if (!_userService.HasAccessToDevice(identifier, AccessLevels.Read))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
             var events = await _deviceRepository.GetDeviceEvents(device.Id);
             return _mapper.Map<List<DeviceEventDto>>(events);
         }
 
         public async Task AddAttachment(Guid identifier, UploadAttachmentModel fileModel)
         {
-            var device = await GetDevice(identifier, AccessLevels.Write);
+            if (!_userService.HasAccessToDevice(identifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault();
             var extension = Path.GetExtension(fileModel.FileName);
             var fileNameToSave = $"{device.Identifier}_{Guid.NewGuid()}{extension}";
             var res = await _storageClient.Upload(new UploadAttachmentModel()
@@ -270,8 +295,12 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task DeleteAttachment(Guid identifier, Guid attachmentIdentifier)
         {
+            if (!_userService.HasAccessToDevice(identifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
             _logger.LogInformation($"Removing attachment with identifier: '{attachmentIdentifier}' for device with identifier: '{identifier}'");
-            var device = await GetDevice(identifier, AccessLevels.Write);
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
             var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
             await _deviceRepository.DeleteAttachment(device.Id, attachmentIdentifier, true);
             await _storageClient.DeleteBlob(attachment.Name);
@@ -279,14 +308,27 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<AttachmentDownloadModel?> GetAttachment(Guid identifier, Guid attachmentIdentifier)
         {
+            if (!_userService.HasAccessToDevice(identifier, AccessLevels.Read))
+            {
+                throw new UnauthorizedAccessException();
+            }
             _logger.LogInformation($"Trying to get attachment with identifier '{attachmentIdentifier}' for device: '{identifier}'");
-            var device = await GetDevice(identifier, AccessLevels.Write);
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
             var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
             return await _storageClient.GetImageAsync(attachment.Name);
         }
+
         public async Task<AttachmentDownloadModel?> GetDefaultImage(Guid identifier)
         {
-            var device = await GetDevice(identifier, AccessLevels.Read);
+            if (!_userService.HasAccessToDevice(identifier, AccessLevels.Read))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault();
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+            }
             var deviceInfo = (await _deviceRepository.GetDeviceInfo(new GetDevicesModel() { Ids = [device.Id], GetAttachments = true, OnlyVisible = false })).FirstOrDefault();
             var attachment = deviceInfo?.Device.Attachments.FirstOrDefault(x => x.IsDefaultImage);
             if (attachment == null)
@@ -299,14 +341,24 @@ namespace EnvironmentMonitor.Application.Services
         public async Task SetDefaultImage(Guid identifier, Guid attachmentGuid)
         {
             _logger.LogInformation($"Setting default image for device '{identifier}'");
-            var device = await GetDevice(identifier, AccessLevels.Write);
+            if (!_userService.HasAccessToDevice(identifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault();
+
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+            }
             await _deviceRepository.SetDefaultImage(device.Id, attachmentGuid);
         }
 
         public async Task SetStatus(SetDeviceStatusModel model)
         {
             _logger.LogInformation($"Trying to set status for device: {model.DeviceId}. Status: {model.Status}");
-            if (!_userService.HasAccessToDevice(model.DeviceId, AccessLevels.Write))
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = [model.DeviceId], OnlyVisible = false })).FirstOrDefault();
+            if (device == null || !_userService.HasAccessToDevice(device.Identifier, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
             }
@@ -315,7 +367,8 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model)
         {
-            if (!_userService.HasAccessToDevices(model.DeviceIds, AccessLevels.Read))
+            var devices = await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = model.DeviceIds, OnlyVisible = false });
+            if (!_userService.HasAccessToDevices(devices.Select(x => x.Identifier).ToList(), AccessLevels.Read))
             {
                 throw new UnauthorizedAccessException();
             }
@@ -330,15 +383,11 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<DeviceInfoDto> UpdateDevice(UpdateDeviceDto model)
         {
-            if (model.Device.Id <= 0 && !_userService.IsAdmin)
+            if (!_userService.HasAccessToDevice(model.Device.Identifier, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
             }
-            else if (!_userService.HasAccessToDevice(model.Device.Id, AccessLevels.Write))
-            {
-                throw new UnauthorizedAccessException();
-            }
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = [model.Device.Id] })).FirstOrDefault();
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [model.Device.Identifier] })).FirstOrDefault();
             var updateModel = _mapper.Map<Device>(model.Device);
             var info = await _deviceRepository.AddOrUpdate(updateModel, true);
             return _mapper.Map<DeviceInfoDto>(info);
@@ -346,15 +395,15 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model)
         {
-            List<int>? deviceIdFilter = null;
-            if (model.DeviceIds?.Any() == true)
+            List<Guid>? deviceIdFilter = null;
+            if (model.Identifiers?.Any() == true)
             {
-                if (!_userService.HasAccessToDevices(model.DeviceIds, AccessLevels.Read))
+                if (!_userService.HasAccessToDevices(model.Identifiers, AccessLevels.Read))
                 {
-                    _logger.LogWarning($"No access to devices: {model.DeviceIds}");
+                    _logger.LogWarning($"No access to devices: {model.Identifiers}");
                     throw new UnauthorizedAccessException();
                 }
-                deviceIdFilter = model.DeviceIds;
+                deviceIdFilter = model.Identifiers;
             }
             if (deviceIdFilter == null && !_userService.IsAdmin)
             {
@@ -365,9 +414,9 @@ namespace EnvironmentMonitor.Application.Services
                     throw new UnauthorizedAccessException();
                 }
             }
-            if (model.LocationIds?.Any() == true)
+            if (model.LocationIdentifiers?.Any() == true)
             {
-                if (!_userService.HasAccessToLocations(model.LocationIds, AccessLevels.Read))
+                if (!_userService.HasAccessToLocations(model.LocationIdentifiers, AccessLevels.Read))
                 {
                     throw new UnauthorizedAccessException();
                 }
