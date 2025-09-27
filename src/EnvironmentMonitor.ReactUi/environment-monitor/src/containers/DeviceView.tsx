@@ -73,7 +73,7 @@ export const DeviceView: React.FC = () => {
     setIsLoadingMeasurments(true);
     measurementApiHook
       .getMeasurementsBySensor(
-        selectedDevice.device.sensors.map((x) => x.id),
+        selectedDevice.device.sensors.map((x) => x.identifier),
         momentStart,
         undefined
       )
@@ -98,7 +98,7 @@ export const DeviceView: React.FC = () => {
     setIsLoadingMeasurments(true);
     measurementApiHook
       .getMeasurementsBySensor(
-        selectedDevice.device.sensors.map((x) => x.id),
+        selectedDevice.device.sensors.map((x) => x.identifier),
         momentStart,
         undefined
       )
@@ -521,10 +521,10 @@ export const DeviceView: React.FC = () => {
               selectedDevice
                 ? [
                     {
-                      id: selectedDevice.device.id,
+                      identifier: selectedDevice.device.identifier,
                       sensorId: 1,
                       name: selectedDevice.device.name,
-                      deviceId: selectedDevice.device.id,
+                      deviceIdentifier: selectedDevice.device.identifier,
                       scaleMin: 0,
                       scaleMax: 2,
                     },
@@ -544,14 +544,15 @@ export const DeviceView: React.FC = () => {
                 ? {
                     measurements: [
                       {
-                        sensorId: selectedDevice.device.id,
+                        sensorIdentifier: selectedDevice.device.identifier,
                         minValues: {},
                         maxValues: {},
                         latestValues: {},
                         measurements: deviceStatusModel
                           ? deviceStatusModel.deviceStatuses.map((d) => {
                               return {
-                                sensorId: selectedDevice.device.id,
+                                sensorIdentifier:
+                                  selectedDevice.device.identifier,
                                 sensorValue: d.status ? 1 : 0,
                                 typeId: MeasurementTypes.Online,
                                 timestamp: d.timestamp,

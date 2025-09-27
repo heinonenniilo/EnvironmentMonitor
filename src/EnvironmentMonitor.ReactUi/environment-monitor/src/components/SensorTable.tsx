@@ -38,7 +38,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
           <TableBody>
             {sensors.map((r) => {
               return (
-                <TableRow key={r.id}>
+                <TableRow key={r.identifier}>
                   <TableCell>{r.name}</TableCell>
                   <TableCell>{r.sensorId}</TableCell>
                   <TableCell>{r.scaleMin}</TableCell>

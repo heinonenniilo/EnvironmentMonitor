@@ -18,13 +18,13 @@ export interface MeasurementsLeftViewProps {
   onSearch: (
     from: moment.Moment,
     to: moment.Moment | undefined,
-    sensorIds: number[]
+    sensorIds: string[]
   ) => void;
   onSelectDevice: (deviceId: string) => void;
-  toggleSensorSelection: (sensorId: number) => void;
+  toggleSensorSelection: (sensorId: string) => void;
   devices: Device[];
   sensors: Sensor[];
-  selectedSensors: number[];
+  selectedSensors: string[];
   selectedDevices: Device[] | undefined;
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
@@ -58,7 +58,9 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
 
   const getSensorText = (sensor: Sensor) => {
     if (selectedDevices && selectedDevices.length > 1) {
-      const matchingDevice = devices.find((d) => d.id === sensor.deviceId);
+      const matchingDevice = devices.find(
+        (d) => d.identifier === sensor.deviceIdentifier
+      );
       return `${matchingDevice?.displayName ?? matchingDevice?.name}: ${
         sensor.name
       }`;
@@ -147,10 +149,10 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
               .sort((a, b) => stringSort(getSensorText(a), getSensorText(b)))
               .map((y) => (
                 <MenuItem
-                  value={y.id}
-                  key={`sensor-${y.id}`}
+                  value={y.identifier}
+                  key={`sensor-${y.identifier}`}
                   onClick={() => {
-                    toggleSensorSelection(y.id);
+                    toggleSensorSelection(y.identifier);
                   }}
                 >
                   {getSensorText(y)}

@@ -40,7 +40,9 @@ export const DashboardView: React.FC = () => {
         return locA - locB;
       })
       .map((device) => {
-        const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
+        const deviceSensors = sensors.filter(
+          (s) => s.deviceIdentifier === device.identifier
+        );
 
         return { device, sensors: deviceSensors };
       });

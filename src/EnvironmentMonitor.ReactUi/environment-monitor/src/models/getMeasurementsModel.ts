@@ -1,5 +1,5 @@
 export interface GetMeasurementsModel {
-  sensorIds: number[];
+  sensorIdentifiers: string[];
   deviceMessageIds?: number[];
   latestOnly?: boolean;
   from?: moment.Moment;

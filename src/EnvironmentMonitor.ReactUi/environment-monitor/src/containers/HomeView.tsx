@@ -26,9 +26,13 @@ export const HomeView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const hook = useApiHook().measureHook;
 
-  const getSensorLabel = (sensorId: number, typeId?: MeasurementTypes) => {
+  const getSensorLabel = (
+    sensorIdentifier: string,
+    typeId?: MeasurementTypes
+  ) => {
     const sensorName =
-      sensors?.find((s) => s.id === sensorId)?.name ?? `${sensorId}`;
+      sensors?.find((s) => s.identifier === sensorIdentifier)?.name ??
+      `${sensorIdentifier}`;
     return getDatasetLabel(sensorName, typeId);
   };
 
@@ -42,15 +46,17 @@ export const HomeView: React.FC = () => {
       for (const item in MeasurementTypes) {
         const val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
         if (m.measurements.some((m) => m.typeId === val)) {
-          const matchingSensor = sensors.find((s) => s.id === m.sensorId);
+          const matchingSensor = sensors.find(
+            (s) => s.identifier === m.sensorIdentifier
+          );
           const matchingDevice = devices.find(
-            (s) => s.id === matchingSensor?.deviceId
+            (s) => s.identifier === matchingSensor?.deviceIdentifier
           );
           returnRows.push({
             latest: m.latestValues[val],
             min: m.minValues[val],
             max: m.maxValues[val],
-            label: getSensorLabel(m.sensorId, val),
+            label: getSensorLabel(m.sensorIdentifier, val),
             sensor: matchingSensor,
             device: matchingDevice,
           });
@@ -82,7 +88,7 @@ export const HomeView: React.FC = () => {
       setIsLoading(true);
       hook
         .getMeasurementsBySensor(
-          sensors.map((s) => s.id),
+          sensors.map((s) => s.identifier),
           moment(),
           undefined,
           true

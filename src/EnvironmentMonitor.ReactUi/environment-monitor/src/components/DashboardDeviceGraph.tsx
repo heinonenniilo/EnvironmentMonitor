@@ -67,7 +67,7 @@ export const DashboardDeviceGraph: React.FC<{
     setIsLoading(true);
     measurementApiHook
       .getMeasurementsBySensor(
-        sensors.map((x) => x.id),
+        sensors.map((x) => x.identifier),
         momentStart,
         undefined
       )

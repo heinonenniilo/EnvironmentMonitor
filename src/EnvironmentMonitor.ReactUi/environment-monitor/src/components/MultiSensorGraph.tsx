@@ -82,7 +82,7 @@ interface GraphDataset {
   borderColor?: string;
   backgroundColor?: string;
   stepped?: boolean;
-  sensorId: number;
+  sensorIdentifier: string;
 }
 
 const dynamicColorLimit = 7;
@@ -123,13 +123,15 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   }, [useAutoScale]);
 
   const getSensorLabel = useCallback(
-    (sensorId: number, typeId?: MeasurementTypes) => {
-      const matchingSensor = sensors?.find((s) => s.id === sensorId);
-      let sensorName = matchingSensor?.name ?? `${sensorId}`;
+    (sensorIdentifier: string, typeId?: MeasurementTypes) => {
+      const matchingSensor = sensors?.find(
+        (s) => s.identifier === sensorIdentifier
+      );
+      let sensorName = matchingSensor?.name ?? `${sensorIdentifier}`;
       const device =
         devices &&
         devices.length > 1 &&
-        devices.find((d) => d.id === matchingSensor?.deviceId);
+        devices.find((d) => d.identifier === matchingSensor?.deviceIdentifier);
       if (device) {
         sensorName = device.displayName
           ? `${device.displayName}: ${sensorName}`
@@ -142,14 +144,18 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   );
 
   const showMeasurementsInDialog = (
-    sensorId: number,
+    sensorIdentifier: string,
     type?: MeasurementTypes
   ) => {
-    const toShow = model?.measurements.find((s) => s.sensorId === sensorId);
+    const toShow = model?.measurements.find(
+      (s) => s.sensorIdentifier === sensorIdentifier
+    );
     if (toShow) {
-      const matchingSensor = sensors?.find((s) => s.id == toShow.sensorId);
+      const matchingSensor = sensors?.find(
+        (s) => s.identifier == toShow.sensorIdentifier
+      );
       const matchingDevice = devices?.find(
-        (d) => d.id === matchingSensor?.deviceId
+        (d) => d.identifier === matchingSensor?.deviceIdentifier
       );
       setDialogTitle(
         matchingDevice
@@ -181,11 +187,11 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
 
           returnValues.push({
             id: id++,
-            label: getSensorLabel(measurementsBySensor.sensorId, val),
+            label: getSensorLabel(measurementsBySensor.sensorIdentifier, val),
             yAxisID: yAxisId,
             measurementType: val,
             stepped: stepped,
-            sensorId: measurementsBySensor.sensorId,
+            sensorIdentifier: measurementsBySensor.sensorIdentifier,
             data: measurementsBySensor.measurements
               .filter((d) => d.typeId === val)
               .map((d) => ({ x: d.timestamp, y: d.sensorValue })),
@@ -217,9 +223,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           returnArray.push({
             min: m.minValues[val],
             max: m.maxValues[val],
-            sensor: sensors?.find((s) => s.id === m.sensorId),
+            sensor: sensors?.find((s) => s.identifier === m.sensorIdentifier),
             latest: m.latestValues[val],
-            label: getSensorLabel(m.sensorId, val),
+            label: getSensorLabel(m.sensorIdentifier, val),
             type: val,
           });
         }
@@ -435,7 +441,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                         const matchingDataset =
                           memoSets[legendItem.datasetIndex];
                         showMeasurementsInDialog(
-                          matchingDataset.sensorId,
+                          matchingDataset.sensorIdentifier,
                           matchingDataset.measurementType
                         );
                       }
@@ -543,7 +549,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
               if (!row.sensor) {
                 return;
               }
-              showMeasurementsInDialog(row.sensor.id, row.type);
+              showMeasurementsInDialog(row.sensor.identifier, row.type);
             }}
             infoRows={getInfoValues()}
           />

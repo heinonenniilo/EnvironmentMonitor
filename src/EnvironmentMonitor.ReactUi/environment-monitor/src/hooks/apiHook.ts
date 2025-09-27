@@ -49,13 +49,13 @@ interface measureHook {
     model: GetMeasurementsModel
   ) => Promise<MeasurementsModel | undefined>;
   getMeasurementsBySensor: (
-    sensorIds: number[],
+    sensorIds: string[],
     from: moment.Moment,
     to?: moment.Moment,
     latestOnly?: boolean
   ) => Promise<MeasurementsViewModel | undefined>;
   getMeasurementsByLocation: (
-    sensorIds: number[],
+    sensorIds: string[],
     from: moment.Moment,
     to?: moment.Moment,
     latestOnly?: boolean
@@ -222,7 +222,7 @@ export const useApiHook = (): ApiHook => {
         }
       },
       getMeasurementsBySensor: async (
-        sensorIds: number[],
+        sensorIds: string[],
         from: moment.Moment,
         to?: moment.Moment,
         latestOnly?: boolean
@@ -233,7 +233,7 @@ export const useApiHook = (): ApiHook => {
             AxiosResponse<MeasurementsViewModel>
           >("/api/Measurements/bysensor", {
             params: {
-              SensorIds: sensorIds,
+              SensorIdentifiers: sensorIds,
               from: from.toISOString(),
               to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,
@@ -247,7 +247,7 @@ export const useApiHook = (): ApiHook => {
         }
       },
       getMeasurementsByLocation: async (
-        sensorIds: number[],
+        sensorIds: string[],
         from: moment.Moment,
         to?: moment.Moment,
         latestOnly?: boolean
@@ -258,7 +258,7 @@ export const useApiHook = (): ApiHook => {
             AxiosResponse<MeasurementsByLocationModel>
           >("/api/Measurements/bylocation", {
             params: {
-              SensorIds: sensorIds,
+              SensorIdentifiers: sensorIds,
               from: from.toISOString(),
               to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,
