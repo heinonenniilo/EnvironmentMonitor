@@ -364,9 +364,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => x.Visible);
             }
 
-            if (model.LocationIds != null)
+            if (model.LocationIdentifiers != null)
             {
-                query = query.Where(x => model.LocationIds.Contains(x.LocationId));
+                query = query.Where(x => model.LocationIdentifiers.Contains(x.Location.Identifier));
             }
             return query;
         }

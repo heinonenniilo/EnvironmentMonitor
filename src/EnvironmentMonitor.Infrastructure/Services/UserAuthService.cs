@@ -131,31 +131,32 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private async Task<List<Claim>> GetCalculatedClaims(ApplicationUser user)
         {
             var claims = await _userManager.GetClaimsAsync(user);
-            var locationIdsAsClaims = claims.Where(x => x.Type == EntityRoles.Location.ToString()).Select(x => int.Parse(x.Value)).ToList();
+            var locationIdentifiersAsClaims = claims.Where(x => x.Type == EntityRoles.Location.ToString()).Select(x => Guid.Parse(x.Value)).ToList();
 
-            var existingSensorIdsInClaims = claims.Where(x => x.Type == EntityRoles.Sensor.ToString()).Select(x => int.Parse(x.Value)).ToList();
+            var existingSensorIdsInClaims = claims.Where(x => x.Type == EntityRoles.Sensor.ToString()).Select(x => Guid.Parse(x.Value)).ToList();
 
-            var deviceIdsAsClaims = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => int.Parse(x.Value)).ToList();
-            var deviceIdsMatchingsLocations = (await _deviceRepository.GetDevices(new GetDevicesModel() { LocationIds = locationIdsAsClaims })).Select(x => x.Id).ToList();
+            var deviceIdentifiersAsClaims = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => Guid.Parse(x.Value)).ToList();
+            var deviceIdentifiersMatchingsLocations = (await _deviceRepository.GetDevices(new GetDevicesModel() { LocationIdentifiers = locationIdentifiersAsClaims })).Select(x => x.Identifier).ToList();
 
-            var deviceIds = new List<int>(deviceIdsAsClaims);
-            deviceIds.AddRange(deviceIdsMatchingsLocations);
+            var deviceIdentifiers = new List<Guid>(deviceIdentifiersAsClaims);
+
+            deviceIdentifiers.AddRange(deviceIdentifiersMatchingsLocations);
 
             var claimsToReturn = new List<Claim>();
-            var sensorIdsMatchingDevices = (await _deviceRepository.GetSensors(new GetSensorsModel()
+            var sensorIdentifiersMatchingDevices = (await _deviceRepository.GetSensors(new GetSensorsModel()
             {
                 DevicesModel = new GetDevicesModel()
                 {
-                    Ids = deviceIds
+                    Identifiers = deviceIdentifiers
                 }
-            })).Select(x => x.Id).ToList();
+            })).Select(x => x.Identifier).ToList();
 
-            claimsToReturn.AddRange(sensorIdsMatchingDevices
+            claimsToReturn.AddRange(sensorIdentifiersMatchingDevices
                 .Where(x => !existingSensorIdsInClaims.Contains(x))
                 .Distinct()
                 .Select(x => new Claim(EntityRoles.Sensor.ToString(), x.ToString())));
-            claimsToReturn.AddRange(deviceIdsMatchingsLocations
-                .Where(x => !deviceIdsAsClaims.Contains(x))
+            claimsToReturn.AddRange(deviceIdentifiersMatchingsLocations
+                .Where(x => !deviceIdentifiersAsClaims.Contains(x))
                 .Distinct()
                 .Select(x => new Claim(EntityRoles.Device.ToString(), x.ToString())));
             return claimsToReturn;
