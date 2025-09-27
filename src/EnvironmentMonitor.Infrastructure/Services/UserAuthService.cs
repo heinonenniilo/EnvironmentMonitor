@@ -131,11 +131,28 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private async Task<List<Claim>> GetCalculatedClaims(ApplicationUser user)
         {
             var claims = await _userManager.GetClaimsAsync(user);
-            var locationIdentifiersAsClaims = claims.Where(x => x.Type == EntityRoles.Location.ToString()).Select(x => Guid.Parse(x.Value)).ToList();
+            
+            var locationIdentifiersAsClaims = claims
+                .Where(x => x.Type == EntityRoles.Location.ToString())
+                .Select(x => Guid.TryParse(x.Value, out var guid) ? (Guid?)guid : null)
+                .Where(x => x.HasValue)
+                .Select(x => x.Value)
+                .ToList();
 
-            var existingSensorIdsInClaims = claims.Where(x => x.Type == EntityRoles.Sensor.ToString()).Select(x => Guid.Parse(x.Value)).ToList();
+            var existingSensorIdsInClaims = claims
+                .Where(x => x.Type == EntityRoles.Sensor.ToString())
+                .Select(x => Guid.TryParse(x.Value, out var guid) ? (Guid?)guid : null)
+                .Where(x => x.HasValue)
+                .Select(x => x.Value)
+                .ToList();
 
-            var deviceIdentifiersAsClaims = claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(x => Guid.Parse(x.Value)).ToList();
+            var deviceIdentifiersAsClaims = claims
+                .Where(x => x.Type == EntityRoles.Device.ToString())
+                .Select(x => Guid.TryParse(x.Value, out var guid) ? (Guid?)guid : null)
+                .Where(x => x.HasValue)
+                .Select(x => x.Value)
+                .ToList();
+                
             var deviceIdentifiersMatchingsLocations = (await _deviceRepository.GetDevices(new GetDevicesModel() { LocationIdentifiers = locationIdentifiersAsClaims })).Select(x => x.Identifier).ToList();
 
             var deviceIdentifiers = new List<Guid>(deviceIdentifiersAsClaims);
