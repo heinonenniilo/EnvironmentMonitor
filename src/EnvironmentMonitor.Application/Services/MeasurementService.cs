@@ -134,7 +134,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 await _deviceRepository.SetStatus(new SetDeviceStatusModel()
                 {
-                    DeviceId = device.Id,
+                    Idenfifier = device.Identifier,
                     Status = true,
                     TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
                     Message = $"Measurement count: {measurementsToAdd.Count}",

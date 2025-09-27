@@ -181,7 +181,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public async Task SetStatus(SetDeviceStatusModel model, bool saveChanges)
         {
             bool statusToSet;
-            var device = await _context.Devices.FirstOrDefaultAsync(x => x.Id == model.DeviceId) ?? throw new EntityNotFoundException();
+            var device = await _context.Devices.FirstOrDefaultAsync(x => x.Identifier == model.Idenfifier) ?? throw new EntityNotFoundException();
             var latestStatus = await _context.DeviceStatusChanges.Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
             var latestMessage = await _context.Measurements.Where(x => 
                 x.Sensor.DeviceId == device.Id

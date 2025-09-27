@@ -356,8 +356,19 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task SetStatus(SetDeviceStatusModel model)
         {
-            _logger.LogInformation($"Trying to set status for device: {model.DeviceId}. Status: {model.Status}");
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = [model.DeviceId], OnlyVisible = false })).FirstOrDefault();
+            _logger.LogInformation($"Trying to set status for device: {model.Idenfifier}. Status: {model.Status}");
+            if (!_userService.HasAccessToDevice(model.Idenfifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [model.Idenfifier],
+                OnlyVisible = false
+            }))
+            .FirstOrDefault();
+
             if (device == null || !_userService.HasAccessToDevice(device.Identifier, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
