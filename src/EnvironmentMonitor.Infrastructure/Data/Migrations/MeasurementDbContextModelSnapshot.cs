@@ -116,6 +116,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("DeviceIdentifier")
                         .IsUnique();
 
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
                     b.HasIndex("LocationId");
 
                     b.HasIndex("TypeId");
@@ -569,6 +572,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
                     b.HasIndex("SensorId")
                         .IsUnique();
 
@@ -611,6 +617,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
 
                     b.HasIndex("TypeId");
 

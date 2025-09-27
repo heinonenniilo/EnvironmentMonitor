@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    [Migration("20250926194251_AddIdentifierToSensorAndPublicSensor")]
-    partial class AddIdentifierToSensorAndPublicSensor
+    [Migration("20250927091800_AddIdentifierToSensorsAndPublicSensorsAddUniqueIndexToIdentifier")]
+    partial class AddIdentifierToSensorsAndPublicSensorsAddUniqueIndexToIdentifier
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -117,6 +117,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DeviceIdentifier")
+                        .IsUnique();
+
+                    b.HasIndex("Identifier")
                         .IsUnique();
 
                     b.HasIndex("LocationId");
@@ -572,6 +575,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Identifier")
+                        .IsUnique();
+
                     b.HasIndex("SensorId")
                         .IsUnique();
 
@@ -614,6 +620,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Identifier")
+                        .IsUnique();
 
                     b.HasIndex("TypeId");
 

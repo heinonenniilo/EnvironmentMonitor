@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddIdentifierToSensorAndPublicSensor : Migration
+    public partial class AddIdentifierToSensorsAndPublicSensorsAddUniqueIndexToIdentifier : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -24,11 +24,41 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                 type: "uniqueidentifier",
                 nullable: false,
                 defaultValueSql: "newid()");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Sensors_Identifier",
+                table: "Sensors",
+                column: "Identifier",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PublicSensors_Identifier",
+                table: "PublicSensors",
+                column: "Identifier",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Devices_Identifier",
+                table: "Devices",
+                column: "Identifier",
+                unique: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropIndex(
+                name: "IX_Sensors_Identifier",
+                table: "Sensors");
+
+            migrationBuilder.DropIndex(
+                name: "IX_PublicSensors_Identifier",
+                table: "PublicSensors");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Devices_Identifier",
+                table: "Devices");
+
             migrationBuilder.DropColumn(
                 name: "Identifier",
                 table: "Sensors");
