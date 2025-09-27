@@ -6,6 +6,7 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.Pagination;
+using EnvironmentMonitor.Domain.Models.ReturnModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
@@ -35,7 +36,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return devices;
         }
 
-        public async Task<IEnumerable<Sensor>> GetSensors(GetSensorsModel model)
+        public async Task<List<SensorExtended>> GetSensors(GetSensorsModel model)
         {
             var query = _context.Sensors.Where(x =>
                 (model.DevicesModel.DeviceIdentifiers == null || model.DevicesModel.DeviceIdentifiers.Contains(x.Device.DeviceIdentifier))
@@ -51,7 +52,18 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => model.SensorIds.Contains(x.SensorId));
             }
-            return await query.ToListAsync();
+            return await query.Select(x => new SensorExtended()
+            {
+                Id = x.Id,
+                SensorId = x.SensorId,
+                Name = x.Name,
+                Identifier = x.Identifier,
+                DeviceId = x.DeviceId,
+                DeviceIdentifier = x.Device.Identifier,
+                ScaleMin = x.ScaleMin,
+                ScaleMax = x.ScaleMax,
+                TypeId = x.TypeId,
+            }).ToListAsync();
         }
 
         public async Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? dateTimeUtc)

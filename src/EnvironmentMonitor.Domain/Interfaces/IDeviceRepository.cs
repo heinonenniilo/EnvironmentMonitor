@@ -3,6 +3,7 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.Pagination;
+using EnvironmentMonitor.Domain.Models.ReturnModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<List<DeviceInfo>> GetDeviceInfo(GetDevicesModel model);
         Task<Attachment> GetAttachment(int deviceId, Guid attachmentIdentifier);
         Task<List<DeviceEvent>> GetDeviceEvents(int id);
-        Task<IEnumerable<Sensor>> GetSensors(GetSensorsModel model);
+        Task<List<SensorExtended>> GetSensors(GetSensorsModel model);
         Task<PaginatedResult<DeviceMessage>> GetDeviceMessages(GetDeviceMessagesModel model);
 
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);

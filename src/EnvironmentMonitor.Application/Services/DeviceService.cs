@@ -99,7 +99,7 @@ namespace EnvironmentMonitor.Application.Services
                     Identifiers = identifiers
                 }
             });
-            sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Identifier, AccessLevels.Read));
+            sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Identifier, AccessLevels.Read)).ToList();
             return _mapper.Map<List<SensorDto>>(sensors);
         }
 

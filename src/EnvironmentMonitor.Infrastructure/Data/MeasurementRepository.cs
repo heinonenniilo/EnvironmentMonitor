@@ -126,7 +126,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     Value = x.Value,
                     Timestamp = x.Timestamp,
                     TimestampUtc = x.TimestampUtc,
-                    SensorId = x.SensorId
+                    SensorId = x.SensorId,
+                    SensorIdentifier = x.Sensor.Identifier,
                 }).OrderBy(x => x.Timestamp).ToListAsync();
             }
         }

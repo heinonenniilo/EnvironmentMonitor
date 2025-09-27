@@ -197,7 +197,7 @@ namespace EnvironmentMonitor.Application.Services
                     var infoRow = GetMeasurementInfo(measurementsToCheck, [sensor.Sensor.Identifier]).FirstOrDefault();
                     var bySensorRow = new MeasurementsBySensorDto()
                     {
-                        SensorId = sensor.Sensor.Identifier,
+                        SensorIdentifier = sensor.Sensor.Identifier,
                         Measurements = measurementsBySensor,
                         LatestValues = infoRow?.LatestValues ?? [],
                         MaxValues = infoRow?.MaxValues ?? [],
@@ -207,7 +207,7 @@ namespace EnvironmentMonitor.Application.Services
                 }
                 modelToReturn.Measurements.Add(new MeasurementsByLocationDto()
                 {
-                    Id = location.Id,
+                    Identifier = location.Identifier,
                     Measurements = measurementsInLocation,
                     Sensors = _mapper.Map<List<SensorDto>>(location.LocationSensors)
                 });
@@ -241,11 +241,11 @@ namespace EnvironmentMonitor.Application.Services
             {
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
-                    SensorId = sensorId,
+                    SensorIdentifier = sensorId,
                     Measurements = _mapper.Map<List<MeasurementExtended>, List<MeasurementBaseDto>>(result.Where(x => x.SensorIdentifier == sensorId).ToList()),
-                    LatestValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.LatestValues ?? [],
-                    MaxValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MaxValues ?? [],
-                    MinValues = info.FirstOrDefault(d => d.SensorId == sensorId)?.MinValues ?? []
+                    LatestValues = info.FirstOrDefault(d => d.SensorIdentifier == sensorId)?.LatestValues ?? [],
+                    MaxValues = info.FirstOrDefault(d => d.SensorIdentifier == sensorId)?.MaxValues ?? [],
+                    MinValues = info.FirstOrDefault(d => d.SensorIdentifier == sensorId)?.MinValues ?? []
                 };
                 returnList.Add(rowToAdd);
             }
@@ -269,7 +269,7 @@ namespace EnvironmentMonitor.Application.Services
                 return new MeasurementsBySensorModel();
             }
 
-            var sensorIds = publicSensors.Select(ps => ps.Identifier).ToList();
+            var sensorIds = publicSensors.Select(ps => ps.Sensor.Identifier).ToList();
             var sensorFilterDictionary = new Dictionary<int, List<MeasurementTypes>?>();
 
             foreach (var publicSensor in publicSensors)
@@ -293,14 +293,14 @@ namespace EnvironmentMonitor.Application.Services
             };
             foreach (var publicSensor in publicSensors)
             {
-                var sensorIdToCheck = publicSensor.Identifier;
+                var sensorIdToCheck = publicSensor.Sensor.Identifier;
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
-                    SensorId = publicSensor.Identifier,
+                    SensorIdentifier = publicSensor.Identifier,
                     Measurements = _mapper.Map<List<MeasurementExtended>, List<MeasurementBaseDto>>(res.Where(x => x.SensorIdentifier == sensorIdToCheck).ToList()),
-                    LatestValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.LatestValues ?? [],
-                    MaxValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.MaxValues ?? [],
-                    MinValues = info.FirstOrDefault(d => d.SensorId == sensorIdToCheck)?.MinValues ?? []
+                    LatestValues = info.FirstOrDefault(d => d.SensorIdentifier == sensorIdToCheck)?.LatestValues ?? [],
+                    MaxValues = info.FirstOrDefault(d => d.SensorIdentifier == sensorIdToCheck)?.MaxValues ?? [],
+                    MinValues = info.FirstOrDefault(d => d.SensorIdentifier == sensorIdToCheck)?.MinValues ?? []
                 };
                 returnModel.Measurements.Add(rowToAdd);
             }
@@ -315,7 +315,7 @@ namespace EnvironmentMonitor.Application.Services
                 var measurementsToCheck = measurements.Where(x => x.SensorIdentifier == sensorId).ToList();
                 if (!measurementsToCheck.Any())
                     continue;
-                var rowToAdd = new MeasurementsInfoDto() { SensorId = sensorId };
+                var rowToAdd = new MeasurementsInfoDto() { SensorIdentifier = sensorId };
                 foreach (MeasurementTypes type in Enum.GetValues(typeof(MeasurementTypes)))
                 {
                     if (measurementsToCheck.Any(x => x.TypeId == (int)type && x.SensorIdentifier == sensorId))

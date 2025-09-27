@@ -13,6 +13,7 @@ namespace EnvironmentMonitor.Application.DTOs
     {
         public Guid Identifier { get; set; }
         // public Guid Identifier { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
         public List<SensorDto> Sensors { get; set; } = [];
         public bool Visible { get; set; }
