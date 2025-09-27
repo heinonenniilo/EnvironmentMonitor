@@ -15,6 +15,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
         {
             builder.HasKey(ps => ps.Id);
             builder.Property(x => x.Identifier).HasDefaultValueSql("newid()").IsRequired();
+            builder.HasIndex(x => x.Identifier).IsUnique();
             builder.Property(ps => ps.Name)
                 .IsRequired()
                 .HasMaxLength(512);
