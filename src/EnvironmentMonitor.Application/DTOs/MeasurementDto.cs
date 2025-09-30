@@ -14,34 +14,34 @@ namespace EnvironmentMonitor.Application.DTOs
     public class MeasurementDto : MeasurementBaseDto, IMapFrom<Measurement>, IMapFrom<MeasurementExtended>
     {        
         public Guid SensorIdentifier { get; set; }
-        public new void Mapping(Profile profile)
+        public override void Mapping(Profile profile)
         {
             profile.CreateMap<Measurement, MeasurementDto>()
-                .ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value))
                 .IncludeBase<Measurement, MeasurementBaseDto>()
                 .ReverseMap()
                 .IncludeBase<MeasurementBaseDto, Measurement>();
 
             profile.CreateMap<MeasurementExtended, MeasurementDto>()
-                .ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value))
-                .ReverseMap();
+                .IncludeBase<MeasurementExtended, MeasurementBaseDto>()
+                .ReverseMap()
+                .IncludeBase<MeasurementBaseDto,MeasurementExtended>();
         }
     }
 
     public class AddMeasurementDto : MeasurementBaseDto, IMapFrom<Measurement>, IMapFrom<MeasurementExtended>
     {
         public int SensorId { get; set; }
-        public new void Mapping(Profile profile)
+        public override void Mapping(Profile profile)
         {
             profile.CreateMap<Measurement, AddMeasurementDto>()
-                .ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value))
                 .IncludeBase<Measurement, MeasurementBaseDto>()
                 .ReverseMap()
                 .IncludeBase<MeasurementBaseDto, Measurement>();
 
             profile.CreateMap<MeasurementExtended, AddMeasurementDto>()
-                .ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value))
-                .ReverseMap();
+                .IncludeBase<MeasurementExtended, MeasurementBaseDto>()
+                .ReverseMap()
+                .IncludeBase<MeasurementBaseDto,MeasurementExtended>();
         }
     }
 
