@@ -7,6 +7,7 @@ using EnvironmentMonitor.WebApi.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using System;
 using System.Security.Claims;
@@ -22,6 +23,12 @@ if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientS
         googleOptions.SaveTokens = true;
         googleOptions.ClientId = googleClientId;
         googleOptions.ClientSecret = googleClientSecret;
+        googleOptions.Events.OnRedirectToAuthorizationEndpoint = context =>
+        {
+            var redirect = QueryHelpers.AddQueryString(context.RedirectUri, "prompt", "select_account");
+            context.Response.Redirect(redirect);
+            return Task.CompletedTask;
+        };
     });
 }
 
