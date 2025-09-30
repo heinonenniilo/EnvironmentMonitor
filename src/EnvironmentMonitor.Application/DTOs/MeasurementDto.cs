@@ -13,8 +13,8 @@ namespace EnvironmentMonitor.Application.DTOs
 {
     public class MeasurementDto : MeasurementBaseDto, IMapFrom<Measurement>, IMapFrom<MeasurementExtended>
     {
-        public int SensorId { get; set; }
-        public Guid SensorGuid { get; set; }
+        public int? SensorId { get; set; }
+        public Guid SensorIdentifier { get; set; }
         public new void Mapping(Profile profile)
         {
             profile.CreateMap<Measurement, MeasurementDto>()
