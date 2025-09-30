@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
@@ -15,14 +16,15 @@ namespace EnvironmentMonitor.Application.DTOs
         public Guid Identifier { get; set; }
         public string Name { get; set; }
         public int SensorId { get; set; }
-        public Guid DeviceIdentifier { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Guid? DeviceIdentifier { get; set; }
         public double? ScaleMin { get; set; }
         public double? ScaleMax { get; set; }
 
         public void Mapping(Profile profile)
         {
             profile.CreateMap<Sensor, SensorDto>()
-                .ForMember(x => x.DeviceIdentifier, opt => opt.MapFrom(x => x.Device.Identifier))
+                .ForMember(x => x.DeviceIdentifier, opt => opt.MapFrom(d => d.Device != null ? d.Device.Identifier: (Guid?)null))
                 .ReverseMap();
             profile.CreateMap<SensorExtended, SensorDto>().ReverseMap();
             profile.CreateMap<LocationSensor, SensorDto>()
