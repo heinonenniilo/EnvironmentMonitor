@@ -12,8 +12,7 @@ using System.Threading.Tasks;
 namespace EnvironmentMonitor.Application.DTOs
 {
     public class MeasurementDto : MeasurementBaseDto, IMapFrom<Measurement>, IMapFrom<MeasurementExtended>
-    {
-        public int? SensorId { get; set; }
+    {        
         public Guid SensorIdentifier { get; set; }
         public new void Mapping(Profile profile)
         {
@@ -24,6 +23,23 @@ namespace EnvironmentMonitor.Application.DTOs
                 .IncludeBase<MeasurementBaseDto, Measurement>();
 
             profile.CreateMap<MeasurementExtended, MeasurementDto>()
+                .ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value))
+                .ReverseMap();
+        }
+    }
+
+    public class AddMeasurementDto : MeasurementBaseDto, IMapFrom<Measurement>, IMapFrom<MeasurementExtended>
+    {
+        public int SensorId { get; set; }
+        public new void Mapping(Profile profile)
+        {
+            profile.CreateMap<Measurement, AddMeasurementDto>()
+                .ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value))
+                .IncludeBase<Measurement, MeasurementBaseDto>()
+                .ReverseMap()
+                .IncludeBase<MeasurementBaseDto, Measurement>();
+
+            profile.CreateMap<MeasurementExtended, AddMeasurementDto>()
                 .ForMember(x => x.SensorValue, opt => opt.MapFrom(d => d.Value))
                 .ReverseMap();
         }

@@ -96,7 +96,7 @@ namespace EnvironmentMonitor.Application.Services
 
             foreach (var row in measurement.Measurements)
             {
-                var sensor = await _deviceService.GetSensor(device.Id, row.SensorId.Value, AccessLevels.Write); // TODO CHECK
+                var sensor = await _deviceService.GetSensor(device.Id, row.SensorId, AccessLevels.Write);
                 if (sensor == null)
                 {
                     _logger.LogWarning($"Sensor with id '{row.SensorId}' not found on device '{device.Identifier}'.");
