@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Models.ReturnModel
 {
-    public class MeasurementExtended : Measurement
+    public class SensorExtended : Sensor
     {
-        public Guid SensorIdentifier { get; set; }
+        public Guid DeviceIdentifier { get; set; }
     }
 }

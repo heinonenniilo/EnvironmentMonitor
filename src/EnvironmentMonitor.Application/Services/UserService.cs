@@ -52,37 +52,6 @@ namespace EnvironmentMonitor.Application.Services
             return false;
         }
 
-        // Backwards compatibility methods for int-based access
-        public bool HasAccessTo(EntityRoles entity, int id, AccessLevels accessLevel)
-        {
-            if (_currentUser?.Claims.Any() != true)
-            {
-                return false;
-            }
-
-            if (HasGlobalRole(GlobalRoles.Admin))
-            {
-                return true;
-            }
-            var hasRole = HasGlobalRole(GlobalRoles.Viewer) || _currentUser.Claims.Any(x => x.Type == entity.ToString() && int.TryParse(x.Value, out var res) && res == id);
-            switch (accessLevel)
-            {
-                case AccessLevels.None:
-                    return false;
-                case AccessLevels.Read:
-                    return HasGlobalRole(GlobalRoles.Viewer) || hasRole;
-                case AccessLevels.Write:
-                    return HasGlobalRole(GlobalRoles.Admin);
-            };
-            return false;
-        }
-
-        public bool HasAccessToDevice(int id, AccessLevels accessLevel) => HasAccessTo(EntityRoles.Device, id, accessLevel);
-        public bool HasAccessToSensor(int id, AccessLevels accessLevel) => HasAccessTo(EntityRoles.Sensor, id, accessLevel);
-        public bool HasAccessToSensors(List<int> ids, AccessLevels accessLevel) => ids.All(d => HasAccessToSensor(d, accessLevel));
-        public bool HasAccessToDevices(List<int> ids, AccessLevels accessLevel) => ids.All(d => HasAccessToDevice(d, accessLevel));
-        public bool HasAccessToLocations(List<int> ids, AccessLevels accessLevel) => ids.All(x => HasAccessTo(EntityRoles.Location, x, accessLevel));
-
         public bool HasAccessToSensor(Guid id, AccessLevels accessLevel) => HasAccessTo(EntityRoles.Sensor, id, accessLevel);
 
         public bool HasAccessToSensors(List<Guid> ids, AccessLevels accessLevel) => ids.All(d => HasAccessToSensor(d, accessLevel));
@@ -116,17 +85,6 @@ namespace EnvironmentMonitor.Application.Services
         public List<Guid> GetLocations()
         {
             return _currentUser.Claims.Where(x => x.Type == EntityRoles.Location.ToString()).Select(d => Guid.Parse(d.Value)).ToList();
-        }
-
-        // Backwards compatibility methods for int-based lists
-        public List<int> GetDevicesAsInt()
-        {
-            return _currentUser.Claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(d => int.Parse(d.Value)).ToList();
-        }
-
-        public List<int> GetLocationsAsInt()
-        {
-            return _currentUser.Claims.Where(x => x.Type == EntityRoles.Location.ToString()).Select(d => int.Parse(d.Value)).ToList();
         }
 
         public bool HasAccessToLocations(List<Guid> ids, AccessLevels accessLevel) => ids.All(x => HasAccessTo(EntityRoles.Location, x, accessLevel));
