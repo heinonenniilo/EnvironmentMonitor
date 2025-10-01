@@ -95,6 +95,7 @@ export const DevicesView: React.FC = () => {
         devices={sorted}
         renderLink
         renderLinkToDeviceMessages
+        hideId
         onReboot={(device) => {
           dispatch(
             setConfirmDialog({

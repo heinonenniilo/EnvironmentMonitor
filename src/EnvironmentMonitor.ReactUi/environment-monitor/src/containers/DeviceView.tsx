@@ -439,6 +439,7 @@ export const DeviceView: React.FC = () => {
           <DeviceTable
             hideName
             showDeviceIdentifier
+            hideId
             onClickVisible={(device) => {
               dispatch(
                 setConfirmDialog({
