@@ -94,7 +94,7 @@ interface deviceHook {
     attachmentIdentifier: string
   ) => Promise<DeviceInfo | undefined>;
   getDeviceStatus: (
-    deviceIds: number[],
+    deviceIdentifiers: string[],
     from: moment.Moment,
     to?: moment.Moment
   ) => Promise<DeviceStatusModel>;
@@ -445,7 +445,7 @@ export const useApiHook = (): ApiHook => {
         }
       },
       getDeviceStatus: async (
-        deviceIds: number[],
+        deviceIdentifiers: string[],
         from: moment.Moment,
         to?: moment.Moment
       ) => {
@@ -455,7 +455,7 @@ export const useApiHook = (): ApiHook => {
             AxiosResponse<DeviceStatusModel>
           >(`/api/devices/status`, {
             params: {
-              deviceIds: deviceIds,
+              deviceIdentifiers: deviceIdentifiers,
               from: from.toISOString(),
               to: to ? to.toISOString() : undefined,
             },

@@ -49,13 +49,13 @@ export const DashbordLocationsView: React.FC = () => {
         }}
       >
         {visibleLocations?.map((m) => {
-          const location = locations.find((l) => l.id === m.id);
+          const location = locations.find((l) => l.identifier === m.identifier);
           return (
             <DashboardLocationGraph
               location={location!}
               timeRange={timeRange}
               model={undefined}
-              key={m.id}
+              key={m.identifier}
               autoFetch
             />
           );

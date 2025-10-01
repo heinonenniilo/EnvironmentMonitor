@@ -45,35 +45,41 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
     return defaultStart;
   };
 
-  const toggleLocation = (locationId: number) => {
+  const toggleLocation = (locationIdentifier: string) => {
     if (!innerModel) {
       return;
     }
-    const prevSelected = innerModel.locationIds?.some((s) => s === locationId);
+    const prevSelected = innerModel.locationIdentifiers?.some(
+      (s) => s === locationIdentifier
+    );
     if (prevSelected) {
       setModel({
         ...innerModel,
-        locationIds: innerModel.locationIds?.filter((s) => s !== locationId),
-        deviceIds: innerModel.deviceIds
-          ? innerModel.deviceIds.filter((deviceId) => {
-              const matchingDevice = devices.find((d) => d.id === deviceId);
-              return matchingDevice?.locationId !== locationId;
+        locationIdentifiers: innerModel.locationIdentifiers?.filter(
+          (s) => s !== locationIdentifier
+        ),
+        deviceIdentifiers: innerModel.deviceIdentifiers
+          ? innerModel.deviceIdentifiers.filter((deviceId) => {
+              const matchingDevice = devices.find(
+                (d) => d.identifier === deviceId
+              );
+              return matchingDevice?.locationIdentifier !== locationIdentifier;
             })
           : undefined,
       });
     } else {
-      const locationIdsToSet = innerModel.locationIds
-        ? [...innerModel.locationIds, locationId]
-        : [locationId];
+      const locationIdsToSet = innerModel.locationIdentifiers
+        ? [...innerModel.locationIdentifiers, locationIdentifier]
+        : [locationIdentifier];
 
       const deviceIdsToSelect = devices
-        .filter((d) => d.locationId === locationId)
-        .map((d) => d.id);
+        .filter((d) => d.locationIdentifier === locationIdentifier)
+        .map((d) => d.identifier);
       setModel({
         ...innerModel,
-        locationIds: locationIdsToSet,
-        deviceIds: innerModel.deviceIds
-          ? [...innerModel.deviceIds, ...deviceIdsToSelect]
+        locationIdentifiers: locationIdsToSet,
+        deviceIdentifiers: innerModel.deviceIdentifiers
+          ? [...innerModel.deviceIdentifiers, ...deviceIdsToSelect]
           : deviceIdsToSelect,
       });
     }
@@ -121,7 +127,7 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
           <Select
             labelId="location-select-label"
             id="location-select"
-            value={innerModel?.locationIds ?? []}
+            value={innerModel?.locationIdentifiers ?? []}
             label="Location"
             multiple
           >
@@ -129,9 +135,9 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
               .sort((a, b) => stringSort(a.name, b.name))
               .map((y) => (
                 <MenuItem
-                  value={y.id}
-                  key={`location-${y.id}`}
-                  onClick={() => toggleLocation(y.id)}
+                  value={y.identifier}
+                  key={`location-${y.identifier}`}
+                  onClick={() => toggleLocation(y.identifier)}
                 >
                   {y.name}
                 </MenuItem>
@@ -145,14 +151,14 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
           <Select
             labelId="device-select-label"
             id="device-select"
-            value={innerModel?.deviceIds ?? []}
+            value={innerModel?.deviceIdentifiers ?? []}
             label="Device"
             onChange={(event) => {
               if (innerModel) {
-                const selectedDeviceIds = event.target.value as number[];
+                const selectedDeviceIds = event.target.value as string[];
                 setModel({
                   ...innerModel,
-                  deviceIds: selectedDeviceIds,
+                  deviceIdentifiers: selectedDeviceIds,
                 });
               }
             }}
@@ -160,12 +166,14 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
           >
             {[
               ...devices.filter((d) =>
-                (innerModel?.locationIds ?? []).some((l) => d.locationId === l)
+                (innerModel?.locationIdentifiers ?? []).some(
+                  (l) => d.locationIdentifier === l
+                )
               ),
             ]
               .sort((a, b) => stringSort(getDeviceTitle(a), getDeviceTitle(b)))
               .map((y) => (
-                <MenuItem value={y.id} key={`device-${y.id}`}>
+                <MenuItem value={y.identifier} key={`device-${y.identifier}`}>
                   {getDeviceTitle(y)}
                 </MenuItem>
               ))}

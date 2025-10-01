@@ -69,16 +69,18 @@ export const DeviceMessagesTable: React.FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getModel]);
 
-  const getDeviceLabel = (deviceId: number) => {
-    const matchingDevice = devices.find((d) => d.id === deviceId);
+  const getDeviceLabel = (deviceIdentifier: string) => {
+    const matchingDevice = devices.find(
+      (d) => d.identifier === deviceIdentifier
+    );
     const matchingLocation = locations.find(
-      (l) => l.id === matchingDevice?.locationId
+      (l) => l.identifier === matchingDevice?.locationIdentifier
     );
     return matchingDevice
       ? `${matchingLocation ? `${matchingLocation.name} - ` : ""}${
           matchingDevice.name
         }`
-      : deviceId;
+      : deviceIdentifier;
   };
   const columns: GridColDef[] = [
     {
@@ -109,7 +111,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
       minWidth: 150,
       valueGetter: (_value, row) => {
         const deviceMessageRow = row as DeviceMessage;
-        return getDeviceLabel(deviceMessageRow.deviceId);
+        return getDeviceLabel(deviceMessageRow.deviceIdentifier);
       },
     },
     {

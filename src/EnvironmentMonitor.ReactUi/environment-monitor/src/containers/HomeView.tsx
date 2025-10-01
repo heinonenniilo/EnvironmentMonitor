@@ -68,7 +68,7 @@ export const HomeView: React.FC = () => {
     );
     let lastDevice: Device | undefined;
     for (const row of sorted) {
-      if (row.device?.id !== lastDevice?.id) {
+      if (row.device?.identifier !== lastDevice?.identifier) {
         row.boldDevice = true;
         row.renderLinkToDevice = true;
       } else {

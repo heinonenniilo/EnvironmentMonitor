@@ -124,7 +124,11 @@ export const DeviceView: React.FC = () => {
       .utc(true);
     setIsLoadingDeviceStatus(true);
     deviceHook
-      .getDeviceStatus([selectedDevice.device.id], momentStart, undefined)
+      .getDeviceStatus(
+        [selectedDevice.device.identifier],
+        momentStart,
+        undefined
+      )
       .then((res) => {
         setDeviceStatusModel(res);
       })

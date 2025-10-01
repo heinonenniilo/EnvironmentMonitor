@@ -22,7 +22,7 @@ export const defaultStart = moment()
   .utc(true);
 
 export interface DeviceMessagesLocationState {
-  deviceId?: number;
+  deviceIdentifier?: string;
 }
 
 export const DeviceMessagesView: React.FC = () => {
@@ -42,25 +42,25 @@ export const DeviceMessagesView: React.FC = () => {
   const location = useLocation();
 
   const deviceId = (location.state as DeviceMessagesLocationState | null)
-    ?.deviceId;
+    ?.deviceIdentifier;
 
   useEffect(() => {
     const selectedDevice =
       deviceId !== undefined
-        ? devices.find((d) => d.id === deviceId)
+        ? devices.find((d) => d.identifier === deviceId)
         : undefined;
 
     const selectedLocation = locations.find(
-      (l) => l.id === selectedDevice?.locationId
+      (l) => l.identifier === selectedDevice?.locationIdentifier
     );
 
     setGetModel({
-      deviceIds: selectedDevice
-        ? [selectedDevice.id]
-        : devices.map((d) => d.id),
-      locationIds: selectedLocation
-        ? [selectedLocation.id]
-        : locations.map((l) => l.id),
+      deviceIdentifiers: selectedDevice
+        ? [selectedDevice.identifier]
+        : devices.map((d) => d.identifier),
+      locationIdentifiers: selectedLocation
+        ? [selectedLocation.identifier]
+        : locations.map((l) => l.identifier),
       pageNumber: 0,
       pageSize: 50,
       isDescending: true,
@@ -71,7 +71,9 @@ export const DeviceMessagesView: React.FC = () => {
   const handleClickRow = (message: DeviceMessage) => {
     setIsLoading(true);
 
-    const matchingDevice = devices.find((d) => d.id === message.deviceId);
+    const matchingDevice = devices.find(
+      (d) => d.identifier === message.deviceIdentifier
+    );
     if (matchingDevice) {
       setDialogTitle(`${matchingDevice.name} - ${message.identifier}`);
     } else {

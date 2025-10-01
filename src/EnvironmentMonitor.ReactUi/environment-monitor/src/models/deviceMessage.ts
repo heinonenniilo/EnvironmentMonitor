@@ -1,5 +1,5 @@
 export interface DeviceMessage {
-  deviceId: number;
+  deviceIdentifier: string;
   identifier: string;
   timeStamp: Date;
   isDuplicate: boolean;

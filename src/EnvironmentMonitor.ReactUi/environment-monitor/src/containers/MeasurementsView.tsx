@@ -37,7 +37,9 @@ export const MeasurementsView: React.FC = () => {
   const sensors = useSelector(getSensors);
   const dashboardTimeRange = useSelector(getDashboardTimeRange);
   const autoScaleInUseForDevice = useSelector(
-    getDeviceAutoScale(selectedDevices.length === 1 ? selectedDevices[0].id : 0)
+    getDeviceAutoScale(
+      selectedDevices.length === 1 ? selectedDevices[0].identifier : ""
+    )
   );
   const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
 
@@ -195,7 +197,7 @@ export const MeasurementsView: React.FC = () => {
             if (selectedDevices.length === 1) {
               dispatch(
                 toggleAutoScale({
-                  deviceId: selectedDevices[0].id,
+                  deviceIdentifier: selectedDevices[0].identifier,
                   state: state,
                 })
               );

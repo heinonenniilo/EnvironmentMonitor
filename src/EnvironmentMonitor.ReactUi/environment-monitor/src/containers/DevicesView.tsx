@@ -102,7 +102,7 @@ export const DevicesView: React.FC = () => {
                 rebootDevice(device.device);
               },
               title: `Reboot ${device.device.name}?`,
-              body: `Reboot command will be sent to ${device.device.name}.  Id: ${device.device.id}, Identifier: '${device.device.identifier}'`,
+              body: `Reboot command will be sent to ${device.device.name}.  Id: ${device.device.identifier}, Identifier: '${device.device.identifier}'`,
             })
           );
         }}

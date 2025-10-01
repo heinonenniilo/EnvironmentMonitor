@@ -250,7 +250,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       return singleDevice.displayName;
     }
 
-    return `${singleDevice?.name} / (${singleDevice?.id})`;
+    return `${singleDevice?.name} / (${singleDevice?.identifier})`;
   };
 
   const getMinScale = () => {

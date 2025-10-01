@@ -10,12 +10,12 @@ export interface MeasurementState {
   sensors: Sensor[];
 
   locations: LocationModel[];
-  autoScaleSensorIds: number[];
+  autoScaleSensorIds: string[];
   timeRange: number;
 }
 
 export interface DashboardAutoScale {
-  deviceId: number;
+  deviceIdentifier: string;
   state: boolean;
 }
 
@@ -40,13 +40,15 @@ export const measurementSlice = createSlice({
     toggleAutoScale: (state, action: PayloadAction<DashboardAutoScale>) => {
       if (action.payload.state) {
         if (
-          !state.autoScaleSensorIds.some((s) => s === action.payload.deviceId)
+          !state.autoScaleSensorIds.some(
+            (s) => s === action.payload.deviceIdentifier
+          )
         ) {
-          state.autoScaleSensorIds.push(action.payload.deviceId);
+          state.autoScaleSensorIds.push(action.payload.deviceIdentifier);
         }
       } else {
         state.autoScaleSensorIds = state.autoScaleSensorIds.filter(
-          (s) => s !== action.payload.deviceId
+          (s) => s !== action.payload.deviceIdentifier
         );
       }
     },
@@ -73,17 +75,17 @@ export const getDevices = (state: RootState): Device[] =>
 export const getSensors = (state: RootState): Sensor[] =>
   state.measurementInfo.sensors;
 
-export const getDashboardAutoScale = (state: RootState): number[] => {
+export const getDashboardAutoScale = (state: RootState): string[] => {
   return state.measurementInfo.autoScaleSensorIds;
 };
 
 export const getLocations = (state: RootState): LocationModel[] =>
   state.measurementInfo.locations;
 
-export const getDeviceAutoScale = (deviceId: number) =>
+export const getDeviceAutoScale = (deviceIdentifier: string) =>
   createSelector(
     [(state: RootState) => state.measurementInfo.autoScaleSensorIds],
-    (autoScaleSensorIds) => autoScaleSensorIds.includes(deviceId)
+    (autoScaleSensorIds) => autoScaleSensorIds.includes(deviceIdentifier)
   );
 
 export const getDashboardTimeRange = (state: RootState): number => {
