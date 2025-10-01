@@ -35,7 +35,7 @@ export const DashboardView: React.FC = () => {
 
   const measurementsModel: DeviceDashboardModel[] = useMemo(() => {
     return [...devices]
-      .sort((a, b) => stringSort(a.locationIdentifier, b.locationIdentifier))
+      .sort((a, b) => stringSort(a.displayName, b.displayName))
       .map((device) => {
         const deviceSensors = sensors.filter(
           (s) => s.deviceIdentifier === device.identifier
