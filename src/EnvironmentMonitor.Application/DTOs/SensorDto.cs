@@ -15,7 +15,6 @@ namespace EnvironmentMonitor.Application.DTOs
     {
         public Guid Identifier { get; set; }
         public string Name { get; set; }
-        public int SensorId { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Guid? DeviceIdentifier { get; set; }
         public double? ScaleMin { get; set; }
@@ -35,7 +34,6 @@ namespace EnvironmentMonitor.Application.DTOs
             profile.CreateMap<PublicSensor, SensorDto>()
                 .ForMember(x => x.ScaleMin, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMin : null))
                 .ForMember(x => x.ScaleMax, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMax : null))
-                .ForMember(x => x.SensorId, opt => opt.MapFrom(x => x.Id))
                 .ReverseMap();
         }
     }
