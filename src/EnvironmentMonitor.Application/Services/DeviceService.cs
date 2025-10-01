@@ -378,12 +378,14 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model)
         {
-            var devices = await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = model.DeviceIds, OnlyVisible = false });
-            if (!_userService.HasAccessToDevices(devices.Select(x => x.Identifier).ToList(), AccessLevels.Read))
+            if (model.DeviceIdentifiers.Count == 0)
+            {
+                throw new ArgumentException("No device identifiers provided");
+            }
+            if (!_userService.HasAccessToDevices(model.DeviceIdentifiers, AccessLevels.Read))
             {
                 throw new UnauthorizedAccessException();
             }
-
             var returnList = await _deviceRepository.GetDevicesStatus(model);
             return new DeviceStatusModel()
             {
@@ -407,14 +409,14 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model)
         {
             List<Guid>? deviceIdFilter = null;
-            if (model.Identifiers?.Any() == true)
+            if (model.DeviceIdentifiers?.Any() == true)
             {
-                if (!_userService.HasAccessToDevices(model.Identifiers, AccessLevels.Read))
+                if (!_userService.HasAccessToDevices(model.DeviceIdentifiers, AccessLevels.Read))
                 {
-                    _logger.LogWarning($"No access to devices: {model.Identifiers}");
+                    _logger.LogWarning($"No access to devices: {model.DeviceIdentifiers}");
                     throw new UnauthorizedAccessException();
                 }
-                deviceIdFilter = model.Identifiers;
+                deviceIdFilter = model.DeviceIdentifiers;
             }
             if (deviceIdFilter == null && !_userService.IsAdmin)
             {
@@ -424,6 +426,7 @@ namespace EnvironmentMonitor.Application.Services
                 {
                     throw new UnauthorizedAccessException();
                 }
+                deviceIdFilter = deviceIds;
             }
             if (model.LocationIdentifiers?.Any() == true)
             {
@@ -432,6 +435,7 @@ namespace EnvironmentMonitor.Application.Services
                     throw new UnauthorizedAccessException();
                 }
             }
+            model.DeviceIdentifiers = deviceIdFilter;
             var res = await _deviceRepository.GetDeviceMessages(model);
             return new PaginatedResult<DeviceMessageDto>()
             {

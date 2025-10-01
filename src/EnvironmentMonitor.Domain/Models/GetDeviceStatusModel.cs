@@ -8,9 +8,8 @@ namespace EnvironmentMonitor.Domain.Models
 {
     public class GetDeviceStatusModel
     {
-        public required List<int> DeviceIds { get; set; }
-        public List<Guid>? Identifiers { get; set; }
-        public required DateTime From { get; set; }
+        public required List<Guid> DeviceIdentifiers { get; set; }
+        public required DateTime From { get; set; } = DateTime.UtcNow.AddDays(-4);
         public DateTime? To { get; set; }
     }
 }

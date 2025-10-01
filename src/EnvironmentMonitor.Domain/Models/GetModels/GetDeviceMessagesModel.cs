@@ -8,7 +8,7 @@ namespace EnvironmentMonitor.Domain.Models.GetModels
 {
     public class GetDeviceMessagesModel : Paginated
     {
-        public List<Guid>? Identifiers { get; set; }
+        public List<Guid>? DeviceIdentifiers { get; set; }
         public List<Guid>? LocationIdentifiers { get; set; }
         public bool? IsDuplicate { get; set; }
         public bool? IsFirstMessage { get; set; }
