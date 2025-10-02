@@ -4,7 +4,8 @@ export interface DeviceMessage {
   timeStamp: Date;
   isDuplicate: boolean;
   uptime: number;
-  id: number;
   messageCount: number;
   firstMessage: boolean;
+  //
+  uniqueRowId?: string; // Calculated
 }

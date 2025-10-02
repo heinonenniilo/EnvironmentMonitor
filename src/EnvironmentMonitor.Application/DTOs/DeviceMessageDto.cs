@@ -16,10 +16,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public string? Identifier { get; set; }
         public Guid DeviceIdentifier { get; set; }
         public DateTime TimeStamp { get; set; }
-        public int Id { get; set; }
-
         public long? Uptime { get; set; }
-
         public long? LoopCount { get; set; }
         public long? MessageCount { get; set; }
         public bool IsDuplicate { get; set; }

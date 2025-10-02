@@ -57,7 +57,25 @@ export const DeviceMessagesTable: React.FC<Props> = ({
     hook
       .getDeviceMessage(getModel)
       .then((res) => {
-        setPaginationModel(res);
+        const duplicateCounters = new Map<string, number>();
+        const processedItems = res.items.map((item) => {
+          if (!item.isDuplicate) {
+            return { ...item, uniqueRowId: item.identifier };
+          } else {
+            const currentCount = duplicateCounters.get(item.identifier) || 0;
+            const newCount = currentCount + 1;
+            duplicateCounters.set(item.identifier, newCount);
+            return {
+              ...item,
+              uniqueRowId: `${item.identifier}-dup-${newCount}`,
+            };
+          }
+        });
+
+        setPaginationModel({
+          ...res,
+          items: processedItems,
+        });
       })
       .catch(console.error)
       .finally(() => {
@@ -152,7 +170,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
         disableRowSelectionOnClick
         loading={isLoading}
         pagination
-        rowCount={paginationModel?.totalCount}
+        rowCount={paginationModel?.totalCount ?? 0}
         pageSizeOptions={[25, 50, 100]}
         paginationMode="server"
         sortingMode="server"
@@ -186,6 +204,10 @@ export const DeviceMessagesTable: React.FC<Props> = ({
             isDescending: model?.isDescending ?? true,
           }));
         }}
+        getRowId={(row) =>
+          (row as DeviceMessage).uniqueRowId ??
+          (row as DeviceMessage).identifier
+        }
         getRowClassName={(params) =>
           !(params.row as DeviceMessage).isDuplicate && onRowClick
             ? "clickable-row"

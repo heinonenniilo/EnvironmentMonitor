@@ -1,6 +1,6 @@
 export interface GetMeasurementsModel {
   sensorIdentifiers: string[];
-  deviceMessageIds?: number[];
+  deviceMessageIdentifiers?: string[];
   latestOnly?: boolean;
   from?: moment.Moment;
   to?: moment.Moment;

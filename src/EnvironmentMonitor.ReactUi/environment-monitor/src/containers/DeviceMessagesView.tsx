@@ -81,7 +81,7 @@ export const DeviceMessagesView: React.FC = () => {
     }
     apiHook.measureHook
       .getMeasurements({
-        deviceMessageIds: [message.id],
+        deviceMessageIdentifiers: [message.identifier],
         sensorIdentifiers: [],
       })
       .then((res) => {

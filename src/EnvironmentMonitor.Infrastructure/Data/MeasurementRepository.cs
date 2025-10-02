@@ -51,10 +51,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(predicate);
             }
 
-
-            if (model.DeviceMessageIds?.Any() == true)
+            if (model.DeviceMessageIdentifiers?.Any() == true)
             {
-                query = query.Where(x => x.DeviceMessageId != null && model.DeviceMessageIds.Contains(x.DeviceMessageId.Value));
+                query = query.Where(x => x.DeviceMessage != null && !x.DeviceMessage.IsDuplicate && !string.IsNullOrEmpty(x.DeviceMessage.Identifier) && model.DeviceMessageIdentifiers.Contains(x.DeviceMessage.Identifier));
                 return await query.OrderBy(x => x.Timestamp).Select(x => new MeasurementExtended()
                 {
                     TypeId = x.TypeId,
@@ -66,6 +65,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     SensorIdentifier = x.Sensor.Identifier,
                 }).ToListAsync();
             }
+
             if (model.LatestOnly == true)
             {
                 var grouped = await query.Where(
