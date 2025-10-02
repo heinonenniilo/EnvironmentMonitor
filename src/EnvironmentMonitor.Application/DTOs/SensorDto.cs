@@ -20,7 +20,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public double? ScaleMin { get; set; }
         public double? ScaleMax { get; set; }
 
-        public void Mapping(Profile profile)
+        public virtual void Mapping(Profile profile)
         {
             profile.CreateMap<Sensor, SensorDto>()
                 .ForMember(x => x.DeviceIdentifier, opt => opt.MapFrom(d => d.Device != null ? d.Device.Identifier: (Guid?)null))

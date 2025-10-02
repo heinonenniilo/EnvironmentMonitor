@@ -73,7 +73,7 @@ export const DeviceView: React.FC = () => {
     setIsLoadingMeasurments(true);
     measurementApiHook
       .getMeasurementsBySensor(
-        selectedDevice.device.sensors.map((x) => x.identifier),
+        selectedDevice.sensors.map((x) => x.identifier),
         momentStart,
         undefined
       )
@@ -98,7 +98,7 @@ export const DeviceView: React.FC = () => {
     setIsLoadingMeasurments(true);
     measurementApiHook
       .getMeasurementsBySensor(
-        selectedDevice.device.sensors.map((x) => x.identifier),
+        selectedDevice.sensors.map((x) => x.identifier),
         momentStart,
         undefined
       )
@@ -498,12 +498,12 @@ export const DeviceView: React.FC = () => {
           }}
         />
         <Collapsible title="Sensors" isOpen={true}>
-          <SensorTable sensors={selectedDevice?.device?.sensors ?? []} />
+          <SensorTable sensors={selectedDevice?.sensors ?? []} />
         </Collapsible>
 
         <Collapsible title="Measurements">
           <MultiSensorGraph
-            sensors={selectedDevice?.device.sensors}
+            sensors={selectedDevice?.sensors}
             model={model}
             minHeight={400}
             title={`${selectedDevice?.device.name} - Last 48 h`}
@@ -527,7 +527,6 @@ export const DeviceView: React.FC = () => {
                 ? [
                     {
                       identifier: selectedDevice.device.identifier,
-                      sensorId: 1,
                       name: selectedDevice.device.name,
                       deviceIdentifier: selectedDevice.device.identifier,
                       scaleMin: 0,

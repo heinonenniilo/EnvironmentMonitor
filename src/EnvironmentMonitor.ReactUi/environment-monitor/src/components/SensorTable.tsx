@@ -1,4 +1,4 @@
-import { type Sensor } from "../models/sensor";
+import { type SensorInfo } from "../models/sensor";
 import {
   Box,
   Paper,
@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 
 export interface SensorTableProps {
-  sensors: Sensor[];
+  sensors: SensorInfo[];
   title?: string;
 }
 
