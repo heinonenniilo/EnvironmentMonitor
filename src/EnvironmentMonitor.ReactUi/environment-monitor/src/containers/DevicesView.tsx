@@ -2,21 +2,20 @@ import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useEffect, useState } from "react";
 import { type Device } from "../models/device";
 import { useApiHook } from "../hooks/apiHook";
-import { type DeviceInfo } from "../models/deviceInfo";
 import { DeviceTable } from "../components/DeviceTable";
 import { dateTimeSort } from "../utilities/datetimeUtils";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   addNotification,
   setConfirmDialog,
 } from "../reducers/userInterfaceReducer";
+import { getDeviceInfos, setDeviceInfos } from "../reducers/measurementReducer";
 
 export const DevicesView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const dispatch = useDispatch();
+  const deviceInfos = useSelector(getDeviceInfos);
   const deviceHook = useApiHook().deviceHook;
-
-  const [deviceInfos, setDeviceInfos] = useState<DeviceInfo[]>([]);
 
   useEffect(() => {
     if (deviceInfos.length === 0 && deviceHook) {
@@ -31,7 +30,7 @@ export const DevicesView: React.FC = () => {
       .getDeviceInfos()
       .then((res) => {
         if (res) {
-          setDeviceInfos(res);
+          dispatch(setDeviceInfos(res));
         }
       })
       .catch((er) => {

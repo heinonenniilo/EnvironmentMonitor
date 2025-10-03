@@ -4,10 +4,12 @@ import type { Device } from "../models/device";
 import type { Sensor } from "../models/sensor";
 import type { LocationModel } from "../models/location";
 import type { RootState } from "../setup/appStore";
+import type { DeviceInfo } from "../models/deviceInfo";
 
 export interface MeasurementState {
   devices: Device[];
   sensors: Sensor[];
+  deviceInfos: DeviceInfo[];
 
   locations: LocationModel[];
   autoScaleSensorIds: string[];
@@ -21,6 +23,7 @@ export interface DashboardAutoScale {
 
 const initialState: MeasurementState = {
   devices: [],
+  deviceInfos: [],
   sensors: [],
   autoScaleSensorIds: [],
   timeRange: 24,
@@ -36,6 +39,9 @@ export const measurementSlice = createSlice({
     },
     setDevices: (state, action: PayloadAction<Device[]>) => {
       state.devices = action.payload;
+    },
+    setDeviceInfos: (state, action: PayloadAction<DeviceInfo[]>) => {
+      state.deviceInfos = action.payload;
     },
     toggleAutoScale: (state, action: PayloadAction<DashboardAutoScale>) => {
       if (action.payload.state) {
@@ -63,6 +69,7 @@ export const measurementSlice = createSlice({
 
 export const {
   setDevices,
+  setDeviceInfos,
   setSensors,
   toggleAutoScale,
   setDashboardTimeRange,
@@ -71,6 +78,9 @@ export const {
 
 export const getDevices = (state: RootState): Device[] =>
   state.measurementInfo.devices;
+
+export const getDeviceInfos = (state: RootState): DeviceInfo[] =>
+  state.measurementInfo.deviceInfos;
 
 export const getSensors = (state: RootState): Sensor[] =>
   state.measurementInfo.sensors;

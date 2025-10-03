@@ -5,8 +5,12 @@ import type { PaginatedResult } from "../models/paginatedResult";
 import type { DeviceMessage } from "../models/deviceMessage";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { Box, Checkbox, useMediaQuery, useTheme } from "@mui/material";
-import { useSelector } from "react-redux";
-import { getDevices, getLocations } from "../reducers/measurementReducer";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  getDeviceInfos,
+  getLocations,
+  setDeviceInfos,
+} from "../reducers/measurementReducer";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { defaultStart } from "../containers/DeviceMessagesView";
 
@@ -22,11 +26,14 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   onRowClick,
 }) => {
   const hook = useApiHook().deviceHook;
+  const dispatch = useDispatch();
   const [getModel, setGetModel] = useState<GetDeviceMessagesModel | undefined>(
     undefined
   );
   const [isLoading, setIsLoading] = useState(false);
-  const devices = useSelector(getDevices);
+  const deviceInfos = useSelector(getDeviceInfos);
+  const measurementApiHook = useApiHook().deviceHook;
+
   const locations = useSelector(getLocations);
   const [paginationModel, setPaginationModel] = useState<
     PaginatedResult<DeviceMessage> | undefined
@@ -34,6 +41,28 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   const theme = useTheme();
   const drawDesktop = useMediaQuery(theme.breakpoints.up("lg"));
 
+  useEffect(() => {
+    if (deviceInfos.length > 0) {
+      return;
+    }
+    if (measurementApiHook) {
+      measurementApiHook
+        .getDeviceInfos()
+        .then((res) => {
+          if (res) {
+            dispatch(setDeviceInfos(res));
+          }
+        })
+        .catch((er) => {
+          console.error(er);
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceInfos.length]);
+
+  useEffect(() => {
+    console.log(deviceInfos);
+  }, [deviceInfos]);
   useEffect(() => {
     if (!model) {
       return;
@@ -88,15 +117,15 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   }, [getModel]);
 
   const getDeviceLabel = (deviceIdentifier: string) => {
-    const matchingDevice = devices.find(
-      (d) => d.identifier === deviceIdentifier
+    const matchingDevice = deviceInfos.find(
+      (d) => d.device.identifier === deviceIdentifier
     );
     const matchingLocation = locations.find(
-      (l) => l.identifier === matchingDevice?.locationIdentifier
+      (l) => l.identifier === matchingDevice?.device.locationIdentifier
     );
     return matchingDevice
       ? `${matchingLocation ? `${matchingLocation.name} - ` : ""}${
-          matchingDevice.name
+          matchingDevice.device.name
         }`
       : deviceIdentifier;
   };
