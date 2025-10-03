@@ -400,8 +400,9 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [model.Device.Identifier] })).FirstOrDefault();
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [model.Device.Identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{model.Device.Identifier}' not found.");
             var updateModel = _mapper.Map<Device>(model.Device);
+            updateModel.Id = device.Id;
             var info = await _deviceRepository.AddOrUpdate(updateModel, true);
             return _mapper.Map<DeviceInfoDto>(info);
         }
