@@ -5,34 +5,30 @@ import type { PaginatedResult } from "../models/paginatedResult";
 import type { DeviceMessage } from "../models/deviceMessage";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { Box, Checkbox, useMediaQuery, useTheme } from "@mui/material";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  getDeviceInfos,
-  getLocations,
-  setDeviceInfos,
-} from "../reducers/measurementReducer";
+import { useSelector } from "react-redux";
+import { getLocations } from "../reducers/measurementReducer";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { defaultStart } from "../containers/DeviceMessagesView";
+import type { DeviceInfo } from "../models/deviceInfo";
 
 interface Props {
   model: GetDeviceMessagesModel | undefined;
   onLoadingChange?: (state: boolean) => void;
   onRowClick?: (message: DeviceMessage) => void;
+  deviceInfos: DeviceInfo[];
 }
 
 export const DeviceMessagesTable: React.FC<Props> = ({
   model,
   onLoadingChange,
   onRowClick,
+  deviceInfos,
 }) => {
   const hook = useApiHook().deviceHook;
-  const dispatch = useDispatch();
   const [getModel, setGetModel] = useState<GetDeviceMessagesModel | undefined>(
     undefined
   );
   const [isLoading, setIsLoading] = useState(false);
-  const deviceInfos = useSelector(getDeviceInfos);
-  const measurementApiHook = useApiHook().deviceHook;
 
   const locations = useSelector(getLocations);
   const [paginationModel, setPaginationModel] = useState<
@@ -40,25 +36,6 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   >(undefined);
   const theme = useTheme();
   const drawDesktop = useMediaQuery(theme.breakpoints.up("lg"));
-
-  useEffect(() => {
-    if (deviceInfos.length > 0) {
-      return;
-    }
-    if (measurementApiHook) {
-      measurementApiHook
-        .getDeviceInfos()
-        .then((res) => {
-          if (res) {
-            dispatch(setDeviceInfos(res));
-          }
-        })
-        .catch((er) => {
-          console.error(er);
-        });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deviceInfos.length]);
 
   useEffect(() => {
     console.log(deviceInfos);

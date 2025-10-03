@@ -1,10 +1,11 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
 import {
-  getDevices,
+  getDeviceInfos,
   getLocations,
   getSensors,
+  setDeviceInfos,
 } from "../reducers/measurementReducer";
 import moment from "moment";
 import { Box } from "@mui/material";
@@ -26,7 +27,8 @@ export interface DeviceMessagesLocationState {
 }
 
 export const DeviceMessagesView: React.FC = () => {
-  const devices = useSelector(getDevices);
+  const deviceInfos = useSelector(getDeviceInfos);
+  const dispatch = useDispatch();
   const locations = useSelector(getLocations);
   const apiHook = useApiHook();
   const [isLoading, setIsLoading] = useState(false);
@@ -45,19 +47,39 @@ export const DeviceMessagesView: React.FC = () => {
     ?.deviceIdentifier;
 
   useEffect(() => {
+    if (deviceInfos.length > 0) {
+      return;
+    }
+
+    if (apiHook.deviceHook) {
+      apiHook.deviceHook
+        .getDeviceInfos()
+        .then((res) => {
+          if (res) {
+            dispatch(setDeviceInfos(res));
+          }
+        })
+        .catch((er) => {
+          console.error(er);
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deviceInfos]);
+
+  useEffect(() => {
     const selectedDevice =
       deviceId !== undefined
-        ? devices.find((d) => d.identifier === deviceId)
+        ? deviceInfos.find((d) => d.device.identifier === deviceId)
         : undefined;
 
     const selectedLocation = locations.find(
-      (l) => l.identifier === selectedDevice?.locationIdentifier
+      (l) => l.identifier === selectedDevice?.device.locationIdentifier
     );
 
     setGetModel({
       deviceIdentifiers: selectedDevice
-        ? [selectedDevice.identifier]
-        : devices.map((d) => d.identifier),
+        ? [selectedDevice.device.identifier]
+        : deviceInfos.map((d) => d.device.identifier),
       locationIdentifiers: selectedLocation
         ? [selectedLocation.identifier]
         : locations.map((l) => l.identifier),
@@ -66,16 +88,16 @@ export const DeviceMessagesView: React.FC = () => {
       isDescending: true,
       from: defaultStart,
     });
-  }, [devices, locations, deviceId]);
+  }, [deviceInfos, locations, deviceId]);
 
   const handleClickRow = (message: DeviceMessage) => {
     setIsLoading(true);
 
-    const matchingDevice = devices.find(
-      (d) => d.identifier === message.deviceIdentifier
+    const matchingDevice = deviceInfos.find(
+      (d) => d.device.identifier === message.deviceIdentifier
     );
     if (matchingDevice) {
-      setDialogTitle(`${matchingDevice.name} - ${message.identifier}`);
+      setDialogTitle(`${matchingDevice.device.name} - ${message.identifier}`);
     } else {
       setDialogTitle(`${message.identifier}`);
     }
@@ -106,7 +128,7 @@ export const DeviceMessagesView: React.FC = () => {
               setGetModel({ ...model });
             }}
             model={getModel}
-            devices={devices}
+            devices={deviceInfos}
             locations={locations}
           />
         )
@@ -134,6 +156,7 @@ export const DeviceMessagesView: React.FC = () => {
             model={getModel}
             onLoadingChange={(state) => setIsLoading(state)}
             onRowClick={handleClickRow}
+            deviceInfos={deviceInfos}
           />
         )}
       </Box>

@@ -10,14 +10,14 @@ import React, { useEffect, useState } from "react";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
 import { defaultStart } from "../containers/DeviceMessagesView";
-import type { Device } from "../models/device";
 import { stringSort } from "../utilities/stringUtils";
 import { getDeviceTitle } from "../utilities/deviceUtils";
 import type { LocationModel } from "../models/location";
+import type { DeviceInfo } from "../models/deviceInfo";
 
 export interface DeviceMessagesLeftViewProps {
   onSearch: (model: GetDeviceMessagesModel) => void;
-  devices: Device[];
+  devices: DeviceInfo[];
   locations: LocationModel[];
   model: GetDeviceMessagesModel;
 }
@@ -61,9 +61,11 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
         deviceIdentifiers: innerModel.deviceIdentifiers
           ? innerModel.deviceIdentifiers.filter((deviceId) => {
               const matchingDevice = devices.find(
-                (d) => d.identifier === deviceId
+                (d) => d.device.identifier === deviceId
               );
-              return matchingDevice?.locationIdentifier !== locationIdentifier;
+              return (
+                matchingDevice?.device.locationIdentifier !== locationIdentifier
+              );
             })
           : undefined,
       });
@@ -73,8 +75,8 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
         : [locationIdentifier];
 
       const deviceIdsToSelect = devices
-        .filter((d) => d.locationIdentifier === locationIdentifier)
-        .map((d) => d.identifier);
+        .filter((d) => d.device.locationIdentifier === locationIdentifier)
+        .map((d) => d.device.identifier);
       setModel({
         ...innerModel,
         locationIdentifiers: locationIdsToSet,
@@ -167,14 +169,19 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
             {[
               ...devices.filter((d) =>
                 (innerModel?.locationIdentifiers ?? []).some(
-                  (l) => d.locationIdentifier === l
+                  (l) => d.device.locationIdentifier === l
                 )
               ),
             ]
-              .sort((a, b) => stringSort(getDeviceTitle(a), getDeviceTitle(b)))
+              .sort((a, b) =>
+                stringSort(getDeviceTitle(a.device), getDeviceTitle(b.device))
+              )
               .map((y) => (
-                <MenuItem value={y.identifier} key={`device-${y.identifier}`}>
-                  {getDeviceTitle(y)}
+                <MenuItem
+                  value={y.device.identifier}
+                  key={`device-${y.device.identifier}`}
+                >
+                  {getDeviceTitle(y.device)}
                 </MenuItem>
               ))}
           </Select>
