@@ -157,9 +157,14 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
 
-            if (!_userService.IsAdmin && model.SensorIdentifiers.Count == 0)
+            if (model.DeviceIdentifiers.Any(d => !_userService.HasAccessToDevice(d, AccessLevels.Read)))
             {
-                throw new InvalidOperationException("SensorIds must be defined");
+                throw new UnauthorizedAccessException();
+            }
+
+            if (!_userService.IsAdmin && model.SensorIdentifiers.Count == 0 && model.DeviceIdentifiers.Count == 0)
+            {
+                throw new InvalidOperationException("SensorIdentifiers or DeviceIdentifiers must be defined");
             }
 
             var measurementRows = await _measurementRepository.GetMeasurements(model);
