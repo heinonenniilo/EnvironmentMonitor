@@ -38,9 +38,6 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   const drawDesktop = useMediaQuery(theme.breakpoints.up("lg"));
 
   useEffect(() => {
-    console.log(deviceInfos);
-  }, [deviceInfos]);
-  useEffect(() => {
     if (!model) {
       return;
     }

@@ -105,6 +105,7 @@ export const DeviceMessagesView: React.FC = () => {
       .getMeasurements({
         deviceMessageIdentifiers: [message.identifier],
         sensorIdentifiers: [],
+        deviceIdentifiers: [message.deviceIdentifier],
       })
       .then((res) => {
         setMeasurementsModel(res);
