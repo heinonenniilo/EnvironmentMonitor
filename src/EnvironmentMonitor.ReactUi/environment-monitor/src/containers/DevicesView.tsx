@@ -18,11 +18,9 @@ export const DevicesView: React.FC = () => {
   const deviceHook = useApiHook().deviceHook;
 
   useEffect(() => {
-    if (deviceInfos.length === 0 && deviceHook) {
-      getDevices();
-    }
+    getDevices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deviceInfos]);
+  }, []);
 
   const getDevices = () => {
     setIsLoading(true);
