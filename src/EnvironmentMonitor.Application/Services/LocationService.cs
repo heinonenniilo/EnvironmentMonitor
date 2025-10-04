@@ -25,7 +25,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<List<LocationDto>> GetLocations()
         {
-            List<int>? ids;
+            List<Guid>? ids;
             if (_userService.IsAdmin)
             {
                 ids = null;
@@ -34,7 +34,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 ids = _userService.GetLocations();
             }
-            var locations = await _locationRepository.GetLocations(new GetLocationsModel() { Ids = ids, IncludeLocationSensors = true });
+            var locations = await _locationRepository.GetLocations(new GetLocationsModel() { Identifiers = ids, IncludeLocationSensors = true });
             return _mapper.Map<List<LocationDto>>(locations);
         }
     }

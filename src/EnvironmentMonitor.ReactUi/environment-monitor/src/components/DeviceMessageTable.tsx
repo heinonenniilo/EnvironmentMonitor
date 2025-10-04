@@ -6,27 +6,30 @@ import type { DeviceMessage } from "../models/deviceMessage";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { Box, Checkbox, useMediaQuery, useTheme } from "@mui/material";
 import { useSelector } from "react-redux";
-import { getDevices, getLocations } from "../reducers/measurementReducer";
+import { getLocations } from "../reducers/measurementReducer";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { defaultStart } from "../containers/DeviceMessagesView";
+import type { DeviceInfo } from "../models/deviceInfo";
 
 interface Props {
   model: GetDeviceMessagesModel | undefined;
   onLoadingChange?: (state: boolean) => void;
   onRowClick?: (message: DeviceMessage) => void;
+  deviceInfos: DeviceInfo[];
 }
 
 export const DeviceMessagesTable: React.FC<Props> = ({
   model,
   onLoadingChange,
   onRowClick,
+  deviceInfos,
 }) => {
   const hook = useApiHook().deviceHook;
   const [getModel, setGetModel] = useState<GetDeviceMessagesModel | undefined>(
     undefined
   );
   const [isLoading, setIsLoading] = useState(false);
-  const devices = useSelector(getDevices);
+
   const locations = useSelector(getLocations);
   const [paginationModel, setPaginationModel] = useState<
     PaginatedResult<DeviceMessage> | undefined
@@ -34,6 +37,9 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   const theme = useTheme();
   const drawDesktop = useMediaQuery(theme.breakpoints.up("lg"));
 
+  useEffect(() => {
+    console.log(deviceInfos);
+  }, [deviceInfos]);
   useEffect(() => {
     if (!model) {
       return;
@@ -57,7 +63,25 @@ export const DeviceMessagesTable: React.FC<Props> = ({
     hook
       .getDeviceMessage(getModel)
       .then((res) => {
-        setPaginationModel(res);
+        const duplicateCounters = new Map<string, number>();
+        const processedItems = res.items.map((item) => {
+          if (!item.isDuplicate) {
+            return { ...item, uniqueRowId: item.identifier };
+          } else {
+            const currentCount = duplicateCounters.get(item.identifier) || 0;
+            const newCount = currentCount + 1;
+            duplicateCounters.set(item.identifier, newCount);
+            return {
+              ...item,
+              uniqueRowId: `${item.identifier}-dup-${newCount}`,
+            };
+          }
+        });
+
+        setPaginationModel({
+          ...res,
+          items: processedItems,
+        });
       })
       .catch(console.error)
       .finally(() => {
@@ -69,16 +93,18 @@ export const DeviceMessagesTable: React.FC<Props> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getModel]);
 
-  const getDeviceLabel = (deviceId: number) => {
-    const matchingDevice = devices.find((d) => d.id === deviceId);
+  const getDeviceLabel = (deviceIdentifier: string) => {
+    const matchingDevice = deviceInfos.find(
+      (d) => d.device.identifier === deviceIdentifier
+    );
     const matchingLocation = locations.find(
-      (l) => l.id === matchingDevice?.locationId
+      (l) => l.identifier === matchingDevice?.device.locationIdentifier
     );
     return matchingDevice
       ? `${matchingLocation ? `${matchingLocation.name} - ` : ""}${
-          matchingDevice.name
+          matchingDevice.device.name
         }`
-      : deviceId;
+      : deviceIdentifier;
   };
   const columns: GridColDef[] = [
     {
@@ -109,7 +135,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
       minWidth: 150,
       valueGetter: (_value, row) => {
         const deviceMessageRow = row as DeviceMessage;
-        return getDeviceLabel(deviceMessageRow.deviceId);
+        return getDeviceLabel(deviceMessageRow.deviceIdentifier);
       },
     },
     {
@@ -150,7 +176,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
         disableRowSelectionOnClick
         loading={isLoading}
         pagination
-        rowCount={paginationModel?.totalCount}
+        rowCount={paginationModel?.totalCount ?? 0}
         pageSizeOptions={[25, 50, 100]}
         paginationMode="server"
         sortingMode="server"
@@ -184,6 +210,10 @@ export const DeviceMessagesTable: React.FC<Props> = ({
             isDescending: model?.isDescending ?? true,
           }));
         }}
+        getRowId={(row) =>
+          (row as DeviceMessage).uniqueRowId ??
+          (row as DeviceMessage).identifier
+        }
         getRowClassName={(params) =>
           !(params.row as DeviceMessage).isDuplicate && onRowClick
             ? "clickable-row"

@@ -6,6 +6,7 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.Pagination;
+using EnvironmentMonitor.Domain.Models.ReturnModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
@@ -35,11 +36,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return devices;
         }
 
-        public async Task<IEnumerable<Sensor>> GetSensors(GetSensorsModel model)
+        public async Task<List<SensorExtended>> GetSensors(GetSensorsModel model)
         {
             var query = _context.Sensors.Where(x =>
                 (model.DevicesModel.DeviceIdentifiers == null || model.DevicesModel.DeviceIdentifiers.Contains(x.Device.DeviceIdentifier))
                 && (model.DevicesModel.Ids == null || model.DevicesModel.Ids.Contains(x.Device.Id))
+                && (model.Identifiers == null || model.Identifiers.Contains(x.Identifier))
                 && (model.DevicesModel.Identifiers == null || model.DevicesModel.Identifiers.Contains(x.Device.Identifier))
                 );
             if (model.Ids != null)
@@ -50,7 +52,18 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => model.SensorIds.Contains(x.SensorId));
             }
-            return await query.ToListAsync();
+            return await query.Select(x => new SensorExtended()
+            {
+                Id = x.Id,
+                SensorId = x.SensorId,
+                Name = x.Name,
+                Identifier = x.Identifier,
+                DeviceId = x.DeviceId,
+                DeviceIdentifier = x.Device.Identifier,
+                ScaleMin = x.ScaleMin,
+                ScaleMax = x.ScaleMax,
+                TypeId = x.TypeId,
+            }).ToListAsync();
         }
 
         public async Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? dateTimeUtc)
@@ -168,7 +181,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public async Task SetStatus(SetDeviceStatusModel model, bool saveChanges)
         {
             bool statusToSet;
-            var device = await _context.Devices.FirstOrDefaultAsync(x => x.Id == model.DeviceId) ?? throw new EntityNotFoundException();
+            var device = await _context.Devices.FirstOrDefaultAsync(x => x.Identifier == model.Idenfifier) ?? throw new EntityNotFoundException();
             var latestStatus = await _context.DeviceStatusChanges.Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
             var latestMessage = await _context.Measurements.Where(x => 
                 x.Sensor.DeviceId == device.Id
@@ -207,7 +220,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public async Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model)
         {
             var listToReturn = new List<DeviceStatus>();
-            foreach (var deviceId in model.DeviceIds)
+
+            var devices = await _context.Devices.Where(x => model.DeviceIdentifiers.Contains(x.Identifier)).ToListAsync();
+            var deviceIds = devices.Select(x => x.Id).ToList();
+
+            foreach (var deviceId in deviceIds)
             {
                 var latestStatusBeforeTimeRangeStart = await _context.DeviceStatusChanges.Where(x => x.DeviceId == deviceId && x.TimeStamp < model.From).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
                 if (latestStatusBeforeTimeRangeStart != null)
@@ -222,13 +239,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
 
             var query = _context.DeviceStatusChanges.Where(
-                x => model.DeviceIds.Contains(x.DeviceId) &&
+                x => deviceIds.Contains(x.DeviceId) &&
                 x.TimeStamp >= model.From && (model.To == null || x.TimeStamp <= model.To)
             ).OrderBy(x => x.TimeStamp);
 
             var statusList = await query.ToListAsync();
             listToReturn.AddRange(statusList);
-            listToReturn.AddRange(model.DeviceIds.Select(x => new DeviceStatus()
+            listToReturn.AddRange(deviceIds.Select(x => new DeviceStatus()
             {
                 TimeStamp = _dateService.CurrentTime(),
                 Status = listToReturn.Where(y => y.DeviceId == x).OrderByDescending(x => x.TimeStamp).FirstOrDefault()?.Status ?? false,
@@ -276,17 +293,17 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return toReturn ?? throw new EntityNotFoundException();
         }
 
-        public async Task<PaginatedResult<DeviceMessage>> GetDeviceMessages(GetDeviceMessagesModel model)
+        public async Task<PaginatedResult<DeviceMessageExtended>> GetDeviceMessages(GetDeviceMessagesModel model)
         {
             IQueryable<DeviceMessage> query = _context.DeviceMessages;
-            if (model.DeviceIds != null)
+            if (model.DeviceIdentifiers != null)
             {
-                query = query.Where(x => model.DeviceIds.Contains(x.DeviceId));
+                query = query.Where(x => model.DeviceIdentifiers.Contains(x.Device.Identifier));
             }
 
-            if (model.LocationIds != null)
+            if (model.LocationIdentifiers != null)
             {
-                query = query.Where(x => model.LocationIds.Contains(x.Device.LocationId));
+                query = query.Where(x => model.LocationIdentifiers.Contains(x.Device.Location.Identifier));
             }
 
             if (model.IsDuplicate != null)
@@ -309,7 +326,22 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => x.TimeStamp < model.To);
             }
 
-            var res = await _paginationService.PaginateAsync(query, new PaginationParams()
+            var extendedQuery = query.Select(x => new DeviceMessageExtended()
+            {
+                Id = x.Id,
+                DeviceId = x.DeviceId,
+                DeviceIdentifier = x.Device.Identifier,
+                TimeStamp = x.TimeStamp,
+                TimeStampUtc = x.TimeStampUtc,
+                FirstMessage = x.FirstMessage,
+                Identifier = x.Identifier,
+                MessageCount = x.MessageCount,
+                IsDuplicate = x.IsDuplicate,
+                Created = x.Created,
+                CreatedUtc = x.CreatedUtc,
+            });
+
+            var res = await _paginationService.PaginateAsync(extendedQuery, new PaginationParams()
             {
                 PageNumber = model.PageNumber,
                 PageSize = model.PageSize,
@@ -351,9 +383,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => x.Visible);
             }
 
-            if (model.LocationIds != null)
+            if (model.LocationIdentifiers != null)
             {
-                query = query.Where(x => model.LocationIds.Contains(x.LocationId));
+                query = query.Where(x => model.LocationIdentifiers.Contains(x.Location.Identifier));
             }
             return query;
         }

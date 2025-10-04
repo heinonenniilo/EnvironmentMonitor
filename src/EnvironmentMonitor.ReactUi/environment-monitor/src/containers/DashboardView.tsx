@@ -12,6 +12,7 @@ import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorCompo
 import { DashboardDeviceGraph } from "../components/DashboardDeviceGraph";
 import { type Sensor } from "../models/sensor";
 import { type Device } from "../models/device";
+import { stringSort } from "../utilities/stringUtils";
 
 interface DeviceDashboardModel {
   sensors: Sensor[];
@@ -34,13 +35,11 @@ export const DashboardView: React.FC = () => {
 
   const measurementsModel: DeviceDashboardModel[] = useMemo(() => {
     return [...devices]
-      .sort((a, b) => {
-        const locA = a.locationId ?? 0;
-        const locB = b.locationId ?? 0;
-        return locA - locB;
-      })
+      .sort((a, b) => stringSort(a.displayName, b.displayName))
       .map((device) => {
-        const deviceSensors = sensors.filter((s) => s.deviceId === device.id);
+        const deviceSensors = sensors.filter(
+          (s) => s.deviceIdentifier === device.identifier
+        );
 
         return { device, sensors: deviceSensors };
       });
@@ -52,7 +51,7 @@ export const DashboardView: React.FC = () => {
         device={device}
         model={undefined}
         sensors={sensors}
-        key={device.id}
+        key={device.identifier}
         timeRange={timeRange}
         autoFetch
       />

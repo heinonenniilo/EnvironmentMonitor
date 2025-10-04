@@ -12,7 +12,7 @@ namespace EnvironmentMonitor.Domain.Models
         public bool? Status { get; set; }
         public DateTime? TimeStamp { get; set; }
         public string? Details { get; set; }
-        public required int DeviceId { get; set; }
+        public Guid Idenfifier { get; set; }
         public string? Message { get; set; }
         public DeviceMessage? DeviceMessage { get; set; }
     }

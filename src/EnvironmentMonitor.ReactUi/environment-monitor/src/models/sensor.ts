@@ -1,8 +1,12 @@
 export interface Sensor {
-  id: number;
+  identifier: string;
   name: string;
-  deviceId: number;
-  sensorId: number;
+  deviceIdentifier: string;
+
   scaleMin?: number;
   scaleMax?: number;
+}
+
+export interface SensorInfo extends Sensor {
+  sensorId: number;
 }

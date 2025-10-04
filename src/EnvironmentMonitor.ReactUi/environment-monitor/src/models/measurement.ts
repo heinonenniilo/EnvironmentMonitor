@@ -1,5 +1,5 @@
 export interface Measurement {
-  sensorId: number;
+  sensorIdentifier: string;
   sensorValue: number;
   typeId: number;
   timestamp: Date;

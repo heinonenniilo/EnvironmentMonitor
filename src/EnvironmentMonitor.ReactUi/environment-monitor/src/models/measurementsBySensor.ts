@@ -7,7 +7,7 @@ export interface MeasurementsViewModel {
 }
 
 export interface MeasurementsBySensor {
-  sensorId: number;
+  sensorIdentifier: string;
   measurements: Measurement[];
   minValues: { [key: number]: Measurement };
   maxValues: { [key: number]: Measurement };
@@ -22,14 +22,14 @@ export interface MeasurementsModel {
 }
 
 export interface MeasurementsInfo {
-  sensorId: number;
+  sensorIdentifier: string;
   minValues: { [key: number]: Measurement };
   maxValues: { [key: number]: Measurement };
   latestValues: { [key: number]: Measurement };
 }
 
 export interface MeasurementsByLocation {
-  id: number;
+  identifier: string;
   name: string;
   measurements: MeasurementsBySensor[];
   sensors: Sensor[];

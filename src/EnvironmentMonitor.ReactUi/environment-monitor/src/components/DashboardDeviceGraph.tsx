@@ -20,7 +20,7 @@ export const DashboardDeviceGraph: React.FC<{
   timeRange: number;
   autoFetch: boolean;
 }> = ({ device, sensors, model, timeRange, autoFetch }) => {
-  const useAutoScale = useSelector(getDeviceAutoScale(device.id));
+  const useAutoScale = useSelector(getDeviceAutoScale(device.identifier));
   const measurementApiHook = useApiHook().measureHook;
 
   const [deviceModel, setDeviceModel] = useState<
@@ -67,7 +67,7 @@ export const DashboardDeviceGraph: React.FC<{
     setIsLoading(true);
     measurementApiHook
       .getMeasurementsBySensor(
-        sensors.map((x) => x.id),
+        sensors.map((x) => x.identifier),
         momentStart,
         undefined
       )
@@ -110,7 +110,9 @@ export const DashboardDeviceGraph: React.FC<{
         titleAsLink
         useAutoScale={useAutoScale}
         onSetAutoScale={(state) =>
-          dispatch(toggleAutoScale({ deviceId: device.id, state }))
+          dispatch(
+            toggleAutoScale({ deviceIdentifier: device.identifier, state })
+          )
         }
         onRefresh={fetchMeasurements}
         isLoading={isLoading}

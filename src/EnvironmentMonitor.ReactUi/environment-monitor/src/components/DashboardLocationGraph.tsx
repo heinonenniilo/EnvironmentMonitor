@@ -52,7 +52,7 @@ export const DashboardLocationGraph: React.FC<{
       .add(-1 * timeRange, "hour")
       .utc(true);
     measurementApiHook
-      .getMeasurementsByLocation([location.id], momentStart)
+      .getMeasurementsByLocation([location.identifier], momentStart)
       .then((res) => {
         setLastTimeRange(timeRange);
         setMeasurementModel(res?.measurements[0]);

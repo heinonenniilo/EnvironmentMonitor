@@ -35,7 +35,7 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
       flex: 1,
       valueFormatter: (value, row) => {
         const matchingSensor = sensors?.find(
-          (s) => s.id === (row as Measurement).sensorId
+          (s) => s.identifier === (row as Measurement).sensorIdentifier
         );
 
         if (matchingSensor) {

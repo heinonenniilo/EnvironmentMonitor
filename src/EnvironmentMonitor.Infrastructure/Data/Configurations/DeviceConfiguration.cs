@@ -28,6 +28,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 
             builder.Property(x => x.Identifier).HasDefaultValueSql("NEWID()");
             builder.Property(x => x.Identifier).IsRequired();
+            builder.HasIndex(x => x.Identifier).IsUnique();
 
             builder.HasMany(d => d.Sensors)
                 .WithOne(s => s.Device)

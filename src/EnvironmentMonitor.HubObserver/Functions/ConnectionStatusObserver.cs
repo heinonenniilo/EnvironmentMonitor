@@ -23,10 +23,10 @@ namespace EnvironmentMonitor.HubObserver.Functions
             var devices = await _deviceService.GetDeviceInfos(false, null, false);
             foreach (var device in devices)
             {
-                _logger.LogInformation($"Checking connection status for device: {device.Device.Name} ({device.Device.Id})");
+                _logger.LogInformation($"Checking connection status for device: {device.Device.Name} ({device.Device.Identifier})");
                 await _deviceService.SetStatus(new SetDeviceStatusModel()
                 {
-                    DeviceId = device.Device.Id,
+                    Idenfifier = device.Device.Identifier,
                     Message = $"Recurring check"
                 });
             }

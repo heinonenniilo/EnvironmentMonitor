@@ -77,7 +77,7 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
   };
 
   const getTitle = () => {
-    const sensorInfo = `${sensor?.name} (${sensor?.sensorId})`;
+    const sensorInfo = `${sensor?.name} (${sensor?.identifier})`;
     if (device) {
       return `${device.name}: ${sensorInfo}`;
     }

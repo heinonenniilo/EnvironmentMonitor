@@ -137,9 +137,8 @@ namespace EnvironmentMonitor.Tests
             var queryDictionaryForAccessibleLocations = new List<KeyValuePair<string, string>>(); //new Dictionary<string, string>();
             var queryDictionaryForNonAccessibleLocations = new List<KeyValuePair<string, string>>();
 
-            queryDictionaryForAccessibleLocations.Add( new KeyValuePair<string, string>("SensorIds", model.Location.Id.ToString()));
-            queryDictionaryForNonAccessibleLocations.Add(new KeyValuePair<string, string>("SensorIds", "0"));
-            queryDictionaryForNonAccessibleLocations.Add(new KeyValuePair<string, string>("SensorIds", model.LocationWithNoDefinedAccess.Id.ToString()));
+            queryDictionaryForAccessibleLocations.Add( new KeyValuePair<string, string>("SensorIdentifiers", model.Location.Identifier.ToString()));
+            queryDictionaryForNonAccessibleLocations.Add(new KeyValuePair<string, string>("SensorIdentifiers", model.LocationWithNoDefinedAccess.Identifier.ToString()));
 
             queryDictionaryForAccessibleLocations.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
             queryDictionaryForNonAccessibleLocations.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
@@ -168,15 +167,15 @@ namespace EnvironmentMonitor.Tests
             var queryDictionaryForNonAccessibleSensors = new List<KeyValuePair<string, string>>();
             foreach (var sensor in expectedAccessibleDevice.Sensors)
             {
-                queryDictionaryForAccessibleSensors.Add(new KeyValuePair<string, string>("SensorIds", sensor.Id.ToString()));
+                queryDictionaryForAccessibleSensors.Add(new KeyValuePair<string, string>("SensorIdentifiers", sensor.Identifier.ToString()));
             }
             foreach (var sensor in expectedNonAccessibleDevice.Sensors)
             {
-                queryDictionaryForNonAccessibleSensors.Add(new KeyValuePair<string, string>("SensorIds", sensor.Id.ToString()));
+                queryDictionaryForNonAccessibleSensors.Add(new KeyValuePair<string, string>("SensorIdentifiers", sensor.Identifier.ToString()));
             }
             foreach (var sensor in model.DeviceInLocationWithNoAccess.Sensors)
             {
-                queryDictionaryForNonAccessibleSensors.Add(new KeyValuePair<string, string>("SensorIds", sensor.Id.ToString()));
+                queryDictionaryForNonAccessibleSensors.Add(new KeyValuePair<string, string>("SensorIdentifiers", sensor.Identifier.ToString()));
             }
 
             queryDictionaryForAccessibleSensors.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
@@ -208,11 +207,11 @@ namespace EnvironmentMonitor.Tests
             var queryDictionaryForNonAccessibleSensors = new Dictionary<string, string>();
             foreach (var sensor in expectedAccessibleDevice.Sensors)
             {
-                queryDictionaryForAccessibleSensors.Add("SensorIds", sensor.Id.ToString());
+                queryDictionaryForAccessibleSensors.Add("SensorIdentifiers", sensor.Identifier.ToString());
             }
             foreach (var sensor in expectedNonAccessibleDevice.Sensors)
             {
-                queryDictionaryForNonAccessibleSensors.Add("SensorIds", sensor.Id.ToString());
+                queryDictionaryForNonAccessibleSensors.Add("SensorIdentifiers", sensor.Identifier.ToString());
             }
             queryDictionaryForAccessibleSensors.Add("From", DateTime.Now.ToString("yyyy-MM-dd"));
             queryDictionaryForNonAccessibleSensors.Add("From", DateTime.Now.ToString("yyyy-MM-dd"));
@@ -241,8 +240,8 @@ namespace EnvironmentMonitor.Tests
             var loginResult = isAdmin ? await LoginAsync(AdminUserName, AdminPassword) : await LoginAsync(ViewerUserName, ViewerPassword);
             var queryParams =  new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("SensorIds", model.Location.Id.ToString()),
-                new KeyValuePair<string, string>( "SensorIds", model.LocationWithNoDefinedAccess.Id.ToString() ),
+                new KeyValuePair<string, string>("SensorIdentifiers", model.Location.Identifier.ToString()),
+                new KeyValuePair<string, string>( "SensorIdentifiers", model.LocationWithNoDefinedAccess.Identifier.ToString() ),
                 new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd"))
             };
             var apiPath = "/api/measurements/bylocation";
@@ -259,7 +258,7 @@ namespace EnvironmentMonitor.Tests
         {
             var model = await PrepareDatabase();
             var loginResult = isAdmin ? await LoginAsync(AdminUserName, AdminPassword) : await LoginAsync(ViewerUserName, ViewerPassword);
-            var queryParams = model.Sensors.Select(x => new KeyValuePair<string, string>("SensorIds", x.Id.ToString())).ToList();
+            var queryParams = model.Sensors.Select(x => new KeyValuePair<string, string>("SensorIdentifiers", x.Identifier.ToString())).ToList();
             queryParams.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
             var apiPath = "/api/measurements/bysensor";
             var clientPath = QueryHelpers.AddQueryString(apiPath, queryParams);
@@ -354,11 +353,11 @@ namespace EnvironmentMonitor.Tests
 
                 var basicUserInDb = await userManager.FindByEmailAsync(LocationUserName);
                 await userManager.AddToRoleAsync(basicUserInDb, GlobalRoles.User.ToString());
-                await userManager.AddClaimAsync(basicUserInDb, new System.Security.Claims.Claim(EntityRoles.Location.ToString(), location.Id.ToString()));
+                await userManager.AddClaimAsync(basicUserInDb, new System.Security.Claims.Claim(EntityRoles.Location.ToString(), location.Identifier.ToString()));
 
                 var deviceUserInDb = await userManager.FindByEmailAsync(DeviceUserName);
                 await userManager.AddToRoleAsync(deviceUserInDb, GlobalRoles.User.ToString());
-                await userManager.AddClaimAsync(deviceUserInDb, new System.Security.Claims.Claim(EntityRoles.Device.ToString(), deviceWithBaseLocation.Id.ToString()));
+                await userManager.AddClaimAsync(deviceUserInDb, new System.Security.Claims.Claim(EntityRoles.Device.ToString(), deviceWithBaseLocation.Identifier.ToString()));
 
                 var sensors = await measurementDbContext.Sensors.ToListAsync();
 

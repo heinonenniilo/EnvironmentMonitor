@@ -9,7 +9,7 @@ namespace EnvironmentMonitor.Application.DTOs
     public class SaveMeasurementsDto
     {
         public string DeviceId { get; set; }
-        public List<MeasurementDto> Measurements { get; set; } = new List<MeasurementDto>();
+        public List<AddMeasurementDto> Measurements { get; set; } = new List<AddMeasurementDto>();
         public bool FirstMessage { get; set; }
         public DateTime? EnqueuedUtc { get; set; }
         public long? SequenceNumber { get; set; }

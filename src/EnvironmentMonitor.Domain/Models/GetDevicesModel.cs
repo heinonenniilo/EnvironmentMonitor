@@ -13,7 +13,7 @@ namespace EnvironmentMonitor.Domain.Models
         public List<int>? Ids { get; set; }
         public List<string>? DeviceIdentifiers { get; set; }
         public List<Guid>? Identifiers { get; set; }
-        public List<int>? LocationIds { get; set; }
+        public List<Guid>? LocationIdentifiers { get; set; }
         public bool OnlyVisible { get; set; }
         public bool GetAttachments { get; set; }
         public bool GetLocation { get; set; }
@@ -23,6 +23,7 @@ namespace EnvironmentMonitor.Domain.Models
     {
         public required GetDevicesModel DevicesModel { get; set; }
         public List<int>? Ids { get; set; }
+        public List<Guid>? Identifiers { get; set; }
         public List<int>? SensorIds { get; set; }
     }
 }

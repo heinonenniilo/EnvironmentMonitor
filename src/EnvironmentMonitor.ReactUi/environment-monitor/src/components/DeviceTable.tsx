@@ -60,16 +60,16 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
               (params?.row as DeviceInfo)?.device.identifier
             }`}
           >
-            {(params?.row as DeviceInfo)?.device.id}
+            {(params?.row as DeviceInfo)?.device.identifier}
           </Link>
         ) : (
-          (params?.row as DeviceInfo)?.device.id
+          (params?.row as DeviceInfo)?.device.identifier
         ),
       valueGetter: (_value, row) => {
         if (!row) {
           return "";
         }
-        return (row as DeviceInfo)?.device.id;
+        return (row as DeviceInfo)?.device.identifier;
       },
     },
     {
@@ -258,7 +258,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         );
 
         const stateToSet: DeviceMessagesLocationState = {
-          deviceId: row.device.id,
+          deviceIdentifier: row.device.identifier,
         };
         return renderLinkToDeviceMessages ? (
           <Link to={routes.deviceMessages} state={stateToSet}>
@@ -315,7 +315,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           columns={columns}
           getRowId={(row) => {
             if (row) {
-              return (row as DeviceInfo).device.id;
+              return (row as DeviceInfo).device.identifier;
             }
             return "";
           }}

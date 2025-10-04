@@ -20,6 +20,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 .HasMaxLength(512);
             builder.Property(x => x.Identifier).HasDefaultValueSql("NEWID()");
             builder.Property(x => x.Identifier).IsRequired();
+            builder.HasIndex(x => x.Identifier).IsUnique();
             builder.HasMany(x => x.Devices).WithOne(x => x.Location);
             builder.HasIndex(d => d.Name).IsUnique();
             builder.HasIndex(d => d.Identifier).IsUnique();

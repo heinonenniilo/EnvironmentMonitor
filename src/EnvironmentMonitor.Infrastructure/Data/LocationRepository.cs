@@ -21,11 +21,18 @@ namespace EnvironmentMonitor.Infrastructure.Data
         }
         public async Task<List<Location>> GetLocations(GetLocationsModel model)
         {
-            IQueryable<Location> query = _context.Locations;
+            IQueryable<Location> query = _context.Locations.Include(x => x.LocationSensors).ThenInclude(ls => ls.Sensor);
+
             if (model.Ids != null)
             {
                 query = query.Where(x => model.Ids.Contains(x.Id));
             }
+
+            if (model.Identifiers != null)
+            {
+                query = query.Where(x => model.Identifiers.Contains(x.Identifier));
+            }
+
             if (model.IncludeLocationSensors)
             {
                 query = query.Include(x => x.LocationSensors).ThenInclude(ls => ls.Sensor);

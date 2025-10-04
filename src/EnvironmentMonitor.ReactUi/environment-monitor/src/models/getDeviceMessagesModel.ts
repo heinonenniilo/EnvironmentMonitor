@@ -1,7 +1,7 @@
 import type { PaginationParams } from "./paginationParams";
 export interface GetDeviceMessagesModel extends PaginationParams {
-  deviceIds?: number[];
-  locationIds?: number[];
+  deviceIdentifiers?: string[];
+  locationIdentifiers?: string[];
   isDuplicate?: boolean;
   isFirstMessage?: boolean;
   from: moment.Moment;

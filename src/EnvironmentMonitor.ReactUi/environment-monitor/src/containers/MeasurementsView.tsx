@@ -37,15 +37,19 @@ export const MeasurementsView: React.FC = () => {
   const sensors = useSelector(getSensors);
   const dashboardTimeRange = useSelector(getDashboardTimeRange);
   const autoScaleInUseForDevice = useSelector(
-    getDeviceAutoScale(selectedDevices.length === 1 ? selectedDevices[0].id : 0)
+    getDeviceAutoScale(
+      selectedDevices.length === 1 ? selectedDevices[0].identifier : ""
+    )
   );
   const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
 
-  const toggleSensorSelection = (sensorId: number) => {
-    if (selectedSensors.some((s) => s.id === sensorId)) {
-      setSelectedSensors([...selectedSensors.filter((s) => s.id !== sensorId)]);
+  const toggleSensorSelection = (sensorId: string) => {
+    if (selectedSensors.some((s) => s.identifier === sensorId)) {
+      setSelectedSensors([
+        ...selectedSensors.filter((s) => s.identifier !== sensorId),
+      ]);
     } else {
-      const matchingSensor = sensors.find((s) => s.id === sensorId);
+      const matchingSensor = sensors.find((s) => s.identifier === sensorId);
       if (matchingSensor) {
         setSelectedSensors([...selectedSensors, matchingSensor]);
       }
@@ -61,7 +65,9 @@ export const MeasurementsView: React.FC = () => {
       }
     } else {
       setSelectedSensors(
-        selectedSensors.filter((s) => s.deviceId !== matchingDevice?.id)
+        selectedSensors.filter(
+          (s) => s.deviceIdentifier !== matchingDevice?.identifier
+        )
       );
       setSelectedDevices(
         selectedDevices.filter((s) => s.identifier !== deviceId)
@@ -75,8 +81,8 @@ export const MeasurementsView: React.FC = () => {
       if (matchingDevice) {
         setSelectedDevices([matchingDevice]);
         const sensorIds = sensors
-          .filter((s) => s.deviceId === matchingDevice.id)
-          .map((s) => s.id);
+          .filter((s) => s.deviceIdentifier === matchingDevice.identifier)
+          .map((s) => s.identifier);
         setIsLoading(true);
 
         const fromDate = moment()
@@ -89,7 +95,9 @@ export const MeasurementsView: React.FC = () => {
           .getMeasurementsBySensor(sensorIds, fromDate, undefined)
           .then((res) => {
             setSelectedSensors(
-              sensors.filter((sensor) => sensorIds.some((s) => sensor.id === s))
+              sensors.filter((sensor) =>
+                sensorIds.some((s) => sensor.identifier === s)
+              )
             );
             setMeasurementsModel(res);
           })
@@ -104,14 +112,16 @@ export const MeasurementsView: React.FC = () => {
   const onSearch = (
     from: moment.Moment,
     to: moment.Moment | undefined,
-    sensorIds: number[]
+    sensorIds: string[]
   ) => {
     setIsLoading(true);
     measurementApiHook
       .getMeasurementsBySensor(sensorIds, from, to)
       .then((res) => {
         setSelectedSensors(
-          sensors.filter((sensor) => sensorIds.some((s) => sensor.id === s))
+          sensors.filter((sensor) =>
+            sensorIds.some((s) => sensor.identifier === s)
+          )
         );
         setMeasurementsModel(res);
       })
@@ -129,7 +139,7 @@ export const MeasurementsView: React.FC = () => {
           onSearch={(
             from: moment.Moment,
             to: moment.Moment | undefined,
-            sensorIds: number[]
+            sensorIds: string[]
           ) => {
             setTimeFrom(from);
             setTimeTo(to);
@@ -138,14 +148,16 @@ export const MeasurementsView: React.FC = () => {
           onSelectDevice={toggleDeviceSelection}
           toggleSensorSelection={toggleSensorSelection}
           selectedDevices={selectedDevices}
-          selectedSensors={selectedSensors.map((s) => s.id)}
+          selectedSensors={selectedSensors.map((s) => s.identifier)}
           devices={devices}
           sensors={
             selectedDevices
               ? sensors.filter(
                   (s) =>
                     selectedDevices &&
-                    selectedDevices.some((d) => d.id === s.deviceId)
+                    selectedDevices.some(
+                      (d) => d.identifier === s.deviceIdentifier
+                    )
                 )
               : []
           }
@@ -168,7 +180,9 @@ export const MeasurementsView: React.FC = () => {
             measurementsModel
               ? {
                   measurements: measurementsModel.measurements.filter((m) =>
-                    selectedSensors.some((s) => s.id === m.sensorId)
+                    selectedSensors.some(
+                      (s) => s.identifier === m.sensorIdentifier
+                    )
                   ),
                 }
               : undefined
@@ -183,7 +197,7 @@ export const MeasurementsView: React.FC = () => {
             if (selectedDevices.length === 1) {
               dispatch(
                 toggleAutoScale({
-                  deviceId: selectedDevices[0].id,
+                  deviceIdentifier: selectedDevices[0].identifier,
                   state: state,
                 })
               );
@@ -194,7 +208,7 @@ export const MeasurementsView: React.FC = () => {
               onSearch(
                 timeFrom,
                 timeTo,
-                selectedSensors.map((s) => s.id)
+                selectedSensors.map((s) => s.identifier)
               );
             }
           }}

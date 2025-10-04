@@ -1,5 +1,6 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.ReturnModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IMeasurementRepository
     {
-        Task<IEnumerable<Measurement>> GetMeasurements(GetMeasurementsModel model);
+        Task<List<MeasurementExtended>> GetMeasurements(GetMeasurementsModel model);
         public Task<MeasurementType?> GetMeasurementType(int id);
         Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, DeviceMessage? deviceMessage = null);
         Task<DeviceMessage?> GetDeviceMessage(string messageIdentifier, int deviceId);

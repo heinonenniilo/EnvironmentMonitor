@@ -9,6 +9,7 @@ namespace EnvironmentMonitor.Domain.Entities
     public class Sensor
     {
         public int Id { get; set; }
+        public Guid Identifier { get; set; }
         public int DeviceId { get; set; }
         public Device Device { get; set; }
         public int SensorId { get; set; }

@@ -73,7 +73,7 @@ export const DeviceView: React.FC = () => {
     setIsLoadingMeasurments(true);
     measurementApiHook
       .getMeasurementsBySensor(
-        selectedDevice.device.sensors.map((x) => x.id),
+        selectedDevice.sensors.map((x) => x.identifier),
         momentStart,
         undefined
       )
@@ -98,7 +98,7 @@ export const DeviceView: React.FC = () => {
     setIsLoadingMeasurments(true);
     measurementApiHook
       .getMeasurementsBySensor(
-        selectedDevice.device.sensors.map((x) => x.id),
+        selectedDevice.sensors.map((x) => x.identifier),
         momentStart,
         undefined
       )
@@ -124,7 +124,11 @@ export const DeviceView: React.FC = () => {
       .utc(true);
     setIsLoadingDeviceStatus(true);
     deviceHook
-      .getDeviceStatus([selectedDevice.device.id], momentStart, undefined)
+      .getDeviceStatus(
+        [selectedDevice.device.identifier],
+        momentStart,
+        undefined
+      )
       .then((res) => {
         setDeviceStatusModel(res);
       })
@@ -435,6 +439,7 @@ export const DeviceView: React.FC = () => {
           <DeviceTable
             hideName
             showDeviceIdentifier
+            hideId
             onClickVisible={(device) => {
               dispatch(
                 setConfirmDialog({
@@ -493,12 +498,12 @@ export const DeviceView: React.FC = () => {
           }}
         />
         <Collapsible title="Sensors" isOpen={true}>
-          <SensorTable sensors={selectedDevice?.device?.sensors ?? []} />
+          <SensorTable sensors={selectedDevice?.sensors ?? []} />
         </Collapsible>
 
         <Collapsible title="Measurements">
           <MultiSensorGraph
-            sensors={selectedDevice?.device.sensors}
+            sensors={selectedDevice?.sensors}
             model={model}
             minHeight={400}
             title={`${selectedDevice?.device.name} - Last 48 h`}
@@ -521,10 +526,9 @@ export const DeviceView: React.FC = () => {
               selectedDevice
                 ? [
                     {
-                      id: selectedDevice.device.id,
-                      sensorId: 1,
+                      identifier: selectedDevice.device.identifier,
                       name: selectedDevice.device.name,
-                      deviceId: selectedDevice.device.id,
+                      deviceIdentifier: selectedDevice.device.identifier,
                       scaleMin: 0,
                       scaleMax: 2,
                     },
@@ -544,14 +548,15 @@ export const DeviceView: React.FC = () => {
                 ? {
                     measurements: [
                       {
-                        sensorId: selectedDevice.device.id,
+                        sensorIdentifier: selectedDevice.device.identifier,
                         minValues: {},
                         maxValues: {},
                         latestValues: {},
                         measurements: deviceStatusModel
                           ? deviceStatusModel.deviceStatuses.map((d) => {
                               return {
-                                sensorId: selectedDevice.device.id,
+                                sensorIdentifier:
+                                  selectedDevice.device.identifier,
                                 sensorValue: d.status ? 1 : 0,
                                 typeId: MeasurementTypes.Online,
                                 timestamp: d.timestamp,

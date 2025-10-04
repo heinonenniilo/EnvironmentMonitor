@@ -1,4 +1,4 @@
-import { type Sensor } from "../models/sensor";
+import { type SensorInfo } from "../models/sensor";
 import {
   Box,
   Paper,
@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 
 export interface SensorTableProps {
-  sensors: Sensor[];
+  sensors: SensorInfo[];
   title?: string;
 }
 
@@ -38,7 +38,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
           <TableBody>
             {sensors.map((r) => {
               return (
-                <TableRow key={r.id}>
+                <TableRow key={r.identifier}>
                   <TableCell>{r.name}</TableCell>
                   <TableCell>{r.sensorId}</TableCell>
                   <TableCell>{r.scaleMin}</TableCell>

@@ -1,10 +1,11 @@
 export interface DeviceMessage {
-  deviceId: number;
+  deviceIdentifier: string;
   identifier: string;
   timeStamp: Date;
   isDuplicate: boolean;
   uptime: number;
-  id: number;
   messageCount: number;
   firstMessage: boolean;
+  //
+  uniqueRowId?: string; // Calculated
 }
