@@ -37,14 +37,11 @@ export const DeviceAttachments: React.FC<DeviceAttachmentsProps> = ({
       minWidth: 150,
     },
     {
-      field: "isImage",
-      headerName: "Type",
+      field: "extension",
+      headerName: "Extension",
       flex: 1,
       sortable: false,
-      minWidth: 100,
-      valueFormatter: (value) => {
-        return value ? "Image" : "File";
-      },
+      minWidth: 80,
     },
     {
       field: "sizeInBytes",
