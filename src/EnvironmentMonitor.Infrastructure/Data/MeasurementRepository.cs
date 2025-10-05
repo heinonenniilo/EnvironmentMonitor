@@ -51,6 +51,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(predicate);
             }
 
+            if (model.DeviceIdentifiers.Any())
+            {
+                query = query.Where(x => model.DeviceIdentifiers.Contains(x.Sensor.Device.Identifier));
+            }
+
             if (model.DeviceMessageIdentifiers?.Any() == true)
             {
                 query = query.Where(x => x.DeviceMessage != null && !x.DeviceMessage.IsDuplicate && !string.IsNullOrEmpty(x.DeviceMessage.Identifier) && model.DeviceMessageIdentifiers.Contains(x.DeviceMessage.Identifier));
