@@ -54,13 +54,20 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public async Task<DeviceInfoDto> UploadAttachment([FromForm] Guid deviceId, [FromForm] bool isDeviceImage, [FromForm] string? fileName, IFormFile file)
         {
             var maxFileSize = _fileUploadSettings.MaxImageUploadSizeMb * 1024 * 1024;
+
+            if (!string.IsNullOrEmpty(fileName) && (fileName.Length > 100 || fileName.Length < 6))
+            {
+                throw new ArgumentException("Invalid filename length");
+            }
+
             if (file == null || file.Length > maxFileSize)
             {
                 throw new ArgumentException("File too large");
             }
+
             await _deviceService.AddAttachment(deviceId, new UploadAttachmentModel()
             {
-                FileName = string.IsNullOrEmpty(fileName)  ? file.FileName: fileName,
+                FileName = string.IsNullOrEmpty(fileName) ? file.FileName : fileName,
                 Stream = file.OpenReadStream(),
                 ContentType = file.ContentType,
                 IsImage = isDeviceImage
