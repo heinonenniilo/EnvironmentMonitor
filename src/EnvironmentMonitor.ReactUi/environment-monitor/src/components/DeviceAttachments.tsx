@@ -5,15 +5,16 @@ import type { DeviceAttachment } from "../models/deviceAttachment";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { formatBytes } from "../utilities/stringUtils";
 import { FileUpload, Download, Delete } from "@mui/icons-material";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { DeviceInfo } from "../models/deviceInfo";
 import { getDeviceAttachmentUrl } from "../utilities/deviceUtils";
+import { FileUploadDialog } from "./FileUploadDialog";
 
 export interface DeviceAttachmentsProps {
   attachments: DeviceAttachment[];
   device: DeviceInfo | undefined;
   title?: string;
-  onUploadAttachment: (file: File) => void;
+  onUploadAttachment: (file: File, customName?: string) => void;
   onDeleteAttachment: (attachmentId: string) => void;
 }
 
@@ -25,6 +26,8 @@ export const DeviceAttachments: React.FC<DeviceAttachmentsProps> = ({
   onDeleteAttachment,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const columns: GridColDef[] = [
     {
       field: "name",
@@ -117,58 +120,84 @@ export const DeviceAttachments: React.FC<DeviceAttachmentsProps> = ({
     fileInputRef.current?.click();
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+      setUploadDialogOpen(true);
+      // Reset input value to allow selecting same file again
+      e.target.value = "";
+    }
+  };
+
+  const handleUploadConfirm = (file: File, customName?: string) => {
+    onUploadAttachment(file, customName);
+    setSelectedFile(null);
+    setUploadDialogOpen(false);
+  };
+
+  const handleUploadCancel = () => {
+    setSelectedFile(null);
+    setUploadDialogOpen(false);
+  };
+
   return (
-    <Collapsible
-      title={title ?? "Attachments"}
-      isOpen={true}
-      customComponent={
-        <Tooltip title="Upload new image" arrow>
-          <IconButton
-            onClick={openFileDialog}
-            sx={{ ml: 1, cursor: "pointer" }}
-            size="small"
-          >
-            <FileUpload />
-          </IconButton>
-        </Tooltip>
-      }
-    >
-      <Box marginTop={2} display="flex" flexDirection="column">
-        {attachments.length === 0 ? (
-          <Typography variant="body2" color="textSecondary">
-            No attachments found
-          </Typography>
-        ) : (
-          <Box sx={{ width: "100%", maxHeight: 600 }}>
-            <DataGrid
-              rows={attachments}
-              columns={columns}
-              getRowId={(row) => (row as DeviceAttachment).guid}
-              disableRowSelectionOnClick
-              density="compact"
-              hideFooter={attachments.length <= 25}
-              pageSizeOptions={[25, 50, 100]}
-              autoHeight
-              sx={{
-                maxHeight: 600,
-                "& .MuiDataGrid-virtualScroller": {
-                  maxHeight: 550,
-                },
-              }}
-            />
-          </Box>
-        )}
-        <input
-          type="file"
-          hidden
-          ref={fileInputRef}
-          onChange={(e) => {
-            if (e.target.files && e.target.files?.length > 0) {
-              onUploadAttachment(e.target.files?.[0]);
-            }
-          }}
-        />
-      </Box>
-    </Collapsible>
+    <>
+      <Collapsible
+        title={title ?? "Attachments"}
+        isOpen={true}
+        customComponent={
+          <Tooltip title="Upload new attachment" arrow>
+            <IconButton
+              onClick={openFileDialog}
+              sx={{ ml: 1, cursor: "pointer" }}
+              size="small"
+            >
+              <FileUpload />
+            </IconButton>
+          </Tooltip>
+        }
+      >
+        <Box marginTop={2} display="flex" flexDirection="column">
+          {attachments.length === 0 ? (
+            <Typography variant="body2" color="textSecondary">
+              No attachments found
+            </Typography>
+          ) : (
+            <Box sx={{ width: "100%", maxHeight: 600 }}>
+              <DataGrid
+                rows={attachments}
+                columns={columns}
+                getRowId={(row) => (row as DeviceAttachment).guid}
+                disableRowSelectionOnClick
+                density="compact"
+                hideFooter={attachments.length <= 25}
+                pageSizeOptions={[25, 50, 100]}
+                autoHeight
+                sx={{
+                  maxHeight: 600,
+                  "& .MuiDataGrid-virtualScroller": {
+                    maxHeight: 550,
+                  },
+                }}
+              />
+            </Box>
+          )}
+          <input
+            type="file"
+            hidden
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+          />
+        </Box>
+      </Collapsible>
+
+      <FileUploadDialog
+        open={uploadDialogOpen}
+        file={selectedFile}
+        onClose={handleUploadCancel}
+        onConfirm={handleUploadConfirm}
+        title="Upload Attachment"
+      />
+    </>
   );
 };

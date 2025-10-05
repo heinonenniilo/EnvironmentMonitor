@@ -344,14 +344,23 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const uploadAttachment = (file: File, isDeviceImage: boolean) => {
+  const uploadAttachment = (
+    file: File,
+    isDeviceImage: boolean,
+    name?: string
+  ) => {
     if (selectedDevice === undefined) {
       return;
     }
     setIsLoading(true);
 
     deviceHook
-      .uploadAttachment(selectedDevice?.device.identifier, file, isDeviceImage)
+      .uploadAttachment(
+        selectedDevice?.device.identifier,
+        file,
+        isDeviceImage,
+        name
+      )
       .then((res) => {
         setSelectedDevice(res);
         if (isDeviceImage) {
@@ -519,16 +528,8 @@ export const DeviceView: React.FC = () => {
               })
             );
           }}
-          onUploadAttachment={(file) => {
-            dispatch(
-              setConfirmDialog({
-                onConfirm: () => {
-                  uploadAttachment(file, false);
-                },
-                title: "Upload attachment?",
-                body: `Upload "${file.name}"?`,
-              })
-            );
+          onUploadAttachment={(file, customName) => {
+            uploadAttachment(file, false, customName);
           }}
         />
 

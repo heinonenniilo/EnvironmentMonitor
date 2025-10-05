@@ -84,7 +84,8 @@ interface deviceHook {
   uploadAttachment: (
     identifire: string,
     file: File,
-    isDeviceImage: boolean
+    isDeviceImage: boolean,
+    fileName?: string
   ) => Promise<DeviceInfo | undefined>;
   deleteAttachment: (
     deviceIdentifier: string,
@@ -401,12 +402,16 @@ export const useApiHook = (): ApiHook => {
       uploadAttachment: async (
         identifier: string,
         file: File,
-        isDeviceImage: boolean
+        isDeviceImage: boolean,
+        fileName?: string
       ) => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("deviceId", identifier);
         formData.append("isDeviceImage", isDeviceImage ? "true" : "false");
+        if (fileName) {
+          formData.append("fileName", fileName);
+        }
         try {
           const res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
             `/api/devices/attachment/`,
