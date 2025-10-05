@@ -22,7 +22,7 @@ import { useDropzone } from "react-dropzone";
 import { DeviceImageDialog } from "./DeviceImageDialog";
 import { dateTimeSort, getFormattedDate } from "../utilities/datetimeUtils";
 import { formatBytes } from "../utilities/stringUtils";
-import { getDeviceImageUrl } from "../utilities/deviceUtils";
+import { getDeviceAttachmentUrl } from "../utilities/deviceUtils";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -91,7 +91,9 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
   };
 
   const attachments = device?.attachments
-    ? device?.attachments.sort((a, b) => dateTimeSort(b.created, a.created))
+    ? device?.attachments
+        .filter((a) => a.isImage)
+        .sort((a, b) => dateTimeSort(b.created, a.created))
     : [];
 
   const activeAttachment =
@@ -108,7 +110,10 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     if (!activeAttachment || !device) {
       return "";
     }
-    return getDeviceImageUrl(device.device.identifier, activeAttachment.guid);
+    return getDeviceAttachmentUrl(
+      device.device.identifier,
+      activeAttachment.guid
+    );
   };
 
   return !device ? (
