@@ -11,6 +11,9 @@ namespace EnvironmentMonitor.Domain.Models
         public required Stream Stream { get; set; }
         public required string FileName { get; set; }
         public required string ContentType { get; set; }
-
+        /// <summary>
+        /// Is device image?
+        /// </summary>
+        public required bool IsImage { get; set; }
     }
 }

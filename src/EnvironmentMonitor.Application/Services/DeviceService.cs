@@ -277,7 +277,8 @@ namespace EnvironmentMonitor.Application.Services
             {
                 FileName = fileNameToSave,
                 ContentType = fileModel.ContentType,
-                Stream = await _imageService.CompressToSize(fileModel.Stream),
+                Stream = fileModel.IsImage ? await _imageService.CompressToSize(fileModel.Stream) : fileModel.Stream,
+                IsImage = fileModel.IsImage
             });
 
             await _deviceRepository.AddAttachment(device.Id, new Attachment()
@@ -289,6 +290,7 @@ namespace EnvironmentMonitor.Application.Services
                 Extension = extension,
                 Created = _dateService.CurrentTime(),
                 ContentType = fileModel.ContentType,
+                IsImage = fileModel.IsImage
             },
             true);
         }

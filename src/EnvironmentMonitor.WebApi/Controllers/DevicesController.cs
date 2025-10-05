@@ -51,7 +51,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> UploadAttachment([FromForm] Guid deviceId, IFormFile file)
+        public async Task<DeviceInfoDto> UploadAttachment([FromForm] Guid deviceId, [FromForm] bool isDeviceImage, IFormFile file)
         {
             var maxFileSize = _fileUploadSettings.MaxImageUploadSizeMb * 1024 * 1024;
             if (file == null || file.Length > maxFileSize)
@@ -62,14 +62,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
             {
                 FileName = file.FileName,
                 Stream = file.OpenReadStream(),
-                ContentType = file.ContentType
+                ContentType = file.ContentType,
+                IsImage = isDeviceImage
             });
             var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId], true);
             return deviceInfos.First();
         }
 
         [HttpGet("{deviceId}/attachment/{identifier}")]
-        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "image/jpeg")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAttachment([FromRoute] Guid deviceId, [FromRoute] Guid identifier)
         {
