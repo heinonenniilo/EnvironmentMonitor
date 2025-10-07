@@ -113,7 +113,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 Created = _dateService.CurrentTime(),
                 Attachment = model.Attachment,
                 Device = device,
-                IsDefaultImage = model.IsDeviceImage && (!device.Attachments.Any(x => x.IsDefaultImage))
+                IsDefaultImage = model.IsDeviceImage && (!device.Attachments.Any(x => x.IsDefaultImage)),
                 IsDeviceImage = model.IsDeviceImage,
             });
             if (model.SaveChanges)
