@@ -1,6 +1,7 @@
 ﻿using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.AddModels;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.Pagination;
 using System;
@@ -28,7 +29,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model);
 
         public Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model);
-        public Task AddAttachment(Guid identifier, UploadAttachmentModel fileModel);
+        public Task AddAttachment(UploadDeviceAttachmentModel fileModel);
         public Task DeleteAttachment(Guid identifier, Guid attachmentIdentifier);
         public Task<AttachmentDownloadModel?> GetAttachment(Guid identifier, Guid attachmentIdentifier);
         public Task<AttachmentDownloadModel?> GetDefaultImage(Guid identifier);

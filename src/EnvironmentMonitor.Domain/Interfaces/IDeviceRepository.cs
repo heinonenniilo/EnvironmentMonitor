@@ -1,6 +1,7 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.AddModels;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.Pagination;
 using EnvironmentMonitor.Domain.Models.ReturnModel;
@@ -24,7 +25,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<PaginatedResult<DeviceMessageExtended>> GetDeviceMessages(GetDeviceMessagesModel model);
 
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);
-        public Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges);       
+        public Task AddAttachment(AddDeviceAttachmentModel model);
         public Task DeleteAttachment(int deviceId, Guid attachmentIdentifier, bool saveChanges);
         public Task SetDefaultImage(int deviceId, Guid attachmentIdentifier);
 

@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.Pagination;
+using EnvironmentMonitor.Domain.Models.AddModels;
 
 namespace EnvironmentMonitor.Application.Services
 {
@@ -264,35 +265,38 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceEventDto>>(events);
         }
 
-        public async Task AddAttachment(Guid identifier, UploadAttachmentModel fileModel)
+        public async Task AddAttachment(UploadDeviceAttachmentModel fileModel)
         {
-            if (!_userService.HasAccessToDevice(identifier, AccessLevels.Write))
+            if (!_userService.HasAccessToDevice(fileModel.DeviceIdentifier, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
             }
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault();
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [fileModel.DeviceIdentifier] })).FirstOrDefault();
             var extension = Path.GetExtension(fileModel.FileName);
             var fileNameToSave = $"{device.Identifier}_{Guid.NewGuid()}{extension}";
             var res = await _storageClient.Upload(new UploadAttachmentModel()
             {
                 FileName = fileNameToSave,
                 ContentType = fileModel.ContentType,
-                Stream = fileModel.IsImage ? await _imageService.CompressToSize(fileModel.Stream) : fileModel.Stream,
-                IsImage = fileModel.IsImage
+                Stream = fileModel.IsDeviceImage ? await _imageService.CompressToSize(fileModel.Stream) : fileModel.Stream
             });
 
-            await _deviceRepository.AddAttachment(device.Id, new Attachment()
+            await _deviceRepository.AddAttachment(new AddDeviceAttachmentModel()
             {
-                Name = fileNameToSave,
-                OriginalName = fileModel.FileName,
-                FullPath = res.ToString(),
-                Path = res.ToString(),
-                Extension = extension,
-                Created = _dateService.CurrentTime(),
-                ContentType = fileModel.ContentType,
-                IsImage = fileModel.IsImage
-            },
-            true);
+                Attachment = new Attachment()
+                {
+                    Name = fileNameToSave,
+                    OriginalName = fileModel.FileName,
+                    FullPath = res.ToString(),
+                    Path = res.ToString(),
+                    Extension = extension,
+                    Created = _dateService.CurrentTime(),
+                    ContentType = fileModel.ContentType
+                },
+                IsDeviceImage = fileModel.IsDeviceImage,
+                Identifier = device.Identifier,
+                SaveChanges = true
+            });
         }
 
         public async Task DeleteAttachment(Guid identifier, Guid attachmentIdentifier)

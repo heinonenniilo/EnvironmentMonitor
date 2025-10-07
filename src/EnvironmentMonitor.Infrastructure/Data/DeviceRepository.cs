@@ -4,6 +4,7 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.AddModels;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.Pagination;
 using EnvironmentMonitor.Domain.Models.ReturnModel;
@@ -103,18 +104,19 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return await query.ToListAsync();
         }
 
-        public async Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges)
+        public async Task AddAttachment(AddDeviceAttachmentModel model)
         {
-            var device = await _context.Devices.Include(x => x.Attachments).FirstAsync(x => x.Id == deviceId);
-            _context.Attachments.Add(attachment);
+            var device = await _context.Devices.Include(x => x.Attachments).FirstAsync(x => x.Identifier == model.Identifier);
+            _context.Attachments.Add(model.Attachment);
             _context.DeviceAttachments.Add(new DeviceAttachment()
             {
                 Created = _dateService.CurrentTime(),
-                Attachment = attachment,
+                Attachment = model.Attachment,
                 Device = device,
-                IsDefaultImage = !device.Attachments.Any(x => x.IsDefaultImage)
+                IsDefaultImage = model.IsDeviceImage && (!device.Attachments.Any(x => x.IsDefaultImage))
+                IsDeviceImage = model.IsDeviceImage,
             });
-            if (saveChanges)
+            if (model.SaveChanges)
             {
                 await _context.SaveChangesAsync();
             }

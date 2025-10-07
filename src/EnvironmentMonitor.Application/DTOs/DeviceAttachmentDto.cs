@@ -23,7 +23,7 @@ namespace EnvironmentMonitor.Application.DTOs
             profile.CreateMap<DeviceAttachment, DeviceAttachmentDto>()
                 .ForMember(x => x.Name, opt => opt.MapFrom(x => x.Attachment != null ? x.Attachment.OriginalName : ""))
                 .ForMember(x => x.SizeInBytes, opt => opt.MapAtRuntime())
-                .ForMember(x => x.IsImage, opt => opt.MapFrom(x => x.Attachment.IsImage))
+                .ForMember(x => x.IsImage, opt => opt.MapFrom(x => x.IsDeviceImage))
                 .ForMember(x => x.Extension, opt => opt.MapFrom(x => x.Attachment.Extension))
                 .ReverseMap();
         }

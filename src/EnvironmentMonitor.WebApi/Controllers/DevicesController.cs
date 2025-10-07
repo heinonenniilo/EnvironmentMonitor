@@ -16,6 +16,7 @@ using System.Security.Claims;
 using EnvironmentMonitor.Application.Services;
 using EnvironmentMonitor.Domain.Models.Pagination;
 using EnvironmentMonitor.Domain.Models.GetModels;
+using EnvironmentMonitor.Domain.Models.AddModels;
 
 namespace EnvironmentMonitor.WebApi.Controllers
 {
@@ -65,12 +66,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 throw new ArgumentException("File too large");
             }
 
-            await _deviceService.AddAttachment(deviceId, new UploadAttachmentModel()
+            await _deviceService.AddAttachment(new UploadDeviceAttachmentModel()
             {
+                DeviceIdentifier = deviceId,
                 FileName = string.IsNullOrEmpty(fileName) ? file.FileName : fileName,
                 Stream = file.OpenReadStream(),
                 ContentType = file.ContentType,
-                IsImage = isDeviceImage
+                IsDeviceImage = isDeviceImage
             });
             var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId], true);
             return deviceInfos.First();

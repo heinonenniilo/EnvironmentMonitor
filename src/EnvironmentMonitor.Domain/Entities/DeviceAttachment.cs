@@ -14,5 +14,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public int AttachmentId { get; set; }
         public Attachment Attachment { get; set; }
         public bool IsDefaultImage { get; set; }
+        public bool IsDeviceImage { get; set; }
     }
 }
