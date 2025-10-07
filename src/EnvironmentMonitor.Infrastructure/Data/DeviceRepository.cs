@@ -144,10 +144,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
             _context.Remove(deviceAttachment.Attachment);
             if (deviceAttachment.IsDefaultImage)
             {
-                var firstOtherAttachment = await _context.DeviceAttachments.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid != attachmentIdentifier);
-                if (firstOtherAttachment != null)
+                var firstOtherImageAttachment = await _context.DeviceAttachments.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid != attachmentIdentifier && x.IsDeviceImage);
+                if (firstOtherImageAttachment != null)
                 {
-                    firstOtherAttachment.IsDefaultImage = true;
+                    firstOtherImageAttachment.IsDefaultImage = true;
                 }
             }
             if (saveChanges)
