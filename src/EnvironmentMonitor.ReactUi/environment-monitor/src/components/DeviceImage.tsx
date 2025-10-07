@@ -92,7 +92,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
 
   const attachments = device?.attachments
     ? device?.attachments
-        .filter((a) => a.isImage)
+        .filter((a) => a.isDeviceImage)
         .sort((a, b) => dateTimeSort(b.created, a.created))
     : [];
 

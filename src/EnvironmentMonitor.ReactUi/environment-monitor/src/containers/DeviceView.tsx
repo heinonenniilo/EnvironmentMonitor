@@ -514,7 +514,7 @@ export const DeviceView: React.FC = () => {
 
         <DeviceAttachments
           attachments={
-            selectedDevice?.attachments.filter((a) => !a.isImage) ?? []
+            selectedDevice?.attachments.filter((a) => !a.isDeviceImage) ?? []
           }
           device={selectedDevice}
           onDeleteAttachment={(identifier: string) => {
