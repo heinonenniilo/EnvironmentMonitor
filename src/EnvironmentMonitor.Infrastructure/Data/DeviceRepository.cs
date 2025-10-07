@@ -106,7 +106,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task AddAttachment(AddDeviceAttachmentModel model)
         {
-            var device = await _context.Devices.Include(x => x.Attachments).FirstAsync(x => x.Identifier == model.Identifier);
+            var device = await _context.Devices.Include(x => x.Attachments).FirstAsync(x => x.Identifier == model.Identifier) 
+                ?? throw new EntityNotFoundException($"Device with identifier: {model.Identifier} not found.");
             _context.Attachments.Add(model.Attachment);
             _context.DeviceAttachments.Add(new DeviceAttachment()
             {
@@ -124,11 +125,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<Attachment> GetAttachment(int deviceId, Guid attachmentIdentifier)
         {
-            var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier);
-            if (deviceAttachment == null)
-            {
-                throw new EntityNotFoundException();
-            }
+            var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier)
+                ?? throw new EntityNotFoundException($"Attachment for device with id: {deviceId} and attachment identifier: {attachmentIdentifier} not found.");
             return deviceAttachment.Attachment;
         }
 
@@ -139,7 +137,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task DeleteAttachment(int deviceId, Guid attachmentIdentifier, bool saveChanges)
         {
-            var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier);
+            var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier)
+                ?? throw new EntityNotFoundException($"Attachment for device with id: {deviceId} and attachment identifier: {attachmentIdentifier} not found.");
             _context.Remove(deviceAttachment);
             _context.Remove(deviceAttachment.Attachment);
             if (deviceAttachment.IsDefaultImage)
