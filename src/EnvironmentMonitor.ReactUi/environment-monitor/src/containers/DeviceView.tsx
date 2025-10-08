@@ -368,7 +368,7 @@ export const DeviceView: React.FC = () => {
         }
         dispatch(
           addNotification({
-            title: "Image uploaded",
+            title: isDeviceImage ? "Image uploaded" : "Attachment uploaded",
             body: "",
             severity: "success",
           })
@@ -394,7 +394,7 @@ export const DeviceView: React.FC = () => {
         setSelectedDevice(res);
         dispatch(
           addNotification({
-            title: "Image deleted",
+            title: "Attachment deleted",
             body: "Success",
             severity: "success",
           })
