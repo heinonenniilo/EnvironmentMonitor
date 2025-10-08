@@ -27,6 +27,7 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
   title = "Upload File",
 }) => {
   const [customName, setCustomName] = useState("");
+  const fileMinLength = 5;
 
   useEffect(() => {
     if (file) {
@@ -46,6 +47,14 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
     setCustomName("");
     onClose();
   };
+
+  const revertName = () => {
+    if (file) {
+      setCustomName(file.name);
+    }
+  };
+
+  const canUpload = customName.trim().length >= fileMinLength && file !== null;
 
   const getFileExtension = (filename: string) => {
     return filename.split(".").pop() || "";
@@ -77,7 +86,15 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
-        <Button onClick={handleConfirm} color="primary" variant="contained">
+        <Button onClick={revertName} disabled={customName === file?.name}>
+          Revert
+        </Button>
+        <Button
+          disabled={!canUpload}
+          onClick={handleConfirm}
+          color="primary"
+          variant="contained"
+        >
           Upload
         </Button>
       </DialogActions>
