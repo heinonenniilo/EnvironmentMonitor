@@ -4,6 +4,7 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.AddModels;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.Pagination;
 using EnvironmentMonitor.Domain.Models.ReturnModel;
@@ -103,18 +104,20 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return await query.ToListAsync();
         }
 
-        public async Task AddAttachment(int deviceId, Attachment attachment, bool saveChanges)
+        public async Task AddAttachment(AddDeviceAttachmentModel model)
         {
-            var device = await _context.Devices.Include(x => x.Attachments).FirstAsync(x => x.Id == deviceId);
-            _context.Attachments.Add(attachment);
+            var device = await _context.Devices.Include(x => x.Attachments).FirstAsync(x => x.Identifier == model.Identifier) 
+                ?? throw new EntityNotFoundException($"Device with identifier: {model.Identifier} not found.");
+            _context.Attachments.Add(model.Attachment);
             _context.DeviceAttachments.Add(new DeviceAttachment()
             {
                 Created = _dateService.CurrentTime(),
-                Attachment = attachment,
+                Attachment = model.Attachment,
                 Device = device,
-                IsDefaultImage = !device.Attachments.Any(x => x.IsDefaultImage)
+                IsDefaultImage = model.IsDeviceImage && (!device.Attachments.Any(x => x.IsDefaultImage)),
+                IsDeviceImage = model.IsDeviceImage,
             });
-            if (saveChanges)
+            if (model.SaveChanges)
             {
                 await _context.SaveChangesAsync();
             }
@@ -122,11 +125,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task<Attachment> GetAttachment(int deviceId, Guid attachmentIdentifier)
         {
-            var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier);
-            if (deviceAttachment == null)
-            {
-                throw new EntityNotFoundException();
-            }
+            var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier)
+                ?? throw new EntityNotFoundException($"Attachment for device with id: {deviceId} and attachment identifier: {attachmentIdentifier} not found.");
             return deviceAttachment.Attachment;
         }
 
@@ -137,15 +137,16 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public async Task DeleteAttachment(int deviceId, Guid attachmentIdentifier, bool saveChanges)
         {
-            var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier);
+            var deviceAttachment = await _context.DeviceAttachments.Include(x => x.Attachment).FirstAsync(x => x.DeviceId == deviceId && x.Guid == attachmentIdentifier)
+                ?? throw new EntityNotFoundException($"Attachment for device with id: {deviceId} and attachment identifier: {attachmentIdentifier} not found.");
             _context.Remove(deviceAttachment);
             _context.Remove(deviceAttachment.Attachment);
             if (deviceAttachment.IsDefaultImage)
             {
-                var firstOtherAttachment = await _context.DeviceAttachments.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid != attachmentIdentifier);
-                if (firstOtherAttachment != null)
+                var firstOtherImageAttachment = await _context.DeviceAttachments.FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Guid != attachmentIdentifier && x.IsDeviceImage);
+                if (firstOtherImageAttachment != null)
                 {
-                    firstOtherAttachment.IsDefaultImage = true;
+                    firstOtherImageAttachment.IsDefaultImage = true;
                 }
             }
             if (saveChanges)

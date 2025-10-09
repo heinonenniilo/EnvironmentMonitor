@@ -21,11 +21,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
             builder.Property(x => x.Extension).IsRequired();
             builder.Property(x => x.Path).HasMaxLength(1024).IsRequired();
             builder.Property(x => x.FullPath).HasMaxLength(1024);
-            builder.Property(x => x.IsImage).IsRequired();
-
-            builder.HasIndex(x => x.Name).IsUnique();
-            // builder.Property(x => x.CreatedAtUtc).HasDefaultValueSql("GETUTCDATE()").IsRequired();
-            
+            builder.HasIndex(x => x.Name).IsUnique();           
         }
     }
 }

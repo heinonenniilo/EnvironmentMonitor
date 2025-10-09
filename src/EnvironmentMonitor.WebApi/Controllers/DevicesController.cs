@@ -16,6 +16,7 @@ using System.Security.Claims;
 using EnvironmentMonitor.Application.Services;
 using EnvironmentMonitor.Domain.Models.Pagination;
 using EnvironmentMonitor.Domain.Models.GetModels;
+using EnvironmentMonitor.Domain.Models.AddModels;
 
 namespace EnvironmentMonitor.WebApi.Controllers
 {
@@ -51,25 +52,34 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> UploadAttachment([FromForm] Guid deviceId, IFormFile file)
+        public async Task<DeviceInfoDto> UploadAttachment([FromForm] Guid deviceId, [FromForm] bool isDeviceImage, [FromForm] string? fileName, IFormFile file)
         {
             var maxFileSize = _fileUploadSettings.MaxImageUploadSizeMb * 1024 * 1024;
+
+            if (!string.IsNullOrEmpty(fileName) && (fileName.Length > 100 || fileName.Length < 6))
+            {
+                throw new ArgumentException("Invalid filename length");
+            }
+
             if (file == null || file.Length > maxFileSize)
             {
                 throw new ArgumentException("File too large");
             }
-            await _deviceService.AddAttachment(deviceId, new UploadAttachmentModel()
+
+            await _deviceService.AddAttachment(new UploadDeviceAttachmentModel()
             {
-                FileName = file.FileName,
+                DeviceIdentifier = deviceId,
+                FileName = string.IsNullOrEmpty(fileName) ? file.FileName : fileName,
                 Stream = file.OpenReadStream(),
-                ContentType = file.ContentType
+                ContentType = file.ContentType,
+                IsDeviceImage = isDeviceImage
             });
             var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId], true);
             return deviceInfos.First();
         }
 
         [HttpGet("{deviceId}/attachment/{identifier}")]
-        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK, "image/jpeg")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAttachment([FromRoute] Guid deviceId, [FromRoute] Guid identifier)
         {

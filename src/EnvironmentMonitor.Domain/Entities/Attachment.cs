@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Entities
 {
-    public class Attachment: TrackedEntity
+    public class Attachment : TrackedEntity
     {
         public int Id { get; set; }
         public required string Name { get; set; }
@@ -15,8 +15,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public string? ContentType { get; set; }
         public required string Path { get; set; }
         public string? FullPath { get; set; }
-        public bool IsImage { get; set; } = true;
-
         public List<DeviceAttachment> DeviceAttachments { get; set; }
     }
 }

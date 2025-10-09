@@ -24,6 +24,7 @@ import { MeasurementTypes } from "../enums/measurementTypes";
 import { setDevices } from "../reducers/measurementReducer";
 import { getDeviceTitle } from "../utilities/deviceUtils";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
+import { DeviceAttachments } from "../components/DeviceAttachments";
 
 interface PromiseInfo {
   type: string;
@@ -343,21 +344,31 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const uploadImage = (file: File) => {
+  const uploadAttachment = (
+    file: File,
+    isDeviceImage: boolean,
+    name?: string
+  ) => {
     if (selectedDevice === undefined) {
       return;
     }
-    //
     setIsLoading(true);
 
     deviceHook
-      .uploadImage(selectedDevice?.device.identifier, file)
+      .uploadAttachment(
+        selectedDevice?.device.identifier,
+        file,
+        isDeviceImage,
+        name
+      )
       .then((res) => {
         setSelectedDevice(res);
-        setDefaultImageVer(defaultImageVer + 1);
+        if (isDeviceImage) {
+          setDefaultImageVer(defaultImageVer + 1);
+        }
         dispatch(
           addNotification({
-            title: "Image uploaded",
+            title: isDeviceImage ? "Image uploaded" : "Attachment uploaded",
             body: "",
             severity: "success",
           })
@@ -371,7 +382,7 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const deleteImage = (identifier: string) => {
+  const deleteAttachment = (identifier: string) => {
     if (selectedDevice === undefined) {
       return;
     }
@@ -383,7 +394,7 @@ export const DeviceView: React.FC = () => {
         setSelectedDevice(res);
         dispatch(
           addNotification({
-            title: "Image deleted",
+            title: "Attachment deleted",
             body: "Success",
             severity: "success",
           })
@@ -478,7 +489,7 @@ export const DeviceView: React.FC = () => {
             dispatch(
               setConfirmDialog({
                 onConfirm: () => {
-                  deleteImage(identifier);
+                  deleteAttachment(identifier);
                 },
                 title: "Delete image",
                 body: `The selected image of ${selectedDevice?.device.name} will be removed.`,
@@ -489,7 +500,7 @@ export const DeviceView: React.FC = () => {
             dispatch(
               setConfirmDialog({
                 onConfirm: () => {
-                  uploadImage(file);
+                  uploadAttachment(file, true);
                 },
                 title: "Upload new image?",
                 body: `Upload "${file.name}"?`,
@@ -500,6 +511,27 @@ export const DeviceView: React.FC = () => {
         <Collapsible title="Sensors" isOpen={true}>
           <SensorTable sensors={selectedDevice?.sensors ?? []} />
         </Collapsible>
+
+        <DeviceAttachments
+          attachments={
+            selectedDevice?.attachments.filter((a) => !a.isDeviceImage) ?? []
+          }
+          device={selectedDevice}
+          onDeleteAttachment={(identifier: string) => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  deleteAttachment(identifier);
+                },
+                title: "Delete attachment",
+                body: `Attachment will be removed`,
+              })
+            );
+          }}
+          onUploadAttachment={(file, customName) => {
+            uploadAttachment(file, false, customName);
+          }}
+        />
 
         <Collapsible title="Measurements">
           <MultiSensorGraph
