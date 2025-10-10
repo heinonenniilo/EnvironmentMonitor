@@ -36,16 +36,18 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {sensors.map((r) => {
-              return (
-                <TableRow key={r.identifier}>
-                  <TableCell>{r.name}</TableCell>
-                  <TableCell>{r.sensorId}</TableCell>
-                  <TableCell>{r.scaleMin}</TableCell>
-                  <TableCell>{r.scaleMax}</TableCell>
-                </TableRow>
-              );
-            })}
+            {sensors
+              .sort((a, b) => a.sensorId - b.sensorId)
+              .map((r) => {
+                return (
+                  <TableRow key={r.identifier}>
+                    <TableCell>{r.name}</TableCell>
+                    <TableCell>{r.sensorId}</TableCell>
+                    <TableCell>{r.scaleMin}</TableCell>
+                    <TableCell>{r.scaleMax}</TableCell>
+                  </TableRow>
+                );
+              })}
           </TableBody>
         </Table>
       </TableContainer>
