@@ -54,7 +54,15 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
               }
             : undefined
         }
-        sx={{ cursor: onClick ? "pointer" : undefined }}
+        sx={{
+          cursor: onClick ? "pointer" : undefined,
+          "&:hover": onClick
+            ? {
+                backgroundColor: "action.hover",
+                transition: "background-color 0.2s ease",
+              }
+            : undefined,
+        }}
       >
         {row.label}
       </TableCell>
