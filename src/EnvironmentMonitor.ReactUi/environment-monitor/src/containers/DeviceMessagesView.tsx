@@ -158,6 +158,7 @@ export const DeviceMessagesView: React.FC = () => {
             onLoadingChange={(state) => setIsLoading(state)}
             onRowClick={handleClickRow}
             deviceInfos={deviceInfos}
+            renderLinkToDevice
           />
         )}
       </Box>

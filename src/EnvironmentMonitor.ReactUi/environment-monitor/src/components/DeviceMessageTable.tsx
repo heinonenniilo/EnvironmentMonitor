@@ -10,11 +10,13 @@ import { getLocations } from "../reducers/measurementReducer";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { defaultStart } from "../containers/DeviceMessagesView";
 import type { DeviceInfo } from "../models/deviceInfo";
+import { Link } from "react-router";
 
 interface Props {
   model: GetDeviceMessagesModel | undefined;
   onLoadingChange?: (state: boolean) => void;
   onRowClick?: (message: DeviceMessage) => void;
+  renderLinkToDevice?: boolean;
   deviceInfos: DeviceInfo[];
 }
 
@@ -22,6 +24,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
   model,
   onLoadingChange,
   onRowClick,
+  renderLinkToDevice,
   deviceInfos,
 }) => {
   const hook = useApiHook().deviceHook;
@@ -134,6 +137,19 @@ export const DeviceMessagesTable: React.FC<Props> = ({
         const deviceMessageRow = row as DeviceMessage;
         return getDeviceLabel(deviceMessageRow.deviceIdentifier);
       },
+      renderCell: renderLinkToDevice
+        ? (params) => {
+            return (
+              <Link
+                to={`/devices/${
+                  (params.row as DeviceMessage).deviceIdentifier
+                }`}
+              >
+                {getDeviceLabel((params.row as DeviceMessage).deviceIdentifier)}
+              </Link>
+            );
+          }
+        : undefined,
     },
     {
       field: "isDuplicate",
