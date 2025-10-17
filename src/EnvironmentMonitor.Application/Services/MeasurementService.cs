@@ -229,25 +229,36 @@ namespace EnvironmentMonitor.Application.Services
         {
             var returnList = new List<MeasurementsBySensorDto>();
             _logger.LogInformation("Getting measurements by sensor");
-            if (model.SensorIdentifiers.Any(s => !_userService.HasAccessToSensor(s, AccessLevels.Read)))
-            {
-                throw new UnauthorizedAccessException();
-            }
             var accessibleSensorIds = model.SensorIdentifiers.Where(d => _userService.HasAccessToSensor(d, AccessLevels.Read)).ToList();
-            if (!_userService.IsAdmin && !accessibleSensorIds.Any())
+            var accessibleDeviceIdentifiers = model.DeviceIdentifiers.Where(x => _userService.HasAccessToDevice(x, AccessLevels.Read)).ToList();
+            if (accessibleSensorIds.Count == 0 && accessibleDeviceIdentifiers.Count == 0)
             {
                 throw new InvalidOperationException("No accessible sensors");
+            }
+
+            if (model.DeviceIdentifiers.Count != 0)
+            {
+                var sensorsFromDevices = (await _deviceRepository.GetSensors(new GetSensorsModel()
+                {
+                    DevicesModel = new GetDevicesModel()
+                    {
+                        Identifiers = model.DeviceIdentifiers
+                    }
+                })).Where(s => _userService.HasAccessToSensor(s.Identifier, AccessLevels.Read)).Select(x => x.Identifier).ToList();
+                accessibleSensorIds.AddRange(sensorsFromDevices.Where(id => !accessibleSensorIds.Contains(id)));
             }
 
             var result = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
             {
                 SensorIdentifiers = accessibleSensorIds,
+                DeviceIdentifiers = model.DeviceIdentifiers,
                 To = model.To,
                 From = model.From,
                 LatestOnly = model.LatestOnly,
             });
+
             var info = GetMeasurementInfo(result.ToList(), accessibleSensorIds);
-            foreach (var sensorId in model.SensorIdentifiers)
+            foreach (var sensorId in accessibleSensorIds)
             {
                 var rowToAdd = new MeasurementsBySensorDto()
                 {
