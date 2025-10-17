@@ -52,7 +52,8 @@ interface measureHook {
     sensorIds: string[],
     from: moment.Moment,
     to?: moment.Moment,
-    latestOnly?: boolean
+    latestOnly?: boolean,
+    deviceIds?: string[]
   ) => Promise<MeasurementsViewModel | undefined>;
   getMeasurementsByLocation: (
     sensorIds: string[],
@@ -227,7 +228,8 @@ export const useApiHook = (): ApiHook => {
         sensorIds: string[],
         from: moment.Moment,
         to?: moment.Moment,
-        latestOnly?: boolean
+        latestOnly?: boolean,
+        deviceIds?: string[]
       ) => {
         try {
           const res = await apiClient.get<
@@ -236,6 +238,7 @@ export const useApiHook = (): ApiHook => {
           >("/api/Measurements/bysensor", {
             params: {
               SensorIdentifiers: sensorIds,
+              DeviceIdentifiers: deviceIds,
               from: from.toISOString(),
               to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,

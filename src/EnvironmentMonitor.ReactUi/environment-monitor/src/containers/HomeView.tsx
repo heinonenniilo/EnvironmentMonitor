@@ -88,10 +88,11 @@ export const HomeView: React.FC = () => {
       setIsLoading(true);
       hook
         .getMeasurementsBySensor(
-          sensors.map((s) => s.identifier),
+          [],
           moment(),
           undefined,
-          true
+          true,
+          devices.map((d) => d.identifier)
         )
         .then((res) => {
           setModel(res);
@@ -106,7 +107,7 @@ export const HomeView: React.FC = () => {
         });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sensors, model]);
+  }, [devices, model]);
 
   return (
     <AppContentWrapper title={getTitle()} isLoading={isLoading}>
