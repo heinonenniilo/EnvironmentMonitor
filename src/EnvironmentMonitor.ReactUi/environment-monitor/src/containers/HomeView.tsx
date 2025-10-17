@@ -84,11 +84,15 @@ export const HomeView: React.FC = () => {
   };
 
   useEffect(() => {
-    if (devices.length > 0 && model === undefined && hook) {
+    if (
+      (devices.length > 0 || sensors.length > 0) &&
+      model === undefined &&
+      hook
+    ) {
       setIsLoading(true);
       hook
         .getMeasurementsBySensor(
-          [],
+          sensors.map((s) => s.identifier),
           moment(),
           undefined,
           true,
@@ -107,7 +111,7 @@ export const HomeView: React.FC = () => {
         });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [devices, model]);
+  }, [devices, sensors, model]);
 
   return (
     <AppContentWrapper title={getTitle()} isLoading={isLoading}>
