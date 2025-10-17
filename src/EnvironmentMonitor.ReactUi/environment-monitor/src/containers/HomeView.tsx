@@ -84,7 +84,7 @@ export const HomeView: React.FC = () => {
   };
 
   useEffect(() => {
-    if (sensors.length > 0 && model === undefined && hook) {
+    if (devices.length > 0 && model === undefined && hook) {
       setIsLoading(true);
       hook
         .getMeasurementsBySensor(
