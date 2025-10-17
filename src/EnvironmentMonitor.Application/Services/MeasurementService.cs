@@ -233,7 +233,7 @@ namespace EnvironmentMonitor.Application.Services
             var accessibleDeviceIdentifiers = model.DeviceIdentifiers.Where(x => _userService.HasAccessToDevice(x, AccessLevels.Read)).ToList();
             if (accessibleSensorIds.Count == 0 && accessibleDeviceIdentifiers.Count == 0)
             {
-                throw new InvalidOperationException("No accessible sensors");
+                throw new UnauthorizedAccessException("No accessible sensors");
             }
 
             if (model.DeviceIdentifiers.Count != 0)
