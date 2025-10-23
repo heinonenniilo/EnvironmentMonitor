@@ -32,7 +32,9 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 
             builder.HasMany(d => d.Sensors)
                 .WithOne(s => s.Device)
+                .IsRequired(false)
                 .HasForeignKey(s => s.DeviceId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(x => x.DeviceMessages).WithOne(x => x.Device).IsRequired();
