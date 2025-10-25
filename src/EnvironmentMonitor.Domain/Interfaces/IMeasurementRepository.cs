@@ -15,7 +15,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<List<MeasurementExtended>> GetMeasurements(GetMeasurementsModel model);
         public Task<MeasurementType?> GetMeasurementType(int id);
         Task<IList<Measurement>> AddMeasurements(List<Measurement> measurements, bool saveChanges = true, DeviceMessage? deviceMessage = null);
-        Task ProcessCombinedMeasurement(Measurement measurement, int sensorId, bool saveChanges);
+        Task ProcessVirtualSensorMeasurement(Measurement measurement, int sensorId, bool saveChanges);
         Task<DeviceMessage?> GetDeviceMessage(string messageIdentifier, int deviceId);
         Task<DeviceMessage> AddDeviceMessage(DeviceMessage deviceMessage, bool saveChanges);
         Task<List<PublicSensor>> GetPublicSensors();

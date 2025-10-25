@@ -164,7 +164,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return measurements;
         }
 
-        public async Task ProcessCombinedMeasurement(Measurement measurement, int sensorId, bool saveChanges)
+        public async Task ProcessVirtualSensorMeasurement(Measurement measurement, int sensorId, bool saveChanges)
         {
             var virtualSensorRows = await _context.VirtualSensorRows.Where(x => x.ValueSensorId == sensorId && (x.TypeId == null || x.TypeId == measurement.TypeId)).ToListAsync();
             if (virtualSensorRows.Count == 0)
