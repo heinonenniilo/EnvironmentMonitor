@@ -56,6 +56,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => model.DeviceIdentifiers.Contains(x.Sensor.Device.Identifier));
             }
 
+            var dateLimit = _dateService.CurrentTime();
+            // Don't show rows from the future.
+            query = query.Where(x => x.Timestamp < dateLimit);
+
             if (model.DeviceMessageIdentifiers?.Any() == true)
             {
                 query = query.Where(x => x.DeviceMessage != null && !x.DeviceMessage.IsDuplicate && !string.IsNullOrEmpty(x.DeviceMessage.Identifier) && model.DeviceMessageIdentifiers.Contains(x.DeviceMessage.Identifier));
@@ -158,6 +162,57 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 }
             }
             return measurements;
+        }
+
+        public async Task ProcessVirtualSensorMeasurement(Measurement measurement, int sensorId, bool saveChanges)
+        {
+            var virtualSensorRows = await _context.VirtualSensorRows.Where(x => x.ValueSensorId == sensorId && (x.TypeId == null || x.TypeId == measurement.TypeId)).ToListAsync();
+            if (virtualSensorRows.Count == 0)
+            {
+                _logger.LogInformation($"No virtual sensor rows found for sensor id: {sensorId} and measurement type id: {measurement.TypeId}");
+                return;
+            }
+
+            var virtualSensorIds = virtualSensorRows.Select(x => x.VirtualSensorId).Distinct().ToList();
+            var batchStart = new DateTime(measurement.Timestamp.Year, measurement.Timestamp.Month, measurement.Timestamp.Day, measurement.Timestamp.Hour, (measurement.Timestamp.Minute / 10) * 10, 0);
+            var batchEnd = batchStart.AddMinutes(10).AddSeconds(-1);
+
+            foreach (var virtualSensorId in virtualSensorIds)
+            {
+                var existingMeasurement = await _context.Measurements.FirstOrDefaultAsync(x =>
+                    x.SensorId == virtualSensorId &&
+                    x.TypeId == measurement.TypeId &&
+                    x.Timestamp >= batchStart &&
+                    x.Timestamp <= batchEnd);
+
+                if (existingMeasurement == null)
+                {
+                    _logger.LogInformation($"No existing measurement found for batch ({batchStart} - {batchEnd}) and virtual sensor id {virtualSensorId}. Adding new measurement with value {measurement.Value}");
+                    _context.Measurements.Add(new Measurement()
+                    {
+                        SensorId = virtualSensorId,
+                        TypeId = measurement.TypeId,
+                        Timestamp = batchEnd,
+                        TimestampUtc = _dateService.LocalToUtc(batchEnd),
+                        CreatedAt = _dateService.CurrentTime(),
+                        CreatedAtUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                        Value = measurement.Value
+                    });
+                    continue;
+                }
+
+                if (existingMeasurement.Value > measurement.Value)
+                {
+                    _logger.LogInformation($"Found existing measurement ({existingMeasurement.Id}) for batch ({batchStart - batchEnd} and virtual sensor id {virtualSensorId}. Value {existingMeasurement.Value} to be replaced with value {measurement.Value}");
+                    existingMeasurement.Value = measurement.Value;
+                }
+            } 
+
+            if (saveChanges)
+            {
+                _logger.LogInformation("Saving changes (ProcessCombinedMeasurement)");
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<MeasurementType?> GetMeasurementType(int id)

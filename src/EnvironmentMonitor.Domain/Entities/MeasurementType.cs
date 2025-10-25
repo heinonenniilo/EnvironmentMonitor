@@ -14,5 +14,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public List<Measurement> Measurements { get; set; }
         public IList<LocationSensor> LocationSensors { get; set; }
         public IList<PublicSensor> PublicSensors { get; set; }
+        public IList<VirtualSensorRow> VirtualSensorRows { get; set; }
     }
 }

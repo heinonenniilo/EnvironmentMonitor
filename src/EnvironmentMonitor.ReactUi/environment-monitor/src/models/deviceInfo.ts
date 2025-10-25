@@ -12,4 +12,5 @@ export interface DeviceInfo {
   sensors: SensorInfo[];
   defaultImageGuid: string;
   deviceIdentifier: string;
+  isVirtual: boolean;
 }

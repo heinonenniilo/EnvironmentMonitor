@@ -17,6 +17,8 @@ namespace EnvironmentMonitor.Application.DTOs
         public string DeviceIdentifier { get; set; }
         public List<SensorInfoDto> Sensors { get; set; } = [];
 
+        public bool IsVirtual { get; set; }
+
         public bool ShowWarning { get; set; }
         public void Mapping(Profile profile)
         {
@@ -25,6 +27,7 @@ namespace EnvironmentMonitor.Application.DTOs
                 .ForMember(x => x.Attachments, opt => opt.MapFrom(x => x.Device.Attachments ?? new List<DeviceAttachment>()))
                 .ForMember(x => x.DeviceIdentifier, opt => opt.MapFrom(x => x.Device.DeviceIdentifier))
                 .ForMember(x => x.Sensors, opt => opt.MapFrom(x => x.Device.Sensors ?? new List<Sensor>()))
+                .ForMember(x => x.IsVirtual, opt => opt.MapFrom(x => x.Device.IsVirtual))
                 .ReverseMap();
         }
     }

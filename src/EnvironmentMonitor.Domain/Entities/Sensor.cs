@@ -19,7 +19,10 @@ namespace EnvironmentMonitor.Domain.Entities
         public ICollection<Measurement> Measurements { get; set; } = [];
         public ICollection<LocationSensor> LocationSensors { get; set; } = [];
         public ICollection<PublicSensor> PublicSensors { get; set; } = [];
+        public ICollection<VirtualSensorRow> VirtualSensorRows { get; set; } = [];
+        public ICollection<VirtualSensorRow> VirtualSensorRowValues { get; set; } = [];
         public double? ScaleMin { get; set; }
         public double? ScaleMax { get; set; }
-    } 
+        public bool IsVirtual { get; set; }
+    }
 }

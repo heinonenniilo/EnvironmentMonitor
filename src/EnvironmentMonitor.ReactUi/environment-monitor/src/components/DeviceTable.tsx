@@ -260,7 +260,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         const stateToSet: DeviceMessagesLocationState = {
           deviceIdentifier: row.device.identifier,
         };
-        return renderLinkToDeviceMessages ? (
+        return renderLinkToDeviceMessages && !row.isVirtual ? (
           <Link to={routes.deviceMessages} state={stateToSet}>
             {contentToRender}
           </Link>
