@@ -202,6 +202,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
                 if (existingMeasurement.Value > measurement.Value)
                 {
+                    _logger.LogInformation($"Found existing measurement ({existingMeasurement.Id}) for batch ({batchStart - batchEnd} and virtual sensor id {virtualSensorId}. Value {existingMeasurement.Value} to be replaced with value {measurement.Value}");
                     existingMeasurement.Value = measurement.Value;
                 }
             } 
