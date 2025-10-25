@@ -1,4 +1,4 @@
-import { type SensorInfo } from "../models/sensor";
+import { type Sensor, type SensorInfo } from "../models/sensor";
 import {
   Box,
   Paper,
@@ -10,6 +10,8 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { SensorsDialog } from "./SensorsDialog";
+import { useState } from "react";
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
@@ -17,6 +19,7 @@ export interface SensorTableProps {
 }
 
 export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
+  const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
   return (
     <Box marginTop={1}>
       {title && (
@@ -24,7 +27,13 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
           {title}
         </Typography>
       )}
-
+      <SensorsDialog
+        isOpen={selectedSensors.length > 0}
+        onClose={() => {
+          setSelectedSensors([]);
+        }}
+        sensors={selectedSensors}
+      />
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
@@ -40,7 +49,24 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
               .sort((a, b) => a.sensorId - b.sensorId)
               .map((r) => {
                 return (
-                  <TableRow key={r.identifier}>
+                  <TableRow
+                    key={r.identifier}
+                    onClick={() => {
+                      console.log(r.sensors);
+                      if (r.sensors.length > 0) {
+                        setSelectedSensors(r.sensors.map((s) => s.sensor));
+                      }
+                    }}
+                    sx={{
+                      cursor: r.sensors.length > 0 ? "pointer" : "default",
+                      "&:hover":
+                        r.sensors.length > 0
+                          ? {
+                              backgroundColor: "action.hover",
+                            }
+                          : undefined,
+                    }}
+                  >
                     <TableCell>{r.name}</TableCell>
                     <TableCell>{r.sensorId}</TableCell>
                     <TableCell>{r.scaleMin}</TableCell>
