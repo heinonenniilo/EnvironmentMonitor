@@ -56,6 +56,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => model.DeviceIdentifiers.Contains(x.Sensor.Device.Identifier));
             }
 
+            var dateLimit = _dateService.CurrentTime();
+            // Don't show rows from the future.
+            query = query.Where(x => x.Timestamp < dateLimit);
+
             if (model.DeviceMessageIdentifiers?.Any() == true)
             {
                 query = query.Where(x => x.DeviceMessage != null && !x.DeviceMessage.IsDuplicate && !string.IsNullOrEmpty(x.DeviceMessage.Identifier) && model.DeviceMessageIdentifiers.Contains(x.DeviceMessage.Identifier));
