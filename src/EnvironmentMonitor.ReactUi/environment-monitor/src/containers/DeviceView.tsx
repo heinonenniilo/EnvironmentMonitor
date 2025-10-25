@@ -469,7 +469,7 @@ export const DeviceView: React.FC = () => {
             renderLinkToDeviceMessages
           />
         </Collapsible>
-        {selectedDevice && !selectedDevice.isVirtual ? (
+        {selectedDevice && !selectedDevice.isVirtual && (
           <DeviceImage
             device={selectedDevice}
             ver={defaultImageVer}
@@ -508,7 +508,7 @@ export const DeviceView: React.FC = () => {
               );
             }}
           />
-        ) : null}
+        )}
 
         <Collapsible title="Sensors" isOpen={true}>
           <SensorTable sensors={selectedDevice?.sensors ?? []} />
@@ -604,7 +604,7 @@ export const DeviceView: React.FC = () => {
             }
           />
         </Collapsible>
-        {selectedDevice && !selectedDevice.isVirtual ? (
+        {selectedDevice && !selectedDevice.isVirtual && (
           <Collapsible isOpen={true} title="Commands">
             <DeviceControlComponent
               device={selectedDevice}
@@ -662,10 +662,12 @@ export const DeviceView: React.FC = () => {
               }}
             />
           </Collapsible>
-        ) : null}
-        <Collapsible title="Events" isOpen={true}>
-          <DeviceEventTable events={deviceEvents} maxHeight={"500px"} />
-        </Collapsible>
+        )}
+        {deviceEvents.length > 0 && (
+          <Collapsible title="Events" isOpen={true}>
+            <DeviceEventTable events={deviceEvents} maxHeight={"500px"} />
+          </Collapsible>
+        )}
       </Box>
     </AppContentWrapper>
   );
