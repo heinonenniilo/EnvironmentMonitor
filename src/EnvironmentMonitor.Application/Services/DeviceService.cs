@@ -49,6 +49,10 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+            if (device.IsVirtual)
+            {
+                throw new InvalidOperationException($"Cannot reboot a virtual device ({device.Id})");
+            }
             _logger.LogInformation($"Trying to reboot device with identifier '{identifier}'");
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, "REBOOT");
             await AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true);
@@ -61,6 +65,12 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+
+            if (device.IsVirtual)
+            {
+                throw new InvalidOperationException($"Cannot send messages to a virtual device ({device.Id})");
+            }
+
             var message = $"MOTIONCONTROLSTATUS:{(int)status}";
             _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
@@ -74,6 +84,10 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+            if (device.IsVirtual)
+            {
+                throw new InvalidOperationException($"Cannot send messages to a virtual device ({device.Id})");
+            }
             var message = $"MOTIONCONTROLDELAY: {delayMs}";
             _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
