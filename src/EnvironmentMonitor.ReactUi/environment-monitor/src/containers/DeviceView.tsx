@@ -469,45 +469,47 @@ export const DeviceView: React.FC = () => {
             renderLinkToDeviceMessages
           />
         </Collapsible>
+        {selectedDevice && !selectedDevice.isVirtual ? (
+          <DeviceImage
+            device={selectedDevice}
+            ver={defaultImageVer}
+            title={"Device images"}
+            onSetDefaultImage={(identifier: string) => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    setDefaultImage(identifier);
+                  },
+                  title: "Set default image",
+                  body: `Current image will be set as default image for ${selectedDevice?.device.name}`,
+                })
+              );
+            }}
+            onDeleteImage={(identifier: string) => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    deleteAttachment(identifier);
+                  },
+                  title: "Delete image",
+                  body: `The selected image of ${selectedDevice?.device.name} will be removed.`,
+                })
+              );
+            }}
+            onUploadImage={(file) => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    uploadAttachment(file, true);
+                  },
+                  title: "Upload new image?",
+                  body: `Upload "${file.name}"?`,
+                })
+              );
+            }}
+          />
+        ) : null}
 
-        <DeviceImage
-          device={selectedDevice}
-          ver={defaultImageVer}
-          title={"Device images"}
-          onSetDefaultImage={(identifier: string) => {
-            dispatch(
-              setConfirmDialog({
-                onConfirm: () => {
-                  setDefaultImage(identifier);
-                },
-                title: "Set default image",
-                body: `Current image will be set as default image for ${selectedDevice?.device.name}`,
-              })
-            );
-          }}
-          onDeleteImage={(identifier: string) => {
-            dispatch(
-              setConfirmDialog({
-                onConfirm: () => {
-                  deleteAttachment(identifier);
-                },
-                title: "Delete image",
-                body: `The selected image of ${selectedDevice?.device.name} will be removed.`,
-              })
-            );
-          }}
-          onUploadImage={(file) => {
-            dispatch(
-              setConfirmDialog({
-                onConfirm: () => {
-                  uploadAttachment(file, true);
-                },
-                title: "Upload new image?",
-                body: `Upload "${file.name}"?`,
-              })
-            );
-          }}
-        />
         <Collapsible title="Sensors" isOpen={true}>
           <SensorTable sensors={selectedDevice?.sensors ?? []} />
         </Collapsible>
@@ -602,63 +604,65 @@ export const DeviceView: React.FC = () => {
             }
           />
         </Collapsible>
-        <Collapsible isOpen={true} title="Commands">
-          <DeviceControlComponent
-            device={selectedDevice}
-            reboot={() => {
-              dispatch(
-                setConfirmDialog({
-                  onConfirm: () => {
-                    reboot(
-                      `Boot command sent to ${selectedDevice?.device.name}`
-                    );
-                  },
-                  title: `Reboot device?`,
-                  body: `${selectedDevice?.device.name} will be rebooted`,
-                })
-              );
-            }}
-            onSetOutStatic={(mode: boolean) => {
-              dispatch(
-                setConfirmDialog({
-                  onConfirm: () => {
-                    setMotionControlState(
-                      mode ? 1 : 0,
-                      `Outputs set to ${mode} for ${selectedDevice?.device.name}`
-                    );
-                  },
-                  title: `Set output as ${mode}`,
-                  body: `Output pins will be set as ${mode}. Motion sensor trigger will be disabled`,
-                })
-              );
-            }}
-            onSetOutOnMotionControl={() => {
-              dispatch(
-                setConfirmDialog({
-                  onConfirm: () => {
-                    setMotionControlState(2, "Motion control enabled");
-                  },
-                  title: `Enable motion control`,
-                  body: "Output pins will be controlled by motion sensor",
-                })
-              );
-            }}
-            onSetMotionControlDelay={(delay: number) => {
-              dispatch(
-                setConfirmDialog({
-                  onConfirm: () => {
-                    setMotionControlDelay(
-                      delay * 1000,
-                      `Motioncontrol delay set to ${delay} s`
-                    );
-                  },
-                  title: `Set motion control delay`,
-                  body: `Motion control delay will be set to ${delay} s`,
-                })
-              );
-            }}
-          />
-        </Collapsible>
+        {selectedDevice && !selectedDevice.isVirtual ? (
+          <Collapsible isOpen={true} title="Commands">
+            <DeviceControlComponent
+              device={selectedDevice}
+              reboot={() => {
+                dispatch(
+                  setConfirmDialog({
+                    onConfirm: () => {
+                      reboot(
+                        `Boot command sent to ${selectedDevice?.device.name}`
+                      );
+                    },
+                    title: `Reboot device?`,
+                    body: `${selectedDevice?.device.name} will be rebooted`,
+                  })
+                );
+              }}
+              onSetOutStatic={(mode: boolean) => {
+                dispatch(
+                  setConfirmDialog({
+                    onConfirm: () => {
+                      setMotionControlState(
+                        mode ? 1 : 0,
+                        `Outputs set to ${mode} for ${selectedDevice?.device.name}`
+                      );
+                    },
+                    title: `Set output as ${mode}`,
+                    body: `Output pins will be set as ${mode}. Motion sensor trigger will be disabled`,
+                  })
+                );
+              }}
+              onSetOutOnMotionControl={() => {
+                dispatch(
+                  setConfirmDialog({
+                    onConfirm: () => {
+                      setMotionControlState(2, "Motion control enabled");
+                    },
+                    title: `Enable motion control`,
+                    body: "Output pins will be controlled by motion sensor",
+                  })
+                );
+              }}
+              onSetMotionControlDelay={(delay: number) => {
+                dispatch(
+                  setConfirmDialog({
+                    onConfirm: () => {
+                      setMotionControlDelay(
+                        delay * 1000,
+                        `Motioncontrol delay set to ${delay} s`
+                      );
+                    },
+                    title: `Set motion control delay`,
+                    body: `Motion control delay will be set to ${delay} s`,
+                  })
+                );
+              }}
+            />
+          </Collapsible>
+        ) : null}
         <Collapsible title="Events" isOpen={true}>
           <DeviceEventTable events={deviceEvents} maxHeight={"500px"} />
         </Collapsible>
