@@ -5,14 +5,16 @@ import {
   DialogTitle,
   IconButton,
 } from "@mui/material";
-import type { Sensor, SensorInfo } from "../models/sensor";
+import type { VirtualSensor } from "../models/sensor";
 import { Close } from "@mui/icons-material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
 import { getDeviceInfos } from "../reducers/measurementReducer";
+import { getMeasurementUnit } from "../utilities/measurementUtils";
+import type { MeasurementTypes } from "../enums/measurementTypes";
 
 export interface SensorsDialogProps {
-  sensors: Sensor[];
+  sensors: VirtualSensor[];
   isOpen: boolean;
   onClose: () => void;
   title?: string;
@@ -31,6 +33,13 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
       headerName: "Name",
       minWidth: 150,
       flex: 2,
+      valueGetter: (_value, row) => {
+        const sensor = row as VirtualSensor;
+        if (!sensor) {
+          return "";
+        }
+        return sensor.sensor.name;
+      },
     },
     {
       field: "deviceIdentifier",
@@ -38,33 +47,23 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
       minWidth: 130,
       flex: 1,
       valueGetter: (_value, row) => {
-        const sensor = row as Sensor;
+        const sensor = row as VirtualSensor;
         const matchingDevice = devices.find(
-          (d) => d.device.identifier === sensor.deviceIdentifier
+          (d) => d.device.identifier === sensor.sensor.deviceIdentifier
         );
         return matchingDevice
           ? matchingDevice.device.name
-          : sensor.deviceIdentifier;
+          : sensor.sensor.deviceIdentifier;
       },
     },
     {
-      field: "scaleMin",
-      headerName: "Scale Min",
-      type: "number",
-      minWidth: 100,
+      field: "typeId",
+      headerName: "Type",
+      minWidth: 130,
       flex: 1,
-      valueFormatter: (value) => {
-        return value ?? "-";
-      },
-    },
-    {
-      field: "scaleMax",
-      headerName: "Scale Max",
-      type: "number",
-      minWidth: 100,
-      flex: 1,
-      valueFormatter: (value) => {
-        return value ?? "-";
+      valueGetter: (_value, row) => {
+        const sensor = row as VirtualSensor;
+        return getMeasurementUnit(sensor.typeId as MeasurementTypes);
       },
     },
   ];
@@ -111,7 +110,7 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
             density="compact"
             getRowId={(row) => {
               if (row) {
-                return (row as SensorInfo).identifier;
+                return (row as VirtualSensor).sensor.identifier;
               }
               return "";
             }}

@@ -15,4 +15,5 @@ export interface SensorInfo extends Sensor {
 export interface VirtualSensor {
   sensor: Sensor;
   identifier: string;
+  typeId: number;
 }

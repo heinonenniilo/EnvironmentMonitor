@@ -1,4 +1,4 @@
-import { type Sensor, type SensorInfo } from "../models/sensor";
+import { type SensorInfo, type VirtualSensor } from "../models/sensor";
 import {
   Box,
   Paper,
@@ -19,7 +19,7 @@ export interface SensorTableProps {
 }
 
 export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
-  const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
+  const [selectedSensors, setSelectedSensors] = useState<VirtualSensor[]>([]);
   return (
     <Box marginTop={1}>
       {title && (
@@ -54,7 +54,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
                     onClick={() => {
                       console.log(r.sensors);
                       if (r.sensors.length > 0) {
-                        setSelectedSensors(r.sensors.map((s) => s.sensor));
+                        setSelectedSensors(r.sensors);
                       }
                     }}
                     sx={{
