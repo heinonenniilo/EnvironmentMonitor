@@ -45,6 +45,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 && (model.Identifiers == null || model.Identifiers.Contains(x.Identifier))
                 && (model.DevicesModel.Identifiers == null || model.DevicesModel.Identifiers.Contains(x.Device.Identifier))
                 );
+
+            if (model.IncludeVirtualSensors)
+            {
+                query = query.Include(x => x.VirtualSensorRowValues);
+                query = query.Include(x => x.VirtualSensorRows);
+            }
+
             if (model.Ids != null)
             {
                 query = query.Where(x => model.Ids.Contains(x.Id));
@@ -64,6 +71,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 ScaleMin = x.ScaleMin,
                 ScaleMax = x.ScaleMax,
                 TypeId = x.TypeId,
+                VirtualSensorRowValues = x.VirtualSensorRowValues,
+                VirtualSensorRows = x.VirtualSensorRows,
             }).ToListAsync();
         }
 

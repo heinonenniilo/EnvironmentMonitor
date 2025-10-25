@@ -102,7 +102,7 @@ namespace EnvironmentMonitor.Application.Services
                     _logger.LogWarning($"Sensor with id '{row.SensorId}' not found on device '{device.Identifier}'.");
                     continue;
                 }
-                var sensorInDb = (await _deviceRepository.GetSensors(new GetSensorsModel() { Identifiers = [sensor.Identifier], DevicesModel = new GetDevicesModel() })).FirstOrDefault();
+                var sensorInDb = (await _deviceRepository.GetSensors(new GetSensorsModel() { Identifiers = [sensor.Identifier], DevicesModel = new GetDevicesModel(), IncludeVirtualSensors = true })).FirstOrDefault();
                 MeasurementType? type = await _measurementRepository.GetMeasurementType(row.TypeId);
                 if (type == null)
                 {
@@ -118,7 +118,7 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogInformation($"Found sensor: {sensor.Identifier}. Name: '{sensor.Name}'");
 
                 var createdAt = _dateService.CurrentTime();
-                measurementsToAdd.Add(new Measurement()
+                var measurementToAdd = new Measurement()
                 {
                     SensorId = sensorInDb.Id,
                     Value = row.SensorValue,
@@ -127,7 +127,12 @@ namespace EnvironmentMonitor.Application.Services
                     CreatedAtUtc = _dateService.LocalToUtc(createdAt),
                     TimestampUtc = row.TimestampUtc,
                     TypeId = row.TypeId
-                });
+                };
+                measurementsToAdd.Add(measurementToAdd);
+                if (sensorInDb.VirtualSensorRowValues.Count != 0)
+                {
+                    await _measurementRepository.ProcessCombinedMeasurement(measurementToAdd, sensorInDb.Id, false);
+                }
             }
 
             _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device ({device.Identifier}): '{device.Name}'");

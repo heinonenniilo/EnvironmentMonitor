@@ -25,5 +25,6 @@ namespace EnvironmentMonitor.Domain.Models
         public List<int>? Ids { get; set; }
         public List<Guid>? Identifiers { get; set; }
         public List<int>? SensorIds { get; set; }
+        public bool IncludeVirtualSensors { get; set; } = false;
     }
 }

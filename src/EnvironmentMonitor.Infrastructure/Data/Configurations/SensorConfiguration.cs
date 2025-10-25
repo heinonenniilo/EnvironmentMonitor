@@ -32,8 +32,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(s => s.CombinedSensorRows).WithOne(x => x.VirtualSensor).HasForeignKey(x => x.VirtualSensorId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
-            builder.HasMany(s => s.CombinedSensorRowValues).WithOne(x => x.ValueSensor).HasForeignKey(x => x.ValueSensorId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+            builder.HasMany(s => s.VirtualSensorRows).WithOne(x => x.VirtualSensor).HasForeignKey(x => x.VirtualSensorId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
+            builder.HasMany(s => s.VirtualSensorRowValues).WithOne(x => x.ValueSensor).HasForeignKey(x => x.ValueSensorId).IsRequired(false).OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
