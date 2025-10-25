@@ -101,6 +101,29 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       },
     },
     {
+      field: "isVirtual",
+      headerName: "Virtual",
+      width: 60,
+      valueGetter: (_value, row) => {
+        if (!row) {
+          return false;
+        }
+        return (row as DeviceInfo).isVirtual;
+      },
+      renderCell: (params) => {
+        return (
+          <Checkbox
+            checked={(params?.row as DeviceInfo)?.isVirtual}
+            size="small"
+            disabled
+            sx={{
+              padding: "0px",
+            }}
+          />
+        );
+      },
+    },
+    {
       field: "image",
       headerName: "Image",
       sortable: false,
