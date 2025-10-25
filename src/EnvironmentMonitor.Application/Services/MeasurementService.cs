@@ -131,6 +131,7 @@ namespace EnvironmentMonitor.Application.Services
                 measurementsToAdd.Add(measurementToAdd);
                 if (sensorInDb.VirtualSensorRowValues.Count != 0)
                 {
+                    _logger.LogInformation($"Start processing virtual sensor measurements related to sensor ({sensorInDb.Id})");
                     await _measurementRepository.ProcessCombinedMeasurement(measurementToAdd, sensorInDb.Id, false);
                 }
             }

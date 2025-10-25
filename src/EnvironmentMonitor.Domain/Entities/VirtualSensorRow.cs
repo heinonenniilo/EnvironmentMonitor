@@ -13,8 +13,8 @@ namespace EnvironmentMonitor.Domain.Entities
         public int ValueSensorId { get; set; }
         public int? TypeId { get; set; }
         public MeasurementType? Type { get; set; }
-        public Sensor VirtualSensor { get; set; } // Sensors table, isCombinedSensor = true
-        public Sensor ValueSensor { get; set; } // Sensors table, isCombinedSensor = false
+        public Sensor VirtualSensor { get; set; }
+        public Sensor ValueSensor { get; set; }
         public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
     }
 }

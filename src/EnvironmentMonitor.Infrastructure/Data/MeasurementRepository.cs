@@ -165,11 +165,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var virtualSensorRows = await _context.VirtualSensorRows.Where(x => x.ValueSensorId == sensorId && (x.TypeId == null || x.TypeId == measurement.TypeId)).ToListAsync();
             if (virtualSensorRows.Count == 0)
             {
+                _logger.LogInformation($"No virtual sensor rows found for sensor id: {sensorId} and measurement type id: {measurement.TypeId}");
                 return;
             }
 
             var virtualSensorIds = virtualSensorRows.Select(x => x.VirtualSensorId).Distinct().ToList();
-
             var batchStart = new DateTime(measurement.Timestamp.Year, measurement.Timestamp.Month, measurement.Timestamp.Day, measurement.Timestamp.Hour, (measurement.Timestamp.Minute / 10) * 10, 0);
             var batchEnd = batchStart.AddMinutes(10).AddSeconds(-1);
 
@@ -187,7 +187,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     {
                         SensorId = virtualSensorId,
                         TypeId = measurement.TypeId,
-                        Timestamp = batchEnd ,
+                        Timestamp = batchEnd,
                         TimestampUtc = _dateService.LocalToUtc(batchEnd),
                         CreatedAt = _dateService.CurrentTime(),
                         CreatedAtUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
@@ -200,10 +200,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 {
                     existingMeasurement.Value = measurement.Value;
                 }
-            }
+            } 
 
             if (saveChanges)
             {
+                _logger.LogInformation("Saving changes (ProcessCombinedMeasurement)");
                 await _context.SaveChangesAsync();
             }
         }
