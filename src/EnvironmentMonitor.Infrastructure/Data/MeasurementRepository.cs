@@ -187,6 +187,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
                 if (existingMeasurement == null)
                 {
+                    _logger.LogInformation($"No existing measurement found for batch ({batchStart} - {batchEnd}) and virtual sensor id {virtualSensorId}. Adding new measurement with value {measurement.Value}");
                     _context.Measurements.Add(new Measurement()
                     {
                         SensorId = virtualSensorId,
