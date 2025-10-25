@@ -103,7 +103,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public async Task<List<DeviceInfo>> GetDeviceInfo(GetDevicesModel model)
         {
             IQueryable<Device> query = GetFilteredDeviceQuery(model);
-            query = query.Include(x => x.Sensors);
+            query = query.Include(x => x.Sensors)
+                .ThenInclude(s => s.VirtualSensorRows)
+                    .ThenInclude(vsr => vsr.ValueSensor)
+                        .ThenInclude(hh => hh.Device);
             return await GetDeviceInfos(query);
         }
 
@@ -425,7 +428,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 OnlineSince = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.Online)?.TimeStamp,
                 RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
                 LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest,
-                DefaultImageGuid = defaultImages.FirstOrDefault(x => x.DeviceId == device.Id)?.Guid
+                DefaultImageGuid = defaultImages.FirstOrDefault(x => x.DeviceId == device.Id)?.Guid,
             }).ToList();
         }
 

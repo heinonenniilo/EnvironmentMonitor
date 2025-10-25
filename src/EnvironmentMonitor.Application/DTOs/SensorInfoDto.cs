@@ -13,11 +13,13 @@ namespace EnvironmentMonitor.Application.DTOs
     public class SensorInfoDto : SensorDto, IMapFrom<Sensor>, IMapFrom<SensorExtended>
     {
         public int SensorId { get; set; }
+        public List<VirtualSensorRowDto> Sensors { get; set; } = [];
 
         public override void Mapping(Profile profile)
         {
-            profile.CreateMap<Sensor, SensorInfoDto>()
+            profile.CreateMap<Sensor, SensorInfoDto>()               
                 .IncludeBase<Sensor, SensorDto>()
+                .ForMember(x => x.Sensors, opt => opt.MapFrom(x => x.VirtualSensorRows))
                 .ReverseMap();
 
             profile.CreateMap<SensorExtended, SensorInfoDto>()
