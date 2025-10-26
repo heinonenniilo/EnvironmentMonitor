@@ -15,10 +15,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
     {
         private readonly SecretClient? _secretClient;
         private readonly ILogger<KeyVaultClient> _logger;
+        private readonly KeyVaultSettings _settings;
 
         public KeyVaultClient(KeyVaultSettings settings, ILogger<KeyVaultClient> logger)
         {
             _logger = logger;
+            _settings = settings;
 
             if (!string.IsNullOrEmpty(settings.VaultUri))
             {
@@ -60,13 +62,30 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new InvalidOperationException("KeyVault client not initialized");
             }
 
-            // Convert stream to Base64 string (works for any binary data)
             using var memoryStream = new MemoryStream();
             await stream.CopyToAsync(memoryStream);
             var bytes = memoryStream.ToArray();
-            var base64String = Convert.ToBase64String(bytes);
 
-            var secret = await _secretClient.SetSecretAsync(secretName, base64String);
+            string secretValue;
+            if (_settings.Base64EncodeSecrets)
+            {
+                _logger.LogInformation($"Storing secret '{secretName}' as Base64 encoded");
+                var base64String = Convert.ToBase64String(bytes);
+                secretValue = base64String;
+            }
+            else
+            {
+                _logger.LogInformation($"Storing secret '{secretName}' as plain text");
+                var textContent = Encoding.UTF8.GetString(bytes);
+                // Validate that it's valid text
+                if (ContainsInvalidTextCharacters(textContent))
+                {
+                    throw new InvalidOperationException("Stream contains binary data or invalid text characters. Enable Base64EncodeSecrets setting to store binary files.");
+                }
+                secretValue = textContent;
+            }
+
+            var secret = await _secretClient.SetSecretAsync(secretName, secretValue);
             return secret.Value.Name;
         }
 
@@ -78,13 +97,27 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
 
             var secret = await _secretClient.GetSecretAsync(secretName);
-            var bytes = Convert.FromBase64String(secret.Value.Value);
+            var secretValue = secret.Value.Value;
+
+            byte[] bytes;
+            if (_settings.Base64EncodeSecrets)
+            {
+                _logger.LogInformation($"Reading secret '{secretName}' as Base64 encoded");
+                bytes = Convert.FromBase64String(secretValue);
+            }
+            else
+            {
+                _logger.LogInformation($"Reading secret '{secretName}' as plain text");
+                bytes = Encoding.UTF8.GetBytes(secretValue);
+            }
+
             var stream = new MemoryStream(bytes);
 
             return new AttachmentDownloadModel
             {
                 Stream = stream,
-                ContentType = "application/octet-stream", // To be fixed
+                ContentType = "application/octet-stream", // TODO FIX
+                SizeInBytes = bytes.Length
             };
         }
 
