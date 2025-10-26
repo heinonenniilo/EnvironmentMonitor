@@ -86,7 +86,8 @@ interface deviceHook {
     identifire: string,
     file: File,
     isDeviceImage: boolean,
-    fileName?: string
+    fileName?: string,
+    isSecret?: boolean
   ) => Promise<DeviceInfo | undefined>;
   deleteAttachment: (
     deviceIdentifier: string,
@@ -406,12 +407,14 @@ export const useApiHook = (): ApiHook => {
         identifier: string,
         file: File,
         isDeviceImage: boolean,
-        fileName?: string
+        fileName?: string,
+        isSecret?: boolean
       ) => {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("deviceId", identifier);
         formData.append("isDeviceImage", isDeviceImage ? "true" : "false");
+        formData.append("isSecret", isSecret ? "true" : "false");
         if (fileName) {
           formData.append("fileName", fileName);
         }

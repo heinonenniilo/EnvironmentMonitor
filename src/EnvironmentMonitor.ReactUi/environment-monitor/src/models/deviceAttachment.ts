@@ -4,4 +4,5 @@ export interface DeviceAttachment {
   created: Date;
   name: string;
   sizeInBytes: number;
+  isSecret: boolean;
 }

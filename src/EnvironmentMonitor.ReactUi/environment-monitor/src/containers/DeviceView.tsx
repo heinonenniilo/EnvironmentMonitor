@@ -347,7 +347,8 @@ export const DeviceView: React.FC = () => {
   const uploadAttachment = (
     file: File,
     isDeviceImage: boolean,
-    name?: string
+    name?: string,
+    isSecret?: boolean
   ) => {
     if (selectedDevice === undefined) {
       return;
@@ -359,7 +360,8 @@ export const DeviceView: React.FC = () => {
         selectedDevice?.device.identifier,
         file,
         isDeviceImage,
-        name
+        name,
+        isSecret
       )
       .then((res) => {
         setSelectedDevice(res);
@@ -530,8 +532,8 @@ export const DeviceView: React.FC = () => {
               })
             );
           }}
-          onUploadAttachment={(file, customName) => {
-            uploadAttachment(file, false, customName);
+          onUploadAttachment={(file, customName, isSecret) => {
+            uploadAttachment(file, false, customName, isSecret);
           }}
         />
 
