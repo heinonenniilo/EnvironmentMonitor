@@ -1,6 +1,7 @@
 import { type SensorInfo, type VirtualSensor } from "../models/sensor";
 import {
   Box,
+  Checkbox,
   Paper,
   Table,
   TableBody,
@@ -20,6 +21,7 @@ export interface SensorTableProps {
 
 export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
   const [selectedSensors, setSelectedSensors] = useState<VirtualSensor[]>([]);
+  const [dialogTitle, setDialogTitle] = useState<string>("");
   return (
     <Box marginTop={1}>
       {title && (
@@ -31,8 +33,10 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
         isOpen={selectedSensors.length > 0}
         onClose={() => {
           setSelectedSensors([]);
+          setDialogTitle("");
         }}
         sensors={selectedSensors}
+        title={dialogTitle}
       />
       <TableContainer component={Paper}>
         <Table size="small">
@@ -40,6 +44,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
             <TableRow>
               <TableCell>Name</TableCell>
               <TableCell>Sensor Id</TableCell>
+              <TableCell>Virtual</TableCell>
               <TableCell>Scale min</TableCell>
               <TableCell>Scale max</TableCell>
             </TableRow>
@@ -52,9 +57,9 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
                   <TableRow
                     key={r.identifier}
                     onClick={() => {
-                      console.log(r.sensors);
                       if (r.sensors.length > 0) {
                         setSelectedSensors(r.sensors);
+                        setDialogTitle(`Sensors for ${r.name}`);
                       }
                     }}
                     sx={{
@@ -69,6 +74,16 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
                   >
                     <TableCell>{r.name}</TableCell>
                     <TableCell>{r.sensorId}</TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={r.isVirtual}
+                        size="small"
+                        disabled
+                        sx={{
+                          padding: "0px",
+                        }}
+                      />
+                    </TableCell>
                     <TableCell>{r.scaleMin}</TableCell>
                     <TableCell>{r.scaleMax}</TableCell>
                   </TableRow>

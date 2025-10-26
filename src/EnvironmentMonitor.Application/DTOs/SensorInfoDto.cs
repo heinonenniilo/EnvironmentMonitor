@@ -14,6 +14,7 @@ namespace EnvironmentMonitor.Application.DTOs
     {
         public int SensorId { get; set; }
         public List<VirtualSensorRowDto> Sensors { get; set; } = [];
+        public bool IsVirtual { get; set; }
 
         public override void Mapping(Profile profile)
         {
@@ -24,6 +25,7 @@ namespace EnvironmentMonitor.Application.DTOs
 
             profile.CreateMap<SensorExtended, SensorInfoDto>()
                 .IncludeBase<SensorExtended, SensorDto>()
+                .ForMember(x => x.Sensors, opt => opt.MapFrom(x => x.VirtualSensorRows))
                 .ReverseMap();
         }
     }

@@ -10,6 +10,7 @@ export interface Sensor {
 export interface SensorInfo extends Sensor {
   sensorId: number;
   sensors: VirtualSensor[];
+  isVirtual: boolean;
 }
 
 export interface VirtualSensor {
