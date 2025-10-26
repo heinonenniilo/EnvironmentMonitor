@@ -17,6 +17,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly ILogger<KeyVaultClient> _logger;
         private readonly KeyVaultSettings _settings;
 
+
+        private const string EncodingTagKey = "Encoding";
+        private const string Base64EncodingKey = "base64";
+
         public KeyVaultClient(KeyVaultSettings settings, ILogger<KeyVaultClient> logger)
         {
             _logger = logger;
@@ -53,7 +57,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             // TODO not properly implemented, should support base64 encoding for strings as well.
             var secret = new KeyVaultSecret(secretName, secretValue);
-            secret.Properties.Tags["Encoding"] = "text";
+            secret.Properties.Tags[EncodingTagKey] = "text";
             var response = await _secretClient.SetSecretAsync(secret);
             return response.Value.Name;
         }
@@ -76,7 +80,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 _logger.LogInformation($"Storing secret '{secretName}' as Base64 encoded");
                 var base64String = Convert.ToBase64String(bytes);
                 secretValue = base64String;
-                encoding = "base64";
+                encoding = Base64EncodingKey;
             }
             else
             {
@@ -92,7 +96,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
 
             var secret = new KeyVaultSecret(secretName, secretValue);
-            secret.Properties.Tags["Encoding"] = encoding;
+            secret.Properties.Tags[EncodingTagKey] = encoding;
             var response = await _secretClient.SetSecretAsync(secret);
             return response.Value.Name;
         }
@@ -108,7 +112,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var secretValue = secret.Value.Value;
 
             byte[] bytes;
-            if (_settings.Base64EncodeSecrets)
+
+
+            var encoding = secret.Value.Properties.Tags.TryGetValue(EncodingTagKey, out var enc) ? enc : "text";
+            if (encoding.Equals(Base64EncodingKey))
             {
                 _logger.LogInformation($"Reading secret '{secretName}' as Base64 encoded");
                 bytes = Convert.FromBase64String(secretValue);
