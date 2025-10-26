@@ -1,6 +1,7 @@
-import { type SensorInfo } from "../models/sensor";
+import { type SensorInfo, type VirtualSensor } from "../models/sensor";
 import {
   Box,
+  Checkbox,
   Paper,
   Table,
   TableBody,
@@ -10,6 +11,8 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { SensorsDialog } from "./SensorsDialog";
+import { useState } from "react";
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
@@ -17,6 +20,8 @@ export interface SensorTableProps {
 }
 
 export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
+  const [selectedSensors, setSelectedSensors] = useState<VirtualSensor[]>([]);
+  const [dialogTitle, setDialogTitle] = useState<string>("");
   return (
     <Box marginTop={1}>
       {title && (
@@ -24,13 +29,22 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
           {title}
         </Typography>
       )}
-
+      <SensorsDialog
+        isOpen={selectedSensors.length > 0}
+        onClose={() => {
+          setSelectedSensors([]);
+          setDialogTitle("");
+        }}
+        sensors={selectedSensors}
+        title={dialogTitle}
+      />
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
               <TableCell>Sensor Id</TableCell>
+              <TableCell>Virtual</TableCell>
               <TableCell>Scale min</TableCell>
               <TableCell>Scale max</TableCell>
             </TableRow>
@@ -40,9 +54,36 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
               .sort((a, b) => a.sensorId - b.sensorId)
               .map((r) => {
                 return (
-                  <TableRow key={r.identifier}>
+                  <TableRow
+                    key={r.identifier}
+                    onClick={() => {
+                      if (r.sensors.length > 0) {
+                        setSelectedSensors(r.sensors);
+                        setDialogTitle(`Sensors for ${r.name}`);
+                      }
+                    }}
+                    sx={{
+                      cursor: r.sensors.length > 0 ? "pointer" : "default",
+                      "&:hover":
+                        r.sensors.length > 0
+                          ? {
+                              backgroundColor: "action.hover",
+                            }
+                          : undefined,
+                    }}
+                  >
                     <TableCell>{r.name}</TableCell>
                     <TableCell>{r.sensorId}</TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={r.isVirtual}
+                        size="small"
+                        disabled
+                        sx={{
+                          padding: "0px",
+                        }}
+                      />
+                    </TableCell>
                     <TableCell>{r.scaleMin}</TableCell>
                     <TableCell>{r.scaleMax}</TableCell>
                   </TableRow>
