@@ -51,8 +51,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new InvalidOperationException("KeyVault client not initialized");
             }
 
-            var secret = await _secretClient.SetSecretAsync(secretName, secretValue);
-            return secret.Value.Name;
+            // TODO not properly implemented, should support base64 encoding for strings as well.
+            var secret = new KeyVaultSecret(secretName, secretValue);
+            secret.Properties.Tags["Encoding"] = "text";
+            var response = await _secretClient.SetSecretAsync(secret);
+            return response.Value.Name;
         }
 
         public async Task<string> StoreStreamAsSecretAsync(string secretName, Stream stream)
@@ -67,11 +70,13 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var bytes = memoryStream.ToArray();
 
             string secretValue;
+            string encoding;
             if (_settings.Base64EncodeSecrets)
             {
                 _logger.LogInformation($"Storing secret '{secretName}' as Base64 encoded");
                 var base64String = Convert.ToBase64String(bytes);
                 secretValue = base64String;
+                encoding = "base64";
             }
             else
             {
@@ -83,10 +88,13 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     throw new InvalidOperationException("Stream contains binary data or invalid text characters. Enable Base64EncodeSecrets setting to store binary files.");
                 }
                 secretValue = textContent;
+                encoding = "text";
             }
 
-            var secret = await _secretClient.SetSecretAsync(secretName, secretValue);
-            return secret.Value.Name;
+            var secret = new KeyVaultSecret(secretName, secretValue);
+            secret.Properties.Tags["Encoding"] = encoding;
+            var response = await _secretClient.SetSecretAsync(secret);
+            return response.Value.Name;
         }
 
         public async Task<AttachmentDownloadModel> GetSecretAsStreamAsync(string secretName)
