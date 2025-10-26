@@ -16,5 +16,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public required string Path { get; set; }
         public string? FullPath { get; set; }
         public List<DeviceAttachment> DeviceAttachments { get; set; }
+        public bool IsSecret { get; set; }
     }
 }

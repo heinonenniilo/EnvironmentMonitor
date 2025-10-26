@@ -58,11 +58,16 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             configuration.GetSection("FileUploadSettings").Bind(fileUploadDefaultSettings);
             services.AddSingleton(fileUploadDefaultSettings);
 
+            var keyVaultSettings = new KeyVaultSettings();
+            configuration.GetSection("KeyVaultSettings").Bind(keyVaultSettings);
+            services.AddSingleton(keyVaultSettings);
+
             services.AddSingleton<IDateService, DateService>();
             services.AddSingleton<IHubMessageService, HubMessageService>();
             services.AddSingleton<IStorageClient, StorageClient>();
             services.AddSingleton<IImageService, ImageService>();
             services.AddScoped<IPaginationService, PaginationService>();
+            services.AddSingleton<IKeyVaultClient, KeyVaultClient>();
             return services;
         }
     }

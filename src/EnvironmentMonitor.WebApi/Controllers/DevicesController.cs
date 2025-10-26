@@ -52,7 +52,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> UploadAttachment([FromForm] Guid deviceId, [FromForm] bool isDeviceImage, [FromForm] string? fileName, IFormFile file)
+        public async Task<DeviceInfoDto> UploadAttachment([FromForm] Guid deviceId, [FromForm] bool isDeviceImage, [FromForm] string? fileName, IFormFile file, [FromForm] bool isSecret)
         {
             var maxFileSize = _fileUploadSettings.MaxImageUploadSizeMb * 1024 * 1024;
 
@@ -72,7 +72,8 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 FileName = string.IsNullOrEmpty(fileName) ? file.FileName : fileName,
                 Stream = file.OpenReadStream(),
                 ContentType = file.ContentType,
-                IsDeviceImage = isDeviceImage
+                IsDeviceImage = isDeviceImage,
+                IsSecret = isSecret
             });
             var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId], true);
             return deviceInfos.First();
