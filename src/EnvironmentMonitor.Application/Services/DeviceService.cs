@@ -341,7 +341,14 @@ namespace EnvironmentMonitor.Application.Services
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
             var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
             await _deviceRepository.DeleteAttachment(device.Id, attachmentIdentifier, true);
-            await _storageClient.DeleteBlob(attachment.Name);
+            if (attachment.IsSecret)
+            {
+                await _keyVaultClient.DeleteSecretAsync(attachment.Name);
+            }
+            else
+            {
+                await _storageClient.DeleteBlob(attachment.Name);
+            }
         }
 
         public async Task<AttachmentDownloadModel?> GetAttachment(Guid identifier, Guid attachmentIdentifier)

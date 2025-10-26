@@ -111,6 +111,19 @@ namespace EnvironmentMonitor.Infrastructure.Services
             return secret.Value.Name;
         }
 
+        public async Task<bool> DeleteSecretAsync(string secretName)
+        {
+            if (_secretClient == null)
+            {
+                throw new InvalidOperationException("KeyVault client not initialized");
+            }
+
+            _logger.LogInformation($"Deleting secret: {secretName}");
+            var operation = await _secretClient.StartDeleteSecretAsync(secretName);
+            await operation.WaitForCompletionAsync();
+            return operation.HasCompleted;
+        }
+
         private bool ContainsInvalidTextCharacters(string content)
         {
             foreach (char c in content)
