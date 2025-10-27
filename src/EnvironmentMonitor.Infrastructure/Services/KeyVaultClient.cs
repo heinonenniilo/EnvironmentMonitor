@@ -48,7 +48,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             return secret.Value.Value;
         }
 
-        public async Task<string> StoreSecretAsync(string secretName, string secretValue)
+        public async Task<StoreSecretReturnModel> StoreSecretAsync(string secretName, string secretValue)
         {
             if (_secretClient == null)
             {
@@ -69,10 +69,14 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var secret = new KeyVaultSecret(secretName, secretValueToSave);
             secret.Properties.Tags[EncodingTagKey] = encoding;
             var response = await _secretClient.SetSecretAsync(secret);
-            return response.Value.Name;
+            return new StoreSecretReturnModel()
+            {
+                SecretName = response.Value.Name,
+                Identifier = response.Value.Id
+            };
         }
 
-        public async Task<string> StoreStreamAsSecretAsync(string secretName, Stream stream)
+        public async Task<StoreSecretReturnModel> StoreStreamAsSecretAsync(string secretName, Stream stream)
         {
             if (_secretClient == null)
             {
@@ -109,7 +113,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var secret = new KeyVaultSecret(secretName, secretValue);
             secret.Properties.Tags[EncodingTagKey] = encoding;
             var response = await _secretClient.SetSecretAsync(secret);
-            return response.Value.Name;
+            return new StoreSecretReturnModel()
+            {
+                SecretName = response.Value.Name,
+                Identifier = response.Value.Id
+            };
         }
 
         public async Task<AttachmentDownloadModel> GetSecretAsStreamAsync(string secretName)

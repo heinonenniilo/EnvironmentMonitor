@@ -296,10 +296,12 @@ namespace EnvironmentMonitor.Application.Services
             var fileNameToSave = fileModel.IsSecret ? $"{Guid.NewGuid()}": $"{device.Identifier}_{Guid.NewGuid()}{extension}";
 
             string fullPath = string.Empty;
+            string path = string.Empty;
             if (fileModel.IsSecret)
             {
                 var secretName = await _keyVaultClient.StoreStreamAsSecretAsync(fileNameToSave, fileModel.Stream);
-                fullPath = secretName;
+                fullPath = secretName.Identifier.ToString();
+                path = secretName.SecretName;
             }
             else
             {
@@ -310,6 +312,7 @@ namespace EnvironmentMonitor.Application.Services
                     Stream = fileModel.IsDeviceImage ? await _imageService.CompressToSize(fileModel.Stream) : fileModel.Stream
                 });
                 fullPath = res.ToString();
+                path = res.ToString();
             }
 
             await _deviceRepository.AddAttachment(new AddDeviceAttachmentModel()
@@ -319,7 +322,7 @@ namespace EnvironmentMonitor.Application.Services
                     Name = fileNameToSave,
                     OriginalName = fileModel.FileName,
                     FullPath = fullPath,
-                    Path = fullPath,
+                    Path = path,
                     Extension = extension,
                     Created = _dateService.CurrentTime(),
                     ContentType = fileModel.ContentType,
