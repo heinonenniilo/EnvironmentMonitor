@@ -11,6 +11,7 @@ namespace EnvironmentMonitor.Domain.Models.AddModels
         public required Stream Stream { get; set; }
         public required string FileName { get; set; }
         public required string ContentType { get; set; }
+        public bool IsSecret { get; set; }
     }
 
     public class UploadDeviceAttachmentModel : UploadAttachmentModel

@@ -1,4 +1,4 @@
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, Checkbox, IconButton, Tooltip, Typography } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { Collapsible } from "./CollabsibleComponent";
 import type { DeviceAttachment } from "../models/deviceAttachment";
@@ -14,7 +14,11 @@ export interface DeviceAttachmentsProps {
   attachments: DeviceAttachment[];
   device: DeviceInfo | undefined;
   title?: string;
-  onUploadAttachment: (file: File, customName?: string) => void;
+  onUploadAttachment: (
+    file: File,
+    customName?: string,
+    isSecret?: boolean
+  ) => void;
   onDeleteAttachment: (attachmentId: string) => void;
 }
 
@@ -64,6 +68,26 @@ export const DeviceAttachments: React.FC<DeviceAttachmentsProps> = ({
           return "-";
         }
         return getFormattedDate(value as Date, true, true);
+      },
+    },
+    {
+      field: "isSecret",
+      headerName: "Secret",
+      width: 90,
+      sortable: false,
+      disableColumnMenu: true,
+      renderCell: (params) => {
+        const attachment = params.row as DeviceAttachment;
+        return (
+          <Checkbox
+            checked={attachment.isSecret}
+            size="small"
+            disabled
+            sx={{
+              padding: "0px",
+            }}
+          />
+        );
       },
     },
     {
@@ -126,8 +150,12 @@ export const DeviceAttachments: React.FC<DeviceAttachmentsProps> = ({
     }
   };
 
-  const handleUploadConfirm = (file: File, customName?: string) => {
-    onUploadAttachment(file, customName);
+  const handleUploadConfirm = (
+    file: File,
+    customName?: string,
+    isSecret?: boolean
+  ) => {
+    onUploadAttachment(file, customName, isSecret);
     setSelectedFile(null);
     setUploadDialogOpen(false);
   };

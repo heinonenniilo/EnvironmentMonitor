@@ -18,12 +18,14 @@ namespace EnvironmentMonitor.Application.DTOs
         public string? Name { get; set; }
         public long? SizeInBytes { get; set; }
         public string? Extension { get; set; }
+        public bool IsSecret { get; set; }
         public void Mapping(Profile profile)
         {
             profile.CreateMap<DeviceAttachment, DeviceAttachmentDto>()
                 .ForMember(x => x.Name, opt => opt.MapFrom(x => x.Attachment != null ? x.Attachment.OriginalName : ""))
                 .ForMember(x => x.SizeInBytes, opt => opt.MapAtRuntime())
                 .ForMember(x => x.Extension, opt => opt.MapFrom(x => x.Attachment.Extension))
+                .ForMember(x => x.IsSecret, opt => opt.MapFrom(x => x.Attachment.IsSecret))
                 .ReverseMap();
         }
     }

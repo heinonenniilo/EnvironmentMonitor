@@ -7,6 +7,8 @@ import {
   TextField,
   Box,
   Typography,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { formatBytes } from "../utilities/stringUtils";
@@ -15,7 +17,7 @@ export interface FileUploadDialogProps {
   open: boolean;
   file: File | null;
   onClose: () => void;
-  onConfirm: (file: File, customName?: string) => void;
+  onConfirm: (file: File, customName?: string, isSecret?: boolean) => void;
   title?: string;
 }
 
@@ -27,6 +29,7 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
   title = "Upload File",
 }) => {
   const [customName, setCustomName] = useState("");
+  const [isSecret, setIsSecret] = useState(false);
   const fileMinLength = 5;
 
   useEffect(() => {
@@ -38,13 +41,14 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
   const handleConfirm = () => {
     if (file) {
       const finalName = customName.trim() || file.name;
-      onConfirm(file, finalName);
+      onConfirm(file, finalName, isSecret);
       handleClose();
     }
   };
 
   const handleClose = () => {
     setCustomName("");
+    setIsSecret(false);
     onClose();
   };
 
@@ -81,6 +85,15 @@ export const FileUploadDialog: React.FC<FileUploadDialogProps> = ({
               file ? getFileExtension(file.name) : ""
             }`}
             variant="outlined"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isSecret}
+                onChange={(e) => setIsSecret(e.target.checked)}
+              />
+            }
+            label="Is secret"
           />
         </Box>
       </DialogContent>

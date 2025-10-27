@@ -29,9 +29,10 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IMapper _mapper;
         private readonly IDateService _dateService;
         private readonly IImageService _imageService;
+        private readonly IKeyVaultClient _keyVaultClient;
 
         public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService, IImageService imageService)
+            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService, IImageService imageService, IKeyVaultClient keyVaultClient)
         {
             _messageService = messageService;
             _logger = logger;
@@ -41,6 +42,7 @@ namespace EnvironmentMonitor.Application.Services
             _storageClient = storageClient;
             _dateService = dateService;
             _imageService = imageService;
+            _keyVaultClient = keyVaultClient;
         }
         public async Task Reboot(Guid identifier)
         {
@@ -252,6 +254,10 @@ namespace EnvironmentMonitor.Application.Services
                     var matchingAttachment = infos.FirstOrDefault(x => x.Device.Identifier == info.Device.Identifier)?.Device.Attachments.FirstOrDefault(a => a.Guid == attachment.Guid)?.Attachment;
                     if (matchingAttachment != null)
                     {
+                        if (matchingAttachment.IsSecret)
+                        {
+                            continue;
+                        }
                         try
                         {
                             var blobInfo = await _storageClient.GetBlobInfo(matchingAttachment.Name);
@@ -287,13 +293,27 @@ namespace EnvironmentMonitor.Application.Services
             }
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [fileModel.DeviceIdentifier] })).FirstOrDefault();
             var extension = Path.GetExtension(fileModel.FileName);
-            var fileNameToSave = $"{device.Identifier}_{Guid.NewGuid()}{extension}";
-            var res = await _storageClient.Upload(new UploadAttachmentModel()
+            var fileNameToSave = fileModel.IsSecret ? $"{Guid.NewGuid()}": $"{device.Identifier}_{Guid.NewGuid()}{extension}";
+
+            string fullPath = string.Empty;
+            string path = string.Empty;
+            if (fileModel.IsSecret)
             {
-                FileName = fileNameToSave,
-                ContentType = fileModel.ContentType,
-                Stream = fileModel.IsDeviceImage ? await _imageService.CompressToSize(fileModel.Stream) : fileModel.Stream
-            });
+                var secretName = await _keyVaultClient.StoreStreamAsSecretAsync(fileNameToSave, fileModel.Stream);
+                fullPath = secretName.Identifier.ToString();
+                path = secretName.SecretName;
+            }
+            else
+            {
+                var res = await _storageClient.Upload(new UploadAttachmentModel()
+                {
+                    FileName = fileNameToSave,
+                    ContentType = fileModel.ContentType,
+                    Stream = fileModel.IsDeviceImage ? await _imageService.CompressToSize(fileModel.Stream) : fileModel.Stream
+                });
+                fullPath = res.ToString();
+                path = res.ToString();
+            }
 
             await _deviceRepository.AddAttachment(new AddDeviceAttachmentModel()
             {
@@ -301,15 +321,16 @@ namespace EnvironmentMonitor.Application.Services
                 {
                     Name = fileNameToSave,
                     OriginalName = fileModel.FileName,
-                    FullPath = res.ToString(),
-                    Path = res.ToString(),
+                    FullPath = fullPath,
+                    Path = path,
                     Extension = extension,
                     Created = _dateService.CurrentTime(),
-                    ContentType = fileModel.ContentType
+                    ContentType = fileModel.ContentType,
+                    IsSecret = fileModel.IsSecret,
                 },
                 IsDeviceImage = fileModel.IsDeviceImage,
                 Identifier = device.Identifier,
-                SaveChanges = true
+                SaveChanges = true,
             });
         }
 
@@ -323,7 +344,14 @@ namespace EnvironmentMonitor.Application.Services
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
             var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
             await _deviceRepository.DeleteAttachment(device.Id, attachmentIdentifier, true);
-            await _storageClient.DeleteBlob(attachment.Name);
+            if (attachment.IsSecret)
+            {
+                await _keyVaultClient.DeleteSecretAsync(attachment.Name);
+            }
+            else
+            {
+                await _storageClient.DeleteBlob(attachment.Name);
+            }
         }
 
         public async Task<AttachmentDownloadModel?> GetAttachment(Guid identifier, Guid attachmentIdentifier)
@@ -335,7 +363,15 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Trying to get attachment with identifier '{attachmentIdentifier}' for device: '{identifier}'");
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
             var attachment = await _deviceRepository.GetAttachment(device.Id, attachmentIdentifier);
-            return await _storageClient.GetImageAsync(attachment.Name);
+
+            if (attachment.IsSecret)
+            {
+                return await _keyVaultClient.GetSecretAsStreamAsync(attachment.Name);
+            }
+            else
+            {
+                return await _storageClient.GetImageAsync(attachment.Name);
+            }
         }
 
         public async Task<AttachmentDownloadModel?> GetDefaultImage(Guid identifier)
