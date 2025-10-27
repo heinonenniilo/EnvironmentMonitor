@@ -101,11 +101,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 _logger.LogInformation($"Storing secret '{secretName}' as plain text");
                 var textContent = Encoding.UTF8.GetString(bytes);
-                // Validate that it's valid text
-                if (ContainsInvalidTextCharacters(textContent))
-                {
-                    throw new InvalidOperationException("Stream contains binary data or invalid text characters. Enable Base64EncodeSecrets setting to store binary files.");
-                }
                 secretValue = textContent;
                 encoding = TextEncodingKey;
             }
@@ -166,19 +161,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var operation = await _secretClient.StartDeleteSecretAsync(secretName);
             await operation.WaitForCompletionAsync();
             return operation.HasCompleted;
-        }
-
-        private bool ContainsInvalidTextCharacters(string content)
-        {
-            foreach (char c in content)
-            {
-                // Allow printable characters, newlines, carriage returns, and tabs
-                if (char.IsControl(c) && c != '\n' && c != '\r' && c != '\t')
-                {
-                    return true;
-                }
-            }
-            return false;
         }
     }
 }
