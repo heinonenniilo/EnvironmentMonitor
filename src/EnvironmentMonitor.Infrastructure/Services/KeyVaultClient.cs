@@ -17,9 +17,9 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly ILogger<KeyVaultClient> _logger;
         private readonly KeyVaultSettings _settings;
 
-
         private const string EncodingTagKey = "Encoding";
         private const string Base64EncodingKey = "base64";
+        private const string TextEncodingKey = "text";
 
         public KeyVaultClient(KeyVaultSettings settings, ILogger<KeyVaultClient> logger)
         {
@@ -55,9 +55,19 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new InvalidOperationException("KeyVault client not initialized");
             }
 
-            // TODO not properly implemented, should support base64 encoding for strings as well.
-            var secret = new KeyVaultSecret(secretName, secretValue);
-            secret.Properties.Tags[EncodingTagKey] = "text";
+            var secretValueToSave = secretValue;
+            string encoding = TextEncodingKey;
+
+            if (_settings.Base64EncodeSecrets)
+            {
+                _logger.LogInformation($"Storing secret '{secretName}' as Base64 encoded");
+                var base64String = Convert.ToBase64String(Encoding.UTF8.GetBytes(secretValue));
+                secretValueToSave = base64String;
+                encoding = Base64EncodingKey;
+            }
+
+            var secret = new KeyVaultSecret(secretName, secretValueToSave);
+            secret.Properties.Tags[EncodingTagKey] = encoding;
             var response = await _secretClient.SetSecretAsync(secret);
             return response.Value.Name;
         }
@@ -75,6 +85,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             string secretValue;
             string encoding;
+
             if (_settings.Base64EncodeSecrets)
             {
                 _logger.LogInformation($"Storing secret '{secretName}' as Base64 encoded");
@@ -92,7 +103,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     throw new InvalidOperationException("Stream contains binary data or invalid text characters. Enable Base64EncodeSecrets setting to store binary files.");
                 }
                 secretValue = textContent;
-                encoding = "text";
+                encoding = TextEncodingKey;
             }
 
             var secret = new KeyVaultSecret(secretName, secretValue);
@@ -112,9 +123,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var secretValue = secret.Value.Value;
 
             byte[] bytes;
+            var encoding = secret.Value.Properties.Tags.TryGetValue(EncodingTagKey, out var enc) ? enc : TextEncodingKey;
 
-
-            var encoding = secret.Value.Properties.Tags.TryGetValue(EncodingTagKey, out var enc) ? enc : "text";
             if (encoding.Equals(Base64EncodingKey))
             {
                 _logger.LogInformation($"Reading secret '{secretName}' as Base64 encoded");
@@ -136,28 +146,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
             };
         }
 
-        public async Task<string> StoreTextFileAsSecretAsync(string secretName, Stream stream, Encoding? encoding = null)
-        {
-            if (_secretClient == null)
-            {
-                throw new InvalidOperationException("KeyVault client not initialized");
-            }
-
-            encoding ??= Encoding.UTF8;
-
-            // Read stream as text
-            using var reader = new StreamReader(stream, encoding);
-            var textContent = await reader.ReadToEndAsync();
-
-            // Validate that it's valid text (optional - check for control characters except newlines/tabs)
-            if (ContainsInvalidTextCharacters(textContent))
-            {
-                throw new InvalidOperationException("Stream contains binary data or invalid text characters");
-            }
-
-            var secret = await _secretClient.SetSecretAsync(secretName, textContent);
-            return secret.Value.Name;
-        }
 
         public async Task<bool> DeleteSecretAsync(string secretName)
         {

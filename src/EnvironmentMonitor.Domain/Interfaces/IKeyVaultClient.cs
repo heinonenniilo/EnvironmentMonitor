@@ -13,7 +13,6 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<string> StoreSecretAsync(string secretName, string secretValue);
         Task<string> StoreStreamAsSecretAsync(string secretName, Stream stream);
         Task<AttachmentDownloadModel> GetSecretAsStreamAsync(string secretName);
-        Task<string> StoreTextFileAsSecretAsync(string secretName, Stream stream, Encoding? encoding = null);
         Task<bool> DeleteSecretAsync(string secretName);
     }
 }
