@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Extensions;
 
 namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 {
@@ -33,6 +35,27 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 .WithOne(s => s.Type)
                 .HasForeignKey(s => s.TypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasData(Enum.GetValues(typeof(DeviceAttributeTypes))
+                .Cast<DeviceAttributeTypes>()
+                .Select(e => new DeviceAttributeType
+                {
+                    Id = (int)e,
+                    Name = e.ToString(),
+                    Description = e.GetDescription(),
+                    Type = GetAttributeType(e)
+                })
+                .ToList());
+        }
+
+        private static string GetAttributeType(DeviceAttributeTypes attributeType)
+        {
+            return attributeType switch
+            {
+                DeviceAttributeTypes.OutputMode => "int",
+                DeviceAttributeTypes.OnDelay => "int",
+                _ => "string"
+            };
         }
     }
 }

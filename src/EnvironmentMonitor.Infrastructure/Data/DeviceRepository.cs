@@ -490,7 +490,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
         }
 
-        public async Task UpdateDeviceAttribute(int deviceId, int typeId, string value, DateTime timeStamp, DateTime timeStampUtc, bool saveChanges)
+        public async Task UpdateDeviceAttribute(int deviceId, int typeId, string value, bool saveChanges)
         {
             var device = await _context.Devices.FindAsync(deviceId);
             if (device == null)
@@ -501,12 +501,15 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var existingAttribute = await _context.DeviceAttributes
                 .FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.TypeId == typeId);
 
+            var currentTime = _dateService.CurrentTime();
+            var utcTime = _dateService.LocalToUtc(currentTime);
+
             if (existingAttribute != null)
             {
                 // Update existing attribute
                 existingAttribute.Value = value;
-                existingAttribute.TimeStamp = timeStamp;
-                existingAttribute.TimeStampUtc = timeStampUtc;
+                existingAttribute.TimeStamp = currentTime;
+                existingAttribute.TimeStampUtc = utcTime;
             }
             else
             {
@@ -516,10 +519,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     DeviceId = deviceId,
                     TypeId = typeId,
                     Value = value,
-                    TimeStamp = timeStamp,
-                    TimeStampUtc = timeStampUtc,
+                    TimeStamp = currentTime,
+                    TimeStampUtc = utcTime,
                     Created = _dateService.CurrentTime(),
-                    CreatedUtc = DateTime.UtcNow
+                    CreatedUtc = utcTime
                 };
                 await _context.DeviceAttributes.AddAsync(newAttribute);
             }
