@@ -9,8 +9,8 @@ namespace EnvironmentMonitor.Domain.Enums
 {
     public enum DeviceAttributeTypes
     {
-        [Description("Output mode")]
-        OutputMode = 0,
+        [Description("Motion control status. 0=AlwaysOff,1=AlwaysOn,2=MotionControl")]
+        MotionControlStatus = 0,
         [Description("Output delay in ms when motion control is on.")]
         OnDelay = 1,
     }

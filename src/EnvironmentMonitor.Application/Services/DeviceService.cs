@@ -76,7 +76,7 @@ namespace EnvironmentMonitor.Application.Services
             var message = $"MOTIONCONTROLSTATUS:{(int)status}";
             _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
-            await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.OutputMode, ((int)status).ToString(),false);
+            await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.MotionControlStatus, ((int)status).ToString(),false);
             await AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control status set to: {(int)status} ({status.ToString()})", true);
         }
 

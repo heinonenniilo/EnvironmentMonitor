@@ -52,7 +52,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
         {
             return attributeType switch
             {
-                DeviceAttributeTypes.OutputMode => "int",
+                DeviceAttributeTypes.MotionControlStatus => "int",
                 DeviceAttributeTypes.OnDelay => "int",
                 _ => "string"
             };
