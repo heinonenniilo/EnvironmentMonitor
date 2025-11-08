@@ -22,7 +22,8 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
             IConfiguration configuration,
             string? connectionString = null,
-            IotHubSettings? iotHubSettings = null
+            IotHubSettings? iotHubSettings = null,
+            QueueSettings? queueSettings = null
             )
         {
             services.AddDbContext<MeasurementDbContext>(options =>
@@ -74,9 +75,16 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             configuration.GetSection("KeyVaultSettings").Bind(keyVaultSettings);
             services.AddSingleton(keyVaultSettings);
 
-            var queueSettings = new QueueSettings();
-            configuration.GetSection("QueueSettings").Bind(queueSettings);
-            services.AddSingleton(queueSettings);
+            if (queueSettings != null)
+            {
+                services.AddSingleton(queueSettings);
+            }
+            else
+            {
+                var defaultQueueSettings = new QueueSettings();
+                configuration.GetSection("QueueSettings").Bind(defaultQueueSettings);
+                services.AddSingleton(defaultQueueSettings);
+            }
 
             services.AddSingleton<IDateService, DateService>();
             services.AddSingleton<IHubMessageService, HubMessageService>();
