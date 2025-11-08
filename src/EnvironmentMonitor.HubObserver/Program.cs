@@ -27,7 +27,24 @@ var host = new HostBuilder()
                 ConnectionString = ""
             };
         }
-        services.AddInfrastructureServices(opt.Configuration, opt.Configuration.GetValue<string>("DefaultConnection"), hubSettings);
+
+        // Read queue settings from configuration
+        var queueServiceUri = opt.Configuration.GetValue<string>("StorageAccountConnection:queueServiceUri");
+        var accountName = opt.Configuration.GetValue<string>("StorageAccountConnection:accountName");
+        var defaultQueueName = opt.Configuration.GetValue<string>("DeviceMessagesQueueName");
+        
+        QueueSettings? queueSettings = null;
+        if (!string.IsNullOrEmpty(queueServiceUri) || !string.IsNullOrEmpty(accountName))
+        {
+            queueSettings = new QueueSettings
+            {
+                QueueServiceUri = queueServiceUri,
+                AccountName = accountName,
+                DefaultQueueName = defaultQueueName
+            };
+        }
+
+        services.AddInfrastructureServices(opt.Configuration, opt.Configuration.GetValue<string>("DefaultConnection"), hubSettings, queueSettings);
         services.AddApplicationServices(opt.Configuration);
     })
     .Build();

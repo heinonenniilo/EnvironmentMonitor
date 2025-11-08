@@ -9,6 +9,7 @@ namespace EnvironmentMonitor.Domain.Models
     public class QueueSettings
     {
         public string? QueueServiceUri { get; set; }
+        public string? AccountName { get; set; }
         public string? DefaultQueueName { get; set; }
     }
 }

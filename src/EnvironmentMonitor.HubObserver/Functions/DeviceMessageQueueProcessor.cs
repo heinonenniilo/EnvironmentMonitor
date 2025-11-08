@@ -49,7 +49,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 switch (messageType)
                 {
                     case QueuedMessages.SendDeviceAttributes:
-                        await _deviceService.SendAttributesToDevice(deviceMessage.DeviceIdentifier);
+                        await _deviceService.SendAttributesToDevice(deviceMessage.DeviceIdentifier, "Sent stored attributes to device. Triggered from storage queue.");
                         break;
                     default:
                         _logger.LogWarning("Unknown message type: {MessageTypeId}", deviceMessage.MessageTypeId);

@@ -505,7 +505,7 @@ namespace EnvironmentMonitor.Application.Services
             };
         }
 
-        public async Task SendAttributesToDevice(Guid identifier)
+        public async Task SendAttributesToDevice(Guid identifier, string? message = null)
         {
             if (!_userService.IsAdmin)
             {
@@ -521,7 +521,11 @@ namespace EnvironmentMonitor.Application.Services
 
             var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
             _logger.LogInformation($"Sending {attributes.Count} attributes to device: {device.Id} ({identifier})");
-
+            if (!attributes.Any())
+            {
+                _logger.LogInformation($"No attributes found for device {device.Id} ({identifier})");
+                return;
+            }
             foreach (var attribute in attributes)
             {
                 var type = (DeviceAttributeTypes)attribute.TypeId;
@@ -544,7 +548,7 @@ namespace EnvironmentMonitor.Application.Services
                         _logger.LogInformation($"Sending MotionControlStatus '{status}' ({statusValue}) to device {device.Id} ({identifier})");
                         await SetMotionControlStatus(identifier, status);
                         break;
-                    
+
                     case DeviceAttributeTypes.OnDelay:
                         if (!long.TryParse(attribute.Value, out long delayMs))
                         {
@@ -554,12 +558,15 @@ namespace EnvironmentMonitor.Application.Services
                         _logger.LogInformation($"Sending OnDelay '{delayMs}' ms to device {device.Id} ({identifier})");
                         await SetMotionControlDelay(identifier, delayMs);
                         break;
-                    
+
                     default:
                         _logger.LogInformation($"Skipping unknown attribute type '{type}' for device {device.Id} ({identifier})");
                         continue;
                 }
             }
+
+            var messageToSend = string.IsNullOrEmpty(message) ? "Sent device attributes to device" : message;
+            await AddEvent(device.Id, DeviceEventTypes.SendAttributes, messageToSend, true);
             _logger.LogInformation($"Completed sending attributes to device {device.Id} ({identifier})");
         }
     }

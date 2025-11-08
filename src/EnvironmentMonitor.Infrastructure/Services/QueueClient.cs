@@ -18,15 +18,26 @@ namespace EnvironmentMonitor.Infrastructure.Services
         {
             _logger = logger;
             _settings = settings;
-
+            var clientOptions = new QueueClientOptions()
+            {
+                MessageEncoding = QueueMessageEncoding.Base64
+            };
+            // Try to initialize using QueueServiceUri first, then AccountName
             if (!string.IsNullOrEmpty(settings.QueueServiceUri))
             {
                 var queueServiceUri = new Uri(settings.QueueServiceUri);
-                _queueServiceClient = new QueueServiceClient(queueServiceUri, new DefaultAzureCredential());
+                _queueServiceClient = new QueueServiceClient(queueServiceUri, new DefaultAzureCredential(), clientOptions);
+                _logger.LogInformation($"Queue client initialized using QueueServiceUri: {settings.QueueServiceUri}");
+            }
+            else if (!string.IsNullOrEmpty(settings.AccountName))
+            {
+                var queueServiceUri = new Uri($"https://{settings.AccountName}.queue.core.windows.net");
+                _queueServiceClient = new QueueServiceClient(queueServiceUri, new DefaultAzureCredential(), clientOptions);
+                _logger.LogInformation($"Queue client initialized using AccountName: {settings.AccountName}");
             }
             else
             {
-                _logger.LogWarning("Queue Service URI not configured");
+                _logger.LogWarning("Queue Service URI or Account Name not configured");
             }
         }
 
