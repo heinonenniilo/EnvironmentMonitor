@@ -1,4 +1,6 @@
-﻿using EnvironmentMonitor.Domain.Interfaces;
+﻿using Azure.Identity;
+using Azure.Storage.Queues;
+using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
@@ -72,12 +74,18 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             configuration.GetSection("KeyVaultSettings").Bind(keyVaultSettings);
             services.AddSingleton(keyVaultSettings);
 
+            var queueSettings = new QueueSettings();
+            configuration.GetSection("QueueSettings").Bind(queueSettings);
+            services.AddSingleton(queueSettings);
+
             services.AddSingleton<IDateService, DateService>();
             services.AddSingleton<IHubMessageService, HubMessageService>();
             services.AddSingleton<IStorageClient, StorageClient>();
             services.AddSingleton<IImageService, ImageService>();
             services.AddScoped<IPaginationService, PaginationService>();
             services.AddSingleton<IKeyVaultClient, KeyVaultClient>();
+            services.AddSingleton<IQueueClient, Services.QueueClient>();
+
             return services;
         }
     }
