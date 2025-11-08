@@ -504,5 +504,63 @@ namespace EnvironmentMonitor.Application.Services
                 TotalCount = res.TotalCount,
             };
         }
+
+        public async Task SendAttributesToDevice(Guid identifier)
+        {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault();
+
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+            }
+
+            var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+            _logger.LogInformation($"Sending {attributes.Count} attributes to device: {device.Id} ({identifier})");
+
+            foreach (var attribute in attributes)
+            {
+                var type = (DeviceAttributeTypes)attribute.TypeId;
+
+                if (string.IsNullOrEmpty(attribute.Value))
+                {
+                    _logger.LogInformation($"Skipping attribute type '{type}' for device {device.Id} ({identifier}) - empty value");
+                    continue;
+                }
+
+                switch (type)
+                {
+                    case DeviceAttributeTypes.MotionControlStatus:
+                        if (!int.TryParse(attribute.Value, out int statusValue))
+                        {
+                            _logger.LogError($"Failed to parse MotionControlStatus value '{attribute.Value}' for device {device.Id} ({identifier})");
+                            continue;
+                        }
+                        MotionControlStatus status = (MotionControlStatus)statusValue;
+                        _logger.LogInformation($"Sending MotionControlStatus '{status}' ({statusValue}) to device {device.Id} ({identifier})");
+                        await SetMotionControlStatus(identifier, status);
+                        break;
+                    
+                    case DeviceAttributeTypes.OnDelay:
+                        if (!long.TryParse(attribute.Value, out long delayMs))
+                        {
+                            _logger.LogError($"Failed to parse OnDelay value '{attribute.Value}' for device {device.Id} ({identifier})");
+                            continue;
+                        }
+                        _logger.LogInformation($"Sending OnDelay '{delayMs}' ms to device {device.Id} ({identifier})");
+                        await SetMotionControlDelay(identifier, delayMs);
+                        break;
+                    
+                    default:
+                        _logger.LogInformation($"Skipping unknown attribute type '{type}' for device {device.Id} ({identifier})");
+                        continue;
+                }
+            }
+            _logger.LogInformation($"Completed sending attributes to device {device.Id} ({identifier})");
+        }
     }
 }

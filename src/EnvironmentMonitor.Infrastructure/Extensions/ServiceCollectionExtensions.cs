@@ -19,7 +19,8 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
             IConfiguration configuration,
-            string? connectionString = null
+            string? connectionString = null,
+            IotHubSettings? iotHubSettings = null
             )
         {
             services.AddDbContext<MeasurementDbContext>(options =>
@@ -47,11 +48,20 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<IUserAuthService, UserAuthService>();
 
 
-            var defaultSettings = new IotHubSettings();
-            configuration.GetSection("IotHubSettings").Bind(defaultSettings);
+            if (iotHubSettings != null)
+            {
+                services.AddSingleton(iotHubSettings);
+            }
+            else
+            {
+                var defaultSettings = new IotHubSettings();
+                configuration.GetSection("IotHubSettings").Bind(defaultSettings);
+                services.AddSingleton(defaultSettings);
+            }
+
             var storageAccountSettings = new StorageAccountSettings();
             configuration.GetSection("StorageSettings").Bind(storageAccountSettings);
-            services.AddSingleton(defaultSettings);
+            
             services.AddSingleton(storageAccountSettings);
 
             var fileUploadDefaultSettings = new FileUploadSettings();

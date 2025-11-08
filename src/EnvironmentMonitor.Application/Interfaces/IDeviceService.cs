@@ -17,6 +17,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task Reboot(Guid identifier);
         public Task SetMotionControlStatus(Guid identifier, MotionControlStatus status);
         public Task SetMotionControlDelay(Guid identifier, long delayMs);
+        public Task SendAttributesToDevice(Guid identifier);
 
         public Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel);
         public Task<DeviceDto> GetDevice(Guid identifier, AccessLevels accessLevel);
