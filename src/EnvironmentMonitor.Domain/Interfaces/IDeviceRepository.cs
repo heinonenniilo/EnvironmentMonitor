@@ -30,6 +30,10 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task SetDefaultImage(int deviceId, Guid attachmentIdentifier);
 
         public Task<DeviceInfo> AddOrUpdate(Device device, bool saveChanges);
+        public Task SetDeviceAttributes(int deviceId, List<DeviceAttribute> attributes, bool saveChanges);
+        public Task UpdateDeviceAttribute(int deviceId, int typeId, string value, DateTime timeStamp, DateTime timeStampUtc, bool saveChanges);
+        public Task<List<DeviceAttribute>> GetDeviceAttributes(int deviceId);
+        public Task<DeviceAttribute?> GetDeviceAttribute(int deviceId, int typeId);
 
         public Task SetStatus(SetDeviceStatusModel status, bool saveChanges);
         public Task SaveChanges();

@@ -432,5 +432,118 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }).ToList();
         }
 
+        public async Task SetDeviceAttributes(int deviceId, List<DeviceAttribute> attributes, bool saveChanges)
+        {
+            var device = await _context.Devices.FindAsync(deviceId);
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with id: {deviceId} not found.");
+            }
+
+            var existingAttributes = await _context.DeviceAttributes
+                .Where(x => x.DeviceId == deviceId)
+                .ToListAsync();
+
+            var attributeTypeIds = attributes.Select(x => x.TypeId).ToList();
+
+            var attributesToRemove = existingAttributes
+                .Where(x => !attributeTypeIds.Contains(x.TypeId))
+                .ToList();
+
+            if (attributesToRemove.Any())
+            {
+                _context.DeviceAttributes.RemoveRange(attributesToRemove);
+            }
+
+            foreach (var attribute in attributes)
+            {
+                var existingAttribute = existingAttributes
+                    .FirstOrDefault(x => x.TypeId == attribute.TypeId);
+
+                if (existingAttribute != null)
+                {
+                    // Update existing attribute
+                    existingAttribute.Value = attribute.Value;
+                    existingAttribute.TimeStamp = attribute.TimeStamp;
+                    existingAttribute.TimeStampUtc = attribute.TimeStampUtc;
+                }
+                else
+                {
+                    // Add new attribute
+                    var newAttribute = new DeviceAttribute
+                    {
+                        DeviceId = deviceId,
+                        TypeId = attribute.TypeId,
+                        Value = attribute.Value,
+                        TimeStamp = attribute.TimeStamp,
+                        TimeStampUtc = attribute.TimeStampUtc,
+                        Created = _dateService.CurrentTime(),
+                        CreatedUtc = DateTime.UtcNow
+                    };
+                    await _context.DeviceAttributes.AddAsync(newAttribute);
+                }
+            }
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task UpdateDeviceAttribute(int deviceId, int typeId, string value, DateTime timeStamp, DateTime timeStampUtc, bool saveChanges)
+        {
+            var device = await _context.Devices.FindAsync(deviceId);
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with id: {deviceId} not found.");
+            }
+
+            var existingAttribute = await _context.DeviceAttributes
+                .FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.TypeId == typeId);
+
+            if (existingAttribute != null)
+            {
+                // Update existing attribute
+                existingAttribute.Value = value;
+                existingAttribute.TimeStamp = timeStamp;
+                existingAttribute.TimeStampUtc = timeStampUtc;
+            }
+            else
+            {
+                // Add new attribute
+                var newAttribute = new DeviceAttribute
+                {
+                    DeviceId = deviceId,
+                    TypeId = typeId,
+                    Value = value,
+                    TimeStamp = timeStamp,
+                    TimeStampUtc = timeStampUtc,
+                    Created = _dateService.CurrentTime(),
+                    CreatedUtc = DateTime.UtcNow
+                };
+                await _context.DeviceAttributes.AddAsync(newAttribute);
+            }
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<List<DeviceAttribute>> GetDeviceAttributes(int deviceId)
+        {
+            return await _context.DeviceAttributes
+                .Include(x => x.Type)
+                .Where(x => x.DeviceId == deviceId)
+                .OrderBy(x => x.TypeId)
+                .ToListAsync();
+        }
+
+        public async Task<DeviceAttribute?> GetDeviceAttribute(int deviceId, int typeId)
+        {
+            return await _context.DeviceAttributes
+                .Include(x => x.Type)
+                .FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.TypeId == typeId);
+        }
     }
 }
