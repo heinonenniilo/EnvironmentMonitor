@@ -79,6 +79,16 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 objectToInsert.EnqueuedUtc = message.EnqueuedTime.UtcDateTime;
                 objectToInsert.SequenceNumber = message.SequenceNumber;
 
+                try
+                {
+                    await _measurementService.AddMeasurements(objectToInsert);
+                    processedMessaged++;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Adding measurements failed");
+                }
+
                 if (objectToInsert.FirstMessage && objectToInsert.EnqueuedUtc > DateTime.UtcNow.AddMinutes(-1 * FirstMessageLimitInMinutes))
                 {
                     try
@@ -97,16 +107,6 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     {
                         _logger.LogError(ex, $"Failed to send device attributes to device with id (string) {objectToInsert.DeviceId}");
                     }
-                }
-
-                try
-                {
-                    await _measurementService.AddMeasurements(objectToInsert);
-                    processedMessaged++;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Adding measurements failed");
                 }
             }
             _logger.LogInformation($"Total of {processedMessaged} processed");
