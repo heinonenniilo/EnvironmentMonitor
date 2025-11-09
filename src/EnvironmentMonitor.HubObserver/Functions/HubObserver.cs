@@ -89,23 +89,30 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     _logger.LogError(ex, "Adding measurements failed");
                 }
 
-                if (objectToInsert.FirstMessage && objectToInsert.EnqueuedUtc > DateTime.UtcNow.AddMinutes(-1 * FirstMessageLimitInMinutes))
+                if (objectToInsert.FirstMessage)
                 {
-                    try
+                    if (objectToInsert.EnqueuedUtc > DateTime.UtcNow.AddMinutes(-1 * FirstMessageLimitInMinutes))
                     {
-                        var device = await _deviceService.GetDevice(objectToInsert.DeviceId, AccessLevels.Write);
-                        var queueMessage = new Domain.Models.DeviceQueueMessage
+                        try
                         {
-                            DeviceIdentifier = device.Identifier,
-                            MessageTypeId = (int)QueuedMessages.SendDeviceAttributes
-                        };
-                        var messageJson = JsonSerializer.Serialize(queueMessage);
-                        _logger.LogInformation($"First message detected for device {device.Identifier}, sending to queue");
-                        await _queueClient.SendMessage(messageJson);
+                            var device = await _deviceService.GetDevice(objectToInsert.DeviceId, AccessLevels.Write);
+                            var queueMessage = new Domain.Models.DeviceQueueMessage
+                            {
+                                DeviceIdentifier = device.Identifier,
+                                MessageTypeId = (int)QueuedMessages.SendDeviceAttributes
+                            };
+                            var messageJson = JsonSerializer.Serialize(queueMessage);
+                            _logger.LogInformation($"First message detected for device {device.Identifier}, sending to queue");
+                            await _queueClient.SendMessage(messageJson);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Failed to send device attributes to device with id (string) {objectToInsert.DeviceId}");
+                        }
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        _logger.LogError(ex, $"Failed to send device attributes to device with id (string) {objectToInsert.DeviceId}");
+                        _logger.LogWarning($"First message received for device ({objectToInsert.DeviceId}). It was enqueued {objectToInsert.EnqueuedUtc} which was over {FirstMessageLimitInMinutes} mins ago");
                     }
                 }
             }
