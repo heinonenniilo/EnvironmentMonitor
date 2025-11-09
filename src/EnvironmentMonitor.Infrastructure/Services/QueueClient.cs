@@ -51,7 +51,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             await SendMessage(_settings.DefaultQueueName, message, delay);
         }
 
-        public async Task SendMessage(string queueName, string message, TimeSpan? delay)
+        public async Task SendMessage(string queueName, string message, TimeSpan? delay = null)
         {
             if (_queueServiceClient == null)
             {
