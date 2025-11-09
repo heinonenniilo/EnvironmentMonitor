@@ -3,4 +3,5 @@ export interface DeviceAttribute {
   typeDescription: string;
   value: string;
   type: string;
+  timeStamp?: Date;
 }

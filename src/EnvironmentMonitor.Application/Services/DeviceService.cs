@@ -531,7 +531,6 @@ namespace EnvironmentMonitor.Application.Services
             foreach (var attribute in attributes)
             {
                 var type = (DeviceAttributeTypes)attribute.TypeId;
-
                 if (string.IsNullOrEmpty(attribute.Value))
                 {
                     _logger.LogInformation($"Skipping attribute type '{type}' for device {device.Id} ({identifier}) - empty value");

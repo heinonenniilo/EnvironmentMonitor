@@ -10,6 +10,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { getFormattedDate } from "../utilities/datetimeUtils";
 
 export interface DeviceAttributesTableProps {
   attributes: DeviceAttribute[];
@@ -35,6 +36,7 @@ export const DeviceAttributesTable: React.FC<DeviceAttributesTableProps> = ({
               <TableCell>Description</TableCell>
               <TableCell>Type</TableCell>
               <TableCell>Value</TableCell>
+              <TableCell>Updated</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -45,6 +47,11 @@ export const DeviceAttributesTable: React.FC<DeviceAttributesTableProps> = ({
                   <TableCell>{attr.typeDescription}</TableCell>
                   <TableCell>{attr.type}</TableCell>
                   <TableCell>{attr.value}</TableCell>
+                  <TableCell>
+                    {attr.timeStamp
+                      ? getFormattedDate(attr.timeStamp, true, true)
+                      : ""}
+                  </TableCell>
                 </TableRow>
               );
             })}
