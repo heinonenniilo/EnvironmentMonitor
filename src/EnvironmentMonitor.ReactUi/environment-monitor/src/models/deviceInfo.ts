@@ -1,5 +1,6 @@
 import type { Device } from "./device";
 import type { DeviceAttachment } from "./deviceAttachment";
+import type { DeviceAttribute } from "./deviceAttribute";
 import type { SensorInfo } from "./sensor";
 
 export interface DeviceInfo {
@@ -13,4 +14,5 @@ export interface DeviceInfo {
   defaultImageGuid: string;
   deviceIdentifier: string;
   isVirtual: boolean;
+  attributes: DeviceAttribute[];
 }

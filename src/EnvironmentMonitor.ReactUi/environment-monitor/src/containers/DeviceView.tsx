@@ -6,6 +6,7 @@ import { type DeviceInfo } from "../models/deviceInfo";
 import { SensorTable } from "../components/SensorTable";
 import { DeviceTable } from "../components/DeviceTable";
 import { DeviceControlComponent } from "../components/DeviceControlComponent";
+import { DeviceAttributesTable } from "../components/DeviceAttributesTable";
 import { useDispatch } from "react-redux";
 import {
   addNotification,
@@ -471,49 +472,53 @@ export const DeviceView: React.FC = () => {
             renderLinkToDeviceMessages
           />
         </Collapsible>
-        {selectedDevice && !selectedDevice.isVirtual && (
-          <DeviceImage
-            device={selectedDevice}
-            ver={defaultImageVer}
-            title={"Device images"}
-            onSetDefaultImage={(identifier: string) => {
-              dispatch(
-                setConfirmDialog({
-                  onConfirm: () => {
-                    setDefaultImage(identifier);
-                  },
-                  title: "Set default image",
-                  body: `Current image will be set as default image for ${selectedDevice?.device.name}`,
-                })
-              );
-            }}
-            onDeleteImage={(identifier: string) => {
-              dispatch(
-                setConfirmDialog({
-                  onConfirm: () => {
-                    deleteAttachment(identifier);
-                  },
-                  title: "Delete image",
-                  body: `The selected image of ${selectedDevice?.device.name} will be removed.`,
-                })
-              );
-            }}
-            onUploadImage={(file) => {
-              dispatch(
-                setConfirmDialog({
-                  onConfirm: () => {
-                    uploadAttachment(file, true);
-                  },
-                  title: "Upload new image?",
-                  body: `Upload "${file.name}"?`,
-                })
-              );
-            }}
-          />
-        )}
 
+        <DeviceImage
+          device={selectedDevice}
+          ver={defaultImageVer}
+          title={"Device images"}
+          onSetDefaultImage={(identifier: string) => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  setDefaultImage(identifier);
+                },
+                title: "Set default image",
+                body: `Current image will be set as default image for ${selectedDevice?.device.name}`,
+              })
+            );
+          }}
+          onDeleteImage={(identifier: string) => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  deleteAttachment(identifier);
+                },
+                title: "Delete image",
+                body: `The selected image of ${selectedDevice?.device.name} will be removed.`,
+              })
+            );
+          }}
+          onUploadImage={(file) => {
+            dispatch(
+              setConfirmDialog({
+                onConfirm: () => {
+                  uploadAttachment(file, true);
+                },
+                title: "Upload new image?",
+                body: `Upload "${file.name}"?`,
+              })
+            );
+          }}
+        />
         <Collapsible title="Sensors" isOpen={true}>
           <SensorTable sensors={selectedDevice?.sensors ?? []} />
+        </Collapsible>
+
+        <Collapsible title="Attributes" isOpen={false}>
+          <DeviceAttributesTable
+            attributes={selectedDevice?.attributes ?? []}
+          />
         </Collapsible>
 
         <DeviceAttachments
