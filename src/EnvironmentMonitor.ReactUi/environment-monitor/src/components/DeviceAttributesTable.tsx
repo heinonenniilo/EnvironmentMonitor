@@ -33,9 +33,9 @@ export const DeviceAttributesTable: React.FC<DeviceAttributesTableProps> = ({
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Type</TableCell>
               <TableCell>Value</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Description</TableCell>
               <TableCell>Updated</TableCell>
             </TableRow>
           </TableHead>
@@ -44,9 +44,9 @@ export const DeviceAttributesTable: React.FC<DeviceAttributesTableProps> = ({
               return (
                 <TableRow key={`${attr.typeName}-${index}`}>
                   <TableCell>{attr.typeName}</TableCell>
-                  <TableCell>{attr.typeDescription}</TableCell>
-                  <TableCell>{attr.type}</TableCell>
                   <TableCell>{attr.value}</TableCell>
+                  <TableCell>{attr.type}</TableCell>
+                  <TableCell>{attr.typeDescription}</TableCell>
                   <TableCell>
                     {attr.timeStamp
                       ? getFormattedDate(attr.timeStamp, true, true)
