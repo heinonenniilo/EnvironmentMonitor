@@ -107,6 +107,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 .ThenInclude(s => s.VirtualSensorRows)
                     .ThenInclude(vsr => vsr.ValueSensor)
                         .ThenInclude(hh => hh.Device);
+            
             return await GetDeviceInfos(query);
         }
 
@@ -375,6 +376,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
             if (model.GetLocation)
             {
                 query = query.Include(x => x.Location);
+            }
+
+            if (model.GetAttributes)
+            {
+                query = query.Include(x => x.DeviceAttributes).ThenInclude(a => a.Type);
             }
 
             if (model.Ids != null)
