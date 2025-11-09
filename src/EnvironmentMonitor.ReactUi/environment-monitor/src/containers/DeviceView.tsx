@@ -516,12 +516,13 @@ export const DeviceView: React.FC = () => {
         <Collapsible title="Sensors" isOpen={true}>
           <SensorTable sensors={selectedDevice?.sensors ?? []} />
         </Collapsible>
-
-        <Collapsible title="Attributes" isOpen={false}>
-          <DeviceAttributesTable
-            attributes={selectedDevice?.attributes ?? []}
-          />
-        </Collapsible>
+        {selectedDevice && !selectedDevice.isVirtual && (
+          <Collapsible title="Attributes" isOpen={false}>
+            <DeviceAttributesTable
+              attributes={selectedDevice?.attributes ?? []}
+            />
+          </Collapsible>
+        )}
 
         <DeviceAttachments
           attachments={
