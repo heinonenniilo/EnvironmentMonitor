@@ -473,44 +473,46 @@ export const DeviceView: React.FC = () => {
           />
         </Collapsible>
 
-        <DeviceImage
-          device={selectedDevice}
-          ver={defaultImageVer}
-          title={"Device images"}
-          onSetDefaultImage={(identifier: string) => {
-            dispatch(
-              setConfirmDialog({
-                onConfirm: () => {
-                  setDefaultImage(identifier);
-                },
-                title: "Set default image",
-                body: `Current image will be set as default image for ${selectedDevice?.device.name}`,
-              })
-            );
-          }}
-          onDeleteImage={(identifier: string) => {
-            dispatch(
-              setConfirmDialog({
-                onConfirm: () => {
-                  deleteAttachment(identifier);
-                },
-                title: "Delete image",
-                body: `The selected image of ${selectedDevice?.device.name} will be removed.`,
-              })
-            );
-          }}
-          onUploadImage={(file) => {
-            dispatch(
-              setConfirmDialog({
-                onConfirm: () => {
-                  uploadAttachment(file, true);
-                },
-                title: "Upload new image?",
-                body: `Upload "${file.name}"?`,
-              })
-            );
-          }}
-        />
+        {selectedDevice && !selectedDevice.isVirtual && (
+          <DeviceImage
+            device={selectedDevice}
+            ver={defaultImageVer}
+            title={"Device images"}
+            onSetDefaultImage={(identifier: string) => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    setDefaultImage(identifier);
+                  },
+                  title: "Set default image",
+                  body: `Current image will be set as default image for ${selectedDevice?.device.name}`,
+                })
+              );
+            }}
+            onDeleteImage={(identifier: string) => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    deleteAttachment(identifier);
+                  },
+                  title: "Delete image",
+                  body: `The selected image of ${selectedDevice?.device.name} will be removed.`,
+                })
+              );
+            }}
+            onUploadImage={(file) => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    uploadAttachment(file, true);
+                  },
+                  title: "Upload new image?",
+                  body: `Upload "${file.name}"?`,
+                })
+              );
+            }}
+          />
+        )}
         <Collapsible title="Sensors" isOpen={true}>
           <SensorTable sensors={selectedDevice?.sensors ?? []} />
         </Collapsible>
