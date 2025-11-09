@@ -4,7 +4,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IQueueClient
     {
-        Task SendMessage(string message);
-        Task SendMessage(string queueName, string message);
+        Task SendMessage(string message, TimeSpan? delay);
+        Task SendMessage(string queueName, string message, TimeSpan? delay);
     }
 }

@@ -41,17 +41,17 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
         }
 
-        public async Task SendMessage(string message)
+        public async Task SendMessage(string message, TimeSpan? delay)
         {
             if (string.IsNullOrEmpty(_settings.DefaultQueueName))
             {
                 throw new InvalidOperationException("Default queue name not configured");
             }
 
-            await SendMessage(_settings.DefaultQueueName, message);
+            await SendMessage(_settings.DefaultQueueName, message, delay);
         }
 
-        public async Task SendMessage(string queueName, string message)
+        public async Task SendMessage(string queueName, string message, TimeSpan? delay)
         {
             if (_queueServiceClient == null)
             {
@@ -66,7 +66,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
                 _logger.LogInformation($"Sending message to queue '{queueName}': {message}");
 
-                await queueClient.SendMessageAsync(message);
+                await queueClient.SendMessageAsync(message, visibilityTimeout: delay);
 
                 _logger.LogInformation($"Successfully sent message to queue '{queueName}'");
             }
