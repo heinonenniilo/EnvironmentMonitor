@@ -60,7 +60,7 @@ namespace EnvironmentMonitor.Application.Services
             await AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true);
         }
 
-        public async Task SetMotionControlStatus(Guid identifier, MotionControlStatus status)
+        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status)
         {
             if (!_userService.IsAdmin)
             {
@@ -76,11 +76,14 @@ namespace EnvironmentMonitor.Application.Services
             var message = $"MOTIONCONTROLSTATUS:{(int)status}";
             _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
-            await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.MotionControlStatus, ((int)status).ToString(),false);
+            await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.MotionControlStatus, ((int)status).ToString(), false);
             await AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control status set to: {(int)status} ({status.ToString()})", true);
+
+            var updatedAttributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+            return _mapper.Map<List<DeviceAttributeDto>>(updatedAttributes);
         }
 
-        public async Task SetMotionControlDelay(Guid identifier, long delayMs)
+        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs)
         {
             if (!_userService.IsAdmin)
             {
@@ -96,6 +99,9 @@ namespace EnvironmentMonitor.Application.Services
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
             await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.OnDelay, delayMs.ToString(), false);
             await AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control delay set to: {(int)delayMs} ms", true);
+
+            var updatedAttributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+            return _mapper.Map<List<DeviceAttributeDto>>(updatedAttributes);
         }
 
         public async Task<List<DeviceDto>> GetDevices(bool onlyVisible, bool getLocation)
