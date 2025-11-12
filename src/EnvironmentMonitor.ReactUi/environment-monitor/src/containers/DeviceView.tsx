@@ -6,6 +6,7 @@ import { type DeviceInfo } from "../models/deviceInfo";
 import { SensorTable } from "../components/SensorTable";
 import { DeviceTable } from "../components/DeviceTable";
 import { DeviceControlComponent } from "../components/DeviceControlComponent";
+import { DeviceAttributesTable } from "../components/DeviceAttributesTable";
 import { useDispatch } from "react-redux";
 import {
   addNotification,
@@ -252,7 +253,12 @@ export const DeviceView: React.FC = () => {
     deviceHook
       .setMotionControlState(selectedDevice.device.identifier, state)
       .then((res) => {
-        if (res) {
+        if (res && res.length > 0) {
+          // Update selectedDevice with new attributes
+          setSelectedDevice({
+            ...selectedDevice,
+            attributes: res,
+          });
           getDeviceEvents(selectedDevice.device.identifier);
           dispatch(
             addNotification({
@@ -288,7 +294,12 @@ export const DeviceView: React.FC = () => {
     deviceHook
       .setMotionControlDelay(selectedDevice.device.identifier, delayMs)
       .then((res) => {
-        if (res) {
+        if (res && res.length > 0) {
+          // Update selectedDevice with new attributes
+          setSelectedDevice({
+            ...selectedDevice,
+            attributes: res,
+          });
           getDeviceEvents(selectedDevice.device.identifier);
           dispatch(
             addNotification({
@@ -471,6 +482,7 @@ export const DeviceView: React.FC = () => {
             renderLinkToDeviceMessages
           />
         </Collapsible>
+
         {selectedDevice && !selectedDevice.isVirtual && (
           <DeviceImage
             device={selectedDevice}
@@ -511,10 +523,16 @@ export const DeviceView: React.FC = () => {
             }}
           />
         )}
-
         <Collapsible title="Sensors" isOpen={true}>
           <SensorTable sensors={selectedDevice?.sensors ?? []} />
         </Collapsible>
+        {selectedDevice && !selectedDevice.isVirtual && (
+          <Collapsible title="Attributes" isOpen={false}>
+            <DeviceAttributesTable
+              attributes={selectedDevice?.attributes ?? []}
+            />
+          </Collapsible>
+        )}
 
         <DeviceAttachments
           attachments={

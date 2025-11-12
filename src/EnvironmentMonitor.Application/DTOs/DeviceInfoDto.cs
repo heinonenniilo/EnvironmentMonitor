@@ -16,6 +16,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public Guid? DefaultImageGuid { get; set; }
         public string DeviceIdentifier { get; set; }
         public List<SensorInfoDto> Sensors { get; set; } = [];
+        public List<DeviceAttributeDto> Attributes { get; set; } = [];
 
         public bool IsVirtual { get; set; }
 
@@ -28,6 +29,7 @@ namespace EnvironmentMonitor.Application.DTOs
                 .ForMember(x => x.DeviceIdentifier, opt => opt.MapFrom(x => x.Device.DeviceIdentifier))
                 .ForMember(x => x.Sensors, opt => opt.MapFrom(x => x.Device.Sensors ?? new List<Sensor>()))
                 .ForMember(x => x.IsVirtual, opt => opt.MapFrom(x => x.Device.IsVirtual))
+                .ForMember(x => x.Attributes, opt => opt.MapFrom(x => x.Device.DeviceAttributes ?? new List<DeviceAttribute>()))
                 .ReverseMap();
         }
     }

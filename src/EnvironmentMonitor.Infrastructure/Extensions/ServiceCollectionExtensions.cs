@@ -1,4 +1,6 @@
-﻿using EnvironmentMonitor.Domain.Interfaces;
+﻿using Azure.Identity;
+using Azure.Storage.Queues;
+using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
@@ -19,7 +21,9 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
     {
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
             IConfiguration configuration,
-            string? connectionString = null
+            string? connectionString = null,
+            IotHubSettings? iotHubSettings = null,
+            QueueSettings? queueSettings = null
             )
         {
             services.AddDbContext<MeasurementDbContext>(options =>
@@ -47,11 +51,20 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<IUserAuthService, UserAuthService>();
 
 
-            var defaultSettings = new IotHubSettings();
-            configuration.GetSection("IotHubSettings").Bind(defaultSettings);
+            if (iotHubSettings != null)
+            {
+                services.AddSingleton(iotHubSettings);
+            }
+            else
+            {
+                var defaultSettings = new IotHubSettings();
+                configuration.GetSection("IotHubSettings").Bind(defaultSettings);
+                services.AddSingleton(defaultSettings);
+            }
+
             var storageAccountSettings = new StorageAccountSettings();
             configuration.GetSection("StorageSettings").Bind(storageAccountSettings);
-            services.AddSingleton(defaultSettings);
+            
             services.AddSingleton(storageAccountSettings);
 
             var fileUploadDefaultSettings = new FileUploadSettings();
@@ -62,12 +75,25 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             configuration.GetSection("KeyVaultSettings").Bind(keyVaultSettings);
             services.AddSingleton(keyVaultSettings);
 
+            if (queueSettings != null)
+            {
+                services.AddSingleton(queueSettings);
+            }
+            else
+            {
+                var defaultQueueSettings = new QueueSettings();
+                configuration.GetSection("QueueSettings").Bind(defaultQueueSettings);
+                services.AddSingleton(defaultQueueSettings);
+            }
+
             services.AddSingleton<IDateService, DateService>();
             services.AddSingleton<IHubMessageService, HubMessageService>();
             services.AddSingleton<IStorageClient, StorageClient>();
             services.AddSingleton<IImageService, ImageService>();
             services.AddScoped<IPaginationService, PaginationService>();
             services.AddSingleton<IKeyVaultClient, KeyVaultClient>();
+            services.AddSingleton<IQueueClient, Services.QueueClient>();
+
             return services;
         }
     }

@@ -49,7 +49,9 @@ export const DeviceEventTable: React.FC<DeviceEventTableProps> = ({
               >
                 <TableCell>{event.type}</TableCell>
                 <TableCell>{event.message}</TableCell>
-                <TableCell>{getFormattedDate(event.timeStamp, true)}</TableCell>
+                <TableCell>
+                  {getFormattedDate(event.timeStamp, true, true)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -38,6 +38,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<DeviceStatus> DeviceStatusChanges { get; set; }
         public DbSet<DeviceMessage> DeviceMessages { get; set; }
         public DbSet<VirtualSensorRow> VirtualSensorRows { get; set; }
+        public DbSet<DeviceAttributeType> DeviceAttributeTypes { get; set; }
+        public DbSet<DeviceAttribute> DeviceAttributes { get; set; }
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeasurementDbContext).Assembly, type =>

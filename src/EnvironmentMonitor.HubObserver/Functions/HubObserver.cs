@@ -6,6 +6,8 @@ using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Enums;
 
 namespace EnvironmentMonitor.HubObserver.Functions
 {
@@ -13,11 +15,17 @@ namespace EnvironmentMonitor.HubObserver.Functions
     {
         private readonly ILogger<HubObserver> _logger;
         private readonly IMeasurementService _measurementService;
+        private readonly IQueueClient _queueClient;
+        private readonly IDeviceService _deviceService;
 
-        public HubObserver(ILogger<HubObserver> logger, IMeasurementService measurementService)
+        private const int FirstMessageLimitInMinutes = 5;
+
+        public HubObserver(ILogger<HubObserver> logger, IMeasurementService measurementService, IQueueClient queueClient, IDeviceService deviceService)
         {
             _logger = logger;
             _measurementService = measurementService;
+            _queueClient = queueClient;
+            _deviceService = deviceService;
         }
 
         [Function(nameof(HubObserver))]
@@ -67,8 +75,10 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 {
                     item.TimestampUtc = message.EnqueuedTime.UtcDateTime;
                 }
+
                 objectToInsert.EnqueuedUtc = message.EnqueuedTime.UtcDateTime;
                 objectToInsert.SequenceNumber = message.SequenceNumber;
+
                 try
                 {
                     await _measurementService.AddMeasurements(objectToInsert);
@@ -77,6 +87,33 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Adding measurements failed");
+                }
+
+                if (objectToInsert.FirstMessage)
+                {
+                    if (objectToInsert.EnqueuedUtc > DateTime.UtcNow.AddMinutes(-1 * FirstMessageLimitInMinutes))
+                    {
+                        try
+                        {
+                            var device = await _deviceService.GetDevice(objectToInsert.DeviceId, AccessLevels.Write);
+                            var queueMessage = new Domain.Models.DeviceQueueMessage
+                            {
+                                DeviceIdentifier = device.Identifier,
+                                MessageTypeId = (int)QueuedMessages.SendDeviceAttributes
+                            };
+                            var messageJson = JsonSerializer.Serialize(queueMessage);
+                            _logger.LogInformation($"First message detected for device {device.Identifier}, sending to queue");
+                            await _queueClient.SendMessage(messageJson);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, $"Failed to send device attributes to device with id (string) {objectToInsert.DeviceId}");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"First message received for device ({objectToInsert.DeviceId}). It was enqueued {objectToInsert.EnqueuedUtc} which was over {FirstMessageLimitInMinutes} mins ago");
+                    }
                 }
             }
             _logger.LogInformation($"Total of {processedMessaged} processed");

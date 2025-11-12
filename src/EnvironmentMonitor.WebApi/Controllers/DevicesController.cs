@@ -44,11 +44,11 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("motion-control-status")]
         [Authorize(Roles = "Admin")]
-        public async Task SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode);
+        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode);
 
         [HttpPost("motion-control-delay")]
         [Authorize(Roles = "Admin")]
-        public async Task SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs);
+        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs);
 
         [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]
@@ -126,7 +126,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> GetDeviceInfo(Guid identifier)
         {
-            var result = await _deviceService.GetDeviceInfos(false, [identifier], true, true);
+            var result = await _deviceService.GetDeviceInfos(false, [identifier], true, true, true);
             return result.First();
         }
 

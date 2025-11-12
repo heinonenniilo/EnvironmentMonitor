@@ -60,7 +60,7 @@ namespace EnvironmentMonitor.Application.Services
             await AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true);
         }
 
-        public async Task SetMotionControlStatus(Guid identifier, MotionControlStatus status)
+        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status)
         {
             if (!_userService.IsAdmin)
             {
@@ -76,10 +76,14 @@ namespace EnvironmentMonitor.Application.Services
             var message = $"MOTIONCONTROLSTATUS:{(int)status}";
             _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.MotionControlStatus, ((int)status).ToString(), false);
             await AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control status set to: {(int)status} ({status.ToString()})", true);
+
+            var updatedAttributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+            return _mapper.Map<List<DeviceAttributeDto>>(updatedAttributes);
         }
 
-        public async Task SetMotionControlDelay(Guid identifier, long delayMs)
+        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs)
         {
             if (!_userService.IsAdmin)
             {
@@ -93,7 +97,11 @@ namespace EnvironmentMonitor.Application.Services
             var message = $"MOTIONCONTROLDELAY: {delayMs}";
             _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.OnDelay, delayMs.ToString(), false);
             await AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control delay set to: {(int)delayMs} ms", true);
+
+            var updatedAttributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+            return _mapper.Map<List<DeviceAttributeDto>>(updatedAttributes);
         }
 
         public async Task<List<DeviceDto>> GetDevices(bool onlyVisible, bool getLocation)
@@ -221,7 +229,7 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
 
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false)
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false)
         {
             _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
             var infos = new List<DeviceInfo>();
@@ -232,7 +240,8 @@ namespace EnvironmentMonitor.Application.Services
                     Identifiers = identifiers,
                     OnlyVisible = onlyVisible,
                     GetAttachments = getAttachments,
-                    GetLocation = getLocation
+                    GetLocation = getLocation,
+                    GetAttributes = getAttributes
                 }))
                 .Where(d => _userService.HasAccessToDevice(d.Device.Identifier, AccessLevels.Read)).ToList();
             }
@@ -243,7 +252,8 @@ namespace EnvironmentMonitor.Application.Services
                     Identifiers = _userService.IsAdmin ? null : _userService.GetDevices(),
                     OnlyVisible = onlyVisible,
                     GetAttachments = getAttachments,
-                    GetLocation = getLocation
+                    GetLocation = getLocation,
+                    GetAttributes = getAttributes
                 });
             }
             var listToReturn = _mapper.Map<List<DeviceInfoDto>>(infos);
@@ -501,6 +511,70 @@ namespace EnvironmentMonitor.Application.Services
                 PageSize = res.PageSize,
                 TotalCount = res.TotalCount,
             };
+        }
+
+        public async Task SendAttributesToDevice(Guid identifier, string? message = null)
+        {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault();
+
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+            }
+
+            var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+            _logger.LogInformation($"Sending {attributes.Count} attributes to device: {device.Id} ({identifier})");
+            if (!attributes.Any())
+            {
+                _logger.LogInformation($"No attributes found for device {device.Id} ({identifier})");
+                return;
+            }
+            foreach (var attribute in attributes)
+            {
+                var type = (DeviceAttributeTypes)attribute.TypeId;
+                if (string.IsNullOrEmpty(attribute.Value))
+                {
+                    _logger.LogInformation($"Skipping attribute type '{type}' for device {device.Id} ({identifier}) - empty value");
+                    continue;
+                }
+
+                switch (type)
+                {
+                    case DeviceAttributeTypes.MotionControlStatus:
+                        if (!int.TryParse(attribute.Value, out int statusValue))
+                        {
+                            _logger.LogError($"Failed to parse MotionControlStatus value '{attribute.Value}' for device {device.Id} ({identifier})");
+                            continue;
+                        }
+                        MotionControlStatus status = (MotionControlStatus)statusValue;
+                        _logger.LogInformation($"Sending MotionControlStatus '{status}' ({statusValue}) to device {device.Id} ({identifier})");
+                        await SetMotionControlStatus(identifier, status);
+                        break;
+
+                    case DeviceAttributeTypes.OnDelay:
+                        if (!long.TryParse(attribute.Value, out long delayMs))
+                        {
+                            _logger.LogError($"Failed to parse OnDelay value '{attribute.Value}' for device {device.Id} ({identifier})");
+                            continue;
+                        }
+                        _logger.LogInformation($"Sending OnDelay '{delayMs}' ms to device {device.Id} ({identifier})");
+                        await SetMotionControlDelay(identifier, delayMs);
+                        break;
+
+                    default:
+                        _logger.LogInformation($"Skipping unknown attribute type '{type}' for device {device.Id} ({identifier})");
+                        continue;
+                }
+            }
+
+            var messageToSend = string.IsNullOrEmpty(message) ? "Sent device attributes to device" : message;
+            await AddEvent(device.Id, DeviceEventTypes.SendAttributes, messageToSend, true);
+            _logger.LogInformation($"Completed sending attributes to device {device.Id} ({identifier})");
         }
     }
 }
