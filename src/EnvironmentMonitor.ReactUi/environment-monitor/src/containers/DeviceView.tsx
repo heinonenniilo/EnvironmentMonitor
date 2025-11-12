@@ -253,7 +253,12 @@ export const DeviceView: React.FC = () => {
     deviceHook
       .setMotionControlState(selectedDevice.device.identifier, state)
       .then((res) => {
-        if (res) {
+        if (res && res.length > 0) {
+          // Update selectedDevice with new attributes
+          setSelectedDevice({
+            ...selectedDevice,
+            attributes: res,
+          });
           getDeviceEvents(selectedDevice.device.identifier);
           dispatch(
             addNotification({
@@ -289,7 +294,12 @@ export const DeviceView: React.FC = () => {
     deviceHook
       .setMotionControlDelay(selectedDevice.device.identifier, delayMs)
       .then((res) => {
-        if (res) {
+        if (res && res.length > 0) {
+          // Update selectedDevice with new attributes
+          setSelectedDevice({
+            ...selectedDevice,
+            attributes: res,
+          });
           getDeviceEvents(selectedDevice.device.identifier);
           dispatch(
             addNotification({

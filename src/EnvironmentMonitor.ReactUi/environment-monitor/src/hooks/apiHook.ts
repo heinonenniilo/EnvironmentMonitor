@@ -20,6 +20,7 @@ import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
 import type { PaginatedResult } from "../models/paginatedResult";
 import type { DeviceMessage } from "../models/deviceMessage";
 import type { GetMeasurementsModel } from "../models/getMeasurementsModel";
+import type { DeviceAttribute } from "../models/deviceAttribute";
 
 interface ApiHook {
   userHook: userHook;
@@ -76,11 +77,11 @@ interface deviceHook {
   setMotionControlState: (
     identifier: string,
     state: number
-  ) => Promise<boolean>;
+  ) => Promise<DeviceAttribute[]>;
   setMotionControlDelay: (
     identifier: string,
     delayMs: number
-  ) => Promise<boolean>;
+  ) => Promise<DeviceAttribute[]>;
   getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
   uploadAttachment: (
     identifire: string,
@@ -353,42 +354,34 @@ export const useApiHook = (): ApiHook => {
       },
       setMotionControlState: async (identifier: string, state: number) => {
         try {
-          const res = await apiClient.post(
-            "/api/devices/motion-control-status",
-            {
-              deviceIdentifier: identifier,
-              mode: state,
-            }
-          );
-          if (res.status === 200) {
-            return true;
-          } else {
-            return false;
-          }
+          const res = await apiClient.post<
+            any,
+            AxiosResponse<DeviceAttribute[]>
+          >("/api/devices/motion-control-status", {
+            deviceIdentifier: identifier,
+            mode: state,
+          });
+          return res.data;
         } catch (ex) {
           console.error(ex);
           showError();
-          return false;
+          return [];
         }
       },
       setMotionControlDelay: async (identifier: string, delayMs: number) => {
         try {
-          const res = await apiClient.post(
-            "/api/devices/motion-control-delay",
-            {
-              deviceIdentifier: identifier,
-              DelayMs: delayMs,
-            }
-          );
-          if (res.status === 200) {
-            return true;
-          } else {
-            return false;
-          }
+          const res = await apiClient.post<
+            any,
+            AxiosResponse<DeviceAttribute[]>
+          >("/api/devices/motion-control-delay", {
+            deviceIdentifier: identifier,
+            DelayMs: delayMs,
+          });
+          return res.data;
         } catch (ex) {
           console.error(ex);
           showError();
-          return false;
+          return [];
         }
       },
       getDeviceEvents: async (identifier: string) => {
