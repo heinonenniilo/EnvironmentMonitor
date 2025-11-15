@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Entities
 {
-    public class DeviceQueuedCommand: TrackedEntity
+    public class DeviceQueuedCommand : TrackedEntity
     {
         public int Id { get; set; }
         public required string MessageId { get; set; }
@@ -17,6 +17,7 @@ namespace EnvironmentMonitor.Domain.Entities
         public DateTime? ExecutedAt { get; set; }
         public DateTime? ExecutedAtUtc { get; set; }
         public required int Type { get; set; }
+        public DeviceQueuedCommandType CommandType { get; set; }
         public required string Message { get; set; }
     }
 }

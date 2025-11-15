@@ -41,6 +41,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<DeviceAttributeType> DeviceAttributeTypes { get; set; }
         public DbSet<DeviceAttribute> DeviceAttributes { get; set; }
         public DbSet<DeviceQueuedCommand> DeviceQueuedCommands { get; set; }
+        public DbSet<DeviceQueuedCommandType> DeviceQueuedCommandTypes { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

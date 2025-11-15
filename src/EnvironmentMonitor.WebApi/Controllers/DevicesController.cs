@@ -145,5 +145,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet("device-messages")]
         [Authorize(Roles = "Viewer, Admin")]
         public async Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages([FromQuery] GetDeviceMessagesModel model) => await _deviceService.GetDeviceMessages(model);
+
+        [HttpGet("queued-commands")]
+        [Authorize(Roles = "Viewer, Admin")]
+        public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands([FromQuery] GetQueuedCommandsModel model) => await _deviceService.GetQueuedCommands(model);
     }
 }

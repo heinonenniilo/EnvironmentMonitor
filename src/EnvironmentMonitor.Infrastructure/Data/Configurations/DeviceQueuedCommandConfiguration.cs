@@ -30,9 +30,20 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
             builder.Property(d => d.ScheduledUtc)
                 .IsRequired();
 
+            builder.Property(d => d.Created)
+                .IsRequired();
+
+            builder.Property(d => d.CreatedUtc)
+                .IsRequired();
+
             builder.HasIndex(d => d.MessageId).IsUnique();
             builder.HasIndex(d => new { d.DeviceId, d.ScheduledUtc });
             builder.HasIndex(d => new { d.DeviceId, d.ExecutedAtUtc });
+
+            builder.HasOne(d => d.CommandType)
+                .WithMany(t => t.QueuedCommands)
+                .HasForeignKey(d => d.Type)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

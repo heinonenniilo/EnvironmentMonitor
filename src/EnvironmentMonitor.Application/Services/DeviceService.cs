@@ -668,13 +668,41 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Successfully acknowledged queued command with MessageId: {messageId} for device: {device.Device.Id}. ExecutedAt: {date}");
         }
 
+        public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(GetQueuedCommandsModel model)
+        {
+            _logger.LogInformation($"Fetching queued commands. Device Identifiers: {string.Join(",", model.DeviceIdentifiers ?? [])}");
+
+            // Apply access control
+            if (model.DeviceIdentifiers?.Any() == true)
+            {
+                if (!_userService.HasAccessToDevices(model.DeviceIdentifiers, AccessLevels.Read))
+                {
+                    _logger.LogWarning($"No access to devices: {string.Join(",", model.DeviceIdentifiers)}");
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            else if (!_userService.IsAdmin)
+            {
+                // If no specific devices requested and not admin, filter by user's devices
+                var deviceIds = _userService.GetDevices();
+                _logger.LogInformation($"User has access to: {deviceIds.Count} devices");
+                if (deviceIds.Count == 0)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                model.DeviceIdentifiers = deviceIds;
+            }
+
+            var commands = await _deviceRepository.GetQueuedCommands(model);
+            return _mapper.Map<List<DeviceQueuedCommandDto>>(commands);
+        }
+
         private void ValidateTriggeringTime(DateTime target)
         {
             if (target < _dateService.CurrentTime())
             {
-                throw new ArgumentException("Invalid triggering time");
+                throw new ArgumentException($"Invalid triggering time.{target}");
             }
-
         }
     }
 }
