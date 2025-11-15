@@ -17,6 +17,8 @@ import { type DeviceEvent } from "../models/deviceEvent";
 import { Box } from "@mui/material";
 import { DeviceImage } from "../components/DeviceImage";
 import { Collapsible } from "../components/CollabsibleComponent";
+import { DeviceQueuedCommandsTable } from "../components/DeviceQueuedCommandsTable";
+import { type DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
 import { MultiSensorGraph } from "../components/MultiSensorGraph";
 import moment from "moment";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
@@ -39,6 +41,9 @@ export const DeviceView: React.FC = () => {
     undefined
   );
   const [deviceEvents, setDeviceEvents] = useState<DeviceEvent[]>([]);
+  const [queuedCommands, setQueuedCommands] = useState<
+    DeviceQueuedCommandDto[]
+  >([]);
   const [deviceStatusModel, setDeviceStatusModel] = useState<
     DeviceStatusModel | undefined
   >(undefined);
@@ -168,6 +173,16 @@ export const DeviceView: React.FC = () => {
           .catch((er) => {
             console.log(er);
           }),
+        deviceHook
+          .getQueuedCommands({ deviceIdentifiers: [deviceId] })
+          .then((res) => ({
+            type: "queuedCommands",
+            data: res,
+            error: null,
+          }))
+          .catch((er) => {
+            console.log(er);
+          }),
       ];
 
       setIsLoading(true);
@@ -180,6 +195,8 @@ export const DeviceView: React.FC = () => {
                 setSelectedDevice(value.data as DeviceInfo);
               } else if (value.type === "deviceEvents") {
                 setDeviceEvents(value.data as DeviceEvent[]);
+              } else if (value.type === "queuedCommands") {
+                setQueuedCommands(value.data as DeviceQueuedCommandDto[]);
               }
             } else if (result.status === "rejected") {
               console.error(
@@ -209,6 +226,17 @@ export const DeviceView: React.FC = () => {
       })
       .finally(() => {
         setIsLoading(false);
+      });
+  };
+
+  const getQueuedCommands = (deviceIdentifier: string) => {
+    deviceHook
+      .getQueuedCommands({ deviceIdentifiers: [deviceIdentifier] })
+      .then((res) => {
+        setQueuedCommands(res);
+      })
+      .catch((er) => {
+        console.error(er);
       });
   };
 
@@ -264,6 +292,9 @@ export const DeviceView: React.FC = () => {
             attributes: res,
           });
           getDeviceEvents(selectedDevice.device.identifier);
+          if (executeAt) {
+            getQueuedCommands(selectedDevice.device.identifier);
+          }
           dispatch(
             addNotification({
               title: message ?? "Message sent to device",
@@ -313,6 +344,9 @@ export const DeviceView: React.FC = () => {
             attributes: res,
           });
           getDeviceEvents(selectedDevice.device.identifier);
+          if (executeAt) {
+            getQueuedCommands(selectedDevice.device.identifier);
+          }
           dispatch(
             addNotification({
               title: message ?? "Message sent to device",
@@ -673,6 +707,14 @@ export const DeviceView: React.FC = () => {
                   executeAt
                 );
               }}
+            />
+          </Collapsible>
+        )}
+        {queuedCommands.length > 0 && (
+          <Collapsible title="Queued Commands" isOpen={true}>
+            <DeviceQueuedCommandsTable
+              commands={queuedCommands}
+              maxHeight={"500px"}
             />
           </Collapsible>
         )}

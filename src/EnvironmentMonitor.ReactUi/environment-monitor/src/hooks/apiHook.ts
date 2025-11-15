@@ -21,6 +21,8 @@ import type { PaginatedResult } from "../models/paginatedResult";
 import type { DeviceMessage } from "../models/deviceMessage";
 import type { GetMeasurementsModel } from "../models/getMeasurementsModel";
 import type { DeviceAttribute } from "../models/deviceAttribute";
+import type { GetQueuedCommandsModel } from "../models/getQueuedCommandsModel";
+import type { DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
 
 interface ApiHook {
   userHook: userHook;
@@ -109,6 +111,9 @@ interface deviceHook {
   getDeviceMessage: (
     model: GetDeviceMessagesModel
   ) => Promise<PaginatedResult<DeviceMessage>>;
+  getQueuedCommands: (
+    model: GetQueuedCommandsModel
+  ) => Promise<DeviceQueuedCommandDto[]>;
 }
 
 const apiClient = axios.create({
@@ -506,6 +511,21 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError("Failed to get device messages");
+          throw ex;
+        }
+      },
+      getQueuedCommands: async (model: GetQueuedCommandsModel) => {
+        try {
+          const res = await apiClient.get<
+            any,
+            AxiosResponse<DeviceQueuedCommandDto[]>
+          >(`/api/devices/queued-commands`, {
+            params: model,
+          });
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to get queued commands");
           throw ex;
         }
       },
