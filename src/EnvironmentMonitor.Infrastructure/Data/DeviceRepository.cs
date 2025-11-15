@@ -554,5 +554,107 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 .Include(x => x.Type)
                 .FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.TypeId == typeId);
         }
+
+        public async Task<List<DeviceQueuedCommand>> GetQueuedCommands(GetQueuedCommandsModel model)
+        {
+            IQueryable<DeviceQueuedCommand> query = _context.DeviceQueuedCommands;
+
+            if (model.Ids != null && model.Ids.Any())
+            {
+                query = query.Where(x => model.Ids.Contains(x.Id));
+            }
+
+            if (model.DeviceIds != null && model.DeviceIds.Any())
+            {
+                query = query.Where(x => model.DeviceIds.Contains(x.DeviceId));
+            }
+
+            if (model.DeviceIdentifiers != null && model.DeviceIdentifiers.Any())
+            {
+                query = query.Where(x => model.DeviceIdentifiers.Contains(x.Device.Identifier));
+            }
+
+            if (model.MessageIds != null && model.MessageIds.Any())
+            {
+                query = query.Where(x => model.MessageIds.Contains(x.MessageId));
+            }
+
+            // Filter by scheduled time range
+            if (model.ScheduledFrom != null)
+            {
+                query = query.Where(x => x.ScheduledUtc >= model.ScheduledFrom.Value);
+            }
+
+            if (model.ScheduledTo != null)
+            {
+                query = query.Where(x => x.ScheduledUtc <= model.ScheduledTo.Value);
+            }
+
+            if (model.IsExecuted != null)
+            {
+                if (model.IsExecuted.Value)
+                {
+                    query = query.Where(x => x.ExecutedAtUtc != null);
+                }
+                else
+                {
+                    query = query.Where(x => x.ExecutedAtUtc == null);
+                }
+            }
+
+            query = query.OrderByDescending(x => x.ScheduledUtc);
+
+            if (model.Limit != null && model.Limit > 0 && model.Limit < 100)
+            {
+                query = query.Take(model.Limit.Value);
+            }
+            else
+            {
+                query = query.Take(50);
+            }
+
+            return await query.ToListAsync();
+        }
+
+        public async Task SetQueuedCommand(int deviceId, DeviceQueuedCommand command, bool saveChanges)
+        {
+            var device = await _context.Devices.FindAsync(deviceId);
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with id: {deviceId} not found.");
+            }
+
+            // Check if a command with the same MessageId already exists
+            var existingCommand = await _context.DeviceQueuedCommands
+                .FirstOrDefaultAsync(x => x.MessageId == command.MessageId);
+
+            if (existingCommand != null)
+            {
+                existingCommand.Type = command.Type;
+                existingCommand.Message = command.Message;
+                existingCommand.Scheduled = command.Scheduled;
+                existingCommand.ScheduledUtc = command.ScheduledUtc;
+                existingCommand.ExecutedAt = command.ExecutedAt;
+                existingCommand.ExecutedAtUtc = command.ExecutedAtUtc;
+                existingCommand.DeviceId = deviceId;
+
+                _logger.LogInformation($"Updated queued command with MessageId: {command.MessageId} for device: {deviceId}");
+            }
+            else
+            {
+                // Add new command
+                command.DeviceId = deviceId;
+                command.Created = _dateService.CurrentTime();
+                command.CreatedUtc = DateTime.UtcNow;
+
+                await _context.DeviceQueuedCommands.AddAsync(command);
+                _logger.LogInformation($"Added new queued command with MessageId: {command.MessageId} for device: {deviceId}");
+            }
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

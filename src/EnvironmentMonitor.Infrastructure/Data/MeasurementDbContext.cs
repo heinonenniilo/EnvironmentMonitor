@@ -40,6 +40,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<VirtualSensorRow> VirtualSensorRows { get; set; }
         public DbSet<DeviceAttributeType> DeviceAttributeTypes { get; set; }
         public DbSet<DeviceAttribute> DeviceAttributes { get; set; }
+        public DbSet<DeviceQueuedCommand> DeviceQueuedCommands { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

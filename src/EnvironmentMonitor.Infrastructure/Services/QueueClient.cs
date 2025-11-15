@@ -16,11 +16,13 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly QueueServiceClient? _queueServiceClient;
         private readonly ILogger<QueueClient> _logger;
         private readonly QueueSettings _settings;
+        private readonly IDateService _dateService;
 
-        public QueueClient(QueueSettings settings, ILogger<QueueClient> logger)
+        public QueueClient(QueueSettings settings, ILogger<QueueClient> logger, IDateService dateService)
         {
             _logger = logger;
             _settings = settings;
+            _dateService = dateService;
             var clientOptions = new QueueClientOptions()
             {
                 MessageEncoding = QueueMessageEncoding.Base64
@@ -44,17 +46,17 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
         }
 
-        public async Task SendMessage(string message, TimeSpan? delay)
+        public async Task<CreateQueuedMessageReturnModel> SendMessage(string message, TimeSpan? delay)
         {
             if (string.IsNullOrEmpty(_settings.DefaultQueueName))
             {
                 throw new InvalidOperationException("Default queue name not configured");
             }
 
-            await SendMessage(_settings.DefaultQueueName, message, delay);
+            return await SendMessage(_settings.DefaultQueueName, message, delay);
         }
 
-        public async Task SendMessage(string queueName, string message, TimeSpan? delay = null)
+        public async Task<CreateQueuedMessageReturnModel> SendMessage(string queueName, string message, TimeSpan? delay = null)
         {
             if (_queueServiceClient == null)
             {
@@ -71,8 +73,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
                 var res = await queueClient.SendMessageAsync(message, visibilityTimeout: delay);
 
-
                 _logger.LogInformation($"Successfully sent message to queue '{queueName}'");
+                return new CreateQueuedMessageReturnModel
+                {
+                    MessageId = res.Value.MessageId,
+                    ScheludedToExecute = _dateService.CurrentTime().Add(delay ?? TimeSpan.Zero)
+                };
             }
             catch (Exception ex)
             {

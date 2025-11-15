@@ -1,11 +1,12 @@
+using EnvironmentMonitor.Domain.Models;
 using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IQueueClient
     {
-        Task SendMessage(string message, TimeSpan? delay= null);
-        Task SendMessage(string queueName, string message, TimeSpan? delay= null);
+        Task<CreateQueuedMessageReturnModel> SendMessage(string message, TimeSpan? delay= null);
+        Task<CreateQueuedMessageReturnModel> SendMessage(string queueName, string message, TimeSpan? delay= null);
         Task<IEnumerable<QueueMessageInfo>> PeekMessages(string queueName, int maxMessages = 32);
     }
 

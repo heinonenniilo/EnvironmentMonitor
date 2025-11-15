@@ -2,10 +2,11 @@ using System;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Azure.Storage.Queues;
+using Azure.Storage.Queues.Models;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
@@ -16,8 +17,9 @@ namespace EnvironmentMonitor.HubObserver.Functions
     {
         private readonly ILogger<DeviceMessageQueueProcessor> _logger;
         private readonly IDeviceService _deviceService;
+        private readonly IDateService _dateService;
 
-        public DeviceMessageQueueProcessor(ILogger<DeviceMessageQueueProcessor> logger, IDeviceService deviceService)
+        public DeviceMessageQueueProcessor(ILogger<DeviceMessageQueueProcessor> logger, IDeviceService deviceService, IDateService dateService)
         {
             _logger = logger;
             _deviceService = deviceService;
@@ -25,17 +27,26 @@ namespace EnvironmentMonitor.HubObserver.Functions
 
         [Function(nameof(DeviceMessageQueueProcessor))]
         public async Task Run(
-            [QueueTrigger("%DeviceMessagesQueueName%", Connection = "StorageAccountConnection")] string queueMessage)
+            [QueueTrigger("%DeviceMessagesQueueName%", Connection = "StorageAccountConnection")] QueueMessage queueMessage)
         {
             _logger.LogInformation("Processing device message from queue");
 
             try
             {
+                // Access metadata
+                _logger.LogInformation(
+                    "Queue Message Metadata - MessageId: {MessageId}, InsertedOn: {InsertedOn}, ExpiresOn: {ExpiresOn}, DequeueCount: {DequeueCount}, NextVisibleOn: {NextVisibleOn}",
+                    queueMessage.MessageId,
+                    queueMessage.InsertedOn,
+                    queueMessage.ExpiresOn,
+                    queueMessage.DequeueCount,
+                    queueMessage.NextVisibleOn);
+
                 var options = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true
                 };
-                var deviceMessage = JsonSerializer.Deserialize<DeviceQueueMessage>(queueMessage, options);
+                var deviceMessage = JsonSerializer.Deserialize<DeviceQueueMessage>(queueMessage.MessageText, options);
                 if (deviceMessage == null)
                 {
                     _logger.LogWarning("Failed to deserialize queue message");
@@ -49,6 +60,8 @@ namespace EnvironmentMonitor.HubObserver.Functions
 
                 QueuedMessages messageType = (QueuedMessages)deviceMessage.MessageTypeId;
                 var attributes = deviceMessage.Attributes;
+
+                var hasExecuted = false;
                 switch (messageType)
                 {
                     case QueuedMessages.SendDeviceAttributes:
@@ -59,6 +72,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                         {
                             var valueToSet = int.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
                             await _deviceService.SetMotionControlStatus(deviceMessage.DeviceIdentifier, (MotionControlStatus)valueToSet);
+                            hasExecuted = true;
                         }
                         break;
                     case QueuedMessages.SetMotionControlOnDelay:
@@ -66,13 +80,18 @@ namespace EnvironmentMonitor.HubObserver.Functions
                         {
                             var valueToSet = long.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
                             await _deviceService.SetMotionControlDelay(deviceMessage.DeviceIdentifier, valueToSet);
+                            hasExecuted = true;
                         }
                         break;
                     default:
                         _logger.LogWarning("Unknown message type: {MessageTypeId}", deviceMessage.MessageTypeId);
                         break;
                 }
-                _logger.LogInformation("Successfully processed device message");
+                if (hasExecuted)
+                {
+                    await _deviceService.AckQueuedCommand(deviceMessage.DeviceIdentifier, queueMessage.MessageId, _dateService.CurrentTime()); 
+                    _logger.LogInformation("Successfully processed device message");
+                }
             }
             catch (JsonException ex)
             {
