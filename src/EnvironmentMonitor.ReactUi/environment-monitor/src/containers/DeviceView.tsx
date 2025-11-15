@@ -14,7 +14,7 @@ import {
 } from "../reducers/userInterfaceReducer";
 import { DeviceEventTable } from "../components/DeviceEventTable";
 import { type DeviceEvent } from "../models/deviceEvent";
-import { Box } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import { DeviceImage } from "../components/DeviceImage";
 import { Collapsible } from "../components/CollabsibleComponent";
 import { DeviceQueuedCommandsTable } from "../components/DeviceQueuedCommandsTable";
@@ -28,6 +28,7 @@ import { setDevices } from "../reducers/measurementReducer";
 import { getDeviceTitle } from "../utilities/deviceUtils";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 import { DeviceAttachments } from "../components/DeviceAttachments";
+import { Refresh } from "@mui/icons-material";
 
 interface PromiseInfo {
   type: string;
@@ -229,7 +230,13 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const getQueuedCommands = (deviceIdentifier: string) => {
+  const getQueuedCommands = (
+    deviceIdentifier: string,
+    setLoading?: boolean
+  ) => {
+    if (setLoading) {
+      setIsLoading(true);
+    }
     deviceHook
       .getQueuedCommands({ deviceIdentifiers: [deviceIdentifier] })
       .then((res) => {
@@ -237,6 +244,11 @@ export const DeviceView: React.FC = () => {
       })
       .catch((er) => {
         console.error(er);
+      })
+      .finally(() => {
+        if (setLoading) {
+          setIsLoading(false);
+        }
       });
   };
 
@@ -711,7 +723,23 @@ export const DeviceView: React.FC = () => {
           </Collapsible>
         )}
         {queuedCommands.length > 0 && (
-          <Collapsible title="Queued Commands" isOpen={true}>
+          <Collapsible
+            title="Queued Commands"
+            isOpen={true}
+            customComponent={
+              <IconButton
+                onClick={() => {
+                  if (selectedDevice) {
+                    getQueuedCommands(selectedDevice.device.identifier, true);
+                  }
+                }}
+                sx={{ ml: 1, cursor: "pointer" }}
+                size="small"
+              >
+                <Refresh />
+              </IconButton>
+            }
+          >
             <DeviceQueuedCommandsTable
               commands={queuedCommands}
               maxHeight={"500px"}
