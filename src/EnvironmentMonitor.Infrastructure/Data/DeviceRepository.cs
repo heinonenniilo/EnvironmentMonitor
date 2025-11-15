@@ -630,14 +630,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
             if (existingCommand != null)
             {
-                existingCommand.Type = command.Type;
-                existingCommand.Message = command.Message;
-                existingCommand.Scheduled = command.Scheduled;
-                existingCommand.ScheduledUtc = command.ScheduledUtc;
-                existingCommand.ExecutedAt = command.ExecutedAt;
-                existingCommand.ExecutedAtUtc = command.ExecutedAtUtc;
-                existingCommand.DeviceId = deviceId;
-
+                existingCommand = command;
                 _logger.LogInformation($"Updated queued command with MessageId: {command.MessageId} for device: {deviceId}");
             }
             else

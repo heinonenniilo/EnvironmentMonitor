@@ -23,6 +23,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
         {
             _logger = logger;
             _deviceService = deviceService;
+            _dateService = dateService;
         }
 
         [Function(nameof(DeviceMessageQueueProcessor))]
