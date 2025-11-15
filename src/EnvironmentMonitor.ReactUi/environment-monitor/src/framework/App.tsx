@@ -111,7 +111,7 @@ export const App: React.FC<AppProps> = (props) => {
 
   return (
     <CookiesProvider>
-      <LocalizationProvider dateAdapter={AdapterMoment}>
+      <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="es">
         <>
           <Backdrop
             sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}

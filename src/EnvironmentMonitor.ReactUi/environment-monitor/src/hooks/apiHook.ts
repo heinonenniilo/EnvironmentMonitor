@@ -76,11 +76,13 @@ interface deviceHook {
   getDeviceInfo: (identifier: string) => Promise<DeviceInfo>;
   setMotionControlState: (
     identifier: string,
-    state: number
+    state: number,
+    executeAt?: moment.Moment
   ) => Promise<DeviceAttribute[]>;
   setMotionControlDelay: (
     identifier: string,
-    delayMs: number
+    delayMs: number,
+    executeAt?: moment.Moment
   ) => Promise<DeviceAttribute[]>;
   getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
   uploadAttachment: (
@@ -352,7 +354,11 @@ export const useApiHook = (): ApiHook => {
         );
         return res.data;
       },
-      setMotionControlState: async (identifier: string, state: number) => {
+      setMotionControlState: async (
+        identifier: string,
+        state: number,
+        executeAt?: moment.Moment
+      ) => {
         try {
           const res = await apiClient.post<
             any,
@@ -360,6 +366,7 @@ export const useApiHook = (): ApiHook => {
           >("/api/devices/motion-control-status", {
             deviceIdentifier: identifier,
             mode: state,
+            executeAt: executeAt ? executeAt.format() : undefined,
           });
           return res.data;
         } catch (ex) {
@@ -368,7 +375,11 @@ export const useApiHook = (): ApiHook => {
           return [];
         }
       },
-      setMotionControlDelay: async (identifier: string, delayMs: number) => {
+      setMotionControlDelay: async (
+        identifier: string,
+        delayMs: number,
+        executeAt?: moment.Moment
+      ) => {
         try {
           const res = await apiClient.post<
             any,
@@ -376,6 +387,7 @@ export const useApiHook = (): ApiHook => {
           >("/api/devices/motion-control-delay", {
             deviceIdentifier: identifier,
             DelayMs: delayMs,
+            executeAt: executeAt ? executeAt.format() : undefined,
           });
           return res.data;
         } catch (ex) {

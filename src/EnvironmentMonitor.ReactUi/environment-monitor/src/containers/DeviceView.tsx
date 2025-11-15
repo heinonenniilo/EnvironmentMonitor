@@ -245,13 +245,17 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const setMotionControlState = (state: number, message?: string) => {
+  const setMotionControlState = (
+    state: number,
+    message?: string,
+    executeAt?: moment.Moment
+  ) => {
     if (!selectedDevice) {
       return;
     }
     setIsLoading(true);
     deviceHook
-      .setMotionControlState(selectedDevice.device.identifier, state)
+      .setMotionControlState(selectedDevice.device.identifier, state, executeAt)
       .then((res) => {
         if (res && res.length > 0) {
           // Update selectedDevice with new attributes
@@ -286,13 +290,21 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const setMotionControlDelay = (delayMs: number, message?: string) => {
+  const setMotionControlDelay = (
+    delayMs: number,
+    message?: string,
+    executeAt?: moment.Moment
+  ) => {
     if (!selectedDevice) {
       return;
     }
     setIsLoading(true);
     deviceHook
-      .setMotionControlDelay(selectedDevice.device.identifier, delayMs)
+      .setMotionControlDelay(
+        selectedDevice.device.identifier,
+        delayMs,
+        executeAt
+      )
       .then((res) => {
         if (res && res.length > 0) {
           // Update selectedDevice with new attributes
@@ -641,43 +653,24 @@ export const DeviceView: React.FC = () => {
                   })
                 );
               }}
-              onSetOutStatic={(mode: boolean) => {
-                dispatch(
-                  setConfirmDialog({
-                    onConfirm: () => {
-                      setMotionControlState(
-                        mode ? 1 : 0,
-                        `Outputs set to ${mode} for ${selectedDevice?.device.name}`
-                      );
-                    },
-                    title: `Set output as ${mode}`,
-                    body: `Output pins will be set as ${mode}. Motion sensor trigger will be disabled`,
-                  })
+              onSetOutStatic={(mode: boolean, executeAt?: moment.Moment) => {
+                setMotionControlState(
+                  mode ? 1 : 0,
+                  `Outputs set to ${mode} for ${selectedDevice?.device.name}`,
+                  executeAt
                 );
               }}
-              onSetOutOnMotionControl={() => {
-                dispatch(
-                  setConfirmDialog({
-                    onConfirm: () => {
-                      setMotionControlState(2, "Motion control enabled");
-                    },
-                    title: `Enable motion control`,
-                    body: "Output pins will be controlled by motion sensor",
-                  })
-                );
+              onSetOutOnMotionControl={(executeAt?: moment.Moment) => {
+                setMotionControlState(2, "Motion control enabled", executeAt);
               }}
-              onSetMotionControlDelay={(delay: number) => {
-                dispatch(
-                  setConfirmDialog({
-                    onConfirm: () => {
-                      setMotionControlDelay(
-                        delay * 1000,
-                        `Motioncontrol delay set to ${delay} s`
-                      );
-                    },
-                    title: `Set motion control delay`,
-                    body: `Motion control delay will be set to ${delay} s`,
-                  })
+              onSetMotionControlDelay={(
+                delay: number,
+                executeAt?: moment.Moment
+              ) => {
+                setMotionControlDelay(
+                  delay * 1000,
+                  `Motioncontrol delay set to ${delay} s`,
+                  executeAt
                 );
               }}
             />
