@@ -699,9 +699,10 @@ namespace EnvironmentMonitor.Application.Services
 
         private void ValidateTriggeringTime(DateTime target)
         {
-            if (target < _dateService.CurrentTime())
+            var compareDate = _dateService.CurrentTime();
+            if (target < compareDate)
             {
-                throw new ArgumentException($"Invalid triggering time.{target}");
+                throw new ArgumentException($"Invalid triggering time.{target}. Cur date: {compareDate}");
             }
         }
     }
