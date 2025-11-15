@@ -1,9 +1,12 @@
 using Azure.Identity;
 using Azure.Storage.Queues;
+using Azure.Storage.Queues.Models;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Infrastructure.Services
@@ -66,13 +69,51 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
                 _logger.LogInformation($"Sending message to queue '{queueName}': {message}");
 
-                await queueClient.SendMessageAsync(message, visibilityTimeout: delay);
+                var res = await queueClient.SendMessageAsync(message, visibilityTimeout: delay);
+
 
                 _logger.LogInformation($"Successfully sent message to queue '{queueName}'");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Failed to send message to queue '{queueName}': {message}");
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<QueueMessageInfo>> PeekMessages(string queueName, int maxMessages = 32)
+        {
+            if (_queueServiceClient == null)
+            {
+                throw new InvalidOperationException("Queue client not initialized");
+            }
+
+            try
+            {
+                var queueClient = _queueServiceClient.GetQueueClient(queueName);
+
+                _logger.LogInformation($"Peeking messages from queue '{queueName}' (max: {maxMessages})");
+
+                var response = await queueClient.PeekMessagesAsync(maxMessages);
+
+                var messages = response.Value.Select(m => new QueueMessageInfo
+                {
+                    MessageId = m.MessageId,
+                    MessageText = m.MessageText,
+                    PopReceipt = null,
+                    InsertedOn = m.InsertedOn,
+                    ExpiresOn = m.ExpiresOn,
+                    NextVisibleOn = null, // Not available with PeekMessages
+                    DequeueCount = m.DequeueCount
+                }).ToList();
+
+                _logger.LogInformation($"Peeked {messages.Count} messages from queue '{queueName}'");
+
+                return messages;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to peek messages from queue '{queueName}'");
                 throw;
             }
         }

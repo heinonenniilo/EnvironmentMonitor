@@ -6,5 +6,17 @@ namespace EnvironmentMonitor.Domain.Interfaces
     {
         Task SendMessage(string message, TimeSpan? delay= null);
         Task SendMessage(string queueName, string message, TimeSpan? delay= null);
+        Task<IEnumerable<QueueMessageInfo>> PeekMessages(string queueName, int maxMessages = 32);
+    }
+
+    public class QueueMessageInfo
+    {
+        public string MessageId { get; set; } = string.Empty;
+        public string MessageText { get; set; } = string.Empty;
+        public string? PopReceipt { get; set; }
+        public DateTimeOffset? InsertedOn { get; set; }
+        public DateTimeOffset? ExpiresOn { get; set; }
+        public DateTimeOffset? NextVisibleOn { get; set; }
+        public long DequeueCount { get; set; }
     }
 }

@@ -44,11 +44,11 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("motion-control-status")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode);
+        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode, model.ExecuteAt);
 
         [HttpPost("motion-control-delay")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs);
+        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs, model.ExecuteAt);
 
         [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]

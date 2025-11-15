@@ -1,21 +1,22 @@
 ﻿using AutoMapper;
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
-using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.AddModels;
+using EnvironmentMonitor.Domain.Models.GetModels;
+using EnvironmentMonitor.Domain.Models.Pagination;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using EnvironmentMonitor.Domain;
-using EnvironmentMonitor.Domain.Models.GetModels;
-using EnvironmentMonitor.Domain.Models.Pagination;
-using EnvironmentMonitor.Domain.Models.AddModels;
 
 namespace EnvironmentMonitor.Application.Services
 {
@@ -30,9 +31,10 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDateService _dateService;
         private readonly IImageService _imageService;
         private readonly IKeyVaultClient _keyVaultClient;
+        private readonly IQueueClient _queueClient;
 
         public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService, IImageService imageService, IKeyVaultClient keyVaultClient)
+            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService, IImageService imageService, IKeyVaultClient keyVaultClient, IQueueClient queueClient)
         {
             _messageService = messageService;
             _logger = logger;
@@ -43,6 +45,7 @@ namespace EnvironmentMonitor.Application.Services
             _dateService = dateService;
             _imageService = imageService;
             _keyVaultClient = keyVaultClient;
+            _queueClient = queueClient;
         }
         public async Task Reboot(Guid identifier)
         {
@@ -60,7 +63,7 @@ namespace EnvironmentMonitor.Application.Services
             await AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true);
         }
 
-        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status)
+        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status, DateTime? triggeringTime = null)
         {
             if (!_userService.IsAdmin)
             {
@@ -71,6 +74,26 @@ namespace EnvironmentMonitor.Application.Services
             if (device.IsVirtual)
             {
                 throw new InvalidOperationException($"Cannot send messages to a virtual device ({device.Id})");
+            }
+
+            if (triggeringTime != null)
+            {
+                ValidateTriggeringTime(triggeringTime.Value);
+                var delay = triggeringTime.Value - _dateService.CurrentTime();
+                _logger.LogInformation($"Setting 'SetMotionControlStatus' message to queue. Delay is: {delay}. Target date is: {triggeringTime}");
+                var messageToQueue = new DeviceQueueMessage()
+                {
+                    Attributes = new Dictionary<string, string>()
+                    {
+                        { ApplicationConstants.QueuedMessageDefaultKey, ((int)status).ToString() },
+                    },
+                    DeviceIdentifier = device.Identifier,
+                    MessageTypeId = (int)QueuedMessages.SetMotionControlStatus,
+                };
+                var messageJson = JsonSerializer.Serialize(messageToQueue);
+                await _queueClient.SendMessage(messageJson, delay);
+                var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+                return _mapper.Map<List<DeviceAttributeDto>>(attributes);
             }
 
             var message = $"MOTIONCONTROLSTATUS:{(int)status}";
@@ -83,7 +106,7 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceAttributeDto>>(updatedAttributes);
         }
 
-        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs)
+        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs, DateTime? triggeringTime = null)
         {
             if (!_userService.IsAdmin)
             {
@@ -94,6 +117,27 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new InvalidOperationException($"Cannot send messages to a virtual device ({device.Id})");
             }
+
+            if (triggeringTime != null)
+            {
+                ValidateTriggeringTime(triggeringTime.Value);
+                var delay = triggeringTime.Value - _dateService.CurrentTime();
+                _logger.LogInformation($"Setting 'SetMotionControlDelay' message to queue. Delay is: {delay}. Target date is: {triggeringTime}");
+                var messageToQueue = new DeviceQueueMessage()
+                {
+                    Attributes = new Dictionary<string, string>()
+                    {
+                        { ApplicationConstants.QueuedMessageDefaultKey, delayMs.ToString() },
+                    },
+                    DeviceIdentifier = device.Identifier,
+                    MessageTypeId = (int)QueuedMessages.SetMotionControlOnDelay,
+                };
+                var messageJson = JsonSerializer.Serialize(messageToQueue);
+                await _queueClient.SendMessage(messageJson, delay);
+                var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+                return _mapper.Map<List<DeviceAttributeDto>>(attributes);
+            }
+
             var message = $"MOTIONCONTROLDELAY: {delayMs}";
             _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
@@ -303,7 +347,7 @@ namespace EnvironmentMonitor.Application.Services
             }
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [fileModel.DeviceIdentifier] })).FirstOrDefault();
             var extension = Path.GetExtension(fileModel.FileName);
-            var fileNameToSave = fileModel.IsSecret ? $"{Guid.NewGuid()}": $"{device.Identifier}_{Guid.NewGuid()}{extension}";
+            var fileNameToSave = fileModel.IsSecret ? $"{Guid.NewGuid()}" : $"{device.Identifier}_{Guid.NewGuid()}{extension}";
 
             string fullPath = string.Empty;
             string path = string.Empty;
@@ -575,6 +619,16 @@ namespace EnvironmentMonitor.Application.Services
             var messageToSend = string.IsNullOrEmpty(message) ? "Sent device attributes to device" : message;
             await AddEvent(device.Id, DeviceEventTypes.SendAttributes, messageToSend, true);
             _logger.LogInformation($"Completed sending attributes to device {device.Id} ({identifier})");
+        }
+
+
+        private void ValidateTriggeringTime(DateTime target)
+        {
+            if (target < _dateService.CurrentTime())
+            {
+                throw new ArgumentException("Invalid triggering time");
+            }
+
         }
     }
 }

@@ -1,8 +1,10 @@
 using System;
+using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Azure.Storage.Queues;
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.Azure.Functions.Worker;
@@ -50,6 +52,14 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 {
                     case QueuedMessages.SendDeviceAttributes:
                         await _deviceService.SendAttributesToDevice(deviceMessage.DeviceIdentifier, "Sent stored attributes to device. Triggered from storage queue.");
+                        break;
+                    case QueuedMessages.SetMotionControlStatus:
+                        var attributes = deviceMessage.Attributes;
+                        if (attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) == true)
+                        {
+                            var valueToSet = int.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
+                            await _deviceService.SetMotionControlStatus(deviceMessage.DeviceIdentifier, (MotionControlStatus)valueToSet);
+                        }
                         break;
                     default:
                         _logger.LogWarning("Unknown message type: {MessageTypeId}", deviceMessage.MessageTypeId);

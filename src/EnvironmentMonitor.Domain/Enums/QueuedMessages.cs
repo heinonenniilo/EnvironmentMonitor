@@ -8,6 +8,8 @@ namespace EnvironmentMonitor.Domain.Enums
 {
     public enum QueuedMessages
     {
-        SendDeviceAttributes = 0
+        SendDeviceAttributes = 0,
+        SetMotionControlStatus = 1,
+        SetMotionControlOnDelay = 2
     }
 }
