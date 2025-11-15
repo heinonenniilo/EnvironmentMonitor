@@ -366,7 +366,9 @@ export const useApiHook = (): ApiHook => {
           >("/api/devices/motion-control-status", {
             deviceIdentifier: identifier,
             mode: state,
-            executeAt: executeAt ? executeAt.format() : undefined,
+            executeAt: executeAt
+              ? executeAt.format("YYYY-MM-DDTHH:mm:ss")
+              : undefined,
           });
           return res.data;
         } catch (ex) {
