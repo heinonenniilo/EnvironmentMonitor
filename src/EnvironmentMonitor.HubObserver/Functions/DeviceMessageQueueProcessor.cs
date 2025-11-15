@@ -48,17 +48,24 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     deviceMessage.MessageTypeId);
 
                 QueuedMessages messageType = (QueuedMessages)deviceMessage.MessageTypeId;
+                var attributes = deviceMessage.Attributes;
                 switch (messageType)
                 {
                     case QueuedMessages.SendDeviceAttributes:
                         await _deviceService.SendAttributesToDevice(deviceMessage.DeviceIdentifier, "Sent stored attributes to device. Triggered from storage queue.");
                         break;
-                    case QueuedMessages.SetMotionControlStatus:
-                        var attributes = deviceMessage.Attributes;
+                    case QueuedMessages.SetMotionControlStatus:                       
                         if (attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) == true)
                         {
                             var valueToSet = int.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
                             await _deviceService.SetMotionControlStatus(deviceMessage.DeviceIdentifier, (MotionControlStatus)valueToSet);
+                        }
+                        break;
+                    case QueuedMessages.SetMotionControlOnDelay:
+                        if (attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) == true)
+                        {
+                            var valueToSet = long.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
+                            await _deviceService.SetMotionControlDelay(deviceMessage.DeviceIdentifier, valueToSet);
                         }
                         break;
                     default:
