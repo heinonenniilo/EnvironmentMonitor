@@ -98,6 +98,7 @@ namespace EnvironmentMonitor.Application.Services
                     Type = (int)QueuedMessages.SetMotionControlStatus,
                     Message = messageJson,
                     MessageId = res.MessageId,
+                    PopReceipt = res.PopReceipt,
                     Created = _dateService.CurrentTime(),
                     CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
                     Scheduled = res.ScheludedToExecute,
@@ -145,7 +146,20 @@ namespace EnvironmentMonitor.Application.Services
                     MessageTypeId = (int)QueuedMessages.SetMotionControlOnDelay,
                 };
                 var messageJson = JsonSerializer.Serialize(messageToQueue);
-                await _queueClient.SendMessage(messageJson, delay);
+                var res = await _queueClient.SendMessage(messageJson, delay);
+
+                await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+                {
+                    Type = (int)QueuedMessages.SetMotionControlOnDelay,
+                    Message = messageJson,
+                    MessageId = res.MessageId,
+                    PopReceipt = res.PopReceipt,
+                    Created = _dateService.CurrentTime(),
+                    CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                    Scheduled = res.ScheludedToExecute,
+                    ScheduledUtc = _dateService.LocalToUtc(res.ScheludedToExecute),
+                }, true);
+
                 var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
                 return _mapper.Map<List<DeviceAttributeDto>>(attributes);
             }
@@ -695,6 +709,46 @@ namespace EnvironmentMonitor.Application.Services
 
             var commands = await _deviceRepository.GetQueuedCommands(model);
             return _mapper.Map<List<DeviceQueuedCommandDto>>(commands);
+        }
+
+        public async Task RemoveQueuedCommand(Guid deviceIdentifier, string messageId)
+        {
+
+            if (!_userService.HasAccessToDevice(deviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            _logger.LogInformation($"Removing queued command with MessageId: {messageId} for device: {deviceIdentifier}");
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [deviceIdentifier],
+                OnlyVisible = false
+            })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
+
+            var commands = await _deviceRepository.GetQueuedCommands(new GetQueuedCommandsModel()
+            {
+                DeviceIds = [device.Id],
+                MessageIds = [messageId]
+            });
+
+            var command = commands.FirstOrDefault();
+            if (command == null)
+            {
+                throw new EntityNotFoundException($"Queued command with MessageId: '{messageId}' not found for device: '{deviceIdentifier}'.");
+            }
+
+            if (string.IsNullOrEmpty(command.PopReceipt))
+            {
+                throw new InvalidOperationException($"PopReceipt is missing for MessageId: '{messageId}'");
+            }
+
+            await _queueClient.DeleteMessage(command.MessageId, command.PopReceipt);
+
+            command.IsRemoved = true;
+            await _deviceRepository.SetQueuedCommand(command.DeviceId, command, true);
+
+            _logger.LogInformation($"Successfully removed queued command with MessageId: {messageId} for device: {deviceIdentifier}");
         }
 
         private void ValidateTriggeringTime(DateTime target)

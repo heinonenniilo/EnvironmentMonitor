@@ -14,6 +14,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public int Type { get; set; }
         public string Message { get; set; } = string.Empty;
         public DateTime Created { get; set; }
+        public bool IsRemoved { get; set; }
 
         public void Mapping(Profile profile)
         {

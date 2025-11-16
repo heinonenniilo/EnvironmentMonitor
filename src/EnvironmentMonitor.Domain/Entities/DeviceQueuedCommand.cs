@@ -10,6 +10,7 @@ namespace EnvironmentMonitor.Domain.Entities
     {
         public int Id { get; set; }
         public required string MessageId { get; set; }
+        public string PopReceipt { get; set; }
         public int DeviceId { get; set; }
         public Device Device { get; set; }
         public DateTime Scheduled { get; set; }
@@ -19,5 +20,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public required int Type { get; set; }
         public DeviceQueuedCommandType CommandType { get; set; }
         public required string Message { get; set; }
+        public bool IsRemoved { get; set; }
     }
 }

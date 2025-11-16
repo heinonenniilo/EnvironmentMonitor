@@ -77,6 +77,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 return new CreateQueuedMessageReturnModel
                 {
                     MessageId = res.Value.MessageId,
+                    PopReceipt = res.Value.PopReceipt,
                     ScheludedToExecute = _dateService.CurrentTime().Add(delay ?? TimeSpan.Zero)
                 };
             }
@@ -122,6 +123,40 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 _logger.LogError(ex, $"Failed to peek messages from queue '{queueName}'");
                 throw;
             }
+        }
+
+        public async Task DeleteMessage(string queueName, string messageId, string popReceipt)
+        {
+            if (_queueServiceClient == null)
+            {
+                throw new InvalidOperationException("Queue client not initialized");
+            }
+
+            try
+            {
+                var queueClient = _queueServiceClient.GetQueueClient(queueName);
+
+                _logger.LogInformation($"Deleting message from queue '{queueName}'. MessageId: {messageId}");
+
+                await queueClient.DeleteMessageAsync(messageId, popReceipt);
+
+                _logger.LogInformation($"Successfully deleted message from queue '{queueName}'. MessageId: {messageId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to delete message from queue '{queueName}'. MessageId: {messageId}");
+                throw;
+            }
+        }
+
+        public async Task DeleteMessage(string messageId, string popReceipt)
+        {
+            if (string.IsNullOrEmpty(_settings.DefaultQueueName))
+            {
+                throw new InvalidOperationException("Default queue name not configured");
+            }
+
+            await DeleteMessage(_settings.DefaultQueueName, messageId, popReceipt);
         }
     }
 }

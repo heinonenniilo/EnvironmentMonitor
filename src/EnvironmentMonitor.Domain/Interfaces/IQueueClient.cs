@@ -8,6 +8,8 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<CreateQueuedMessageReturnModel> SendMessage(string message, TimeSpan? delay= null);
         Task<CreateQueuedMessageReturnModel> SendMessage(string queueName, string message, TimeSpan? delay= null);
         Task<IEnumerable<QueueMessageInfo>> PeekMessages(string queueName, int maxMessages = 32);
+        Task DeleteMessage(string messageId, string popReceipt);
+        Task DeleteMessage(string queueName, string messageId, string popReceipt);
     }
 
     public class QueueMessageInfo

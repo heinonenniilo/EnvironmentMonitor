@@ -19,6 +19,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs, DateTime? triggeringTime = null);
         public Task SendAttributesToDevice(Guid identifier, string? message = null);
         public Task AckQueuedCommand(Guid identifier, string messageId, DateTime date);
+        public Task RemoveQueuedCommand(Guid deviceIdentifier, string messageId);
 
         public Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel);
         public Task<DeviceDto> GetDevice(Guid identifier, AccessLevels accessLevel);

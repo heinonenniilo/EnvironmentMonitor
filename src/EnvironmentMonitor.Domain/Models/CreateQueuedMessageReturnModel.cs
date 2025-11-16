@@ -9,6 +9,7 @@ namespace EnvironmentMonitor.Domain.Models
     public class CreateQueuedMessageReturnModel
     {
         public required string MessageId { get; set; }
+        public required string PopReceipt { get; set; }
         public DateTime ScheludedToExecute { get; set; }
     }
 }
