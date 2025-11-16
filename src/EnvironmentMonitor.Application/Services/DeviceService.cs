@@ -101,8 +101,8 @@ namespace EnvironmentMonitor.Application.Services
                     PopReceipt = res.PopReceipt,
                     Created = _dateService.CurrentTime(),
                     CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
-                    Scheduled = res.ScheludedToExecute,
-                    ScheduledUtc = _dateService.LocalToUtc(res.ScheludedToExecute),
+                    Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
+                    ScheduledUtc = res.ScheludedToExecuteUtc,
                 }, true);
 
                 var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
@@ -156,8 +156,8 @@ namespace EnvironmentMonitor.Application.Services
                     PopReceipt = res.PopReceipt,
                     Created = _dateService.CurrentTime(),
                     CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
-                    Scheduled = res.ScheludedToExecute,
-                    ScheduledUtc = _dateService.LocalToUtc(res.ScheludedToExecute),
+                    Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
+                    ScheduledUtc = res.ScheludedToExecuteUtc,
                 }, true);
 
                 var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);

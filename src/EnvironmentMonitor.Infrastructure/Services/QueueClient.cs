@@ -46,7 +46,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
         }
 
-        public async Task<CreateQueuedMessageReturnModel> SendMessage(string message, TimeSpan? delay)
+        public async Task<QueueMessageInfo> SendMessage(string message, TimeSpan? delay)
         {
             if (string.IsNullOrEmpty(_settings.DefaultQueueName))
             {
@@ -56,7 +56,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             return await SendMessage(_settings.DefaultQueueName, message, delay);
         }
 
-        public async Task<CreateQueuedMessageReturnModel> SendMessage(string queueName, string message, TimeSpan? delay = null)
+        public async Task<QueueMessageInfo> SendMessage(string queueName, string message, TimeSpan? delay = null)
         {
             if (_queueServiceClient == null)
             {
@@ -68,59 +68,26 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 var queueClient = _queueServiceClient.GetQueueClient(queueName);
 
                 await queueClient.CreateIfNotExistsAsync();
-
                 _logger.LogInformation($"Sending message to queue '{queueName}': {message}");
-
                 var res = await queueClient.SendMessageAsync(message, visibilityTimeout: delay);
 
                 _logger.LogInformation($"Successfully sent message to queue '{queueName}'");
-                return new CreateQueuedMessageReturnModel
+
+                var scheduledTimeUtc = res.Value.TimeNextVisible.UtcDateTime;
+                var insertedOnUtc = res.Value.InsertionTime.UtcDateTime;
+
+                return new QueueMessageInfo
                 {
                     MessageId = res.Value.MessageId,
                     PopReceipt = res.Value.PopReceipt,
-                    ScheludedToExecute = _dateService.CurrentTime().Add(delay ?? TimeSpan.Zero)
+                    ScheludedToExecuteUtc = scheduledTimeUtc,
+                    MessageText = message,
+                    InsertedOnUtc = insertedOnUtc
                 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Failed to send message to queue '{queueName}': {message}");
-                throw;
-            }
-        }
-
-        public async Task<IEnumerable<QueueMessageInfo>> PeekMessages(string queueName, int maxMessages = 32)
-        {
-            if (_queueServiceClient == null)
-            {
-                throw new InvalidOperationException("Queue client not initialized");
-            }
-
-            try
-            {
-                var queueClient = _queueServiceClient.GetQueueClient(queueName);
-
-                _logger.LogInformation($"Peeking messages from queue '{queueName}' (max: {maxMessages})");
-
-                var response = await queueClient.PeekMessagesAsync(maxMessages);
-
-                var messages = response.Value.Select(m => new QueueMessageInfo
-                {
-                    MessageId = m.MessageId,
-                    MessageText = m.MessageText,
-                    PopReceipt = null,
-                    InsertedOn = m.InsertedOn,
-                    ExpiresOn = m.ExpiresOn,
-                    NextVisibleOn = null, // Not available with PeekMessages
-                    DequeueCount = m.DequeueCount
-                }).ToList();
-
-                _logger.LogInformation($"Peeked {messages.Count} messages from queue '{queueName}'");
-
-                return messages;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to peek messages from queue '{queueName}'");
                 throw;
             }
         }
