@@ -686,10 +686,9 @@ namespace EnvironmentMonitor.Application.Services
         {
             _logger.LogInformation($"Fetching queued commands. Device Identifiers: {string.Join(",", model.DeviceIdentifiers ?? [])}");
 
-            // Apply access control
             if (model.DeviceIdentifiers?.Any() == true)
             {
-                if (!_userService.HasAccessToDevices(model.DeviceIdentifiers, AccessLevels.Read))
+                if (!_userService.HasAccessToDevices(model.DeviceIdentifiers, AccessLevels.Write))
                 {
                     _logger.LogWarning($"No access to devices: {string.Join(",", model.DeviceIdentifiers)}");
                     throw new UnauthorizedAccessException();

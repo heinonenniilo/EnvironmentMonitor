@@ -579,7 +579,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => model.MessageIds.Contains(x.MessageId));
             }
 
-            // Filter by scheduled time range
             if (model.ScheduledFrom != null)
             {
                 query = query.Where(x => x.ScheduledUtc >= model.ScheduledFrom.Value);
@@ -601,6 +600,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     query = query.Where(x => x.ExecutedAtUtc == null);
                 }
             }
+            query = query.Include(x => x.CommandType);
 
             query = query.OrderByDescending(x => x.ScheduledUtc);
 

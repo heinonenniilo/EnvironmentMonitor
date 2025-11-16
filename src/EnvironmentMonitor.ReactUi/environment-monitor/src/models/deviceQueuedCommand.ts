@@ -3,7 +3,7 @@ export interface DeviceQueuedCommandDto {
   deviceIdentifier: string;
   scheduled: Date;
   executedAt?: Date;
-  type: number;
+  type: string;
   message: string;
   created: Date;
   isRemoved: boolean;
