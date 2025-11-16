@@ -398,7 +398,9 @@ export const useApiHook = (): ApiHook => {
           >("/api/devices/motion-control-delay", {
             deviceIdentifier: identifier,
             DelayMs: delayMs,
-            executeAt: executeAt ? executeAt.format() : undefined,
+            executeAt: executeAt
+              ? executeAt.format("YYYY-MM-DDTHH:mm:ss")
+              : undefined,
           });
           return res.data;
         } catch (ex) {
