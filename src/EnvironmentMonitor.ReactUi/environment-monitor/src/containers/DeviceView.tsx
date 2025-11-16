@@ -252,6 +252,41 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const deleteQueuedCommand = (messageId: string) => {
+    if (!selectedDevice) {
+      return;
+    }
+    setIsLoading(true);
+    deviceHook
+      .deleteQueuedCommand(selectedDevice.device.identifier, messageId)
+      .then((success) => {
+        if (success) {
+          dispatch(
+            addNotification({
+              title: "Queued command deleted",
+              body: "",
+              severity: "success",
+            })
+          );
+          // Refresh the queued commands list
+          getQueuedCommands(selectedDevice.device.identifier);
+        }
+      })
+      .catch((er) => {
+        console.error(er);
+        dispatch(
+          addNotification({
+            title: "Failed to delete queued command",
+            body: "",
+            severity: "error",
+          })
+        );
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   const updateVisible = (device: DeviceInfo) => {
     setIsLoading(true);
     deviceHook
@@ -743,6 +778,17 @@ export const DeviceView: React.FC = () => {
             <DeviceQueuedCommandsTable
               commands={queuedCommands}
               maxHeight={"500px"}
+              onDelete={(messageId: string) => {
+                dispatch(
+                  setConfirmDialog({
+                    onConfirm: () => {
+                      deleteQueuedCommand(messageId);
+                    },
+                    title: "Delete queued command",
+                    body: "Are you sure you want to delete this queued command?",
+                  })
+                );
+              }}
             />
           </Collapsible>
         )}

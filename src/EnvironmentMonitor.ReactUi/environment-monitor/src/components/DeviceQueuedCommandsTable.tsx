@@ -11,17 +11,18 @@ import {
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useState } from "react";
-import { Close } from "@mui/icons-material";
+import { Close, Delete } from "@mui/icons-material";
 
 export interface DeviceQueuedCommandsTableProps {
   commands: DeviceQueuedCommandDto[];
   title?: string;
   maxHeight?: string;
+  onDelete?: (messageId: string) => void;
 }
 
 export const DeviceQueuedCommandsTable: React.FC<
   DeviceQueuedCommandsTableProps
-> = ({ commands, title, maxHeight }) => {
+> = ({ commands, title, maxHeight, onDelete }) => {
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -134,16 +135,20 @@ export const DeviceQueuedCommandsTable: React.FC<
       sortable: false,
       renderCell: (params) => {
         const command = params.row as DeviceQueuedCommandDto;
-        return command.executedAt ? (
-          <Chip label="Executed" color="success" size="small" />
-        ) : (
-          <Chip label="Pending" color="warning" size="small" />
-        );
+        if (command.isRemoved) {
+          return <Chip label="Cancelled" color="error" size="small" />;
+        } else if (command.executedAt) {
+          return <Chip label="Executed" color="success" size="small" />;
+        } else {
+          return <Chip label="Pending" color="warning" size="small" />;
+        }
       },
       valueGetter: (_value, row) => {
-        return (row as DeviceQueuedCommandDto).executedAt
-          ? "Executed"
-          : "Pending";
+        const command = row as DeviceQueuedCommandDto;
+        if (command.isRemoved) {
+          return "Cancelled";
+        }
+        return command.executedAt ? "Executed" : "Pending";
       },
     },
     {
@@ -163,6 +168,30 @@ export const DeviceQueuedCommandsTable: React.FC<
       },
       valueFormatter: (_value, row) => {
         return formatDate((row as DeviceQueuedCommandDto)?.created);
+      },
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      sortable: false,
+      filterable: false,
+      width: 80,
+      renderCell: (params) => {
+        const command = params.row as DeviceQueuedCommandDto;
+        // Only show delete button for pending commands (not executed or cancelled)
+        if (command.executedAt || command.isRemoved || !onDelete) {
+          return null;
+        }
+        return (
+          <IconButton
+            onClick={() => onDelete(command.messageId)}
+            size="small"
+            color="error"
+            aria-label="delete"
+          >
+            <Delete />
+          </IconButton>
+        );
       },
     },
   ];

@@ -6,4 +6,5 @@ export interface DeviceQueuedCommandDto {
   type: number;
   message: string;
   created: Date;
+  isRemoved: boolean;
 }

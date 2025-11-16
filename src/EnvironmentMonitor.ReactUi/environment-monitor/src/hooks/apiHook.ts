@@ -114,6 +114,10 @@ interface deviceHook {
   getQueuedCommands: (
     model: GetQueuedCommandsModel
   ) => Promise<DeviceQueuedCommandDto[]>;
+  deleteQueuedCommand: (
+    deviceIdentifier: string,
+    messageId: string
+  ) => Promise<boolean>;
 }
 
 const apiClient = axios.create({
@@ -526,6 +530,21 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError("Failed to get queued commands");
+          throw ex;
+        }
+      },
+      deleteQueuedCommand: async (
+        deviceIdentifier: string,
+        messageId: string
+      ) => {
+        try {
+          const res = await apiClient.delete<any, AxiosResponse<boolean>>(
+            `/api/devices/${deviceIdentifier}/queued-commands/${messageId}`
+          );
+          return res.status === 200;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to delete queued command");
           throw ex;
         }
       },
