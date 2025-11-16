@@ -1,15 +1,15 @@
 using System;
 using System.Net.WebSockets;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Azure.Storage.Queues.Models;
+using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
-using EnvironmentMonitor.Domain.Models;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using EnvironmentMonitor.Domain.Models.GetModels;
 
 namespace EnvironmentMonitor.HubObserver.Functions
 {
@@ -18,6 +18,8 @@ namespace EnvironmentMonitor.HubObserver.Functions
         private readonly ILogger<DeviceMessageQueueProcessor> _logger;
         private readonly IDeviceService _deviceService;
         private readonly IDateService _dateService;
+
+        private const int MessageScheduledLimitInMinutes = 20;
 
         public DeviceMessageQueueProcessor(ILogger<DeviceMessageQueueProcessor> logger, IDeviceService deviceService, IDateService dateService)
         {
@@ -61,8 +63,28 @@ namespace EnvironmentMonitor.HubObserver.Functions
 
                 QueuedMessages messageType = (QueuedMessages)deviceMessage.MessageTypeId;
                 var attributes = deviceMessage.Attributes;
-
                 var hasExecuted = false;
+
+                var matchingMessages = await _deviceService.GetQueuedCommands( new GetQueuedCommandsModel
+                {
+                    DeviceIdentifiers = [deviceMessage.DeviceIdentifier],
+                    MessageIds = [queueMessage.MessageId],
+                    IsExecuted = false
+                });
+
+                // Skip if message's run scheduled time is too old
+                if (matchingMessages.Count == 1)
+                {
+                    var messageToCheck = matchingMessages.First();
+
+                    if ((_dateService.CurrentTime() - messageToCheck.Scheduled).TotalMinutes > MessageScheduledLimitInMinutes)
+                    {
+                        _logger.LogWarning($"Message with id {messageToCheck.MessageId} was scheduled to run at {messageToCheck.Scheduled}, now it is: {_dateService.CurrentTime()}. Limit is {MessageScheduledLimitInMinutes} min");
+                        await _deviceService.AckQueuedCommand(deviceMessage.DeviceIdentifier, queueMessage.MessageId, null);
+                        return;
+                    }
+                }
+
                 switch (messageType)
                 {
                     case QueuedMessages.SendDeviceAttributes:

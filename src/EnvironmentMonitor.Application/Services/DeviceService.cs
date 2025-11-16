@@ -647,7 +647,7 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Completed sending attributes to device {device.Id} ({identifier})");
         }
 
-        public async Task AckQueuedCommand(Guid identifier, string messageId, DateTime date)
+        public async Task AckQueuedCommand(Guid identifier, string messageId, DateTime? date)
         {
             if (!_userService.HasAccessToDevice(identifier, AccessLevels.Write))
             {
@@ -674,8 +674,16 @@ namespace EnvironmentMonitor.Application.Services
                 return;
             }
 
-            command.ExecutedAt = date;
-            command.ExecutedAtUtc = _dateService.LocalToUtc(date);
+            if (date != null)
+            {
+
+                command.ExecutedAt = date.Value;
+                command.ExecutedAtUtc = _dateService.LocalToUtc(date.Value);
+            }
+            else
+            {
+                command.IsRemoved = true; // Indicates error
+            }
 
             await _deviceRepository.SetQueuedCommand(device.Device.Id, command, true);
 
