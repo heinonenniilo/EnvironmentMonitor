@@ -4,6 +4,7 @@ using EnvironmentMonitor.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    partial class MeasurementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251115184554_AddDeviceQueuedMessages")]
+    partial class AddDeviceQueuedMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -428,20 +431,12 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("ExecutedAtUtc")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("IsRemoved")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(MAX)");
 
                     b.Property<string>("MessageId")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("PopReceipt")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -460,56 +455,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("MessageId")
                         .IsUnique();
 
-                    b.HasIndex("Type");
-
                     b.HasIndex("DeviceId", "ExecutedAtUtc");
 
                     b.HasIndex("DeviceId", "ScheduledUtc");
 
                     b.ToTable("DeviceQueuedCommands");
-                });
-
-            modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceQueuedCommandType", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("nvarchar(1024)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("DeviceQueuedCommandTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 0,
-                            Description = "Send stored device attributes",
-                            Name = "SendDeviceAttributes"
-                        },
-                        new
-                        {
-                            Id = 1,
-                            Description = "Set motion control status",
-                            Name = "SetMotionControlStatus"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Description = "Set motion control delay",
-                            Name = "SetMotionControlOnDelay"
-                        });
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceStatus", b =>
@@ -988,14 +938,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EnvironmentMonitor.Domain.Entities.DeviceQueuedCommandType", "CommandType")
-                        .WithMany("QueuedCommands")
-                        .HasForeignKey("Type")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CommandType");
-
                     b.Navigation("Device");
                 });
 
@@ -1171,11 +1113,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Navigation("DeviceStatuses");
 
                     b.Navigation("Measurements");
-                });
-
-            modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceQueuedCommandType", b =>
-                {
-                    b.Navigation("QueuedCommands");
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceType", b =>

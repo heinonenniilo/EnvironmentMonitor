@@ -1,21 +1,22 @@
 ﻿using AutoMapper;
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
-using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.AddModels;
+using EnvironmentMonitor.Domain.Models.GetModels;
+using EnvironmentMonitor.Domain.Models.Pagination;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
-using EnvironmentMonitor.Domain;
-using EnvironmentMonitor.Domain.Models.GetModels;
-using EnvironmentMonitor.Domain.Models.Pagination;
-using EnvironmentMonitor.Domain.Models.AddModels;
 
 namespace EnvironmentMonitor.Application.Services
 {
@@ -30,9 +31,10 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDateService _dateService;
         private readonly IImageService _imageService;
         private readonly IKeyVaultClient _keyVaultClient;
+        private readonly IQueueClient _queueClient;
 
         public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService, IImageService imageService, IKeyVaultClient keyVaultClient)
+            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService, IImageService imageService, IKeyVaultClient keyVaultClient, IQueueClient queueClient)
         {
             _messageService = messageService;
             _logger = logger;
@@ -43,6 +45,7 @@ namespace EnvironmentMonitor.Application.Services
             _dateService = dateService;
             _imageService = imageService;
             _keyVaultClient = keyVaultClient;
+            _queueClient = queueClient;
         }
         public async Task Reboot(Guid identifier)
         {
@@ -60,7 +63,7 @@ namespace EnvironmentMonitor.Application.Services
             await AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true);
         }
 
-        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status)
+        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status, DateTime? triggeringTime = null)
         {
             if (!_userService.IsAdmin)
             {
@@ -71,6 +74,39 @@ namespace EnvironmentMonitor.Application.Services
             if (device.IsVirtual)
             {
                 throw new InvalidOperationException($"Cannot send messages to a virtual device ({device.Id})");
+            }
+
+            if (triggeringTime != null)
+            {
+                ValidateTriggeringTime(triggeringTime.Value);
+                var delay = triggeringTime.Value - _dateService.CurrentTime();
+                _logger.LogInformation($"Setting 'SetMotionControlStatus' message to queue. Delay is: {delay}. Target date is: {triggeringTime}");
+                var messageToQueue = new DeviceQueueMessage()
+                {
+                    Attributes = new Dictionary<string, string>()
+                    {
+                        { ApplicationConstants.QueuedMessageDefaultKey, ((int)status).ToString() },
+                    },
+                    DeviceIdentifier = device.Identifier,
+                    MessageTypeId = (int)QueuedMessages.SetMotionControlStatus,
+                };
+                var messageJson = JsonSerializer.Serialize(messageToQueue);
+                var res = await _queueClient.SendMessage(messageJson, delay);
+
+                await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+                {
+                    Type = (int)QueuedMessages.SetMotionControlStatus,
+                    Message = messageJson,
+                    MessageId = res.MessageId,
+                    PopReceipt = res.PopReceipt,
+                    Created = _dateService.CurrentTime(),
+                    CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                    Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
+                    ScheduledUtc = res.ScheludedToExecuteUtc,
+                }, true);
+
+                var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+                return _mapper.Map<List<DeviceAttributeDto>>(attributes);
             }
 
             var message = $"MOTIONCONTROLSTATUS:{(int)status}";
@@ -83,7 +119,7 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceAttributeDto>>(updatedAttributes);
         }
 
-        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs)
+        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs, DateTime? triggeringTime = null)
         {
             if (!_userService.IsAdmin)
             {
@@ -94,6 +130,40 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new InvalidOperationException($"Cannot send messages to a virtual device ({device.Id})");
             }
+
+            if (triggeringTime != null)
+            {
+                ValidateTriggeringTime(triggeringTime.Value);
+                var delay = triggeringTime.Value - _dateService.CurrentTime();
+                _logger.LogInformation($"Setting 'SetMotionControlDelay' message to queue. Delay is: {delay}. Target date is: {triggeringTime}");
+                var messageToQueue = new DeviceQueueMessage()
+                {
+                    Attributes = new Dictionary<string, string>()
+                    {
+                        { ApplicationConstants.QueuedMessageDefaultKey, delayMs.ToString() },
+                    },
+                    DeviceIdentifier = device.Identifier,
+                    MessageTypeId = (int)QueuedMessages.SetMotionControlOnDelay,
+                };
+                var messageJson = JsonSerializer.Serialize(messageToQueue);
+                var res = await _queueClient.SendMessage(messageJson, delay);
+
+                await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+                {
+                    Type = (int)QueuedMessages.SetMotionControlOnDelay,
+                    Message = messageJson,
+                    MessageId = res.MessageId,
+                    PopReceipt = res.PopReceipt,
+                    Created = _dateService.CurrentTime(),
+                    CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                    Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
+                    ScheduledUtc = res.ScheludedToExecuteUtc,
+                }, true);
+
+                var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+                return _mapper.Map<List<DeviceAttributeDto>>(attributes);
+            }
+
             var message = $"MOTIONCONTROLDELAY: {delayMs}";
             _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
@@ -303,7 +373,7 @@ namespace EnvironmentMonitor.Application.Services
             }
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [fileModel.DeviceIdentifier] })).FirstOrDefault();
             var extension = Path.GetExtension(fileModel.FileName);
-            var fileNameToSave = fileModel.IsSecret ? $"{Guid.NewGuid()}": $"{device.Identifier}_{Guid.NewGuid()}{extension}";
+            var fileNameToSave = fileModel.IsSecret ? $"{Guid.NewGuid()}" : $"{device.Identifier}_{Guid.NewGuid()}{extension}";
 
             string fullPath = string.Empty;
             string path = string.Empty;
@@ -575,6 +645,126 @@ namespace EnvironmentMonitor.Application.Services
             var messageToSend = string.IsNullOrEmpty(message) ? "Sent device attributes to device" : message;
             await AddEvent(device.Id, DeviceEventTypes.SendAttributes, messageToSend, true);
             _logger.LogInformation($"Completed sending attributes to device {device.Id} ({identifier})");
+        }
+
+        public async Task AckQueuedCommand(Guid identifier, string messageId, DateTime? date)
+        {
+            if (!_userService.HasAccessToDevice(identifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+            _logger.LogInformation($"Acknowledging queued command with MessageId: {messageId} for device: {identifier}");
+
+            var device = (await _deviceRepository.GetDeviceInfo(new GetDevicesModel()
+            {
+                Identifiers = [identifier],
+                OnlyVisible = false
+            })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+
+            var commands = await _deviceRepository.GetQueuedCommands(new GetQueuedCommandsModel()
+            {
+                DeviceIdentifiers = [identifier],
+                MessageIds = [messageId]
+            });
+
+            var command = commands.FirstOrDefault();
+            if (command == null)
+            {
+                _logger.LogInformation($"Queued command with MessageId: {messageId} for device: {device.Device.Id} not found");
+                return;
+            }
+
+            if (date != null)
+            {
+
+                command.ExecutedAt = date.Value;
+                command.ExecutedAtUtc = _dateService.LocalToUtc(date.Value);
+            }
+            else
+            {
+                command.IsRemoved = true; // Indicates error
+            }
+
+            await _deviceRepository.SetQueuedCommand(device.Device.Id, command, true);
+
+            _logger.LogInformation($"Successfully acknowledged queued command with MessageId: {messageId} for device: {device.Device.Id}. ExecutedAt: {date}");
+        }
+
+        public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(GetQueuedCommandsModel model)
+        {
+            _logger.LogInformation($"Fetching queued commands. Device Identifiers: {string.Join(",", model.DeviceIdentifiers ?? [])}");
+
+            if (model.DeviceIdentifiers?.Any() == true)
+            {
+                if (!_userService.HasAccessToDevices(model.DeviceIdentifiers, AccessLevels.Write))
+                {
+                    _logger.LogWarning($"No access to devices: {string.Join(",", model.DeviceIdentifiers)}");
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            else if (!_userService.IsAdmin)
+            {
+                // If no specific devices requested and not admin, filter by user's devices
+                var deviceIds = _userService.GetDevices();
+                _logger.LogInformation($"User has access to: {deviceIds.Count} devices");
+                if (deviceIds.Count == 0)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                model.DeviceIdentifiers = deviceIds;
+            }
+
+            var commands = await _deviceRepository.GetQueuedCommands(model);
+            return _mapper.Map<List<DeviceQueuedCommandDto>>(commands);
+        }
+
+        public async Task RemoveQueuedCommand(Guid deviceIdentifier, string messageId)
+        {
+
+            if (!_userService.HasAccessToDevice(deviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            _logger.LogInformation($"Removing queued command with MessageId: {messageId} for device: {deviceIdentifier}");
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [deviceIdentifier],
+                OnlyVisible = false
+            })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
+
+            var commands = await _deviceRepository.GetQueuedCommands(new GetQueuedCommandsModel()
+            {
+                DeviceIds = [device.Id],
+                MessageIds = [messageId]
+            });
+
+            var command = commands.FirstOrDefault();
+            if (command == null)
+            {
+                throw new EntityNotFoundException($"Queued command with MessageId: '{messageId}' not found for device: '{deviceIdentifier}'.");
+            }
+
+            if (string.IsNullOrEmpty(command.PopReceipt))
+            {
+                throw new InvalidOperationException($"PopReceipt is missing for MessageId: '{messageId}'");
+            }
+
+            await _queueClient.DeleteMessage(command.MessageId, command.PopReceipt);
+
+            command.IsRemoved = true;
+            await _deviceRepository.SetQueuedCommand(command.DeviceId, command, true);
+
+            _logger.LogInformation($"Successfully removed queued command with MessageId: {messageId} for device: {deviceIdentifier}");
+        }
+
+        private void ValidateTriggeringTime(DateTime target)
+        {
+            var compareDate = _dateService.CurrentTime();
+            if (target < compareDate)
+            {
+                throw new ArgumentException($"Invalid triggering time.{target}. Cur date: {compareDate}");
+            }
         }
     }
 }

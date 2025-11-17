@@ -1,9 +1,12 @@
 using Azure.Identity;
 using Azure.Storage.Queues;
+using Azure.Storage.Queues.Models;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Infrastructure.Services
@@ -13,11 +16,13 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly QueueServiceClient? _queueServiceClient;
         private readonly ILogger<QueueClient> _logger;
         private readonly QueueSettings _settings;
+        private readonly IDateService _dateService;
 
-        public QueueClient(QueueSettings settings, ILogger<QueueClient> logger)
+        public QueueClient(QueueSettings settings, ILogger<QueueClient> logger, IDateService dateService)
         {
             _logger = logger;
             _settings = settings;
+            _dateService = dateService;
             var clientOptions = new QueueClientOptions()
             {
                 MessageEncoding = QueueMessageEncoding.Base64
@@ -41,17 +46,17 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
         }
 
-        public async Task SendMessage(string message, TimeSpan? delay)
+        public async Task<QueueMessageInfo> SendMessage(string message, TimeSpan? delay)
         {
             if (string.IsNullOrEmpty(_settings.DefaultQueueName))
             {
                 throw new InvalidOperationException("Default queue name not configured");
             }
 
-            await SendMessage(_settings.DefaultQueueName, message, delay);
+            return await SendMessage(_settings.DefaultQueueName, message, delay);
         }
 
-        public async Task SendMessage(string queueName, string message, TimeSpan? delay = null)
+        public async Task<QueueMessageInfo> SendMessage(string queueName, string message, TimeSpan? delay = null)
         {
             if (_queueServiceClient == null)
             {
@@ -63,18 +68,62 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 var queueClient = _queueServiceClient.GetQueueClient(queueName);
 
                 await queueClient.CreateIfNotExistsAsync();
-
                 _logger.LogInformation($"Sending message to queue '{queueName}': {message}");
-
-                await queueClient.SendMessageAsync(message, visibilityTimeout: delay);
+                var res = await queueClient.SendMessageAsync(message, visibilityTimeout: delay);
 
                 _logger.LogInformation($"Successfully sent message to queue '{queueName}'");
+
+                var scheduledTimeUtc = res.Value.TimeNextVisible.UtcDateTime;
+                var insertedOnUtc = res.Value.InsertionTime.UtcDateTime;
+
+                return new QueueMessageInfo
+                {
+                    MessageId = res.Value.MessageId,
+                    PopReceipt = res.Value.PopReceipt,
+                    ScheludedToExecuteUtc = scheduledTimeUtc,
+                    MessageText = message,
+                    InsertedOnUtc = insertedOnUtc
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Failed to send message to queue '{queueName}': {message}");
                 throw;
             }
+        }
+
+        public async Task DeleteMessage(string queueName, string messageId, string popReceipt)
+        {
+            if (_queueServiceClient == null)
+            {
+                throw new InvalidOperationException("Queue client not initialized");
+            }
+
+            try
+            {
+                var queueClient = _queueServiceClient.GetQueueClient(queueName);
+
+                _logger.LogInformation($"Deleting message from queue '{queueName}'. MessageId: {messageId}");
+
+                await queueClient.DeleteMessageAsync(messageId, popReceipt);
+
+                _logger.LogInformation($"Successfully deleted message from queue '{queueName}'. MessageId: {messageId}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to delete message from queue '{queueName}'. MessageId: {messageId}");
+                throw;
+            }
+        }
+
+        public async Task DeleteMessage(string messageId, string popReceipt)
+        {
+            if (string.IsNullOrEmpty(_settings.DefaultQueueName))
+            {
+                throw new InvalidOperationException("Default queue name not configured");
+            }
+
+            await DeleteMessage(_settings.DefaultQueueName, messageId, popReceipt);
         }
     }
 }

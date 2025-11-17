@@ -6,17 +6,32 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import moment, { type Moment } from "moment";
 import { type DeviceInfo } from "../models/deviceInfo";
 import { useState } from "react";
 
 export interface DeviceControlComponentProps {
   reboot: () => void;
-  onSetOutStatic: (on: boolean) => void;
-  onSetOutOnMotionControl: () => void;
-  onSetMotionControlDelay: (delay: number) => void;
+  onSetOutStatic: (on: boolean, executeAt?: Moment) => void;
+  onSetOutOnMotionControl: (executeAt?: Moment) => void;
+  onSetMotionControlDelay: (delay: number, executeAt?: Moment) => void;
   device: DeviceInfo | undefined;
   title?: string;
+}
+
+interface CommandDialogState {
+  open: boolean;
+  title: string;
+  description: string;
+  onConfirm: (executeAt?: Moment) => void;
 }
 
 const delayOptions = [
@@ -43,15 +58,51 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
 
   const hasMotionSensor = device?.device.hasMotionSensor ?? false;
 
-  const handleClickDelayItem = (delay: number) => {
-    onSetMotionControlDelay(delay);
+  const [commandDialog, setCommandDialog] = useState<CommandDialogState>({
+    open: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
+
+  const [selectedDateTime, setSelectedDateTime] = useState<Moment | null>(
+    moment()
+  );
+  const [useScheduledTime, setUseScheduledTime] = useState(false);
+
+  const openCommandDialog = (
+    title: string,
+    description: string,
+    onConfirm: (executeAt?: Moment) => void
+  ) => {
+    setCommandDialog({ open: true, title, description, onConfirm });
+    setSelectedDateTime(moment());
+    setUseScheduledTime(false);
+    setAnchorOutputMode(null);
     setAnchorOutputDelay(null);
   };
 
-  const handleClickSetOutputMode = (functionToCall: () => void) => {
-    functionToCall();
-    setAnchorOutputMode(null);
+  const handleDialogConfirm = () => {
+    commandDialog.onConfirm(
+      useScheduledTime && selectedDateTime ? selectedDateTime : undefined
+    );
+    setCommandDialog({ ...commandDialog, open: false });
   };
+
+  const handleDialogClose = () => {
+    setCommandDialog({ ...commandDialog, open: false });
+  };
+
+  const handleClickDelayItem = (delay: number) => {
+    openCommandDialog(
+      "Set motion control delay",
+      `Motion control delay will be set to ${
+        delay <= 60 ? `${delay} s` : `${delay / 60} min`
+      }`,
+      (executeAt) => onSetMotionControlDelay(delay, executeAt)
+    );
+  };
+
   const [anchorOutputDelay, setAnchorOutputDelay] =
     useState<null | HTMLElement>(null);
 
@@ -96,22 +147,34 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
             >
               <MenuItem
                 onClick={() => {
-                  handleClickSetOutputMode(() => onSetOutStatic(true));
+                  openCommandDialog(
+                    "Set output ON",
+                    "Output pins will be set as ON. Motion sensor trigger will be disabled",
+                    (executeAt) => onSetOutStatic(true, executeAt)
+                  );
                 }}
               >
                 Set output ON (motion control OFF)
               </MenuItem>
               <MenuItem
                 onClick={() => {
-                  handleClickSetOutputMode(() => onSetOutStatic(false));
+                  openCommandDialog(
+                    "Set output OFF",
+                    "Output pins will be set as OFF. Motion sensor trigger will be disabled",
+                    (executeAt) => onSetOutStatic(false, executeAt)
+                  );
                 }}
               >
                 Set output OFF (motion control OFF)
               </MenuItem>
               <MenuItem
-                onClick={() =>
-                  handleClickSetOutputMode(() => onSetOutOnMotionControl())
-                }
+                onClick={() => {
+                  openCommandDialog(
+                    "Enable motion control",
+                    "Output pins will be controlled by motion sensor",
+                    (executeAt) => onSetOutOnMotionControl(executeAt)
+                  );
+                }}
               >
                 Set motion control ON
               </MenuItem>
@@ -147,6 +210,50 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
           </>
         ) : null}
       </Box>
+
+      <Dialog
+        open={commandDialog.open}
+        onClose={handleDialogClose}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>{commandDialog.title}</DialogTitle>
+        <DialogContent>
+          <Typography>{commandDialog.description}</Typography>
+          <Box marginTop={3}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={useScheduledTime}
+                  onChange={(e) => setUseScheduledTime(e.target.checked)}
+                />
+              }
+              label="Schedule for specific time"
+            />
+          </Box>
+          {useScheduledTime && (
+            <Box marginTop={2}>
+              <DateTimePicker
+                label="Execute at"
+                value={selectedDateTime}
+                onChange={(newValue) => setSelectedDateTime(newValue)}
+                sx={{ width: "100%" }}
+                format="DD.MM.YYYY HH:mm"
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button
+            onClick={handleDialogConfirm}
+            variant="contained"
+            color="primary"
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

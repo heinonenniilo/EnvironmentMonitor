@@ -15,5 +15,7 @@ namespace EnvironmentMonitor.Domain
         public static int MeasurementMaxLimitInDays = 120;
         public static int DeviceWarningLimitInMinutes = 10;
         public static int DeviceLastMessageFetchLimitIndays = 1;
+
+        public static string QueuedMessageDefaultKey = "VALUE";
     }
 }

@@ -25,6 +25,7 @@ namespace EnvironmentMonitor.Domain.Entities
         public IList<DeviceStatus> StatusChanges { get; set; } = [];
         public IList<DeviceMessage> DeviceMessages { get; set; } = [];
         public IList<DeviceAttribute> DeviceAttributes { get; set; } = [];
+        public IList<DeviceQueuedCommand> QueuedCommands { get; set; } = [];
         public bool IsVirtual { get; set; }
     }
 }

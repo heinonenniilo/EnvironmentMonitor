@@ -21,6 +21,8 @@ import type { PaginatedResult } from "../models/paginatedResult";
 import type { DeviceMessage } from "../models/deviceMessage";
 import type { GetMeasurementsModel } from "../models/getMeasurementsModel";
 import type { DeviceAttribute } from "../models/deviceAttribute";
+import type { GetQueuedCommandsModel } from "../models/getQueuedCommandsModel";
+import type { DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
 
 interface ApiHook {
   userHook: userHook;
@@ -76,11 +78,13 @@ interface deviceHook {
   getDeviceInfo: (identifier: string) => Promise<DeviceInfo>;
   setMotionControlState: (
     identifier: string,
-    state: number
+    state: number,
+    executeAt?: moment.Moment
   ) => Promise<DeviceAttribute[]>;
   setMotionControlDelay: (
     identifier: string,
-    delayMs: number
+    delayMs: number,
+    executeAt?: moment.Moment
   ) => Promise<DeviceAttribute[]>;
   getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
   uploadAttachment: (
@@ -107,6 +111,13 @@ interface deviceHook {
   getDeviceMessage: (
     model: GetDeviceMessagesModel
   ) => Promise<PaginatedResult<DeviceMessage>>;
+  getQueuedCommands: (
+    model: GetQueuedCommandsModel
+  ) => Promise<DeviceQueuedCommandDto[]>;
+  deleteQueuedCommand: (
+    deviceIdentifier: string,
+    messageId: string
+  ) => Promise<boolean>;
 }
 
 const apiClient = axios.create({
@@ -352,7 +363,11 @@ export const useApiHook = (): ApiHook => {
         );
         return res.data;
       },
-      setMotionControlState: async (identifier: string, state: number) => {
+      setMotionControlState: async (
+        identifier: string,
+        state: number,
+        executeAt?: moment.Moment
+      ) => {
         try {
           const res = await apiClient.post<
             any,
@@ -360,6 +375,9 @@ export const useApiHook = (): ApiHook => {
           >("/api/devices/motion-control-status", {
             deviceIdentifier: identifier,
             mode: state,
+            executeAt: executeAt
+              ? executeAt.format("YYYY-MM-DDTHH:mm:ss")
+              : undefined,
           });
           return res.data;
         } catch (ex) {
@@ -368,7 +386,11 @@ export const useApiHook = (): ApiHook => {
           return [];
         }
       },
-      setMotionControlDelay: async (identifier: string, delayMs: number) => {
+      setMotionControlDelay: async (
+        identifier: string,
+        delayMs: number,
+        executeAt?: moment.Moment
+      ) => {
         try {
           const res = await apiClient.post<
             any,
@@ -376,6 +398,9 @@ export const useApiHook = (): ApiHook => {
           >("/api/devices/motion-control-delay", {
             deviceIdentifier: identifier,
             DelayMs: delayMs,
+            executeAt: executeAt
+              ? executeAt.format("YYYY-MM-DDTHH:mm:ss")
+              : undefined,
           });
           return res.data;
         } catch (ex) {
@@ -492,6 +517,36 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError("Failed to get device messages");
+          throw ex;
+        }
+      },
+      getQueuedCommands: async (model: GetQueuedCommandsModel) => {
+        try {
+          const res = await apiClient.get<
+            any,
+            AxiosResponse<DeviceQueuedCommandDto[]>
+          >(`/api/devices/queued-commands`, {
+            params: model,
+          });
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to get queued commands");
+          throw ex;
+        }
+      },
+      deleteQueuedCommand: async (
+        deviceIdentifier: string,
+        messageId: string
+      ) => {
+        try {
+          const res = await apiClient.delete<any, AxiosResponse<boolean>>(
+            `/api/devices/${deviceIdentifier}/queued-commands/${messageId}`
+          );
+          return res.status === 200;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to delete queued command");
           throw ex;
         }
       },

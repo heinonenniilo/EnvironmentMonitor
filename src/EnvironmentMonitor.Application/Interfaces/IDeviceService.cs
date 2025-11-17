@@ -15,9 +15,18 @@ namespace EnvironmentMonitor.Application.Interfaces
     public interface IDeviceService
     {
         public Task Reboot(Guid identifier);
-        public Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status);
-        public Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs);
+        public Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status, DateTime? triggeringTime = null);
+        public Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs, DateTime? triggeringTime = null);
         public Task SendAttributesToDevice(Guid identifier, string? message = null);
+        /// <summary>
+        /// Null date indicates error
+        /// </summary>
+        /// <param name="identifier">Device identifier</param>
+        /// <param name="messageId">message id</param>
+        /// <param name="date">When completed. If NULL, will be interpreted as failure to complete.</param>
+        /// <returns></returns>
+        public Task AckQueuedCommand(Guid identifier, string messageId, DateTime? date);
+        public Task RemoveQueuedCommand(Guid deviceIdentifier, string messageId);
 
         public Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel);
         public Task<DeviceDto> GetDevice(Guid identifier, AccessLevels accessLevel);
@@ -28,6 +37,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
         public Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
         public Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model);
+        public Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(GetQueuedCommandsModel model);
 
         public Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model);
         public Task AddAttachment(UploadDeviceAttachmentModel fileModel);

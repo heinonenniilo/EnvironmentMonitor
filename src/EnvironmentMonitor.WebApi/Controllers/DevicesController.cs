@@ -44,11 +44,11 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("motion-control-status")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode);
+        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode, model.ExecuteAt);
 
         [HttpPost("motion-control-delay")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs);
+        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs, model.ExecuteAt);
 
         [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]
@@ -145,5 +145,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet("device-messages")]
         [Authorize(Roles = "Viewer, Admin")]
         public async Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages([FromQuery] GetDeviceMessagesModel model) => await _deviceService.GetDeviceMessages(model);
+
+        [HttpGet("queued-commands")]
+        [Authorize(Roles = "Viewer, Admin")]
+        public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands([FromQuery] GetQueuedCommandsModel model) => await _deviceService.GetQueuedCommands(model);
+
+        [HttpDelete("{deviceId}/queued-commands/{messageId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task RemoveQueuedCommand([FromRoute] Guid deviceId, [FromRoute] string messageId) => await _deviceService.RemoveQueuedCommand(deviceId, messageId);
     }
 }

@@ -23,11 +23,13 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<List<DeviceEvent>> GetDeviceEvents(int id);
         Task<List<SensorExtended>> GetSensors(GetSensorsModel model);
         Task<PaginatedResult<DeviceMessageExtended>> GetDeviceMessages(GetDeviceMessagesModel model);
+        Task<List<DeviceQueuedCommand>> GetQueuedCommands(GetQueuedCommandsModel model);
 
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);
         public Task AddAttachment(AddDeviceAttachmentModel model);
         public Task DeleteAttachment(int deviceId, Guid attachmentIdentifier, bool saveChanges);
         public Task SetDefaultImage(int deviceId, Guid attachmentIdentifier);
+        public Task SetQueuedCommand(int deviceId, DeviceQueuedCommand command, bool saveChanges);
 
         public Task<DeviceInfo> AddOrUpdate(Device device, bool saveChanges);
         public Task SetDeviceAttributes(int deviceId, List<DeviceAttribute> attributes, bool saveChanges);

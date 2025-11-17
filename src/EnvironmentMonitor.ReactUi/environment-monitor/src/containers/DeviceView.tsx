@@ -14,9 +14,11 @@ import {
 } from "../reducers/userInterfaceReducer";
 import { DeviceEventTable } from "../components/DeviceEventTable";
 import { type DeviceEvent } from "../models/deviceEvent";
-import { Box } from "@mui/material";
+import { Box, IconButton } from "@mui/material";
 import { DeviceImage } from "../components/DeviceImage";
 import { Collapsible } from "../components/CollabsibleComponent";
+import { DeviceQueuedCommandsTable } from "../components/DeviceQueuedCommandsTable";
+import { type DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
 import { MultiSensorGraph } from "../components/MultiSensorGraph";
 import moment from "moment";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
@@ -26,6 +28,7 @@ import { setDevices } from "../reducers/measurementReducer";
 import { getDeviceTitle } from "../utilities/deviceUtils";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 import { DeviceAttachments } from "../components/DeviceAttachments";
+import { Refresh } from "@mui/icons-material";
 
 interface PromiseInfo {
   type: string;
@@ -39,6 +42,9 @@ export const DeviceView: React.FC = () => {
     undefined
   );
   const [deviceEvents, setDeviceEvents] = useState<DeviceEvent[]>([]);
+  const [queuedCommands, setQueuedCommands] = useState<
+    DeviceQueuedCommandDto[]
+  >([]);
   const [deviceStatusModel, setDeviceStatusModel] = useState<
     DeviceStatusModel | undefined
   >(undefined);
@@ -168,6 +174,16 @@ export const DeviceView: React.FC = () => {
           .catch((er) => {
             console.log(er);
           }),
+        deviceHook
+          .getQueuedCommands({ deviceIdentifiers: [deviceId] })
+          .then((res) => ({
+            type: "queuedCommands",
+            data: res,
+            error: null,
+          }))
+          .catch((er) => {
+            console.log(er);
+          }),
       ];
 
       setIsLoading(true);
@@ -180,6 +196,8 @@ export const DeviceView: React.FC = () => {
                 setSelectedDevice(value.data as DeviceInfo);
               } else if (value.type === "deviceEvents") {
                 setDeviceEvents(value.data as DeviceEvent[]);
+              } else if (value.type === "queuedCommands") {
+                setQueuedCommands(value.data as DeviceQueuedCommandDto[]);
               }
             } else if (result.status === "rejected") {
               console.error(
@@ -206,6 +224,63 @@ export const DeviceView: React.FC = () => {
       })
       .catch((er) => {
         console.error(er);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const getQueuedCommands = (
+    deviceIdentifier: string,
+    setLoading?: boolean
+  ) => {
+    if (setLoading) {
+      setIsLoading(true);
+    }
+    deviceHook
+      .getQueuedCommands({ deviceIdentifiers: [deviceIdentifier] })
+      .then((res) => {
+        setQueuedCommands(res);
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        if (setLoading) {
+          setIsLoading(false);
+        }
+      });
+  };
+
+  const deleteQueuedCommand = (messageId: string) => {
+    if (!selectedDevice) {
+      return;
+    }
+    setIsLoading(true);
+    deviceHook
+      .deleteQueuedCommand(selectedDevice.device.identifier, messageId)
+      .then((success) => {
+        if (success) {
+          dispatch(
+            addNotification({
+              title: "Queued command deleted",
+              body: "",
+              severity: "success",
+            })
+          );
+          // Refresh the queued commands list
+          getQueuedCommands(selectedDevice.device.identifier);
+        }
+      })
+      .catch((er) => {
+        console.error(er);
+        dispatch(
+          addNotification({
+            title: "Failed to delete queued command",
+            body: "",
+            severity: "error",
+          })
+        );
       })
       .finally(() => {
         setIsLoading(false);
@@ -245,13 +320,17 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const setMotionControlState = (state: number, message?: string) => {
+  const setMotionControlState = (
+    state: number,
+    message?: string,
+    executeAt?: moment.Moment
+  ) => {
     if (!selectedDevice) {
       return;
     }
     setIsLoading(true);
     deviceHook
-      .setMotionControlState(selectedDevice.device.identifier, state)
+      .setMotionControlState(selectedDevice.device.identifier, state, executeAt)
       .then((res) => {
         if (res && res.length > 0) {
           // Update selectedDevice with new attributes
@@ -260,6 +339,9 @@ export const DeviceView: React.FC = () => {
             attributes: res,
           });
           getDeviceEvents(selectedDevice.device.identifier);
+          if (executeAt) {
+            getQueuedCommands(selectedDevice.device.identifier);
+          }
           dispatch(
             addNotification({
               title: message ?? "Message sent to device",
@@ -286,13 +368,21 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const setMotionControlDelay = (delayMs: number, message?: string) => {
+  const setMotionControlDelay = (
+    delayMs: number,
+    message?: string,
+    executeAt?: moment.Moment
+  ) => {
     if (!selectedDevice) {
       return;
     }
     setIsLoading(true);
     deviceHook
-      .setMotionControlDelay(selectedDevice.device.identifier, delayMs)
+      .setMotionControlDelay(
+        selectedDevice.device.identifier,
+        delayMs,
+        executeAt
+      )
       .then((res) => {
         if (res && res.length > 0) {
           // Update selectedDevice with new attributes
@@ -301,6 +391,9 @@ export const DeviceView: React.FC = () => {
             attributes: res,
           });
           getDeviceEvents(selectedDevice.device.identifier);
+          if (executeAt) {
+            getQueuedCommands(selectedDevice.device.identifier);
+          }
           dispatch(
             addNotification({
               title: message ?? "Message sent to device",
@@ -641,42 +734,58 @@ export const DeviceView: React.FC = () => {
                   })
                 );
               }}
-              onSetOutStatic={(mode: boolean) => {
-                dispatch(
-                  setConfirmDialog({
-                    onConfirm: () => {
-                      setMotionControlState(
-                        mode ? 1 : 0,
-                        `Outputs set to ${mode} for ${selectedDevice?.device.name}`
-                      );
-                    },
-                    title: `Set output as ${mode}`,
-                    body: `Output pins will be set as ${mode}. Motion sensor trigger will be disabled`,
-                  })
+              onSetOutStatic={(mode: boolean, executeAt?: moment.Moment) => {
+                setMotionControlState(
+                  mode ? 1 : 0,
+                  `Outputs set to ${mode} for ${selectedDevice?.device.name}`,
+                  executeAt
                 );
               }}
-              onSetOutOnMotionControl={() => {
-                dispatch(
-                  setConfirmDialog({
-                    onConfirm: () => {
-                      setMotionControlState(2, "Motion control enabled");
-                    },
-                    title: `Enable motion control`,
-                    body: "Output pins will be controlled by motion sensor",
-                  })
+              onSetOutOnMotionControl={(executeAt?: moment.Moment) => {
+                setMotionControlState(2, "Motion control enabled", executeAt);
+              }}
+              onSetMotionControlDelay={(
+                delay: number,
+                executeAt?: moment.Moment
+              ) => {
+                setMotionControlDelay(
+                  delay * 1000,
+                  `Motioncontrol delay set to ${delay} s`,
+                  executeAt
                 );
               }}
-              onSetMotionControlDelay={(delay: number) => {
+            />
+          </Collapsible>
+        )}
+        {queuedCommands.length > 0 && (
+          <Collapsible
+            title="Queued Commands"
+            isOpen={true}
+            customComponent={
+              <IconButton
+                onClick={() => {
+                  if (selectedDevice) {
+                    getQueuedCommands(selectedDevice.device.identifier, true);
+                  }
+                }}
+                sx={{ ml: 1, cursor: "pointer" }}
+                size="small"
+              >
+                <Refresh />
+              </IconButton>
+            }
+          >
+            <DeviceQueuedCommandsTable
+              commands={queuedCommands}
+              maxHeight={"500px"}
+              onDelete={(messageId: string) => {
                 dispatch(
                   setConfirmDialog({
                     onConfirm: () => {
-                      setMotionControlDelay(
-                        delay * 1000,
-                        `Motioncontrol delay set to ${delay} s`
-                      );
+                      deleteQueuedCommand(messageId);
                     },
-                    title: `Set motion control delay`,
-                    body: `Motion control delay will be set to ${delay} s`,
+                    title: "Delete queued command",
+                    body: "Are you sure you want to delete this queued command?",
                   })
                 );
               }}
