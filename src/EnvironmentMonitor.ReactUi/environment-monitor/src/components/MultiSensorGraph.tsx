@@ -483,11 +483,23 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                       legend.chart.update("show");
                     }
                   },
-                  onHover: (event) => {
+                  onHover: (event, legendItem) => {
                     (event.native?.target as any).style.cursor = "pointer";
+                    if (
+                      enableHighlightOnRowHover &&
+                      legendItem.datasetIndex !== undefined
+                    ) {
+                      const dataset = memoSets[legendItem.datasetIndex];
+                      if (dataset) {
+                        setHighlightedDatasetLabel(dataset.label);
+                      }
+                    }
                   },
                   onLeave: (event) => {
                     (event.native?.target as any).style.cursor = "default";
+                    if (enableHighlightOnRowHover) {
+                      setHighlightedDatasetLabel(null);
+                    }
                   },
                 },
                 zoom: zoomable
