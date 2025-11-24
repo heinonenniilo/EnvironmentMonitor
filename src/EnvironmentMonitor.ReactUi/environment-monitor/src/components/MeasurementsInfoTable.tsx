@@ -21,6 +21,7 @@ export interface MeasurementsInfoTableProps {
   hideMin?: boolean;
   hideMax?: boolean;
   onClick?: (info: MeasurementInfo) => void;
+  onHover?: (info: MeasurementInfo | null) => void;
   showSeconds?: boolean;
 }
 
@@ -42,6 +43,7 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
   hideMax,
   hideMin,
   onClick,
+  onHover,
   showSeconds,
 }) => {
   const getLabel = (row: MeasurementInfo) => {
@@ -113,6 +115,8 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
               <TableRow
                 sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                 key={`tablerow_${idx}`}
+                onMouseEnter={() => onHover?.(r)}
+                onMouseLeave={() => onHover?.(null)}
               >
                 {getDeviceLabel(r)}
                 {getLabel(r)}

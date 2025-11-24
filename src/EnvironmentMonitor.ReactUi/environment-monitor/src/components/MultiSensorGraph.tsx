@@ -114,6 +114,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     []
   );
   const [dialogTitle, setDialogTitle] = useState("");
+  const [highlightedDatasetLabel, setHighlightedDatasetLabel] = useState<
+    string | null
+  >(null);
   const chartRef = useRef<any>(null); // Types?
 
   useEffect(() => {
@@ -174,6 +177,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     chartRef.current?.resetZoom();
   };
 
+  const handleRowHover = (info: MeasurementInfo | null) => {
+    setHighlightedDatasetLabel(info?.label ?? null);
+  };
+
   const memoSets: GraphDataset[] = useMemo(() => {
     if (!model) return [];
     const returnValues: GraphDataset[] = [];
@@ -203,15 +210,19 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     return returnValues
       .sort((a, b) => stringSort(a.label, b.label))
       .map((s, idx) => {
+        const isHighlighted = highlightedDatasetLabel === s.label;
+        const color = getColor(idx);
+
         return {
           ...s,
-          borderColor: getColor(idx),
-          backgroundColor: getColor(idx),
+          borderColor: color,
+          backgroundColor: color,
+          borderWidth: isHighlighted ? 5 : 2,
           id: idx,
         };
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model]);
+  }, [model, highlightedDatasetLabel]);
 
   const getInfoValues = () => {
     const returnArray: MeasurementInfo[] = [];
@@ -551,6 +562,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
               }
               showMeasurementsInDialog(row.sensor.identifier, row.type);
             }}
+            onHover={handleRowHover}
             infoRows={getInfoValues()}
           />
         </Box>
