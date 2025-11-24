@@ -217,7 +217,12 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           ...s,
           borderColor: color,
           backgroundColor: color,
-          borderWidth: isHighlighted ? 5 : 2,
+          opacity: !highlightedDatasetLabel ? 1 : isHighlighted ? 1 : 0.3,
+          borderWidth: !highlightedDatasetLabel
+            ? undefined
+            : isHighlighted
+            ? 4
+            : 1,
           id: idx,
         };
       });
