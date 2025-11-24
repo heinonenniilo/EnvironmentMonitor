@@ -68,6 +68,7 @@ export interface MultiSensorGraphProps {
   showMeasurementsOnDatasetClick?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
+  enableHighlightOnRowHover?: boolean;
 }
 
 interface GraphDataset {
@@ -105,6 +106,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   hideUseAutoScale,
   showMeasurementsOnDatasetClick,
   highlightPoints,
+  enableHighlightOnRowHover,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
@@ -567,7 +569,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
               }
               showMeasurementsInDialog(row.sensor.identifier, row.type);
             }}
-            onHover={handleRowHover}
+            onHover={enableHighlightOnRowHover ? handleRowHover : undefined}
             infoRows={getInfoValues()}
           />
         </Box>

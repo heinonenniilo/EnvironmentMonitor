@@ -60,6 +60,7 @@ export const PublicMeasurementsView: React.FC = () => {
         useAutoScale
         hideUseAutoScale
         minHeight={500}
+        enableHighlightOnRowHover
       />
     </AppContentWrapper>
   );
