@@ -180,7 +180,14 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   };
 
   const handleRowHover = (info: MeasurementInfo | null) => {
-    setHighlightedDatasetLabel(info?.label ?? null);
+    if (info) {
+      const datasetIndex = memoSets.findIndex((ds) => ds.label === info.label);
+      if (datasetIndex !== -1 && !hiddenDatasetIds.includes(datasetIndex)) {
+        setHighlightedDatasetLabel(info.label);
+      }
+    } else {
+      setHighlightedDatasetLabel(null);
+    }
   };
 
   const memoSets: GraphDataset[] = useMemo(() => {
@@ -487,7 +494,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                     (event.native?.target as any).style.cursor = "pointer";
                     if (
                       enableHighlightOnRowHover &&
-                      legendItem.datasetIndex !== undefined
+                      !isTouchDevice() &&
+                      legendItem.datasetIndex !== undefined &&
+                      !legendItem.hidden
                     ) {
                       const dataset = memoSets[legendItem.datasetIndex];
                       if (dataset) {
@@ -497,7 +506,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                   },
                   onLeave: (event) => {
                     (event.native?.target as any).style.cursor = "default";
-                    if (enableHighlightOnRowHover) {
+                    if (enableHighlightOnRowHover && !isTouchDevice()) {
                       setHighlightedDatasetLabel(null);
                     }
                   },
