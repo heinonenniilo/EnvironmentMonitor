@@ -68,6 +68,7 @@ export interface MultiSensorGraphProps {
   showMeasurementsOnDatasetClick?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
+  enableHighlightOnRowHover?: boolean;
 }
 
 interface GraphDataset {
@@ -105,6 +106,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   hideUseAutoScale,
   showMeasurementsOnDatasetClick,
   highlightPoints,
+  enableHighlightOnRowHover,
 }) => {
   const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
 
@@ -114,6 +116,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     []
   );
   const [dialogTitle, setDialogTitle] = useState("");
+  const [highlightedDatasetLabel, setHighlightedDatasetLabel] = useState<
+    string | null
+  >(null);
   const chartRef = useRef<any>(null); // Types?
 
   useEffect(() => {
@@ -174,6 +179,17 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     chartRef.current?.resetZoom();
   };
 
+  const handleRowHover = (info: MeasurementInfo | null) => {
+    if (info) {
+      const datasetIndex = memoSets.findIndex((ds) => ds.label === info.label);
+      if (datasetIndex !== -1 && !hiddenDatasetIds.includes(datasetIndex)) {
+        setHighlightedDatasetLabel(info.label);
+      }
+    } else {
+      setHighlightedDatasetLabel(null);
+    }
+  };
+
   const memoSets: GraphDataset[] = useMemo(() => {
     if (!model) return [];
     const returnValues: GraphDataset[] = [];
@@ -203,15 +219,24 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     return returnValues
       .sort((a, b) => stringSort(a.label, b.label))
       .map((s, idx) => {
+        const isHighlighted = highlightedDatasetLabel === s.label;
+        const color = getColor(idx);
+
         return {
           ...s,
-          borderColor: getColor(idx),
-          backgroundColor: getColor(idx),
+          borderColor: color,
+          backgroundColor: color,
+          opacity: !highlightedDatasetLabel ? 1 : isHighlighted ? 1 : 0.3,
+          borderWidth: !highlightedDatasetLabel
+            ? undefined
+            : isHighlighted
+            ? 4
+            : 1,
           id: idx,
         };
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model]);
+  }, [model, highlightedDatasetLabel]);
 
   const getInfoValues = () => {
     const returnArray: MeasurementInfo[] = [];
@@ -465,11 +490,25 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                       legend.chart.update("show");
                     }
                   },
-                  onHover: (event) => {
+                  onHover: (event, legendItem) => {
                     (event.native?.target as any).style.cursor = "pointer";
+                    if (
+                      enableHighlightOnRowHover &&
+                      !isTouchDevice() &&
+                      legendItem.datasetIndex !== undefined &&
+                      !legendItem.hidden
+                    ) {
+                      const dataset = memoSets[legendItem.datasetIndex];
+                      if (dataset) {
+                        setHighlightedDatasetLabel(dataset.label);
+                      }
+                    }
                   },
                   onLeave: (event) => {
                     (event.native?.target as any).style.cursor = "default";
+                    if (enableHighlightOnRowHover && !isTouchDevice()) {
+                      setHighlightedDatasetLabel(null);
+                    }
                   },
                 },
                 zoom: zoomable
@@ -551,6 +590,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
               }
               showMeasurementsInDialog(row.sensor.identifier, row.type);
             }}
+            onHover={enableHighlightOnRowHover ? handleRowHover : undefined}
             infoRows={getInfoValues()}
           />
         </Box>
