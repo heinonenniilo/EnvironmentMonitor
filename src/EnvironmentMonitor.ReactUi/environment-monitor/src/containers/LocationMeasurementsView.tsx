@@ -223,7 +223,9 @@ export const LocationMeasurementsView: React.FC = () => {
                 }
               : undefined
           }
-          devices={selectedLocations as any[]}
+          devices={selectedLocations.map((l) => {
+            return { ...l, displayName: l.name };
+          })}
           key={"graph_01"}
           minHeight={500}
           useAutoScale

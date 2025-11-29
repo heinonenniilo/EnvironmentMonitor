@@ -10,7 +10,6 @@ import {
   Typography,
 } from "@mui/material";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
-import { type Device } from "../models/device";
 import {
   Chart,
   Colors,
@@ -38,6 +37,7 @@ import { getColor } from "../utilities/graphUtils";
 import zoomPlugin from "chartjs-plugin-zoom";
 import { MeasurementsDialog } from "./MeasurementsDialog";
 import type { Measurement } from "../models/measurement";
+import type { Entity } from "../models/entity";
 
 Chart.register(
   TimeScale,
@@ -52,7 +52,7 @@ Chart.register(
 
 export interface MultiSensorGraphProps {
   sensors: Sensor[] | undefined;
-  devices?: Device[];
+  devices?: Entity[];
   model: MeasurementsViewModel | undefined;
   hideInfo?: boolean;
   minHeight?: number;
