@@ -91,6 +91,7 @@ export const DashboardLocationGraph: React.FC<{
         useDynamicColors={
           model && model.sensors.length > ChartJsColorsPluginMaxDatasets
         }
+        enableHighlightOnRowHover
       />
     </Box>
   );

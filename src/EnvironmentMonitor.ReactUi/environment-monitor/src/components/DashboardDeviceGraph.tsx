@@ -116,6 +116,7 @@ export const DashboardDeviceGraph: React.FC<{
         }
         onRefresh={fetchMeasurements}
         isLoading={isLoading}
+        enableHighlightOnRowHover
       />
     </Box>
   );
