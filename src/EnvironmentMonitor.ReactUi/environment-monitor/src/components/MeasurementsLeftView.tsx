@@ -13,6 +13,7 @@ import { type Sensor } from "../models/sensor";
 import { stringSort } from "../utilities/stringUtils";
 import { getDeviceTitle } from "../utilities/deviceUtils";
 import { type Entity } from "../models/entity";
+import { getMeasurementUnit } from "../utilities/measurementUtils";
 export interface MeasurementsLeftViewProps {
   onSearch: (
     from: moment.Moment,
@@ -27,6 +28,7 @@ export interface MeasurementsLeftViewProps {
   selectedDevices: Entity[] | undefined;
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
+  showsLocations?: boolean;
 }
 
 export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
@@ -39,6 +41,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   selectedDevices,
   timeFrom,
   timeTo,
+  showsLocations,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
     moment().utc(true).add(-2, "day").startOf("day")
@@ -56,13 +59,28 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   }, [timeTo]);
 
   const getSensorText = (sensor: Sensor) => {
+    const measurementUnit =
+      sensor.measurementType !== undefined
+        ? getMeasurementUnit(sensor.measurementType)
+        : undefined;
     if (selectedDevices && selectedDevices.length > 1) {
       const matchingDevice = devices.find(
         (d) => d.identifier === sensor.deviceIdentifier
       );
+
+      const letToReturn = `${
+        matchingDevice?.displayName ?? matchingDevice?.name
+      }: ${sensor.name}`;
+
+      if (measurementUnit) {
+        return `${letToReturn} (${measurementUnit})`;
+      }
       return `${matchingDevice?.displayName ?? matchingDevice?.name}: ${
         sensor.name
       }`;
+    }
+    if (measurementUnit) {
+      return `${sensor.name} (${measurementUnit})`;
     }
     return sensor.name;
   };
@@ -115,7 +133,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                   })
                 : []
             }
-            label="Device"
+            label={showsLocations ? "Location" : "Device"}
             multiple
           >
             {[...devices]

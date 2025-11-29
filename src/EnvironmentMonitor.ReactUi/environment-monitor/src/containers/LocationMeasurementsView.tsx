@@ -194,6 +194,7 @@ export const LocationMeasurementsView: React.FC = () => {
           })}
           sensors={getAvailableSensors()}
           timeFrom={timeFrom}
+          showsLocations
         />
       }
     >

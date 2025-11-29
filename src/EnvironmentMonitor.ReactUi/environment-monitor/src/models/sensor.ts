@@ -5,6 +5,8 @@ export interface Sensor {
 
   scaleMin?: number;
   scaleMax?: number;
+  locationIdentifier?: string;
+  measurementType?: number;
 }
 
 export interface SensorInfo extends Sensor {
