@@ -47,28 +47,7 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
   showSeconds,
 }) => {
   const getLabel = (row: MeasurementInfo) => {
-    return (
-      <TableCell
-        onClick={
-          onClick
-            ? () => {
-                onClick(row);
-              }
-            : undefined
-        }
-        sx={{
-          cursor: onClick ? "pointer" : undefined,
-          "&:hover": onClick
-            ? {
-                backgroundColor: "action.hover",
-                transition: "background-color 0.2s ease",
-              }
-            : undefined,
-        }}
-      >
-        {row.label}
-      </TableCell>
-    );
+    return <TableCell>{row.label}</TableCell>;
   };
 
   const getDeviceLabel = (row: MeasurementInfo) => {
@@ -113,8 +92,19 @@ export const MeasurementsInfoTable: React.FC<MeasurementsInfoTableProps> = ({
           {infoRows.map((r, idx) => {
             return (
               <TableRow
-                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                sx={{
+                  "&:last-child td, &:last-child th": { border: 0 },
+                  cursor: onClick || onHover ? "pointer" : undefined,
+                  "&:hover":
+                    onClick || onHover
+                      ? {
+                          backgroundColor: "action.hover",
+                          transition: "background-color 0.2s ease",
+                        }
+                      : undefined,
+                }}
                 key={`tablerow_${idx}`}
+                onClick={onClick ? () => onClick(r) : undefined}
                 onMouseEnter={() => onHover?.(r)}
                 onMouseLeave={() => onHover?.(null)}
               >
