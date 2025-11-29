@@ -6,6 +6,7 @@ import { MultiSensorGraph } from "./MultiSensorGraph";
 import { useApiHook } from "../hooks/apiHook";
 import moment from "moment";
 import { type LocationModel } from "../models/location";
+import { type Device } from "../models/device";
 import { ChartJsColorsPluginMaxDatasets } from "../models/applicationConstants";
 import { useInView } from "react-intersection-observer";
 
@@ -81,13 +82,15 @@ export const DashboardLocationGraph: React.FC<{
     >
       <MultiSensorGraph
         sensors={measurementModel?.sensors ?? model?.sensors}
-        devices={undefined}
+        devices={[location as unknown as Device]}
         model={measurementModel ?? model}
         minHeight={400}
         isLoading={isLoading}
         onRefresh={fetchMeasurements}
         useAutoScale={true}
         title={location.name}
+        titleAsLink
+        linkToLocationMeasurements
         useDynamicColors={
           model && model.sensors.length > ChartJsColorsPluginMaxDatasets
         }

@@ -9,11 +9,10 @@ import {
 import React, { useEffect, useState } from "react";
 import moment from "moment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
-import { type Device } from "../models/device";
 import { type Sensor } from "../models/sensor";
 import { stringSort } from "../utilities/stringUtils";
 import { getDeviceTitle } from "../utilities/deviceUtils";
-
+import { type Entity } from "../models/entity";
 export interface MeasurementsLeftViewProps {
   onSearch: (
     from: moment.Moment,
@@ -22,10 +21,10 @@ export interface MeasurementsLeftViewProps {
   ) => void;
   onSelectDevice: (deviceId: string) => void;
   toggleSensorSelection: (sensorId: string) => void;
-  devices: Device[];
+  devices: Entity[];
   sensors: Sensor[];
   selectedSensors: string[];
-  selectedDevices: Device[] | undefined;
+  selectedDevices: Entity[] | undefined;
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
 }

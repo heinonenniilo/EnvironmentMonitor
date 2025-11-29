@@ -55,12 +55,24 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
     React.useState<null | HTMLElement>(null);
   const isDashboardMenuOpen = Boolean(dashboardAnchorEl);
 
+  const [measurementsAnchorEl, setMeasurementsAnchorEl] =
+    React.useState<null | HTMLElement>(null);
+  const isMeasurementsMenuOpen = Boolean(measurementsAnchorEl);
+
   const handleDashboardOpen = (event: React.MouseEvent<HTMLElement>) => {
     setDashboardAnchorEl(event.currentTarget);
   };
 
   const handleDashboardClose = () => {
     setDashboardAnchorEl(null);
+  };
+
+  const handleMeasurementsOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMeasurementsAnchorEl(event.currentTarget);
+  };
+
+  const handleMeasurementsClose = () => {
+    setMeasurementsAnchorEl(null);
   };
 
   const handleClick = (
@@ -140,13 +152,44 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
           </AuthorizedComponent>
           <AuthorizedComponent requiredRole={RoleNames.User}>
             <MenuItem
+              onClick={
+                locations.length > 0
+                  ? handleMeasurementsOpen
+                  : (e) => {
+                      handleClick(routes.measurements, e);
+                    }
+              }
               selected={false}
-              onClick={(event) => {
-                handleClick(routes.measurements, event);
-              }}
             >
               Measurements
+              {locations.length > 0 ? <ArrowRight sx={{ mr: 1 }} /> : null}
             </MenuItem>
+            {locations.length > 0 ? (
+              <Menu
+                anchorEl={measurementsAnchorEl}
+                open={isMeasurementsMenuOpen}
+                onClose={handleMeasurementsClose}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "left" }}
+              >
+                <MenuItem
+                  onClick={(event) => {
+                    handleMeasurementsClose();
+                    handleClick(routes.measurements, event);
+                  }}
+                >
+                  Devices
+                </MenuItem>
+                <MenuItem
+                  onClick={(event) => {
+                    handleMeasurementsClose();
+                    handleClick(routes.locationMeasurements, event);
+                  }}
+                >
+                  Locations
+                </MenuItem>
+              </Menu>
+            ) : null}
           </AuthorizedComponent>
           <Menu
             anchorEl={manageAchor}

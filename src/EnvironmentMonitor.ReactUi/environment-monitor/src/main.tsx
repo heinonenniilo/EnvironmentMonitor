@@ -9,6 +9,7 @@ import { HomeView } from "./containers/HomeView";
 import { DashboardView } from "./containers/DashboardView";
 import { DashbordLocationsView } from "./containers/DashboardLocationsView";
 import { MeasurementsView } from "./containers/MeasurementsView";
+import { LocationMeasurementsView } from "./containers/LocationMeasurementsView";
 import { DevicesView } from "./containers/DevicesView";
 import { DeviceView } from "./containers/DeviceView";
 import { store } from "./setup/appStore";
@@ -40,6 +41,14 @@ createRoot(document.getElementById("root")!).render(
               <Route
                 path={routes.measurementsByDevice}
                 element={<MeasurementsView />}
+              />
+              <Route
+                path={routes.locationMeasurements}
+                element={<LocationMeasurementsView />}
+              />
+              <Route
+                path={routes.measurementsByLocation}
+                element={<LocationMeasurementsView />}
               />
               <Route path={routes.devices} element={<DevicesView />} />
               <Route

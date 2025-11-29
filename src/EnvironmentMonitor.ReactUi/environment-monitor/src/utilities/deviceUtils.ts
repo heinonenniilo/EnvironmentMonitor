@@ -1,6 +1,6 @@
-import type { Device } from "../models/device";
+import type { Entity } from "../models/entity";
 
-export const getDeviceTitle = (device: Device | undefined): string => {
+export const getDeviceTitle = (device: Entity | undefined): string => {
   if (!device) {
     return "";
   }

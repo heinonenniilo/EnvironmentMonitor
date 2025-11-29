@@ -57,6 +57,7 @@ export interface MultiSensorGraphProps {
   hideInfo?: boolean;
   minHeight?: number;
   titleAsLink?: boolean;
+  linkToLocationMeasurements?: boolean;
   useAutoScale?: boolean;
   isLoading?: boolean;
   title?: string;
@@ -95,6 +96,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   hideInfo,
   minHeight,
   titleAsLink,
+  linkToLocationMeasurements,
   useAutoScale,
   onSetAutoScale,
   onRefresh,
@@ -356,7 +358,13 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         alignItems="center" // Align children vertically
       >
         {titleAsLink ? (
-          <Link to={`${routes.measurements}/${singleDevice?.identifier}`}>
+          <Link
+            to={
+              linkToLocationMeasurements
+                ? `${routes.locationMeasurements}/${singleDevice?.identifier}`
+                : `${routes.measurements}/${singleDevice?.identifier}`
+            }
+          >
             <Typography align="left" gutterBottom>
               {getTitle()}
             </Typography>
