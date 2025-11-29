@@ -19,8 +19,10 @@ namespace EnvironmentMonitor.Application.DTOs
         public Guid? DeviceIdentifier { get; set; }
         public double? ScaleMin { get; set; }
         public double? ScaleMax { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Guid? LocationIdentifier { get; set; }
-        public int MeasurementType { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? MeasurementType { get; set; }
 
         public virtual void Mapping(Profile profile)
         {
