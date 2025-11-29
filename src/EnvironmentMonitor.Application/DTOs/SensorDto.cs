@@ -30,16 +30,18 @@ namespace EnvironmentMonitor.Application.DTOs
                 .ForMember(x => x.DeviceIdentifier, opt => opt.MapFrom(d => d.Device != null ? d.Device.Identifier : (Guid?)null))
                 .ReverseMap();
             profile.CreateMap<SensorExtended, SensorDto>().ReverseMap();
+
             profile.CreateMap<LocationSensor, SensorDto>()
                 .ForMember(x => x.Identifier, opt => opt.MapFrom(x => x.Sensor.Identifier))
                 .ForMember(x => x.ScaleMin, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMin : null))
                 .ForMember(x => x.ScaleMax, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMax : null))
-                .ForMember(x => x.LocationIdentifier, opt => opt.MapFrom(x => x.Location.Identifier))
+                .ForMember(x => x.LocationIdentifier, opt => opt.MapFrom(x => x.Location != null ? x.Location.Identifier : (Guid?)null))
                 .ForMember(x => x.MeasurementType, opt => opt.MapFrom(x => x.TypeId))
                 .ReverseMap();
             profile.CreateMap<PublicSensor, SensorDto>()
                 .ForMember(x => x.ScaleMin, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMin : null))
                 .ForMember(x => x.ScaleMax, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMax : null))
+                .ForMember(x => x.MeasurementType, opt => opt.MapFrom(x => x.TypeId))
                 .ReverseMap();
         }
     }
