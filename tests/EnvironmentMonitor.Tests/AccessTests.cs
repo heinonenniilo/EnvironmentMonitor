@@ -137,8 +137,8 @@ namespace EnvironmentMonitor.Tests
             var queryDictionaryForAccessibleLocations = new List<KeyValuePair<string, string>>(); //new Dictionary<string, string>();
             var queryDictionaryForNonAccessibleLocations = new List<KeyValuePair<string, string>>();
 
-            queryDictionaryForAccessibleLocations.Add( new KeyValuePair<string, string>("SensorIdentifiers", model.Location.Identifier.ToString()));
-            queryDictionaryForNonAccessibleLocations.Add(new KeyValuePair<string, string>("SensorIdentifiers", model.LocationWithNoDefinedAccess.Identifier.ToString()));
+            queryDictionaryForAccessibleLocations.Add( new KeyValuePair<string, string>("LocationIdentifiers", model.Location.Identifier.ToString()));
+            queryDictionaryForNonAccessibleLocations.Add(new KeyValuePair<string, string>("LocationIdentifiers", model.LocationWithNoDefinedAccess.Identifier.ToString()));
 
             queryDictionaryForAccessibleLocations.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
             queryDictionaryForNonAccessibleLocations.Add(new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd")));
@@ -240,8 +240,8 @@ namespace EnvironmentMonitor.Tests
             var loginResult = isAdmin ? await LoginAsync(AdminUserName, AdminPassword) : await LoginAsync(ViewerUserName, ViewerPassword);
             var queryParams =  new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("SensorIdentifiers", model.Location.Identifier.ToString()),
-                new KeyValuePair<string, string>( "SensorIdentifiers", model.LocationWithNoDefinedAccess.Identifier.ToString() ),
+                new KeyValuePair<string, string>("LocationIdentifiers", model.Location.Identifier.ToString()),
+                new KeyValuePair<string, string>( "LocationIdentifiers", model.LocationWithNoDefinedAccess.Identifier.ToString() ),
                 new KeyValuePair<string, string>("From", DateTime.Now.ToString("yyyy-MM-dd"))
             };
             var apiPath = "/api/measurements/bylocation";
