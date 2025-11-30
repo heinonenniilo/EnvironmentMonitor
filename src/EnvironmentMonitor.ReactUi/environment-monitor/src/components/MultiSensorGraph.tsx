@@ -52,7 +52,7 @@ Chart.register(
 
 export interface MultiSensorGraphProps {
   sensors: Sensor[] | undefined;
-  devices?: Entity[];
+  entities?: Entity[];
   model: MeasurementsViewModel | undefined;
   hideInfo?: boolean;
   minHeight?: number;
@@ -92,7 +92,7 @@ const dynamicColorLimit = 7;
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   sensors,
   model,
-  devices,
+  entities,
   hideInfo,
   minHeight,
   titleAsLink,
@@ -110,7 +110,8 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   highlightPoints,
   enableHighlightOnRowHover,
 }) => {
-  const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
+  const singleDevice =
+    entities && entities.length === 1 ? entities[0] : undefined;
 
   const [autoScale, setAutoScale] = useState(false);
   const [hiddenDatasetIds, setHiddenDatasetIds] = useState<number[]>([]);
@@ -136,9 +137,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       );
       let sensorName = matchingSensor?.name ?? `${sensorIdentifier}`;
       const device =
-        devices &&
-        devices.length > 1 &&
-        devices.find((d) => d.identifier === matchingSensor?.deviceIdentifier);
+        entities &&
+        entities.length > 1 &&
+        entities.find((d) => d.identifier === matchingSensor?.deviceIdentifier);
       if (device) {
         sensorName = device.displayName
           ? `${device.displayName}: ${sensorName}`
@@ -147,7 +148,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
 
       return getDatasetLabel(sensorName, typeId as MeasurementTypes);
     },
-    [sensors, devices]
+    [sensors, entities]
   );
 
   const showMeasurementsInDialog = (
@@ -161,7 +162,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       const matchingSensor = sensors?.find(
         (s) => s.identifier == toShow.sensorIdentifier
       );
-      const matchingDevice = devices?.find(
+      const matchingDevice = entities?.find(
         (d) => d.identifier === matchingSensor?.deviceIdentifier
       );
       setDialogTitle(
@@ -262,7 +263,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       return title;
     }
     if (!singleDevice) {
-      if (!devices || devices.length === 0) {
+      if (!entities || entities.length === 0) {
         return "Select a device";
       } else {
         return "";

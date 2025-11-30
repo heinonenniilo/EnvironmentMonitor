@@ -81,7 +81,7 @@ export const DashboardLocationGraph: React.FC<{
     >
       <MultiSensorGraph
         sensors={measurementModel?.sensors ?? model?.sensors}
-        devices={[location]}
+        entities={[location]}
         model={measurementModel ?? model}
         minHeight={400}
         isLoading={isLoading}

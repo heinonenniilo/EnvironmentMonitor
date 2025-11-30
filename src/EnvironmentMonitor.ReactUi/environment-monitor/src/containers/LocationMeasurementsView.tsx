@@ -32,7 +32,11 @@ export const LocationMeasurementsView: React.FC = () => {
   );
   const [timeTo, setTimeTo] = useState<moment.Moment | undefined>(undefined);
   const locations = useSelector(getLocations);
-  const sensors = locations.flatMap((l) => l.locationSensors);
+  const sensors = locations.flatMap((l) =>
+    l.locationSensors.map((s) => {
+      return { ...s, deviceIdentifier: l.identifier };
+    })
+  );
   const dashboardTimeRange = useSelector(getDashboardTimeRange);
 
   const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
@@ -194,7 +198,7 @@ export const LocationMeasurementsView: React.FC = () => {
           })}
           sensors={getAvailableSensors()}
           timeFrom={timeFrom}
-          showsLocations
+          entityName="Location"
         />
       }
     >
@@ -224,7 +228,7 @@ export const LocationMeasurementsView: React.FC = () => {
                 }
               : undefined
           }
-          devices={selectedLocations.map((l) => {
+          entities={selectedLocations.map((l) => {
             return { ...l, displayName: l.name };
           })}
           key={"graph_01"}

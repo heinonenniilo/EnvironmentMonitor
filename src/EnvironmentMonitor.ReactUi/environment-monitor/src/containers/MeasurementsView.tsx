@@ -187,7 +187,7 @@ export const MeasurementsView: React.FC = () => {
                 }
               : undefined
           }
-          devices={selectedDevices}
+          entities={selectedDevices}
           key={"graph_01"}
           minHeight={500}
           useAutoScale={

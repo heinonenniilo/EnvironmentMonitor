@@ -28,7 +28,7 @@ export interface MeasurementsLeftViewProps {
   selectedDevices: Entity[] | undefined;
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
-  showsLocations?: boolean;
+  entityName?: string;
 }
 
 export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
@@ -41,7 +41,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   selectedDevices,
   timeFrom,
   timeTo,
-  showsLocations,
+  entityName,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
     moment().utc(true).add(-2, "day").startOf("day")
@@ -122,7 +122,9 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
       </Box>
       <Box mt={2}>
         <FormControl fullWidth>
-          <InputLabel id="device-select-label">Device</InputLabel>
+          <InputLabel id="device-select-label">
+            {entityName ?? "Device"}
+          </InputLabel>
           <Select
             labelId="device-select-label"
             id="device-select"
@@ -133,7 +135,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                   })
                 : []
             }
-            label={showsLocations ? "Location" : "Device"}
+            label={entityName ?? "Device"}
             multiple
           >
             {[...devices]
