@@ -10,7 +10,8 @@ namespace EnvironmentMonitor.Application.DTOs
         public List<SensorDto> LocationSensors { get; set; }
         public void Mapping(Profile profile)
         {
-            profile.CreateMap<Location, LocationDto>().ReverseMap();
+            profile.CreateMap<Location, LocationDto>()
+                .ForMember(x => x.DisplayName, opt => opt.MapFrom(x => x.Name)).ReverseMap();
         }
     }
 }

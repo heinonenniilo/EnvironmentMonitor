@@ -101,7 +101,6 @@ export const LocationMeasurementsView: React.FC = () => {
           )
           .then((res) => {
             if (res) {
-              // setSelectedSensors(matchingLocation.locationSensors);
               setMeasurementsModel(res);
             }
           })
@@ -168,13 +167,11 @@ export const LocationMeasurementsView: React.FC = () => {
               sensorIds
             );
           }}
-          onSelectDevice={toggleLocationSelection}
+          onSelectEntity={toggleLocationSelection}
           toggleSensorSelection={toggleSensorSelection}
           selectedEntities={selectedLocations}
           selectedSensors={selectedSensors.map((s) => s.identifier)}
-          entities={locations.map((l) => {
-            return { ...l, displayName: l.name };
-          })}
+          entities={locations}
           sensors={getAvailableSensors()}
           timeFrom={timeFrom}
           entityName="Location"
@@ -207,9 +204,7 @@ export const LocationMeasurementsView: React.FC = () => {
                 }
               : undefined
           }
-          entities={selectedLocations.map((l) => {
-            return { ...l, displayName: l.name };
-          })}
+          entities={selectedLocations}
           key={"graph_01"}
           minHeight={500}
           useAutoScale

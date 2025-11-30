@@ -20,7 +20,7 @@ export interface MeasurementsLeftViewProps {
     to: moment.Moment | undefined,
     sensorIds: string[]
   ) => void;
-  onSelectDevice: (deviceId: string) => void;
+  onSelectEntity: (deviceId: string) => void;
   toggleSensorSelection: (sensorId: string) => void;
   entities: Entity[];
   sensors: Sensor[];
@@ -35,7 +35,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   onSearch,
   entities,
   sensors,
-  onSelectDevice,
+  onSelectEntity,
   toggleSensorSelection,
   selectedSensors,
   selectedEntities,
@@ -145,7 +145,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                   value={y.identifier}
                   key={`device-${y.identifier}`}
                   onClick={() => {
-                    onSelectDevice(y.identifier);
+                    onSelectEntity(y.identifier);
                   }}
                 >
                   {getDeviceTitle(y)}
