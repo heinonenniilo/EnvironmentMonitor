@@ -193,6 +193,11 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
 
+            if (!_userService.HasAccessToSensors(model.SensorIdentifiers, AccessLevels.Read))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             var locations = await _locationRepository.GetLocations(new GetLocationsModel() { Identifiers = model.LocationIdentifiers, IncludeLocationSensors = true} );
             var locationSensors = locations.Select(x => x.LocationSensors).ToList();
 
@@ -202,6 +207,7 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             var sensorIdentifiersToFilter = locationSensors.SelectMany(x => x).Select(d => d.Sensor.Identifier).ToList();
+ 
             if (model.SensorIdentifiers.Count != 0)
             {
                 sensorIdentifiersToFilter = sensorIdentifiersToFilter.Where(x => model.SensorIdentifiers.Contains(x)).ToList();
