@@ -50,7 +50,7 @@ export const HomeView: React.FC = () => {
             (s) => s.identifier === m.sensorIdentifier
           );
           const matchingDevice = devices.find(
-            (s) => s.identifier === matchingSensor?.deviceIdentifier
+            (s) => s.identifier === matchingSensor?.parentIdentifier
           );
           returnRows.push({
             latest: m.latestValues[val],

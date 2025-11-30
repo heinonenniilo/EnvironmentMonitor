@@ -66,7 +66,7 @@ export const MeasurementsView: React.FC = () => {
     } else {
       setSelectedSensors(
         selectedSensors.filter(
-          (s) => s.deviceIdentifier !== matchingDevice?.identifier
+          (s) => s.parentIdentifier !== matchingDevice?.identifier
         )
       );
       setSelectedDevices(
@@ -81,7 +81,7 @@ export const MeasurementsView: React.FC = () => {
       if (matchingDevice) {
         setSelectedDevices([matchingDevice]);
         const sensorIds = sensors
-          .filter((s) => s.deviceIdentifier === matchingDevice.identifier)
+          .filter((s) => s.parentIdentifier === matchingDevice.identifier)
           .map((s) => s.identifier);
         setIsLoading(true);
 
@@ -156,7 +156,7 @@ export const MeasurementsView: React.FC = () => {
                   (s) =>
                     selectedDevices &&
                     selectedDevices.some(
-                      (d) => d.identifier === s.deviceIdentifier
+                      (d) => d.identifier === s.parentIdentifier
                     )
                 )
               : []

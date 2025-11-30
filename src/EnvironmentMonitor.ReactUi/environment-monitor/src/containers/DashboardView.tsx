@@ -38,7 +38,7 @@ export const DashboardView: React.FC = () => {
       .sort((a, b) => stringSort(a.displayName, b.displayName))
       .map((device) => {
         const deviceSensors = sensors.filter(
-          (s) => s.deviceIdentifier === device.identifier
+          (s) => s.parentIdentifier === device.identifier
         );
 
         return { device, sensors: deviceSensors };

@@ -1,11 +1,10 @@
 export interface Sensor {
   identifier: string;
   name: string;
-  deviceIdentifier: string;
+  parentIdentifier: string;
 
   scaleMin?: number;
   scaleMax?: number;
-  locationIdentifier?: string;
   measurementType?: number;
 }
 

@@ -49,11 +49,11 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
       valueGetter: (_value, row) => {
         const sensor = row as VirtualSensor;
         const matchingDevice = devices.find(
-          (d) => d.device.identifier === sensor.sensor.deviceIdentifier
+          (d) => d.device.identifier === sensor.sensor.parentIdentifier
         );
         return matchingDevice
           ? matchingDevice.device.name
-          : sensor.sensor.deviceIdentifier;
+          : sensor.sensor.parentIdentifier;
       },
     },
     {

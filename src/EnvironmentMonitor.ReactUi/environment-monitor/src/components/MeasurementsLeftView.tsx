@@ -65,7 +65,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
         : undefined;
     if (selectedEntities && selectedEntities.length > 1) {
       const matchingDevice = entities.find(
-        (d) => d.identifier === sensor.deviceIdentifier
+        (d) => d.identifier === sensor.parentIdentifier
       );
 
       const letToReturn = `${

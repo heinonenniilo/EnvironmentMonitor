@@ -32,11 +32,7 @@ export const LocationMeasurementsView: React.FC = () => {
   );
   const [timeTo, setTimeTo] = useState<moment.Moment | undefined>(undefined);
   const locations = useSelector(getLocations);
-  const sensors = locations.flatMap((l) =>
-    l.locationSensors.map((s) => {
-      return { ...s, deviceIdentifier: l.identifier };
-    })
-  );
+  const sensors = locations.flatMap((l) => l.locationSensors);
   const dashboardTimeRange = useSelector(getDashboardTimeRange);
 
   const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
@@ -54,16 +50,6 @@ export const LocationMeasurementsView: React.FC = () => {
     }
   };
 
-  const getSensors = () => {
-    const toReturn: Sensor[] = [];
-    locations.forEach((location) => {
-      location.locationSensors.forEach((sensor) => {
-        toReturn.push({ ...sensor, deviceIdentifier: location.identifier });
-      });
-    });
-    return toReturn;
-  };
-
   const toggleLocationSelection = (locationId: string) => {
     const matchingLocation = locations.find((l) => l.identifier === locationId);
 
@@ -72,7 +58,6 @@ export const LocationMeasurementsView: React.FC = () => {
         setSelectedLocations([...selectedLocations, matchingLocation]);
       }
     } else {
-      // When deselecting a location, also remove its sensors from selection
       setSelectedSensors(
         selectedSensors.filter(
           (s) =>
@@ -139,13 +124,6 @@ export const LocationMeasurementsView: React.FC = () => {
       .getMeasurementsByLocation(locationIds, from, to)
       .then((res) => {
         if (res) {
-          /*
-          setSelectedSensors(
-            sensors.filter((sensor) =>
-              locationIds.some((s) => sensor.identifier === s)
-            )
-          );
-          */
           setMeasurementsModel(res);
         }
       })
@@ -167,7 +145,7 @@ export const LocationMeasurementsView: React.FC = () => {
       });
     });
 
-    return getSensors().filter((s) => sensorIds.has(s.identifier));
+    return sensors.filter((s) => sensorIds.has(s.identifier));
   };
 
   return (

@@ -139,7 +139,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       const device =
         entities &&
         entities.length > 1 &&
-        entities.find((d) => d.identifier === matchingSensor?.deviceIdentifier);
+        entities.find((d) => d.identifier === matchingSensor?.parentIdentifier);
       if (device) {
         sensorName = device.displayName
           ? `${device.displayName}: ${sensorName}`
@@ -162,12 +162,12 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       const matchingSensor = sensors?.find(
         (s) => s.identifier == toShow.sensorIdentifier
       );
-      const matchingDevice = entities?.find(
-        (d) => d.identifier === matchingSensor?.deviceIdentifier
+      const matchingEntity = entities?.find(
+        (d) => d.identifier === matchingSensor?.parentIdentifier
       );
       setDialogTitle(
-        matchingDevice
-          ? `${matchingDevice?.displayName} / ${matchingSensor?.name} ${
+        matchingEntity
+          ? `${matchingEntity?.displayName} / ${matchingSensor?.name} ${
               type ? getMeasurementUnit(type) : ""
             }`
           : `${matchingSensor?.name} ${type ? getMeasurementUnit(type) : ""}`
