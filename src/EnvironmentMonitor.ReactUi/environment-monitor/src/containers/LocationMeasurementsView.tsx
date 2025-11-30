@@ -116,12 +116,12 @@ export const LocationMeasurementsView: React.FC = () => {
   const onSearch = (
     from: moment.Moment,
     to: moment.Moment | undefined,
-    locationIds: string[]
+    locationIds: string[],
+    sensorIds?: string[]
   ) => {
-    console.log(locationIds);
     setIsLoading(true);
     measurementApiHook
-      .getMeasurementsByLocation(locationIds, from, to)
+      .getMeasurementsByLocation(locationIds, from, to, false, sensorIds)
       .then((res) => {
         if (res) {
           setMeasurementsModel(res);
@@ -156,15 +156,16 @@ export const LocationMeasurementsView: React.FC = () => {
         <MeasurementsLeftView
           onSearch={(
             from: moment.Moment,
-            to: moment.Moment | undefined
-            // sensorIds: string[]
+            to: moment.Moment | undefined,
+            sensorIds: string[]
           ) => {
             setTimeFrom(from);
             setTimeTo(to);
             onSearch(
               from,
               to,
-              selectedLocations.map((l) => l.identifier)
+              selectedLocations.map((l) => l.identifier),
+              sensorIds
             );
           }}
           onSelectDevice={toggleLocationSelection}

@@ -59,10 +59,11 @@ interface measureHook {
     deviceIds?: string[]
   ) => Promise<MeasurementsViewModel | undefined>;
   getMeasurementsByLocation: (
-    sensorIds: string[],
+    locationIds: string[],
     from: moment.Moment,
     to?: moment.Moment,
-    latestOnly?: boolean
+    latestOnly?: boolean,
+    sensorIds?: string[]
   ) => Promise<MeasurementsByLocationModel | undefined>;
 
   getPublicMeasurements: (
@@ -265,10 +266,11 @@ export const useApiHook = (): ApiHook => {
         }
       },
       getMeasurementsByLocation: async (
-        sensorIds: string[],
+        locationIds: string[],
         from: moment.Moment,
         to?: moment.Moment,
-        latestOnly?: boolean
+        latestOnly?: boolean,
+        sensorIds?: string[]
       ) => {
         try {
           const res = await apiClient.get<
@@ -276,10 +278,11 @@ export const useApiHook = (): ApiHook => {
             AxiosResponse<MeasurementsByLocationModel>
           >("/api/Measurements/bylocation", {
             params: {
-              SensorIdentifiers: sensorIds,
+              locationIdentifiers: locationIds,
               from: from.toISOString(),
               to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,
+              sensorIdentifiers: sensorIds,
             },
           });
           return res.data;
