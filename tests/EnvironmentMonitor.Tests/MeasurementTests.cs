@@ -337,5 +337,146 @@ namespace EnvironmentMonitor.Tests
                 Assert.That(sensor2Type2.SensorValue, Is.EqualTo(68.5), "Sensor 2 TypeId 2 latest value should be 68.5");
             });
         }
+
+        [Test]
+        public async Task GetMeasurementsBySensor_WithDeviceIdentifiers_ReturnsMeasurementsForDeviceSensors()
+        {
+            // Arrange
+            var model = await PrepareDatabase();
+            
+            var device1 = model.DeviceInLocation;
+            var device2 = model.DeviceInLocationWithNoAccess;
+
+            // Get sensors from both devices
+            var device1Sensor1 = device1.Sensors.First(s => s.Name == "Temperature-Sensor-01");
+            var device1Sensor2 = device1.Sensors.First(s => s.Name == "Temperature-Sensor-02");
+            var device2Sensor1 = device2.Sensors.First();
+
+            // Add measurements for Device 1 sensors
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var measurementDbContext = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
+
+                var measurements = new List<Measurement>
+                {
+                    // Device 1 - Sensor 1
+                    new Measurement
+                    {
+                        SensorId = device1Sensor1.Id,
+                        TypeId = 1,
+                        Value = 22.5,
+                        Timestamp = DateTime.Now.AddHours(-2),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-2),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    },
+                    new Measurement
+                    {
+                        SensorId = device1Sensor1.Id,
+                        TypeId = 1,
+                        Value = 23.0,
+                        Timestamp = DateTime.Now.AddHours(-1),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-1),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    },
+                    // Device 1 - Sensor 2
+                    new Measurement
+                    {
+                        SensorId = device1Sensor2.Id,
+                        TypeId = 1,
+                        Value = 65.0,
+                        Timestamp = DateTime.Now.AddHours(-2),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-2),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    },
+                    new Measurement
+                    {
+                        SensorId = device1Sensor2.Id,
+                        TypeId = 1,
+                        Value = 67.5,
+                        Timestamp = DateTime.Now.AddHours(-1),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-1),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    },
+                    // Device 2 - Sensor 1 (should NOT be returned)
+                    new Measurement
+                    {
+                        SensorId = device2Sensor1.Id,
+                        TypeId = 1,
+                        Value = 18.0,
+                        Timestamp = DateTime.Now.AddHours(-2),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-2),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    },
+                    new Measurement
+                    {
+                        SensorId = device2Sensor1.Id,
+                        TypeId = 1,
+                        Value = 19.0,
+                        Timestamp = DateTime.Now.AddHours(-1),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-1),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    }
+                };
+
+                measurementDbContext.Measurements.AddRange(measurements);
+                await measurementDbContext.SaveChangesAsync();
+            }
+
+            await LoginAsync(AdminUserName, AdminPassword);
+
+            // Query with DeviceIdentifiers for Device 1 only
+            var queryParams = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("DeviceIdentifiers", device1.Identifier.ToString()),
+                new KeyValuePair<string, string>("From", DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd"))
+            };
+
+            var apiPath = "/api/measurements/bysensor";
+            var clientPath = QueryHelpers.AddQueryString(apiPath, queryParams);
+
+            // Act
+            var response = await _client.GetAsync(clientPath);
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<MeasurementsBySensorModel>(content);
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(result, Is.Not.Null);
+                Assert.That(result.Measurements, Is.Not.Null);
+                
+                // Should return measurements from 2 sensors of Device 1
+                Assert.That(result.Measurements.Count, Is.EqualTo(2), "Should return measurements from both sensors of Device 1");
+
+                // Verify Device 1 Sensor 1 measurements
+                var sensor1Measurements = result.Measurements.FirstOrDefault(m => m.SensorIdentifier == device1Sensor1.Identifier);
+                Assert.That(sensor1Measurements, Is.Not.Null, "Device 1 Sensor 1 should be in results");
+                Assert.That(sensor1Measurements.Measurements.Count, Is.EqualTo(2), "Device 1 Sensor 1 should have 2 measurements");
+                
+                var sensor1Values = sensor1Measurements.Measurements.Select(m => m.SensorValue).OrderBy(v => v).ToList();
+                Assert.That(sensor1Values[0], Is.EqualTo(22.5));
+                Assert.That(sensor1Values[1], Is.EqualTo(23.0));
+
+                // Verify Device 1 Sensor 2 measurements
+                var sensor2Measurements = result.Measurements.FirstOrDefault(m => m.SensorIdentifier == device1Sensor2.Identifier);
+                Assert.That(sensor2Measurements, Is.Not.Null, "Device 1 Sensor 2 should be in results");
+                Assert.That(sensor2Measurements.Measurements.Count, Is.EqualTo(2), "Device 1 Sensor 2 should have 2 measurements");
+                
+                var sensor2Values = sensor2Measurements.Measurements.Select(m => m.SensorValue).OrderBy(v => v).ToList();
+                Assert.That(sensor2Values[0], Is.EqualTo(65.0));
+                Assert.That(sensor2Values[1], Is.EqualTo(67.5));
+
+                // Verify Device 2 sensors are NOT in results
+                var device2SensorMeasurements = result.Measurements.FirstOrDefault(m => m.SensorIdentifier == device2Sensor1.Identifier);
+                Assert.That(device2SensorMeasurements, Is.Null, "Device 2 sensors should NOT be in results");
+            });
+        }
     }
 }
