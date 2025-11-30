@@ -22,10 +22,10 @@ export interface MeasurementsLeftViewProps {
   ) => void;
   onSelectDevice: (deviceId: string) => void;
   toggleSensorSelection: (sensorId: string) => void;
-  devices: Entity[];
+  entities: Entity[];
   sensors: Sensor[];
   selectedSensors: string[];
-  selectedDevices: Entity[] | undefined;
+  selectedEntities: Entity[] | undefined;
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
   entityName?: string;
@@ -33,12 +33,12 @@ export interface MeasurementsLeftViewProps {
 
 export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   onSearch,
-  devices,
+  entities,
   sensors,
   onSelectDevice,
   toggleSensorSelection,
   selectedSensors,
-  selectedDevices,
+  selectedEntities,
   timeFrom,
   timeTo,
   entityName,
@@ -63,8 +63,8 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
       sensor.measurementType !== undefined
         ? getMeasurementUnit(sensor.measurementType)
         : undefined;
-    if (selectedDevices && selectedDevices.length > 1) {
-      const matchingDevice = devices.find(
+    if (selectedEntities && selectedEntities.length > 1) {
+      const matchingDevice = entities.find(
         (d) => d.identifier === sensor.deviceIdentifier
       );
 
@@ -129,8 +129,8 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
             labelId="device-select-label"
             id="device-select"
             value={
-              selectedDevices
-                ? selectedDevices.map((s) => {
+              selectedEntities
+                ? selectedEntities.map((s) => {
                     return s.identifier;
                   })
                 : []
@@ -138,7 +138,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
             label={entityName ?? "Device"}
             multiple
           >
-            {[...devices]
+            {[...entities]
               .sort((a, b) => stringSort(getDeviceTitle(a), getDeviceTitle(b)))
               .map((y) => (
                 <MenuItem

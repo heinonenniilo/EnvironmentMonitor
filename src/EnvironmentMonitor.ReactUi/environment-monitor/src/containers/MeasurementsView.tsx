@@ -147,9 +147,9 @@ export const MeasurementsView: React.FC = () => {
           }}
           onSelectDevice={toggleDeviceSelection}
           toggleSensorSelection={toggleSensorSelection}
-          selectedDevices={selectedDevices}
+          selectedEntities={selectedDevices}
           selectedSensors={selectedSensors.map((s) => s.identifier)}
-          devices={devices}
+          entities={devices}
           sensors={
             selectedDevices
               ? sensors.filter(

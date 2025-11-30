@@ -191,9 +191,9 @@ export const LocationMeasurementsView: React.FC = () => {
           }}
           onSelectDevice={toggleLocationSelection}
           toggleSensorSelection={toggleSensorSelection}
-          selectedDevices={selectedLocations}
+          selectedEntities={selectedLocations}
           selectedSensors={selectedSensors.map((s) => s.identifier)}
-          devices={locations.map((l) => {
+          entities={locations.map((l) => {
             return { ...l, displayName: l.name };
           })}
           sensors={getAvailableSensors()}
