@@ -11,10 +11,8 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class SensorDto : IMapFrom<Sensor>, IMapFrom<SensorExtended>
+    public class SensorDto : EntityDto, IMapFrom<Sensor>, IMapFrom<SensorExtended>
     {
-        public Guid Identifier { get; set; }
-        public string Name { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public Guid? DeviceIdentifier { get; set; }
         public double? ScaleMin { get; set; }

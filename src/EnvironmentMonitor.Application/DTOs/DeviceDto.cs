@@ -9,14 +9,11 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class DeviceDto : IMapFrom<Device>
+    public class DeviceDto : EntityDto, IMapFrom<Device>
     {
-        public Guid Identifier { get; set; }
-        public string Name { get; set; }
         public bool Visible { get; set; }
         public bool HasMotionSensor { get; set; }
         public Guid LocationIdentifier { get; set; }
-        public string? DisplayName { get; set; }
 
         public void Mapping(Profile profile)
         {
