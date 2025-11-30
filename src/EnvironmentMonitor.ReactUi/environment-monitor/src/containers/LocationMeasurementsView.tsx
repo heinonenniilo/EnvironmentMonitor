@@ -219,7 +219,10 @@ export const LocationMeasurementsView: React.FC = () => {
               onSearch(
                 timeFrom,
                 timeTo,
-                selectedSensors.map((s) => s.identifier)
+                selectedLocations.map((l) => l.identifier),
+                selectedSensors.length > 0
+                  ? selectedSensors.map((s) => s.identifier)
+                  : undefined
               );
             }
           }}
