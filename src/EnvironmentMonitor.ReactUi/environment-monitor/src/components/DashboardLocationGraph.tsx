@@ -81,13 +81,15 @@ export const DashboardLocationGraph: React.FC<{
     >
       <MultiSensorGraph
         sensors={measurementModel?.sensors ?? model?.sensors}
-        devices={undefined}
+        entities={[location]}
         model={measurementModel ?? model}
         minHeight={400}
         isLoading={isLoading}
         onRefresh={fetchMeasurements}
         useAutoScale={true}
         title={location.name}
+        titleAsLink
+        linkToLocationMeasurements
         useDynamicColors={
           model && model.sensors.length > ChartJsColorsPluginMaxDatasets
         }

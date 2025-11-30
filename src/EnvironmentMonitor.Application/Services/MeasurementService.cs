@@ -183,23 +183,35 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<MeasurementsByLocationModel> GetMeasurementsByLocation(GetMeasurementsModel model)
         {
-            if (!_userService.HasAccessToLocations(model.SensorIdentifiers, AccessLevels.Read))
+            if (!model.LocationIdentifiers.Any())
+            {
+                throw new InvalidOperationException("LocationIdentifiers must be defined");
+            }
+
+            if (!_userService.HasAccessToLocations(model.LocationIdentifiers , AccessLevels.Read))
             {
                 throw new UnauthorizedAccessException();
             }
 
-            var locations = await _locationRepository.GetLocations(new GetLocationsModel() { Identifiers = model.SensorIdentifiers, IncludeLocationSensors = true} );
+            var locations = await _locationRepository.GetLocations(new GetLocationsModel() { Identifiers = model.LocationIdentifiers, IncludeLocationSensors = true} );
             var locationSensors = locations.Select(x => x.LocationSensors).ToList();
+
             if (locationSensors.Count == 0)
             {
                 throw new InvalidOperationException();
             }
-            var sensorIds = locationSensors.SelectMany(x => x).Select(d => d.SensorId).ToList();
+
+            var sensorIdentifiersToFilter = locationSensors.SelectMany(x => x).Select(d => d.Sensor.Identifier).ToList();
+            if (model.SensorIdentifiers.Count != 0)
+            {
+                sensorIdentifiersToFilter = sensorIdentifiersToFilter.Where(x => model.SensorIdentifiers.Contains(x)).ToList();
+            }
+
             var res = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
             {
                 From = model.From,
                 To = model.To,
-                SensorIdentifiers = locationSensors.SelectMany(x => x).Select(d => d.Sensor.Identifier).ToList()
+                SensorIdentifiers = sensorIdentifiersToFilter
             });
 
             var modelToReturn = new MeasurementsByLocationModel();
@@ -208,6 +220,10 @@ namespace EnvironmentMonitor.Application.Services
                 var measurementsInLocation = new List<MeasurementsBySensorDto>();
                 foreach (var sensor in location.LocationSensors)
                 {
+                    if (!sensorIdentifiersToFilter.Contains(sensor.Sensor.Identifier))
+                    {
+                        continue;
+                    }
                     var measurementsToCheck = res.Where(x => x.SensorId == sensor.SensorId && x.TypeId == sensor.TypeId).ToList();
                     var measurementsBySensor = _mapper.Map<List<MeasurementBaseDto>>(measurementsToCheck);
                     var infoRow = GetMeasurementInfo(measurementsToCheck, [sensor.Sensor.Identifier]).FirstOrDefault();

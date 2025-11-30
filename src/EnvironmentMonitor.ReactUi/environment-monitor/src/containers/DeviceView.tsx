@@ -675,7 +675,7 @@ export const DeviceView: React.FC = () => {
                     {
                       identifier: selectedDevice.device.identifier,
                       name: selectedDevice.device.name,
-                      deviceIdentifier: selectedDevice.device.identifier,
+                      parentIdentifier: selectedDevice.device.identifier,
                       scaleMin: 0,
                       scaleMax: 2,
                     },

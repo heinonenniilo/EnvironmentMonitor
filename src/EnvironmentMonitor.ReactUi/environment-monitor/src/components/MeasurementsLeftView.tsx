@@ -9,37 +9,39 @@ import {
 import React, { useEffect, useState } from "react";
 import moment from "moment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
-import { type Device } from "../models/device";
 import { type Sensor } from "../models/sensor";
 import { stringSort } from "../utilities/stringUtils";
 import { getDeviceTitle } from "../utilities/deviceUtils";
-
+import { type Entity } from "../models/entity";
+import { getMeasurementUnit } from "../utilities/measurementUtils";
 export interface MeasurementsLeftViewProps {
   onSearch: (
     from: moment.Moment,
     to: moment.Moment | undefined,
     sensorIds: string[]
   ) => void;
-  onSelectDevice: (deviceId: string) => void;
+  onSelectEntity: (deviceId: string) => void;
   toggleSensorSelection: (sensorId: string) => void;
-  devices: Device[];
+  entities: Entity[];
   sensors: Sensor[];
   selectedSensors: string[];
-  selectedDevices: Device[] | undefined;
+  selectedEntities: Entity[] | undefined;
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
+  entityName?: string;
 }
 
 export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   onSearch,
-  devices,
+  entities,
   sensors,
-  onSelectDevice,
+  onSelectEntity,
   toggleSensorSelection,
   selectedSensors,
-  selectedDevices,
+  selectedEntities,
   timeFrom,
   timeTo,
+  entityName,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
     moment().utc(true).add(-2, "day").startOf("day")
@@ -57,13 +59,28 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   }, [timeTo]);
 
   const getSensorText = (sensor: Sensor) => {
-    if (selectedDevices && selectedDevices.length > 1) {
-      const matchingDevice = devices.find(
-        (d) => d.identifier === sensor.deviceIdentifier
+    const measurementUnit =
+      sensor.measurementType !== undefined
+        ? getMeasurementUnit(sensor.measurementType)
+        : undefined;
+    if (selectedEntities && selectedEntities.length > 1) {
+      const matchingEntity = entities.find(
+        (d) => d.identifier === sensor.parentIdentifier
       );
-      return `${matchingDevice?.displayName ?? matchingDevice?.name}: ${
+
+      const letToReturn = `${
+        matchingEntity?.displayName ?? matchingEntity?.name
+      }: ${sensor.name}`;
+
+      if (measurementUnit) {
+        return `${letToReturn} (${measurementUnit})`;
+      }
+      return `${matchingEntity?.displayName ?? matchingEntity?.name}: ${
         sensor.name
       }`;
+    }
+    if (measurementUnit) {
+      return `${sensor.name} (${measurementUnit})`;
     }
     return sensor.name;
   };
@@ -105,28 +122,30 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
       </Box>
       <Box mt={2}>
         <FormControl fullWidth>
-          <InputLabel id="device-select-label">Device</InputLabel>
+          <InputLabel id="device-select-label">
+            {entityName ?? "Device"}
+          </InputLabel>
           <Select
             labelId="device-select-label"
             id="device-select"
             value={
-              selectedDevices
-                ? selectedDevices.map((s) => {
+              selectedEntities
+                ? selectedEntities.map((s) => {
                     return s.identifier;
                   })
                 : []
             }
-            label="Device"
+            label={entityName ?? "Device"}
             multiple
           >
-            {[...devices]
+            {[...entities]
               .sort((a, b) => stringSort(getDeviceTitle(a), getDeviceTitle(b)))
               .map((y) => (
                 <MenuItem
                   value={y.identifier}
                   key={`device-${y.identifier}`}
                   onClick={() => {
-                    onSelectDevice(y.identifier);
+                    onSelectEntity(y.identifier);
                   }}
                 >
                   {getDeviceTitle(y)}

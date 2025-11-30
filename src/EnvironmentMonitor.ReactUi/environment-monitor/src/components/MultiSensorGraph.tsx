@@ -10,7 +10,6 @@ import {
   Typography,
 } from "@mui/material";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
-import { type Device } from "../models/device";
 import {
   Chart,
   Colors,
@@ -38,6 +37,7 @@ import { getColor } from "../utilities/graphUtils";
 import zoomPlugin from "chartjs-plugin-zoom";
 import { MeasurementsDialog } from "./MeasurementsDialog";
 import type { Measurement } from "../models/measurement";
+import type { Entity } from "../models/entity";
 
 Chart.register(
   TimeScale,
@@ -52,11 +52,12 @@ Chart.register(
 
 export interface MultiSensorGraphProps {
   sensors: Sensor[] | undefined;
-  devices?: Device[];
+  entities?: Entity[];
   model: MeasurementsViewModel | undefined;
   hideInfo?: boolean;
   minHeight?: number;
   titleAsLink?: boolean;
+  linkToLocationMeasurements?: boolean;
   useAutoScale?: boolean;
   isLoading?: boolean;
   title?: string;
@@ -91,10 +92,11 @@ const dynamicColorLimit = 7;
 export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   sensors,
   model,
-  devices,
+  entities,
   hideInfo,
   minHeight,
   titleAsLink,
+  linkToLocationMeasurements,
   useAutoScale,
   onSetAutoScale,
   onRefresh,
@@ -108,7 +110,8 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   highlightPoints,
   enableHighlightOnRowHover,
 }) => {
-  const singleDevice = devices && devices.length === 1 ? devices[0] : undefined;
+  const singleDevice =
+    entities && entities.length === 1 ? entities[0] : undefined;
 
   const [autoScale, setAutoScale] = useState(false);
   const [hiddenDatasetIds, setHiddenDatasetIds] = useState<number[]>([]);
@@ -134,9 +137,9 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       );
       let sensorName = matchingSensor?.name ?? `${sensorIdentifier}`;
       const device =
-        devices &&
-        devices.length > 1 &&
-        devices.find((d) => d.identifier === matchingSensor?.deviceIdentifier);
+        entities &&
+        entities.length > 1 &&
+        entities.find((d) => d.identifier === matchingSensor?.parentIdentifier);
       if (device) {
         sensorName = device.displayName
           ? `${device.displayName}: ${sensorName}`
@@ -145,7 +148,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
 
       return getDatasetLabel(sensorName, typeId as MeasurementTypes);
     },
-    [sensors, devices]
+    [sensors, entities]
   );
 
   const showMeasurementsInDialog = (
@@ -159,12 +162,12 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       const matchingSensor = sensors?.find(
         (s) => s.identifier == toShow.sensorIdentifier
       );
-      const matchingDevice = devices?.find(
-        (d) => d.identifier === matchingSensor?.deviceIdentifier
+      const matchingEntity = entities?.find(
+        (d) => d.identifier === matchingSensor?.parentIdentifier
       );
       setDialogTitle(
-        matchingDevice
-          ? `${matchingDevice?.displayName} / ${matchingSensor?.name} ${
+        matchingEntity
+          ? `${matchingEntity?.displayName} / ${matchingSensor?.name} ${
               type ? getMeasurementUnit(type) : ""
             }`
           : `${matchingSensor?.name} ${type ? getMeasurementUnit(type) : ""}`
@@ -260,7 +263,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       return title;
     }
     if (!singleDevice) {
-      if (!devices || devices.length === 0) {
+      if (!entities || entities.length === 0) {
         return "Select a device";
       } else {
         return "";
@@ -356,7 +359,13 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         alignItems="center" // Align children vertically
       >
         {titleAsLink ? (
-          <Link to={`${routes.measurements}/${singleDevice?.identifier}`}>
+          <Link
+            to={
+              linkToLocationMeasurements
+                ? `${routes.locationMeasurements}/${singleDevice?.identifier}`
+                : `${routes.measurements}/${singleDevice?.identifier}`
+            }
+          >
             <Typography align="left" gutterBottom>
               {getTitle()}
             </Typography>

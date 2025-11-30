@@ -104,7 +104,7 @@ export const DashboardDeviceGraph: React.FC<{
     >
       <MultiSensorGraph
         sensors={sensors}
-        devices={[device]}
+        entities={[device]}
         model={deviceModel ? deviceModel : model}
         minHeight={400}
         titleAsLink

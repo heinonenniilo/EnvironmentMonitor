@@ -57,8 +57,11 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [anchorE2, setAnchorE2] = React.useState<null | HTMLElement>(null);
+  const [measurementsAnchorEl, setMeasurementsAnchorEl] =
+    React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const manageMenuOpen = Boolean(anchorE2);
+  const measurementsMenuOpen = Boolean(measurementsAnchorEl);
 
   const handleDashboardClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -66,6 +69,14 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleMeasurementsClick = (event: React.MouseEvent<HTMLElement>) => {
+    setMeasurementsAnchorEl(event.currentTarget);
+  };
+
+  const handleMeasurementsMenuClose = () => {
+    setMeasurementsAnchorEl(null);
   };
 
   return (
@@ -165,12 +176,50 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
             </MenuItem>
           </AuthorizedComponent>
           <AuthorizedComponent requiredRole={RoleNames.User}>
+            {locations.length > 0 ? (
+              <Menu
+                anchorEl={measurementsAnchorEl}
+                open={measurementsMenuOpen}
+                onClose={handleMeasurementsMenuClose}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+              >
+                <MenuItem
+                  onClick={() => {
+                    handleMeasurementsMenuClose();
+                    onNavigate(routes.measurements);
+                  }}
+                >
+                  Devices
+                </MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    handleMeasurementsMenuClose();
+                    onNavigate(routes.locationMeasurements);
+                  }}
+                >
+                  Locations
+                </MenuItem>
+              </Menu>
+            ) : null}
             <MenuItem
-              onClick={() => {
-                onNavigate(routes.measurements);
-              }}
+              onClick={
+                locations.length > 0
+                  ? handleMeasurementsClick
+                  : () => {
+                      onNavigate(routes.measurements);
+                    }
+              }
+              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
             >
               Measurements
+              {locations.length > 0 ? <ArrowDropDownIcon /> : null}
             </MenuItem>
           </AuthorizedComponent>
           <AuthorizedComponent requiredRole={RoleNames.Admin}>

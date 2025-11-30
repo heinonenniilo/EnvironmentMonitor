@@ -1,10 +1,11 @@
 export interface Sensor {
   identifier: string;
   name: string;
-  deviceIdentifier: string;
+  parentIdentifier: string;
 
   scaleMin?: number;
   scaleMax?: number;
+  measurementType?: number;
 }
 
 export interface SensorInfo extends Sensor {
