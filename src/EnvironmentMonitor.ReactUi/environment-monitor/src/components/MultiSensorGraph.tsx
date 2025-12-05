@@ -6,9 +6,14 @@ import {
   Button,
   Checkbox,
   CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   FormControlLabel,
+  IconButton,
   Typography,
 } from "@mui/material";
+import { Close, Fullscreen } from "@mui/icons-material";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import {
   Chart,
@@ -67,6 +72,7 @@ export interface MultiSensorGraphProps {
   hideUseAutoScale?: boolean;
   highlightPoints?: boolean;
   showMeasurementsOnDatasetClick?: boolean;
+  enableFullScreen?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
   enableHighlightOnRowHover?: boolean;
@@ -109,6 +115,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   showMeasurementsOnDatasetClick,
   highlightPoints,
   enableHighlightOnRowHover,
+  enableFullScreen,
 }) => {
   const singleDevice =
     entities && entities.length === 1 ? entities[0] : undefined;
@@ -122,6 +129,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const [highlightedDatasetLabel, setHighlightedDatasetLabel] = useState<
     string | null
   >(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const chartRef = useRef<any>(null); // Types?
 
   useEffect(() => {
@@ -237,6 +245,15 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model, highlightedDatasetLabel]);
 
+  const renderChart = (chartRefToUse?: any) => (
+    <Line
+      data={{ datasets: memoSets }}
+      height={"auto"}
+      ref={chartRefToUse}
+      options={chartOptions}
+    />
+  );
+
   const getInfoValues = () => {
     const returnArray: MeasurementInfo[] = [];
     model?.measurements.forEach((m) => {
@@ -313,6 +330,149 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const isTouchDevice = () => {
     return window.matchMedia("(pointer: coarse)").matches;
   };
+  const chartOptions = useMemo(
+    () => ({
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          text: "Chart.js Time Scale",
+          display: true,
+        },
+        colors:
+          useDynamicColors || memoSets.length > dynamicColorLimit
+            ? undefined
+            : {
+                forceOverride: true,
+              },
+        legend: {
+          onClick: (_event: any, legendItem: any, legend: any) => {
+            if (legendItem.datasetIndex === undefined) {
+              return;
+            }
+            if (showMeasurementsOnDatasetClick) {
+              if (memoSets.length > legendItem.datasetIndex) {
+                const matchingDataset = memoSets[legendItem.datasetIndex];
+                showMeasurementsInDialog(
+                  matchingDataset.sensorIdentifier,
+                  matchingDataset.measurementType
+                );
+              }
+              return;
+            }
+
+            if (!legendItem.hidden) {
+              legend.chart.hide(legendItem.datasetIndex);
+              if (legendItem.datasetIndex !== undefined) {
+                const datasetIndex = legendItem.datasetIndex;
+                setHiddenDatasetIds((prev) => [...prev, datasetIndex]);
+              }
+              legend.chart.update("hide");
+            } else {
+              legend.chart.show(legendItem.datasetIndex);
+              setHiddenDatasetIds(
+                hiddenDatasetIds.filter((d) => d !== legendItem.datasetIndex)
+              );
+              legend.chart.update("show");
+            }
+          },
+          onHover: (event: any, legendItem: any) => {
+            (event.native?.target as any).style.cursor = "pointer";
+            if (
+              enableHighlightOnRowHover &&
+              !isTouchDevice() &&
+              legendItem.datasetIndex !== undefined &&
+              !legendItem.hidden
+            ) {
+              const dataset = memoSets[legendItem.datasetIndex];
+              if (dataset) {
+                setHighlightedDatasetLabel(dataset.label);
+              }
+            }
+          },
+          onLeave: (event: any) => {
+            (event.native?.target as any).style.cursor = "default";
+            if (enableHighlightOnRowHover && !isTouchDevice()) {
+              setHighlightedDatasetLabel(null);
+            }
+          },
+        },
+        zoom: zoomable
+          ? {
+              zoom: {
+                drag: {
+                  enabled: true,
+                  borderColor: "rgba(54,162,235,0.5)",
+                  borderWidth: 1,
+                  backgroundColor: "rgba(54,162,235,0.15)",
+                },
+                pinch: { enabled: true },
+                mode: "x" as const,
+                wheel: { enabled: true },
+              },
+              pan: {
+                enabled: isTouchDevice(),
+                mode: "x" as const,
+              },
+            }
+          : undefined,
+      },
+      elements: {
+        point: {
+          radius: highlightPoints ? 2 : 0,
+        },
+      },
+      responsive: true,
+      scales: {
+        x: {
+          type: "time" as const,
+          time: {
+            unit: "hour" as const,
+            displayFormats: {
+              hour: "HH:mm",
+            },
+          },
+          ticks: {
+            major: {
+              enabled: true,
+            },
+            font: (context: any) => {
+              if (context.tick && context.tick.major) {
+                return {
+                  weight: "bold" as const,
+                };
+              }
+            },
+          },
+        },
+        y: {
+          max: getMaxScale(),
+          min: getMinScale(),
+        },
+        y1: {
+          max: undefined,
+          min: undefined,
+          display: hasLightAxis(),
+          position: "right" as const,
+          ticks: {
+            callback: (value: any) => `${value} lx`,
+          },
+          grid: {
+            drawOnChartArea: false,
+          },
+        },
+      },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      memoSets,
+      useDynamicColors,
+      showMeasurementsOnDatasetClick,
+      hiddenDatasetIds,
+      enableHighlightOnRowHover,
+      zoomable,
+      highlightPoints,
+    ]
+  );
 
   return (
     <Box
@@ -332,6 +492,49 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         }}
         title={dialogTitle}
       />
+      <Dialog
+        open={isFullScreen}
+        onClose={() => setIsFullScreen(false)}
+        fullWidth
+        fullScreen
+        sx={{ padding: 2 }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Box>{getTitle()}</Box>
+          <Box sx={{ display: "flex", flexBasis: "row" }}>
+            <IconButton
+              aria-label="close"
+              onClick={() => setIsFullScreen(false)}
+              sx={{
+                color: (theme) => theme.palette.grey[500],
+              }}
+              size="small"
+            >
+              <Close />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <div
+            style={{
+              position: "relative",
+              margin: "auto",
+              width: "100%",
+              height: "100%",
+              // minHeight: "400px",
+              flexGrow: 1,
+            }}
+          >
+            {renderChart(chartRef)}
+          </div>
+        </DialogContent>
+      </Dialog>
       {isLoading && (
         <Box
           position="absolute"
@@ -396,7 +599,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             }}
           />
         )}
-        {zoomable || onRefresh !== undefined ? (
+        {zoomable || onRefresh !== undefined || enableFullScreen ? (
           <Box
             sx={{
               display: "flex",
@@ -421,6 +624,15 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                 Refresh
               </Button>
             )}
+            {enableFullScreen && (
+              <IconButton
+                onClick={() => setIsFullScreen(true)}
+                size="small"
+                aria-label="fullscreen"
+              >
+                <Fullscreen />
+              </IconButton>
+            )}
           </Box>
         ) : null}
       </Box>
@@ -444,146 +656,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             flexGrow: 1,
           }}
         >
-          <Line
-            data={{ datasets: memoSets }}
-            height={"auto"}
-            ref={chartRef}
-            options={{
-              maintainAspectRatio: false,
-              plugins: {
-                title: {
-                  text: "Chart.js Time Scale",
-                  display: true,
-                },
-                colors:
-                  useDynamicColors || memoSets.length > dynamicColorLimit
-                    ? undefined
-                    : {
-                        forceOverride: true,
-                      },
-                legend: {
-                  onClick: (_event, legendItem, legend) => {
-                    if (legendItem.datasetIndex === undefined) {
-                      return;
-                    }
-                    if (showMeasurementsOnDatasetClick) {
-                      if (memoSets.length > legendItem.datasetIndex) {
-                        const matchingDataset =
-                          memoSets[legendItem.datasetIndex];
-                        showMeasurementsInDialog(
-                          matchingDataset.sensorIdentifier,
-                          matchingDataset.measurementType
-                        );
-                      }
-                      return;
-                    }
-
-                    if (!legendItem.hidden) {
-                      legend.chart.hide(legendItem.datasetIndex);
-                      if (legendItem.datasetIndex !== undefined) {
-                        const datasetIndex = legendItem.datasetIndex;
-                        setHiddenDatasetIds((prev) => [...prev, datasetIndex]);
-                      }
-                      legend.chart.update("hide");
-                    } else {
-                      legend.chart.show(legendItem.datasetIndex);
-                      setHiddenDatasetIds(
-                        hiddenDatasetIds.filter(
-                          (d) => d !== legendItem.datasetIndex
-                        )
-                      );
-                      legend.chart.update("show");
-                    }
-                  },
-                  onHover: (event, legendItem) => {
-                    (event.native?.target as any).style.cursor = "pointer";
-                    if (
-                      enableHighlightOnRowHover &&
-                      !isTouchDevice() &&
-                      legendItem.datasetIndex !== undefined &&
-                      !legendItem.hidden
-                    ) {
-                      const dataset = memoSets[legendItem.datasetIndex];
-                      if (dataset) {
-                        setHighlightedDatasetLabel(dataset.label);
-                      }
-                    }
-                  },
-                  onLeave: (event) => {
-                    (event.native?.target as any).style.cursor = "default";
-                    if (enableHighlightOnRowHover && !isTouchDevice()) {
-                      setHighlightedDatasetLabel(null);
-                    }
-                  },
-                },
-                zoom: zoomable
-                  ? {
-                      zoom: {
-                        drag: {
-                          enabled: true,
-                          borderColor: "rgba(54,162,235,0.5)",
-                          borderWidth: 1,
-                          backgroundColor: "rgba(54,162,235,0.15)",
-                        },
-                        pinch: { enabled: true },
-                        mode: "x",
-                        wheel: { enabled: true },
-                      },
-                      pan: {
-                        enabled: isTouchDevice(),
-                        mode: "x",
-                      },
-                    }
-                  : undefined,
-              },
-              elements: {
-                point: {
-                  radius: highlightPoints ? 2 : 0,
-                },
-              },
-              responsive: true,
-              scales: {
-                x: {
-                  type: "time",
-                  time: {
-                    //tooltipFormat: "DD T",
-                    unit: "hour",
-                    displayFormats: {
-                      hour: "HH:mm",
-                    },
-                  },
-                  ticks: {
-                    major: {
-                      enabled: true,
-                    },
-                    font: (context) => {
-                      if (context.tick && context.tick.major) {
-                        return {
-                          weight: "bold",
-                        };
-                      }
-                    },
-                  },
-                },
-                y: {
-                  max: getMaxScale(),
-                  min: getMinScale(),
-                },
-                y1: {
-                  max: undefined,
-                  min: undefined,
-                  display: hasLightAxis(),
-                  position: "right",
-                  ticks: {
-                    callback: (value) => `${value} lx`,
-                  },
-                  grid: {
-                    drawOnChartArea: false,
-                  },
-                },
-              },
-            }}
-          />
+          {renderChart(chartRef)}
         </div>
       </Box>
       {!hideInfo ? (
