@@ -245,12 +245,172 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model, highlightedDatasetLabel]);
 
+  const renderControls = () => (
+    <>
+      {!hideUseAutoScale && (
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={autoScale}
+              onChange={(_e, c) => {
+                setAutoScale(c);
+                if (onSetAutoScale) {
+                  onSetAutoScale(c);
+                }
+              }}
+              inputProps={{ "aria-label": "auto scale checkbox" }}
+            />
+          }
+          label="Auto scale"
+          componentsProps={{
+            typography: { fontSize: "14px" },
+          }}
+        />
+      )}
+      {onRefresh && (
+        <Button variant="outlined" onClick={onRefresh} size="small">
+          Refresh
+        </Button>
+      )}
+    </>
+  );
+
   const renderChart = (chartRefToUse?: any) => (
     <Line
       data={{ datasets: memoSets }}
       height={"auto"}
       ref={chartRefToUse}
-      options={chartOptions}
+      options={{
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            text: "Chart.js Time Scale",
+            display: true,
+          },
+          colors:
+            useDynamicColors || memoSets.length > dynamicColorLimit
+              ? undefined
+              : {
+                  forceOverride: true,
+                },
+          legend: {
+            onClick: (_event: any, legendItem: any, legend: any) => {
+              if (legendItem.datasetIndex === undefined) {
+                return;
+              }
+              if (showMeasurementsOnDatasetClick) {
+                if (memoSets.length > legendItem.datasetIndex) {
+                  const matchingDataset = memoSets[legendItem.datasetIndex];
+                  showMeasurementsInDialog(
+                    matchingDataset.sensorIdentifier,
+                    matchingDataset.measurementType
+                  );
+                }
+                return;
+              }
+
+              if (!legendItem.hidden) {
+                legend.chart.hide(legendItem.datasetIndex);
+                if (legendItem.datasetIndex !== undefined) {
+                  const datasetIndex = legendItem.datasetIndex;
+                  setHiddenDatasetIds((prev) => [...prev, datasetIndex]);
+                }
+                legend.chart.update("hide");
+              } else {
+                legend.chart.show(legendItem.datasetIndex);
+                setHiddenDatasetIds(
+                  hiddenDatasetIds.filter((d) => d !== legendItem.datasetIndex)
+                );
+                legend.chart.update("show");
+              }
+            },
+            onHover: (event: any, legendItem: any) => {
+              (event.native?.target as any).style.cursor = "pointer";
+              if (
+                enableHighlightOnRowHover &&
+                !isTouchDevice() &&
+                legendItem.datasetIndex !== undefined &&
+                !legendItem.hidden
+              ) {
+                const dataset = memoSets[legendItem.datasetIndex];
+                if (dataset) {
+                  setHighlightedDatasetLabel(dataset.label);
+                }
+              }
+            },
+            onLeave: (event: any) => {
+              (event.native?.target as any).style.cursor = "default";
+              if (enableHighlightOnRowHover && !isTouchDevice()) {
+                setHighlightedDatasetLabel(null);
+              }
+            },
+          },
+          zoom: zoomable
+            ? {
+                zoom: {
+                  drag: {
+                    enabled: true,
+                    borderColor: "rgba(54,162,235,0.5)",
+                    borderWidth: 1,
+                    backgroundColor: "rgba(54,162,235,0.15)",
+                  },
+                  pinch: { enabled: true },
+                  mode: "x" as const,
+                  wheel: { enabled: true },
+                },
+                pan: {
+                  enabled: isTouchDevice(),
+                  mode: "x" as const,
+                },
+              }
+            : undefined,
+        },
+        elements: {
+          point: {
+            radius: highlightPoints ? 2 : 0,
+          },
+        },
+        responsive: true,
+        scales: {
+          x: {
+            type: "time" as const,
+            time: {
+              unit: "hour" as const,
+              displayFormats: {
+                hour: "HH:mm",
+              },
+            },
+            ticks: {
+              major: {
+                enabled: true,
+              },
+              font: (context: any) => {
+                if (context.tick && context.tick.major) {
+                  return {
+                    weight: "bold" as const,
+                  };
+                }
+              },
+            },
+          },
+          y: {
+            max: getMaxScale(),
+            min: getMinScale(),
+          },
+          y1: {
+            max: undefined,
+            min: undefined,
+            display: hasLightAxis(),
+            position: "right" as const,
+            ticks: {
+              callback: (value: any) => `${value} lx`,
+            },
+            grid: {
+              drawOnChartArea: false,
+            },
+          },
+        },
+      }}
     />
   );
 
@@ -330,149 +490,6 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const isTouchDevice = () => {
     return window.matchMedia("(pointer: coarse)").matches;
   };
-  const chartOptions = useMemo(
-    () => ({
-      maintainAspectRatio: false,
-      plugins: {
-        title: {
-          text: "Chart.js Time Scale",
-          display: true,
-        },
-        colors:
-          useDynamicColors || memoSets.length > dynamicColorLimit
-            ? undefined
-            : {
-                forceOverride: true,
-              },
-        legend: {
-          onClick: (_event: any, legendItem: any, legend: any) => {
-            if (legendItem.datasetIndex === undefined) {
-              return;
-            }
-            if (showMeasurementsOnDatasetClick) {
-              if (memoSets.length > legendItem.datasetIndex) {
-                const matchingDataset = memoSets[legendItem.datasetIndex];
-                showMeasurementsInDialog(
-                  matchingDataset.sensorIdentifier,
-                  matchingDataset.measurementType
-                );
-              }
-              return;
-            }
-
-            if (!legendItem.hidden) {
-              legend.chart.hide(legendItem.datasetIndex);
-              if (legendItem.datasetIndex !== undefined) {
-                const datasetIndex = legendItem.datasetIndex;
-                setHiddenDatasetIds((prev) => [...prev, datasetIndex]);
-              }
-              legend.chart.update("hide");
-            } else {
-              legend.chart.show(legendItem.datasetIndex);
-              setHiddenDatasetIds(
-                hiddenDatasetIds.filter((d) => d !== legendItem.datasetIndex)
-              );
-              legend.chart.update("show");
-            }
-          },
-          onHover: (event: any, legendItem: any) => {
-            (event.native?.target as any).style.cursor = "pointer";
-            if (
-              enableHighlightOnRowHover &&
-              !isTouchDevice() &&
-              legendItem.datasetIndex !== undefined &&
-              !legendItem.hidden
-            ) {
-              const dataset = memoSets[legendItem.datasetIndex];
-              if (dataset) {
-                setHighlightedDatasetLabel(dataset.label);
-              }
-            }
-          },
-          onLeave: (event: any) => {
-            (event.native?.target as any).style.cursor = "default";
-            if (enableHighlightOnRowHover && !isTouchDevice()) {
-              setHighlightedDatasetLabel(null);
-            }
-          },
-        },
-        zoom: zoomable
-          ? {
-              zoom: {
-                drag: {
-                  enabled: true,
-                  borderColor: "rgba(54,162,235,0.5)",
-                  borderWidth: 1,
-                  backgroundColor: "rgba(54,162,235,0.15)",
-                },
-                pinch: { enabled: true },
-                mode: "x" as const,
-                wheel: { enabled: true },
-              },
-              pan: {
-                enabled: isTouchDevice(),
-                mode: "x" as const,
-              },
-            }
-          : undefined,
-      },
-      elements: {
-        point: {
-          radius: highlightPoints ? 2 : 0,
-        },
-      },
-      responsive: true,
-      scales: {
-        x: {
-          type: "time" as const,
-          time: {
-            unit: "hour" as const,
-            displayFormats: {
-              hour: "HH:mm",
-            },
-          },
-          ticks: {
-            major: {
-              enabled: true,
-            },
-            font: (context: any) => {
-              if (context.tick && context.tick.major) {
-                return {
-                  weight: "bold" as const,
-                };
-              }
-            },
-          },
-        },
-        y: {
-          max: getMaxScale(),
-          min: getMinScale(),
-        },
-        y1: {
-          max: undefined,
-          min: undefined,
-          display: hasLightAxis(),
-          position: "right" as const,
-          ticks: {
-            callback: (value: any) => `${value} lx`,
-          },
-          grid: {
-            drawOnChartArea: false,
-          },
-        },
-      },
-    }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      memoSets,
-      useDynamicColors,
-      showMeasurementsOnDatasetClick,
-      hiddenDatasetIds,
-      enableHighlightOnRowHover,
-      zoomable,
-      highlightPoints,
-    ]
-  );
 
   return (
     <Box
@@ -504,10 +521,19 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
           <Box>{getTitle()}</Box>
-          <Box sx={{ display: "flex", flexBasis: "row" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 1,
+            }}
+          >
+            {renderControls()}
             <IconButton
               aria-label="close"
               onClick={() => setIsFullScreen(false)}
@@ -578,36 +604,20 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             {getTitle()}
           </Typography>
         )}
-        {!hideUseAutoScale && (
-          <FormControlLabel
-            sx={{ marginLeft: 2 }}
-            control={
-              <Checkbox
-                checked={autoScale}
-                onChange={(_e, c) => {
-                  setAutoScale(c);
-                  if (onSetAutoScale) {
-                    onSetAutoScale(c);
-                  }
-                }}
-                inputProps={{ "aria-label": "controlled checkbox" }}
-              />
-            }
-            label="Auto scale"
-            componentsProps={{
-              typography: { fontSize: "14px" }, // Adjust font size
-            }}
-          />
-        )}
-        {zoomable || onRefresh !== undefined || enableFullScreen ? (
+        {zoomable ||
+        onRefresh !== undefined ||
+        !hideUseAutoScale ||
+        enableFullScreen ? (
           <Box
             sx={{
               display: "flex",
               flexDirection: "row",
               marginLeft: "auto",
               gap: 1,
+              alignItems: "center",
             }}
           >
+            {renderControls()}
             {zoomable && (
               <Button
                 variant="outlined"
@@ -617,11 +627,6 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                 size="small"
               >
                 Reset zoom
-              </Button>
-            )}
-            {onRefresh && (
-              <Button variant="outlined" onClick={onRefresh} size="small">
-                Refresh
               </Button>
             )}
             {enableFullScreen && (
