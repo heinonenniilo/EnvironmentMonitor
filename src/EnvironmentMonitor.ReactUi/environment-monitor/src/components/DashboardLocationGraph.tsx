@@ -94,6 +94,7 @@ export const DashboardLocationGraph: React.FC<{
           model && model.sensors.length > ChartJsColorsPluginMaxDatasets
         }
         enableHighlightOnRowHover
+        enableFullScreen
       />
     </Box>
   );
