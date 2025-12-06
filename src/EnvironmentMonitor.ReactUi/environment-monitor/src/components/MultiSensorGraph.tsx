@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   Checkbox,
-  CircularProgress,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -43,6 +42,7 @@ import zoomPlugin from "chartjs-plugin-zoom";
 import { MeasurementsDialog } from "./MeasurementsDialog";
 import type { Measurement } from "../models/measurement";
 import type { Entity } from "../models/entity";
+import { LoadingOverlay } from "../framework/LoadingOverlay";
 
 Chart.register(
   TimeScale,
@@ -547,6 +547,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           </Box>
         </DialogTitle>
         <DialogContent>
+          <LoadingOverlay isLoading={isLoading ?? false} />
           <div
             style={{
               position: "relative",
@@ -561,24 +562,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           </div>
         </DialogContent>
       </Dialog>
-      {isLoading && (
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          width="100%"
-          height="100%"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          sx={{
-            backgroundColor: "rgba(255,255,255,0.5)",
-            zIndex: 2,
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      )}
+      <LoadingOverlay isLoading={isLoading ?? false} />
       <Box
         width="100%"
         mt={0}
