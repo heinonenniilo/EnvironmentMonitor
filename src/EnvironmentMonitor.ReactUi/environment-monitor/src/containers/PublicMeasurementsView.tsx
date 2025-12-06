@@ -61,6 +61,7 @@ export const PublicMeasurementsView: React.FC = () => {
         hideUseAutoScale
         minHeight={500}
         enableHighlightOnRowHover
+        enableFullScreen
       />
     </AppContentWrapper>
   );
