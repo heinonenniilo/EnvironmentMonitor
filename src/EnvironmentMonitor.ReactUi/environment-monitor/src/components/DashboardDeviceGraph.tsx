@@ -19,7 +19,6 @@ export const DashboardDeviceGraph: React.FC<{
   model: MeasurementsViewModel | undefined;
   timeRange: number;
   autoFetch: boolean;
-  enableFullScreen?: boolean;
 }> = ({ device, sensors, model, timeRange, autoFetch }) => {
   const useAutoScale = useSelector(getDeviceAutoScale(device.identifier));
   const measurementApiHook = useApiHook().measureHook;
