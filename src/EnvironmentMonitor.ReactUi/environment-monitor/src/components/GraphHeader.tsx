@@ -4,11 +4,11 @@ import {
   Checkbox,
   FormControlLabel,
   IconButton,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { Close, Fullscreen } from "@mui/icons-material";
 import { Link } from "react-router";
-import { type ReactNode } from "react";
 
 export interface GraphHeaderProps {
   title: string;
@@ -22,7 +22,6 @@ export interface GraphHeaderProps {
   onClose?: () => void;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
-  renderControls?: () => ReactNode;
   showControls?: boolean;
 }
 
@@ -38,38 +37,8 @@ export const GraphHeader: React.FC<GraphHeaderProps> = ({
   onClose,
   onSetAutoScale,
   onRefresh,
-  renderControls,
   showControls,
 }) => {
-  const renderDefaultControls = () => (
-    <>
-      {!hideUseAutoScale && (
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={autoScale ?? false}
-              onChange={(_e, c) => {
-                if (onSetAutoScale) {
-                  onSetAutoScale(c);
-                }
-              }}
-              inputProps={{ "aria-label": "auto scale checkbox" }}
-            />
-          }
-          label="Auto scale"
-          componentsProps={{
-            typography: { fontSize: "14px" },
-          }}
-        />
-      )}
-      {onRefresh && (
-        <Button variant="outlined" onClick={onRefresh} size="small">
-          Refresh
-        </Button>
-      )}
-    </>
-  );
-
   return (
     <Box
       width="100%"
@@ -100,20 +69,41 @@ export const GraphHeader: React.FC<GraphHeaderProps> = ({
             alignItems: "center",
           }}
         >
-          {renderControls ? renderControls() : renderDefaultControls()}
+          {!hideUseAutoScale && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={autoScale ?? false}
+                  onChange={(_e, c) => {
+                    if (onSetAutoScale) {
+                      onSetAutoScale(c);
+                    }
+                  }}
+                  inputProps={{ "aria-label": "auto scale checkbox" }}
+                />
+              }
+              label="Auto scale"
+              componentsProps={{
+                typography: { fontSize: "14px" },
+              }}
+            />
+          )}
+          {onRefresh && (
+            <Button variant="outlined" onClick={onRefresh} size="small">
+              Refresh
+            </Button>
+          )}
           {zoomable && onResetZoom && (
             <Button variant="outlined" onClick={onResetZoom} size="small">
               Reset zoom
             </Button>
           )}
           {onFullScreen && (
-            <IconButton
-              onClick={onFullScreen}
-              size="small"
-              aria-label="fullscreen"
-            >
-              <Fullscreen />
-            </IconButton>
+            <Tooltip title="Fullscreen">
+              <IconButton onClick={onFullScreen} size="small">
+                <Fullscreen />
+              </IconButton>
+            </Tooltip>
           )}
           {onClose && (
             <IconButton
