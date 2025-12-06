@@ -15,8 +15,6 @@ export interface GraphHeaderProps {
   titleAsLink?: boolean;
   linkTo?: string;
   zoomable?: boolean;
-  enableFullScreen?: boolean;
-  showCloseButton?: boolean;
   hideUseAutoScale?: boolean;
   autoScale?: boolean;
   onResetZoom?: () => void;
@@ -33,8 +31,6 @@ export const GraphHeader: React.FC<GraphHeaderProps> = ({
   titleAsLink,
   linkTo,
   zoomable,
-  enableFullScreen,
-  showCloseButton,
   hideUseAutoScale,
   autoScale,
   onResetZoom,
@@ -110,7 +106,7 @@ export const GraphHeader: React.FC<GraphHeaderProps> = ({
               Reset zoom
             </Button>
           )}
-          {enableFullScreen && onFullScreen && (
+          {onFullScreen && (
             <IconButton
               onClick={onFullScreen}
               size="small"
@@ -119,7 +115,7 @@ export const GraphHeader: React.FC<GraphHeaderProps> = ({
               <Fullscreen />
             </IconButton>
           )}
-          {showCloseButton && onClose && (
+          {onClose && (
             <IconButton
               aria-label="close"
               onClick={onClose}

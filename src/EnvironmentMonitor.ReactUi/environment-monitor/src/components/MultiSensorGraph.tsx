@@ -62,8 +62,10 @@ export interface MultiSensorGraphProps {
   highlightPoints?: boolean;
   showMeasurementsOnDatasetClick?: boolean;
   enableFullScreen?: boolean;
+  isFullScreen?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
+  onSetFullScreen?: (state: boolean) => void;
   enableHighlightOnRowHover?: boolean;
 }
 
@@ -105,6 +107,8 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   highlightPoints,
   enableHighlightOnRowHover,
   enableFullScreen,
+  isFullScreen: isFullScreenProp,
+  onSetFullScreen,
 }) => {
   const singleDevice =
     entities && entities.length === 1 ? entities[0] : undefined;
@@ -118,8 +122,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const [highlightedDatasetLabel, setHighlightedDatasetLabel] = useState<
     string | null
   >(null);
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isFullScreenInternal, setIsFullScreenInternal] = useState(false);
   const chartRef = useRef<any>(null); // Types?
+
+  const isFullScreen = isFullScreenProp ?? isFullScreenInternal;
 
   useEffect(() => {
     if (useAutoScale !== undefined) {
@@ -131,6 +137,14 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     setAutoScale(state);
     if (onSetAutoScale) {
       onSetAutoScale(state);
+    }
+  };
+
+  const handleSetFullScreen = (state: boolean) => {
+    if (onSetFullScreen) {
+      onSetFullScreen(state);
+    } else {
+      setIsFullScreenInternal(state);
     }
   };
 
@@ -477,7 +491,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       />
       <Dialog
         open={isFullScreen}
-        onClose={() => setIsFullScreen(false)}
+        onClose={() => handleSetFullScreen(false)}
         fullWidth
         fullScreen
         sx={{ padding: 2 }}
@@ -486,12 +500,11 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           <GraphHeader
             title={getTitle()}
             showControls={true}
-            showCloseButton={true}
             hideUseAutoScale={hideUseAutoScale}
             autoScale={autoScale}
             onSetAutoScale={handleSetAutoScale}
             onRefresh={onRefresh}
-            onClose={() => setIsFullScreen(false)}
+            onClose={() => handleSetFullScreen(false)}
           />
         </DialogTitle>
         <DialogContent>
@@ -520,11 +533,14 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             : `${routes.measurements}/${singleDevice?.identifier}`
         }
         zoomable={zoomable}
-        enableFullScreen={enableFullScreen}
         hideUseAutoScale={hideUseAutoScale}
         autoScale={autoScale}
         onResetZoom={handleResetZoom}
-        onFullScreen={() => setIsFullScreen(true)}
+        onFullScreen={
+          isFullScreenProp === undefined
+            ? () => handleSetFullScreen(true)
+            : undefined
+        }
         onSetAutoScale={handleSetAutoScale}
         onRefresh={onRefresh}
         showControls={
