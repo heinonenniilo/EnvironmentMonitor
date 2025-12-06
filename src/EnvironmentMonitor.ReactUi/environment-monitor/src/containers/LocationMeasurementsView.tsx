@@ -19,6 +19,7 @@ export const LocationMeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const [isLoading, setIsLoading] = useState(false);
   const { locationId } = useParams<{ locationId?: string }>();
+  const [titleToShow, setTitleToShow] = useState<string | undefined>(undefined);
   const [selectedLocations, setSelectedLocations] = useState<LocationModel[]>(
     []
   );
@@ -160,6 +161,17 @@ export const LocationMeasurementsView: React.FC = () => {
           ) => {
             setTimeFrom(from);
             setTimeTo(to);
+            if (sensorIds.length > 0) {
+              const datesToShow = to
+                ? `${from.format("DD.MM.YYYY")} -> ${to.format("DD.MM.YYYY")}`
+                : `${from.format("DD.MM.YYYY")} ->`;
+              const entitiesToShow = selectedLocations.map(
+                (l) => l.displayName
+              );
+              setTitleToShow(`${datesToShow} (${entitiesToShow.join(", ")})`);
+            } else {
+              setTitleToShow(undefined);
+            }
             onSearch(
               from,
               to,
@@ -190,6 +202,7 @@ export const LocationMeasurementsView: React.FC = () => {
         <MultiSensorGraph
           enableFullScreen
           sensors={selectedSensors}
+          title={titleToShow}
           model={
             measurementsModel
               ? {

@@ -25,6 +25,7 @@ export const MeasurementsView: React.FC = () => {
   const { deviceId } = useParams<{ deviceId?: string }>();
   const [selectedDevices, setSelectedDevices] = useState<Device[]>([]);
 
+  const [titleToShow, setTitleToShow] = useState<string | undefined>(undefined);
   const [measurementsModel, setMeasurementsModel] = useState<
     MeasurementsViewModel | undefined
   >(undefined);
@@ -142,7 +143,17 @@ export const MeasurementsView: React.FC = () => {
             sensorIds: string[]
           ) => {
             setTimeFrom(from);
+            const datesToShow = to
+              ? `${from.format("DD.MM.YYYY")} -> ${to.format("DD.MM.YYYY")}`
+              : `${from.format("DD.MM.YYYY")} ->`;
+            const entitiesToShow = selectedDevices.map((d) => d.displayName);
+            if (entitiesToShow.length > 0) {
+              setTitleToShow(`${datesToShow} (${entitiesToShow.join(", ")})`);
+            } else {
+              setTitleToShow(undefined);
+            }
             setTimeTo(to);
+
             onSearch(from, to, sensorIds);
           }}
           onSelectEntity={toggleDeviceSelection}
@@ -177,6 +188,7 @@ export const MeasurementsView: React.FC = () => {
         <MultiSensorGraph
           sensors={selectedSensors}
           enableFullScreen
+          title={titleToShow}
           model={
             measurementsModel
               ? {
