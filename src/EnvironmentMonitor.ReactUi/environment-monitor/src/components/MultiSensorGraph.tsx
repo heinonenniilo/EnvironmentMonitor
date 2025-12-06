@@ -537,7 +537,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         autoScale={autoScale}
         onResetZoom={handleResetZoom}
         onFullScreen={
-          isFullScreenProp === undefined
+          isFullScreenProp === undefined && enableFullScreen
             ? () => handleSetFullScreen(true)
             : undefined
         }

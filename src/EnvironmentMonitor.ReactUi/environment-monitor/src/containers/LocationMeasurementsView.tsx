@@ -188,6 +188,7 @@ export const LocationMeasurementsView: React.FC = () => {
         }}
       >
         <MultiSensorGraph
+          enableFullScreen
           sensors={selectedSensors}
           model={
             measurementsModel

@@ -176,6 +176,7 @@ export const MeasurementsView: React.FC = () => {
       >
         <MultiSensorGraph
           sensors={selectedSensors}
+          enableFullScreen
           model={
             measurementsModel
               ? {
