@@ -1,18 +1,7 @@
 import "chartjs-adapter-moment";
 import { MeasurementTypes } from "../enums/measurementTypes";
 import { type Sensor } from "../models/sensor";
-import {
-  Box,
-  Button,
-  Checkbox,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  IconButton,
-  Typography,
-} from "@mui/material";
-import { Close, Fullscreen } from "@mui/icons-material";
+import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import {
   Chart,
@@ -33,7 +22,6 @@ import {
   type MeasurementInfo,
   MeasurementsInfoTable,
 } from "./MeasurementsInfoTable";
-import { Link } from "react-router";
 import { routes } from "../utilities/routes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { stringSort } from "../utilities/stringUtils";
@@ -43,6 +31,7 @@ import { MeasurementsDialog } from "./MeasurementsDialog";
 import type { Measurement } from "../models/measurement";
 import type { Entity } from "../models/entity";
 import { LoadingOverlay } from "../framework/LoadingOverlay";
+import { GraphHeader } from "./GraphHeader";
 
 Chart.register(
   TimeScale,
@@ -137,6 +126,13 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       setAutoScale(useAutoScale);
     }
   }, [useAutoScale]);
+
+  const handleSetAutoScale = (state: boolean) => {
+    setAutoScale(state);
+    if (onSetAutoScale) {
+      onSetAutoScale(state);
+    }
+  };
 
   const getSensorLabel = useCallback(
     (sensorIdentifier: string, typeId?: MeasurementTypes) => {
@@ -244,36 +240,6 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [model, highlightedDatasetLabel]);
-
-  const renderControls = () => (
-    <>
-      {!hideUseAutoScale && (
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={autoScale}
-              onChange={(_e, c) => {
-                setAutoScale(c);
-                if (onSetAutoScale) {
-                  onSetAutoScale(c);
-                }
-              }}
-              inputProps={{ "aria-label": "auto scale checkbox" }}
-            />
-          }
-          label="Auto scale"
-          componentsProps={{
-            typography: { fontSize: "14px" },
-          }}
-        />
-      )}
-      {onRefresh && (
-        <Button variant="outlined" onClick={onRefresh} size="small">
-          Refresh
-        </Button>
-      )}
-    </>
-  );
 
   const renderChart = (chartRefToUse?: any) => (
     <Line
@@ -516,35 +482,17 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         fullScreen
         sx={{ padding: 2 }}
       >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Box>{getTitle()}</Box>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            {renderControls()}
-            <IconButton
-              aria-label="close"
-              onClick={() => setIsFullScreen(false)}
-              sx={{
-                color: (theme) => theme.palette.grey[500],
-              }}
-              size="small"
-            >
-              <Close />
-            </IconButton>
-          </Box>
+        <DialogTitle>
+          <GraphHeader
+            title={getTitle()}
+            showControls={true}
+            showCloseButton={true}
+            hideUseAutoScale={hideUseAutoScale}
+            autoScale={autoScale}
+            onSetAutoScale={handleSetAutoScale}
+            onRefresh={onRefresh}
+            onClose={() => setIsFullScreen(false)}
+          />
         </DialogTitle>
         <DialogContent>
           <LoadingOverlay isLoading={isLoading ?? false} />
@@ -563,68 +511,30 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         </DialogContent>
       </Dialog>
       <LoadingOverlay isLoading={isLoading ?? false} />
-      <Box
-        width="100%"
-        mt={0}
-        flexGrow={0}
-        flexDirection="row"
-        display="flex"
-        alignItems="center" // Align children vertically
-      >
-        {titleAsLink ? (
-          <Link
-            to={
-              linkToLocationMeasurements
-                ? `${routes.locationMeasurements}/${singleDevice?.identifier}`
-                : `${routes.measurements}/${singleDevice?.identifier}`
-            }
-          >
-            <Typography align="left" gutterBottom>
-              {getTitle()}
-            </Typography>
-          </Link>
-        ) : (
-          <Typography align="left" gutterBottom>
-            {getTitle()}
-          </Typography>
-        )}
-        {zoomable ||
-        onRefresh !== undefined ||
-        !hideUseAutoScale ||
-        enableFullScreen ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              marginLeft: "auto",
-              gap: 1,
-              alignItems: "center",
-            }}
-          >
-            {renderControls()}
-            {zoomable && (
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  handleResetZoom();
-                }}
-                size="small"
-              >
-                Reset zoom
-              </Button>
-            )}
-            {enableFullScreen && (
-              <IconButton
-                onClick={() => setIsFullScreen(true)}
-                size="small"
-                aria-label="fullscreen"
-              >
-                <Fullscreen />
-              </IconButton>
-            )}
-          </Box>
-        ) : null}
-      </Box>
+      <GraphHeader
+        title={getTitle()}
+        titleAsLink={titleAsLink}
+        linkTo={
+          linkToLocationMeasurements
+            ? `${routes.locationMeasurements}/${singleDevice?.identifier}`
+            : `${routes.measurements}/${singleDevice?.identifier}`
+        }
+        zoomable={zoomable}
+        enableFullScreen={enableFullScreen}
+        hideUseAutoScale={hideUseAutoScale}
+        autoScale={autoScale}
+        onResetZoom={handleResetZoom}
+        onFullScreen={() => setIsFullScreen(true)}
+        onSetAutoScale={handleSetAutoScale}
+        onRefresh={onRefresh}
+        showControls={
+          zoomable ||
+          onRefresh !== undefined ||
+          !hideUseAutoScale ||
+          enableFullScreen ||
+          false
+        }
+      />
       <Box
         flex={1}
         flexGrow={1}
