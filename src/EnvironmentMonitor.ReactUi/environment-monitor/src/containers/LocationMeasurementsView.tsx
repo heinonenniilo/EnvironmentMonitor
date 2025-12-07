@@ -19,6 +19,7 @@ import { getGraphTitle } from "../utilities/graphUtils";
 export const LocationMeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const [isLoading, setIsLoading] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const { locationId } = useParams<{ locationId?: string }>();
   const [titleToShow, setTitleToShow] = useState<string | undefined>(undefined);
   const [selectedLocations, setSelectedLocations] = useState<LocationModel[]>(
@@ -213,8 +214,10 @@ export const LocationMeasurementsView: React.FC = () => {
               : undefined
           }
           entities={selectedLocations}
+          onSetFullScreen={setIsFullScreen}
           key={"graph_01"}
-          isLoading={isLoading}
+          isLoading={isFullScreen ? isLoading : undefined}
+          isFullScreen={isFullScreen}
           minHeight={500}
           useAutoScale
           hideUseAutoScale

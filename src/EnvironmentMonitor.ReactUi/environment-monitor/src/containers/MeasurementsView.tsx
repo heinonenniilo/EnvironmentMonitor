@@ -23,6 +23,7 @@ export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const { deviceId } = useParams<{ deviceId?: string }>();
   const [selectedDevices, setSelectedDevices] = useState<Device[]>([]);
 
@@ -186,7 +187,7 @@ export const MeasurementsView: React.FC = () => {
         <MultiSensorGraph
           sensors={selectedSensors}
           title={titleToShow}
-          isLoading={isLoading}
+          isLoading={isFullScreen ? isLoading : undefined}
           model={
             measurementsModel
               ? {
@@ -200,6 +201,8 @@ export const MeasurementsView: React.FC = () => {
           }
           entities={selectedDevices}
           key={"graph_01"}
+          isFullScreen={isFullScreen}
+          onSetFullScreen={setIsFullScreen}
           minHeight={500}
           useAutoScale={
             selectedDevices.length === 1 ? autoScaleInUseForDevice : undefined
