@@ -214,6 +214,7 @@ export const LocationMeasurementsView: React.FC = () => {
           }
           entities={selectedLocations}
           key={"graph_01"}
+          isLoading={isLoading}
           minHeight={500}
           useAutoScale
           hideUseAutoScale

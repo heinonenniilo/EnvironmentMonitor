@@ -186,6 +186,7 @@ export const MeasurementsView: React.FC = () => {
         <MultiSensorGraph
           sensors={selectedSensors}
           title={titleToShow}
+          isLoading={isLoading}
           model={
             measurementsModel
               ? {
