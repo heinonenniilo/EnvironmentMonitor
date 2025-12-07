@@ -14,11 +14,13 @@ import { MultiSensorGraph } from "../components/MultiSensorGraph";
 import { type Sensor } from "../models/sensor";
 import { useParams } from "react-router";
 import moment from "moment";
+import { getGraphTitle } from "../utilities/graphUtils";
 
 export const LocationMeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const [isLoading, setIsLoading] = useState(false);
   const { locationId } = useParams<{ locationId?: string }>();
+  const [titleToShow, setTitleToShow] = useState<string | undefined>(undefined);
   const [selectedLocations, setSelectedLocations] = useState<LocationModel[]>(
     []
   );
@@ -160,6 +162,11 @@ export const LocationMeasurementsView: React.FC = () => {
           ) => {
             setTimeFrom(from);
             setTimeTo(to);
+            if (sensorIds.length > 0) {
+              setTitleToShow(getGraphTitle(selectedLocations, from, to));
+            } else {
+              setTitleToShow(undefined);
+            }
             onSearch(
               from,
               to,
@@ -189,6 +196,7 @@ export const LocationMeasurementsView: React.FC = () => {
       >
         <MultiSensorGraph
           sensors={selectedSensors}
+          title={titleToShow}
           model={
             measurementsModel
               ? {
@@ -221,6 +229,7 @@ export const LocationMeasurementsView: React.FC = () => {
               );
             }
           }}
+          showFullScreenIcon
         />
       </Box>
     </AppContentWrapper>

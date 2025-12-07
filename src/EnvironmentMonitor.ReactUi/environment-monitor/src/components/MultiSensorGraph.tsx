@@ -1,14 +1,7 @@
 import "chartjs-adapter-moment";
 import { MeasurementTypes } from "../enums/measurementTypes";
 import { type Sensor } from "../models/sensor";
-import {
-  Box,
-  Button,
-  Checkbox,
-  CircularProgress,
-  FormControlLabel,
-  Typography,
-} from "@mui/material";
+import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import {
   Chart,
@@ -20,7 +13,6 @@ import {
   TimeScale,
   Tooltip,
 } from "chart.js";
-import { Line } from "react-chartjs-2";
 import {
   getDatasetLabel,
   getMeasurementUnit,
@@ -29,7 +21,6 @@ import {
   type MeasurementInfo,
   MeasurementsInfoTable,
 } from "./MeasurementsInfoTable";
-import { Link } from "react-router";
 import { routes } from "../utilities/routes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { stringSort } from "../utilities/stringUtils";
@@ -38,6 +29,10 @@ import zoomPlugin from "chartjs-plugin-zoom";
 import { MeasurementsDialog } from "./MeasurementsDialog";
 import type { Measurement } from "../models/measurement";
 import type { Entity } from "../models/entity";
+import { LoadingOverlay } from "../framework/LoadingOverlay";
+import { GraphHeader } from "./GraphHeader";
+import { LineGraph } from "../framework/LineGraph";
+import type { GraphDataset } from "../models/GraphDataset";
 
 Chart.register(
   TimeScale,
@@ -67,24 +62,12 @@ export interface MultiSensorGraphProps {
   hideUseAutoScale?: boolean;
   highlightPoints?: boolean;
   showMeasurementsOnDatasetClick?: boolean;
+  isFullScreen?: boolean;
+  enableHighlightOnRowHover?: boolean;
+  showFullScreenIcon?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
-  enableHighlightOnRowHover?: boolean;
-}
-
-interface GraphDataset {
-  label: string;
-  yAxisID: string;
-  data: {
-    x: Date;
-    y: number;
-  }[];
-  id: number;
-  measurementType: MeasurementTypes;
-  borderColor?: string;
-  backgroundColor?: string;
-  stepped?: boolean;
-  sensorIdentifier: string;
+  onSetFullScreen?: (state: boolean) => void;
 }
 
 const dynamicColorLimit = 7;
@@ -98,8 +81,6 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   titleAsLink,
   linkToLocationMeasurements,
   useAutoScale,
-  onSetAutoScale,
-  onRefresh,
   title,
   isLoading,
   useDynamicColors,
@@ -109,6 +90,11 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   showMeasurementsOnDatasetClick,
   highlightPoints,
   enableHighlightOnRowHover,
+  showFullScreenIcon,
+  isFullScreen: isFullScreenProp,
+  onSetFullScreen,
+  onSetAutoScale,
+  onRefresh,
 }) => {
   const singleDevice =
     entities && entities.length === 1 ? entities[0] : undefined;
@@ -122,6 +108,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const [highlightedDatasetLabel, setHighlightedDatasetLabel] = useState<
     string | null
   >(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const chartRef = useRef<any>(null); // Types?
 
   useEffect(() => {
@@ -129,6 +116,27 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
       setAutoScale(useAutoScale);
     }
   }, [useAutoScale]);
+
+  useEffect(() => {
+    if (isFullScreenProp !== undefined) {
+      setIsFullScreen(isFullScreenProp);
+    }
+  }, [isFullScreenProp]);
+
+  const handleSetAutoScale = (state: boolean) => {
+    setAutoScale(state);
+    if (onSetAutoScale) {
+      onSetAutoScale(state);
+    }
+  };
+
+  const handleSetFullScreen = (state: boolean) => {
+    if (onSetFullScreen) {
+      onSetFullScreen(state);
+    } else {
+      setIsFullScreen(state);
+    }
+  };
 
   const getSensorLabel = useCallback(
     (sensorIdentifier: string, typeId?: MeasurementTypes) => {
@@ -310,10 +318,6 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     return hasLightAxis;
   };
 
-  const isTouchDevice = () => {
-    return window.matchMedia("(pointer: coarse)").matches;
-  };
-
   return (
     <Box
       display="flex"
@@ -332,98 +336,99 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         }}
         title={dialogTitle}
       />
-      {isLoading && (
-        <Box
-          position="absolute"
-          top={0}
-          left={0}
-          width="100%"
-          height="100%"
-          display="flex"
-          justifyContent="center"
-          alignItems="center"
-          sx={{
-            backgroundColor: "rgba(255,255,255,0.5)",
-            zIndex: 2,
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      )}
-      <Box
-        width="100%"
-        mt={0}
-        flexGrow={0}
-        flexDirection="row"
-        display="flex"
-        alignItems="center" // Align children vertically
+      <Dialog
+        open={isFullScreen}
+        onClose={() => handleSetFullScreen(false)}
+        fullWidth
+        fullScreen
+        sx={{ padding: 2 }}
       >
-        {titleAsLink ? (
-          <Link
-            to={
-              linkToLocationMeasurements
-                ? `${routes.locationMeasurements}/${singleDevice?.identifier}`
-                : `${routes.measurements}/${singleDevice?.identifier}`
-            }
-          >
-            <Typography align="left" gutterBottom>
-              {getTitle()}
-            </Typography>
-          </Link>
-        ) : (
-          <Typography align="left" gutterBottom>
-            {getTitle()}
-          </Typography>
-        )}
-        {!hideUseAutoScale && (
-          <FormControlLabel
-            sx={{ marginLeft: 2 }}
-            control={
-              <Checkbox
-                checked={autoScale}
-                onChange={(_e, c) => {
-                  setAutoScale(c);
-                  if (onSetAutoScale) {
-                    onSetAutoScale(c);
-                  }
-                }}
-                inputProps={{ "aria-label": "controlled checkbox" }}
-              />
-            }
-            label="Auto scale"
-            componentsProps={{
-              typography: { fontSize: "14px" }, // Adjust font size
-            }}
+        <DialogTitle>
+          <GraphHeader
+            title={getTitle()}
+            showControls={true}
+            hideUseAutoScale={hideUseAutoScale}
+            autoScale={autoScale}
+            onSetAutoScale={handleSetAutoScale}
+            onRefresh={onRefresh}
+            onClose={() => handleSetFullScreen(false)}
           />
-        )}
-        {zoomable || onRefresh !== undefined ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              marginLeft: "auto",
-              gap: 1,
+        </DialogTitle>
+        <DialogContent>
+          <LoadingOverlay isLoading={isLoading ?? false} />
+          <div
+            style={{
+              position: "relative",
+              margin: "auto",
+              width: "100%",
+              height: "100%",
+              // minHeight: "400px",
+              flexGrow: 1,
             }}
           >
-            {zoomable && (
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  handleResetZoom();
-                }}
-                size="small"
-              >
-                Reset zoom
-              </Button>
-            )}
-            {onRefresh && (
-              <Button variant="outlined" onClick={onRefresh} size="small">
-                Refresh
-              </Button>
-            )}
-          </Box>
-        ) : null}
-      </Box>
+            <LineGraph
+              datasets={memoSets}
+              chartRef={chartRef}
+              useDynamicColors={useDynamicColors}
+              dynamicColorLimit={dynamicColorLimit}
+              zoomable={zoomable}
+              highlightPoints={highlightPoints}
+              yAxisMax={getMaxScale()}
+              yAxisMin={getMinScale()}
+              hasSecondaryAxis={hasLightAxis()}
+              showMeasurementsOnDatasetClick={showMeasurementsOnDatasetClick}
+              enableHighlightOnRowHover={enableHighlightOnRowHover}
+              onLegendClick={(_datasetIndex, dataset) => {
+                showMeasurementsInDialog(
+                  dataset.sensorIdentifier,
+                  dataset.measurementType
+                );
+              }}
+              onLegendHover={(datasetLabel) => {
+                setHighlightedDatasetLabel(datasetLabel);
+              }}
+              onLegendLeave={() => {
+                setHighlightedDatasetLabel(null);
+              }}
+              onDatasetToggle={(datasetIndex, hidden) => {
+                if (hidden) {
+                  setHiddenDatasetIds((prev) => [...prev, datasetIndex]);
+                } else {
+                  setHiddenDatasetIds(
+                    hiddenDatasetIds.filter((d) => d !== datasetIndex)
+                  );
+                }
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+      <LoadingOverlay isLoading={isLoading ?? false} />
+      <GraphHeader
+        title={getTitle()}
+        titleAsLink={titleAsLink}
+        linkTo={
+          linkToLocationMeasurements
+            ? `${routes.locationMeasurements}/${singleDevice?.identifier}`
+            : `${routes.measurements}/${singleDevice?.identifier}`
+        }
+        zoomable={zoomable}
+        hideUseAutoScale={hideUseAutoScale}
+        autoScale={autoScale}
+        onResetZoom={handleResetZoom}
+        onFullScreen={
+          showFullScreenIcon ? () => handleSetFullScreen(true) : undefined
+        }
+        onSetAutoScale={handleSetAutoScale}
+        onRefresh={onRefresh}
+        showControls={
+          zoomable ||
+          onRefresh !== undefined ||
+          !hideUseAutoScale ||
+          showFullScreenIcon ||
+          false
+        }
+      />
       <Box
         flex={1}
         flexGrow={1}
@@ -444,144 +449,38 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             flexGrow: 1,
           }}
         >
-          <Line
-            data={{ datasets: memoSets }}
-            height={"auto"}
-            ref={chartRef}
-            options={{
-              maintainAspectRatio: false,
-              plugins: {
-                title: {
-                  text: "Chart.js Time Scale",
-                  display: true,
-                },
-                colors:
-                  useDynamicColors || memoSets.length > dynamicColorLimit
-                    ? undefined
-                    : {
-                        forceOverride: true,
-                      },
-                legend: {
-                  onClick: (_event, legendItem, legend) => {
-                    if (legendItem.datasetIndex === undefined) {
-                      return;
-                    }
-                    if (showMeasurementsOnDatasetClick) {
-                      if (memoSets.length > legendItem.datasetIndex) {
-                        const matchingDataset =
-                          memoSets[legendItem.datasetIndex];
-                        showMeasurementsInDialog(
-                          matchingDataset.sensorIdentifier,
-                          matchingDataset.measurementType
-                        );
-                      }
-                      return;
-                    }
-
-                    if (!legendItem.hidden) {
-                      legend.chart.hide(legendItem.datasetIndex);
-                      if (legendItem.datasetIndex !== undefined) {
-                        const datasetIndex = legendItem.datasetIndex;
-                        setHiddenDatasetIds((prev) => [...prev, datasetIndex]);
-                      }
-                      legend.chart.update("hide");
-                    } else {
-                      legend.chart.show(legendItem.datasetIndex);
-                      setHiddenDatasetIds(
-                        hiddenDatasetIds.filter(
-                          (d) => d !== legendItem.datasetIndex
-                        )
-                      );
-                      legend.chart.update("show");
-                    }
-                  },
-                  onHover: (event, legendItem) => {
-                    (event.native?.target as any).style.cursor = "pointer";
-                    if (
-                      enableHighlightOnRowHover &&
-                      !isTouchDevice() &&
-                      legendItem.datasetIndex !== undefined &&
-                      !legendItem.hidden
-                    ) {
-                      const dataset = memoSets[legendItem.datasetIndex];
-                      if (dataset) {
-                        setHighlightedDatasetLabel(dataset.label);
-                      }
-                    }
-                  },
-                  onLeave: (event) => {
-                    (event.native?.target as any).style.cursor = "default";
-                    if (enableHighlightOnRowHover && !isTouchDevice()) {
-                      setHighlightedDatasetLabel(null);
-                    }
-                  },
-                },
-                zoom: zoomable
-                  ? {
-                      zoom: {
-                        drag: {
-                          enabled: true,
-                          borderColor: "rgba(54,162,235,0.5)",
-                          borderWidth: 1,
-                          backgroundColor: "rgba(54,162,235,0.15)",
-                        },
-                        pinch: { enabled: true },
-                        mode: "x",
-                        wheel: { enabled: true },
-                      },
-                      pan: {
-                        enabled: isTouchDevice(),
-                        mode: "x",
-                      },
-                    }
-                  : undefined,
-              },
-              elements: {
-                point: {
-                  radius: highlightPoints ? 2 : 0,
-                },
-              },
-              responsive: true,
-              scales: {
-                x: {
-                  type: "time",
-                  time: {
-                    //tooltipFormat: "DD T",
-                    unit: "hour",
-                    displayFormats: {
-                      hour: "HH:mm",
-                    },
-                  },
-                  ticks: {
-                    major: {
-                      enabled: true,
-                    },
-                    font: (context) => {
-                      if (context.tick && context.tick.major) {
-                        return {
-                          weight: "bold",
-                        };
-                      }
-                    },
-                  },
-                },
-                y: {
-                  max: getMaxScale(),
-                  min: getMinScale(),
-                },
-                y1: {
-                  max: undefined,
-                  min: undefined,
-                  display: hasLightAxis(),
-                  position: "right",
-                  ticks: {
-                    callback: (value) => `${value} lx`,
-                  },
-                  grid: {
-                    drawOnChartArea: false,
-                  },
-                },
-              },
+          <LineGraph
+            datasets={memoSets}
+            chartRef={chartRef}
+            useDynamicColors={useDynamicColors}
+            dynamicColorLimit={dynamicColorLimit}
+            zoomable={zoomable}
+            highlightPoints={highlightPoints}
+            yAxisMax={getMaxScale()}
+            yAxisMin={getMinScale()}
+            hasSecondaryAxis={hasLightAxis()}
+            showMeasurementsOnDatasetClick={showMeasurementsOnDatasetClick}
+            enableHighlightOnRowHover={enableHighlightOnRowHover}
+            onLegendClick={(_datasetIndex, dataset) => {
+              showMeasurementsInDialog(
+                dataset.sensorIdentifier,
+                dataset.measurementType
+              );
+            }}
+            onLegendHover={(datasetLabel) => {
+              setHighlightedDatasetLabel(datasetLabel);
+            }}
+            onLegendLeave={() => {
+              setHighlightedDatasetLabel(null);
+            }}
+            onDatasetToggle={(datasetIndex, hidden) => {
+              if (hidden) {
+                setHiddenDatasetIds((prev) => [...prev, datasetIndex]);
+              } else {
+                setHiddenDatasetIds(
+                  hiddenDatasetIds.filter((d) => d !== datasetIndex)
+                );
+              }
             }}
           />
         </div>

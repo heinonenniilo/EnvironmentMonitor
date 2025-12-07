@@ -17,6 +17,7 @@ import { MultiSensorGraph } from "../components/MultiSensorGraph";
 import { type Sensor } from "../models/sensor";
 import { useParams } from "react-router";
 import moment from "moment";
+import { getGraphTitle } from "../utilities/graphUtils";
 
 export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
@@ -25,6 +26,7 @@ export const MeasurementsView: React.FC = () => {
   const { deviceId } = useParams<{ deviceId?: string }>();
   const [selectedDevices, setSelectedDevices] = useState<Device[]>([]);
 
+  const [titleToShow, setTitleToShow] = useState<string | undefined>(undefined);
   const [measurementsModel, setMeasurementsModel] = useState<
     MeasurementsViewModel | undefined
   >(undefined);
@@ -142,7 +144,14 @@ export const MeasurementsView: React.FC = () => {
             sensorIds: string[]
           ) => {
             setTimeFrom(from);
+
+            if (selectedDevices.length > 0) {
+              setTitleToShow(getGraphTitle(selectedDevices, from, to));
+            } else {
+              setTitleToShow(undefined);
+            }
             setTimeTo(to);
+
             onSearch(from, to, sensorIds);
           }}
           onSelectEntity={toggleDeviceSelection}
@@ -176,6 +185,7 @@ export const MeasurementsView: React.FC = () => {
       >
         <MultiSensorGraph
           sensors={selectedSensors}
+          title={titleToShow}
           model={
             measurementsModel
               ? {
@@ -212,6 +222,7 @@ export const MeasurementsView: React.FC = () => {
               );
             }
           }}
+          showFullScreenIcon
         />
       </Box>
     </AppContentWrapper>

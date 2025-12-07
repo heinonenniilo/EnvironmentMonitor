@@ -1,10 +1,10 @@
 import type { Entity } from "../models/entity";
 
-export const getDeviceTitle = (device: Entity | undefined): string => {
-  if (!device) {
+export const getEntityTitle = (entity: Entity | undefined): string => {
+  if (!entity) {
     return "";
   }
-  return device.displayName ?? device.name;
+  return entity.displayName ?? entity.name;
 };
 
 export const getDeviceDefaultImageUrl = (identifier: string) => {

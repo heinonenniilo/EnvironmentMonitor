@@ -22,7 +22,7 @@ import { useDropzone } from "react-dropzone";
 import { DeviceImageDialog } from "./DeviceImageDialog";
 import { dateTimeSort, getFormattedDate } from "../utilities/datetimeUtils";
 import { formatBytes } from "../utilities/stringUtils";
-import { getDeviceAttachmentUrl } from "../utilities/deviceUtils";
+import { getDeviceAttachmentUrl } from "../utilities/entityUtils";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
