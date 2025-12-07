@@ -69,14 +69,14 @@ export const PublicMeasurementsView: React.FC = () => {
       <MultiSensorGraph
         sensors={model?.sensors ?? []}
         model={model}
-        title=" "
+        title={isFullScreen ? `Range: ${timeRange} hours` : " "}
         useAutoScale
         hideUseAutoScale
         minHeight={500}
         enableHighlightOnRowHover
-        enableFullScreen
         isFullScreen={isFullScreen}
         onSetFullScreen={(state) => setIsFullScreen(state)}
+        showFullScreenIcon={false}
       />
     </AppContentWrapper>
   );

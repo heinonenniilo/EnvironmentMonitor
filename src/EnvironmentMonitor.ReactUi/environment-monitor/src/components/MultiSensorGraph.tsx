@@ -61,12 +61,12 @@ export interface MultiSensorGraphProps {
   hideUseAutoScale?: boolean;
   highlightPoints?: boolean;
   showMeasurementsOnDatasetClick?: boolean;
-  enableFullScreen?: boolean;
   isFullScreen?: boolean;
+  enableHighlightOnRowHover?: boolean;
+  showFullScreenIcon?: boolean;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
   onSetFullScreen?: (state: boolean) => void;
-  enableHighlightOnRowHover?: boolean;
 }
 
 interface GraphDataset {
@@ -95,8 +95,6 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   titleAsLink,
   linkToLocationMeasurements,
   useAutoScale,
-  onSetAutoScale,
-  onRefresh,
   title,
   isLoading,
   useDynamicColors,
@@ -106,9 +104,11 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   showMeasurementsOnDatasetClick,
   highlightPoints,
   enableHighlightOnRowHover,
-  enableFullScreen,
+  showFullScreenIcon,
   isFullScreen: isFullScreenProp,
   onSetFullScreen,
+  onSetAutoScale,
+  onRefresh,
 }) => {
   const singleDevice =
     entities && entities.length === 1 ? entities[0] : undefined;
@@ -122,16 +122,20 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const [highlightedDatasetLabel, setHighlightedDatasetLabel] = useState<
     string | null
   >(null);
-  const [isFullScreenInternal, setIsFullScreenInternal] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const chartRef = useRef<any>(null); // Types?
-
-  const isFullScreen = isFullScreenProp ?? isFullScreenInternal;
 
   useEffect(() => {
     if (useAutoScale !== undefined) {
       setAutoScale(useAutoScale);
     }
   }, [useAutoScale]);
+
+  useEffect(() => {
+    if (isFullScreenProp !== undefined) {
+      setIsFullScreen(isFullScreenProp);
+    }
+  }, [isFullScreenProp]);
 
   const handleSetAutoScale = (state: boolean) => {
     setAutoScale(state);
@@ -144,7 +148,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     if (onSetFullScreen) {
       onSetFullScreen(state);
     } else {
-      setIsFullScreenInternal(state);
+      setIsFullScreen(state);
     }
   };
 
@@ -537,9 +541,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         autoScale={autoScale}
         onResetZoom={handleResetZoom}
         onFullScreen={
-          isFullScreenProp === undefined && enableFullScreen
-            ? () => handleSetFullScreen(true)
-            : undefined
+          showFullScreenIcon ? () => handleSetFullScreen(true) : undefined
         }
         onSetAutoScale={handleSetAutoScale}
         onRefresh={onRefresh}
@@ -547,7 +549,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
           zoomable ||
           onRefresh !== undefined ||
           !hideUseAutoScale ||
-          enableFullScreen ||
+          showFullScreenIcon ||
           false
         }
       />

@@ -200,7 +200,6 @@ export const LocationMeasurementsView: React.FC = () => {
         }}
       >
         <MultiSensorGraph
-          enableFullScreen
           sensors={selectedSensors}
           title={titleToShow}
           model={
@@ -235,6 +234,7 @@ export const LocationMeasurementsView: React.FC = () => {
               );
             }
           }}
+          showFullScreenIcon
         />
       </Box>
     </AppContentWrapper>
