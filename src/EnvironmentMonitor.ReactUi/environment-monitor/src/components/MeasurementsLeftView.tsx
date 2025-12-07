@@ -11,7 +11,7 @@ import moment from "moment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { type Sensor } from "../models/sensor";
 import { stringSort } from "../utilities/stringUtils";
-import { getDeviceTitle } from "../utilities/deviceUtils";
+import { getEntityTitle } from "../utilities/entityUtils";
 import { type Entity } from "../models/entity";
 import { getMeasurementUnit } from "../utilities/measurementUtils";
 export interface MeasurementsLeftViewProps {
@@ -139,7 +139,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
             multiple
           >
             {[...entities]
-              .sort((a, b) => stringSort(getDeviceTitle(a), getDeviceTitle(b)))
+              .sort((a, b) => stringSort(getEntityTitle(a), getEntityTitle(b)))
               .map((y) => (
                 <MenuItem
                   value={y.identifier}
@@ -148,7 +148,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                     onSelectEntity(y.identifier);
                   }}
                 >
-                  {getDeviceTitle(y)}
+                  {getEntityTitle(y)}
                 </MenuItem>
               ))}
           </Select>

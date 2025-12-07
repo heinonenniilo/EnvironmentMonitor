@@ -14,6 +14,7 @@ import { MultiSensorGraph } from "../components/MultiSensorGraph";
 import { type Sensor } from "../models/sensor";
 import { useParams } from "react-router";
 import moment from "moment";
+import { getGraphTitle } from "../utilities/graphUtils";
 
 export const LocationMeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
@@ -162,13 +163,7 @@ export const LocationMeasurementsView: React.FC = () => {
             setTimeFrom(from);
             setTimeTo(to);
             if (sensorIds.length > 0) {
-              const datesToShow = to
-                ? `${from.format("DD.MM.YYYY")} -> ${to.format("DD.MM.YYYY")}`
-                : `${from.format("DD.MM.YYYY")} ->`;
-              const entitiesToShow = selectedLocations.map(
-                (l) => l.displayName
-              );
-              setTitleToShow(`${datesToShow} (${entitiesToShow.join(", ")})`);
+              setTitleToShow(getGraphTitle(selectedLocations, from, to));
             } else {
               setTitleToShow(undefined);
             }

@@ -7,7 +7,7 @@ import { formatBytes } from "../utilities/stringUtils";
 import { FileUpload, Download, Delete } from "@mui/icons-material";
 import { useRef, useState } from "react";
 import type { DeviceInfo } from "../models/deviceInfo";
-import { getDeviceAttachmentUrl } from "../utilities/deviceUtils";
+import { getDeviceAttachmentUrl } from "../utilities/entityUtils";
 import { FileUploadDialog } from "./FileUploadDialog";
 
 export interface DeviceAttachmentsProps {

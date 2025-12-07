@@ -9,8 +9,8 @@ import { useState } from "react";
 import { DeviceImageDialog } from "./DeviceImageDialog";
 import {
   getDeviceDefaultImageUrl,
-  getDeviceTitle,
-} from "../utilities/deviceUtils";
+  getEntityTitle,
+} from "../utilities/entityUtils";
 import type { DeviceMessagesLocationState } from "../containers/DeviceMessagesView";
 
 export interface DeviceTableProps {
@@ -79,7 +79,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       flex: 1,
       minWidth: 200,
       renderCell: (params) => {
-        const text = getDeviceTitle((params?.row as DeviceInfo).device);
+        const text = getEntityTitle((params?.row as DeviceInfo).device);
         return renderLink ? (
           <Link
             to={`${routes.devices}/${
@@ -97,7 +97,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
         if (!row) {
           return "";
         }
-        return getDeviceTitle((row as DeviceInfo)?.device);
+        return getEntityTitle((row as DeviceInfo)?.device);
       },
     },
     {

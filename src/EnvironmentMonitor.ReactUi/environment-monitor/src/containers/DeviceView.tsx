@@ -25,7 +25,7 @@ import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { type DeviceStatusModel } from "../models/deviceStatus";
 import { MeasurementTypes } from "../enums/measurementTypes";
 import { setDevices } from "../reducers/measurementReducer";
-import { getDeviceTitle } from "../utilities/deviceUtils";
+import { getEntityTitle } from "../utilities/entityUtils";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 import { DeviceAttachments } from "../components/DeviceAttachments";
 import { Refresh } from "@mui/icons-material";
@@ -543,7 +543,7 @@ export const DeviceView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      title={getDeviceTitle(selectedDevice?.device)}
+      title={getEntityTitle(selectedDevice?.device)}
       isLoading={isLoading}
     >
       <Box

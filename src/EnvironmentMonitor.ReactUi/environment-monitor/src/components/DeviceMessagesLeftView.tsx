@@ -11,7 +11,7 @@ import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
 import { defaultStart } from "../containers/DeviceMessagesView";
 import { stringSort } from "../utilities/stringUtils";
-import { getDeviceTitle } from "../utilities/deviceUtils";
+import { getEntityTitle } from "../utilities/entityUtils";
 import type { LocationModel } from "../models/location";
 import type { DeviceInfo } from "../models/deviceInfo";
 
@@ -174,14 +174,14 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
               ),
             ]
               .sort((a, b) =>
-                stringSort(getDeviceTitle(a.device), getDeviceTitle(b.device))
+                stringSort(getEntityTitle(a.device), getEntityTitle(b.device))
               )
               .map((y) => (
                 <MenuItem
                   value={y.device.identifier}
                   key={`device-${y.device.identifier}`}
                 >
-                  {getDeviceTitle(y.device)}
+                  {getEntityTitle(y.device)}
                 </MenuItem>
               ))}
           </Select>
