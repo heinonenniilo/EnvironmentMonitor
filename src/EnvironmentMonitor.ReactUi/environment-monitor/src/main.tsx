@@ -18,6 +18,8 @@ import { ThemeProvider } from "@mui/material";
 import { baseTheme } from "./utilities/baseTheme";
 import { PublicMeasurementsView } from "./containers/PublicMeasurementsView";
 import { LoginView } from "./containers/LoginView";
+import { AuthorizedComponent } from "./components/AuthorizedComponent";
+import { RoleNames } from "./enums/roleNames";
 
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
@@ -27,37 +29,86 @@ createRoot(document.getElementById("root")!).render(
           <App>
             <Routes>
               <Route path={routes.main} element={<PublicMeasurementsView />} />
-              <Route path={routes.home} element={<HomeView />} />
+              <Route
+                path={routes.home}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.User}>
+                    <HomeView />
+                  </AuthorizedComponent>
+                }
+              />
               <Route path={routes.login} element={<LoginView />} />
-              <Route path={routes.dashboard} element={<DashboardView />} />
+              <Route
+                path={routes.dashboard}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.User}>
+                    <DashboardView />
+                  </AuthorizedComponent>
+                }
+              />
               <Route
                 path={routes.locationDashboard}
-                element={<DashbordLocationsView />}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.User}>
+                    <DashbordLocationsView />
+                  </AuthorizedComponent>
+                }
               />
               <Route
                 path={routes.measurements}
-                element={<MeasurementsView />}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.User}>
+                    <MeasurementsView />
+                  </AuthorizedComponent>
+                }
               />
               <Route
                 path={routes.measurementsByDevice}
-                element={<MeasurementsView />}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.User}>
+                    <MeasurementsView />
+                  </AuthorizedComponent>
+                }
               />
               <Route
                 path={routes.locationMeasurements}
-                element={<LocationMeasurementsView />}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.User}>
+                    <LocationMeasurementsView />
+                  </AuthorizedComponent>
+                }
               />
               <Route
                 path={routes.measurementsByLocation}
-                element={<LocationMeasurementsView />}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.User}>
+                    <LocationMeasurementsView />
+                  </AuthorizedComponent>
+                }
               />
-              <Route path={routes.devices} element={<DevicesView />} />
+              <Route
+                path={routes.devices}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.Admin}>
+                    <DevicesView />
+                  </AuthorizedComponent>
+                }
+              />
               <Route
                 path={routes.deviceView}
-                element={<DeviceView></DeviceView>}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.Admin}>
+                    <DeviceView />
+                  </AuthorizedComponent>
+                }
               />
               <Route
                 path={routes.deviceMessages}
-                element={<DeviceMessagesView />}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.Admin}>
+                    <DeviceMessagesView />
+                  </AuthorizedComponent>
+                }
               />
             </Routes>
           </App>
