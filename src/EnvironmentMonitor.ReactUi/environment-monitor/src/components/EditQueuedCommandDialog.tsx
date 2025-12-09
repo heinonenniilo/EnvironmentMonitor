@@ -4,7 +4,6 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  TextField,
   Box,
   Typography,
   IconButton,
@@ -13,7 +12,8 @@ import { Close } from "@mui/icons-material";
 import { type DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
 import { useState, useEffect } from "react";
 import { getFormattedDate } from "../utilities/datetimeUtils";
-import moment from "moment";
+import moment, { type Moment } from "moment";
+import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 
 export interface EditQueuedCommandDialogProps {
   open: boolean;
@@ -29,14 +29,13 @@ export interface EditQueuedCommandDialogProps {
 export const EditQueuedCommandDialog: React.FC<
   EditQueuedCommandDialogProps
 > = ({ open, command, onClose, onConfirm }) => {
-  const [scheduledTime, setScheduledTime] = useState<string>("");
+  const [scheduledTime, setScheduledTime] = useState<Moment | null>(null);
 
   useEffect(() => {
     if (command && command.scheduled) {
       // Format the date for datetime-local input
       const momentDate = moment(command.scheduled);
-      const formattedDate = momentDate.format("YYYY-MM-DDTHH:mm");
-      setScheduledTime(formattedDate);
+      setScheduledTime(momentDate);
     }
   }, [command]);
 
@@ -46,8 +45,7 @@ export const EditQueuedCommandDialog: React.FC<
     }
     console.log(command);
 
-    const newMoment = moment(scheduledTime);
-    onConfirm(command.messageId, command.deviceIdentifier, newMoment);
+    onConfirm(command.messageId, command.deviceIdentifier, scheduledTime);
   };
 
   const formatJsonMessage = (message: string) => {
@@ -131,14 +129,12 @@ export const EditQueuedCommandDialog: React.FC<
             <Typography variant="subtitle2" color="text.secondary" mb={1}>
               New Scheduled Time
             </Typography>
-            <TextField
-              type="datetime-local"
+            <DateTimePicker
+              label="Execute at"
               value={scheduledTime}
-              onChange={(e) => setScheduledTime(e.target.value)}
-              fullWidth
-              InputLabelProps={{
-                shrink: true,
-              }}
+              onChange={(newValue) => setScheduledTime(newValue)}
+              sx={{ width: "100%" }}
+              format="DD.MM.YYYY HH:mm"
             />
           </Box>
         </Box>
