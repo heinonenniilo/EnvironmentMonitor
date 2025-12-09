@@ -613,6 +613,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Take(50);
             }
 
+            query = query.Include(x => x.Device);
+
             return await query.ToListAsync();
         }
 
