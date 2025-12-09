@@ -760,11 +760,6 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<DeviceQueuedCommandDto> UpdateQueuedCommandSchedule(UpdateQueuedCommand model)
         {
-            if (!_userService.IsAdmin)
-            {
-                throw new UnauthorizedAccessException();
-            }
-
             if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
@@ -806,10 +801,8 @@ namespace EnvironmentMonitor.Application.Services
             var currentTime = _dateService.CurrentTime();
             var delay = model.NewScheduledTime - currentTime;
 
-            // Update the message visibility in the queue
             var queueUpdateResult = await _queueClient.UpdateMessageVisibility(command.MessageId, command.PopReceipt, delay);
 
-            // Update the database record
             command.Scheduled = model.NewScheduledTime;
             command.ScheduledUtc = _dateService.LocalToUtc(model.NewScheduledTime);
             command.PopReceipt = queueUpdateResult.PopReceipt;
