@@ -758,6 +758,69 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Successfully removed queued command with MessageId: {messageId} for device: {deviceIdentifier}");
         }
 
+        public async Task<DeviceQueuedCommandDto> UpdateQueuedCommandSchedule(UpdateQueuedCommand model)
+        {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            ValidateTriggeringTime(model.NewScheduledTime);
+
+            _logger.LogInformation($"Updating queued command schedule with MessageId: {model.MessageId} for device: {model.DeviceIdentifier} to {model.NewScheduledTime}");
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [model.DeviceIdentifier],
+                OnlyVisible = false
+            })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{model.DeviceIdentifier}' not found.");
+
+            var commands = await _deviceRepository.GetQueuedCommands(new GetQueuedCommandsModel()
+            {
+                DeviceIds = [device.Id],
+                MessageIds = [model.MessageId],
+                IsExecuted = false
+            });
+
+            var command = commands.FirstOrDefault();
+            if (command == null)
+            {
+                throw new EntityNotFoundException($"Queued command with MessageId: '{model.MessageId}' not found for device: '{model.DeviceIdentifier}'.");
+            }
+
+            if (string.IsNullOrEmpty(command.PopReceipt))
+            {
+                throw new InvalidOperationException($"PopReceipt is missing for MessageId: '{model.MessageId}'");
+            }
+
+            if (command.ExecutedAt != null)
+            {
+                throw new InvalidOperationException($"Cannot update schedule for already executed command with MessageId: '{model.MessageId}'");
+            }
+
+            var currentTime = _dateService.CurrentTime();
+            var delay = model.NewScheduledTime - currentTime;
+
+            // Update the message visibility in the queue
+            var queueUpdateResult = await _queueClient.UpdateMessageVisibility(command.MessageId, command.PopReceipt, delay);
+
+            // Update the database record
+            command.Scheduled = model.NewScheduledTime;
+            command.ScheduledUtc = _dateService.LocalToUtc(model.NewScheduledTime);
+            command.PopReceipt = queueUpdateResult.PopReceipt;
+
+            await _deviceRepository.SetQueuedCommand(device.Id, command, true);
+
+            _logger.LogInformation($"Successfully updated queued command schedule with MessageId: {model.MessageId} for device: {model.DeviceIdentifier}");
+
+            return _mapper.Map<DeviceQueuedCommandDto>(command);
+        }
+
         private void ValidateTriggeringTime(DateTime target)
         {
             var compareDate = _dateService.CurrentTime();

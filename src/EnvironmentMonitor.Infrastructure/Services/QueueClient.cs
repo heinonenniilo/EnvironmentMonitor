@@ -125,5 +125,50 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             await DeleteMessage(_settings.DefaultQueueName, messageId, popReceipt);
         }
+
+        public async Task<QueueMessageInfo> UpdateMessageVisibility(string messageId, string popReceipt, TimeSpan visibilityTimeout)
+        {
+            if (string.IsNullOrEmpty(_settings.DefaultQueueName))
+            {
+                throw new InvalidOperationException("Default queue name not configured");
+            }
+
+            return await UpdateMessageVisibility(_settings.DefaultQueueName, messageId, popReceipt, visibilityTimeout);
+        }
+
+        public async Task<QueueMessageInfo> UpdateMessageVisibility(string queueName, string messageId, string popReceipt, TimeSpan visibilityTimeout)
+        {
+            if (_queueServiceClient == null)
+            {
+                throw new InvalidOperationException("Queue client not initialized");
+            }
+
+            try
+            {
+                var queueClient = _queueServiceClient.GetQueueClient(queueName);
+
+                _logger.LogInformation($"Updating message visibility in queue '{queueName}'. MessageId: {messageId}, VisibilityTimeout: {visibilityTimeout}");
+
+                var res = await queueClient.UpdateMessageAsync(messageId, popReceipt, visibilityTimeout: visibilityTimeout);
+
+                _logger.LogInformation($"Successfully updated message visibility in queue '{queueName}'. MessageId: {messageId}");
+
+                var scheduledTimeUtc = res.Value.NextVisibleOn.UtcDateTime;
+
+                return new QueueMessageInfo
+                {
+                    MessageId = messageId,
+                    PopReceipt = res.Value.PopReceipt,
+                    ScheludedToExecuteUtc = scheduledTimeUtc,
+                    MessageText = string.Empty,
+                    InsertedOnUtc = DateTime.UtcNow
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to update message visibility in queue '{queueName}'. MessageId: {messageId}");
+                throw;
+            }
+        }
     }
 }

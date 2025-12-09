@@ -27,6 +27,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         /// <returns></returns>
         public Task AckQueuedCommand(Guid identifier, string messageId, DateTime? date);
         public Task RemoveQueuedCommand(Guid deviceIdentifier, string messageId);
+        public Task<DeviceQueuedCommandDto> UpdateQueuedCommandSchedule(UpdateQueuedCommand model);
 
         public Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel);
         public Task<DeviceDto> GetDevice(Guid identifier, AccessLevels accessLevel);
