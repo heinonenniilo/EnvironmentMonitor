@@ -11,20 +11,30 @@ import {
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useState } from "react";
-import { Close, Delete } from "@mui/icons-material";
+import { Close, Delete, Schedule } from "@mui/icons-material";
+import { EditQueuedCommandDialog } from "./EditQueuedCommandDialog";
+import moment from "moment";
 
 export interface DeviceQueuedCommandsTableProps {
   commands: DeviceQueuedCommandDto[];
   title?: string;
   maxHeight?: string;
   onDelete?: (messageId: string) => void;
+  onChangeScheduledTime?: (
+    messageId: string,
+    deviceIdentifier: string,
+    newScheduledTime: moment.Moment
+  ) => void;
 }
 
 export const DeviceQueuedCommandsTable: React.FC<
   DeviceQueuedCommandsTableProps
-> = ({ commands, title, maxHeight, onDelete }) => {
+> = ({ commands, title, maxHeight, onDelete, onChangeScheduledTime }) => {
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [commandToEdit, setCommandToEdit] =
+    useState<DeviceQueuedCommandDto | null>(null);
 
   const formatDate = (input: Date | undefined | null) => {
     if (input) {
@@ -44,6 +54,27 @@ export const DeviceQueuedCommandsTable: React.FC<
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setSelectedMessage(null);
+  };
+
+  const handleEditCommand = (command: DeviceQueuedCommandDto) => {
+    setCommandToEdit(command);
+    setEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setEditDialogOpen(false);
+    setCommandToEdit(null);
+  };
+
+  const handleConfirmEdit = (
+    messageId: string,
+    deviceIdentifier: string,
+    newScheduledTime: moment.Moment
+  ) => {
+    if (onChangeScheduledTime) {
+      onChangeScheduledTime(messageId, deviceIdentifier, newScheduledTime);
+    }
+    handleCloseEditDialog();
   };
 
   const formatJsonMessage = (message: string) => {
@@ -175,22 +206,36 @@ export const DeviceQueuedCommandsTable: React.FC<
       headerName: "Actions",
       sortable: false,
       filterable: false,
-      width: 80,
+      width: 120,
       renderCell: (params) => {
         const command = params.row as DeviceQueuedCommandDto;
-        // Only show delete button for pending commands (not executed or cancelled)
-        if (command.executedAt || command.isRemoved || !onDelete) {
+        // Only show action buttons for pending commands (not executed or cancelled)
+        if (command.executedAt || command.isRemoved) {
           return null;
         }
         return (
-          <IconButton
-            onClick={() => onDelete(command.messageId)}
-            size="small"
-            color="error"
-            aria-label="delete"
-          >
-            <Delete />
-          </IconButton>
+          <Box display="flex" gap={0.5}>
+            {onChangeScheduledTime && (
+              <IconButton
+                onClick={() => handleEditCommand(command)}
+                size="small"
+                color="primary"
+                aria-label="edit schedule"
+              >
+                <Schedule />
+              </IconButton>
+            )}
+            {onDelete && (
+              <IconButton
+                onClick={() => onDelete(command.messageId)}
+                size="small"
+                color="error"
+                aria-label="delete"
+              >
+                <Delete />
+              </IconButton>
+            )}
+          </Box>
         );
       },
     },
@@ -285,6 +330,13 @@ export const DeviceQueuedCommandsTable: React.FC<
           </Box>
         </DialogContent>
       </Dialog>
+
+      <EditQueuedCommandDialog
+        open={editDialogOpen}
+        command={commandToEdit}
+        onClose={handleCloseEditDialog}
+        onConfirm={handleConfirmEdit}
+      />
     </>
   );
 };
