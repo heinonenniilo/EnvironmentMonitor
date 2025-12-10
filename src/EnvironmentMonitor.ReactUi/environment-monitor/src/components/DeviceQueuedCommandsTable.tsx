@@ -214,7 +214,14 @@ export const DeviceQueuedCommandsTable: React.FC<
           return null;
         }
         return (
-          <Box display="flex" gap={0.5}>
+          <Box
+            display="flex"
+            gap={0.5}
+            sx={{
+              alignItems: "center",
+              height: "100%",
+            }}
+          >
             {onChangeScheduledTime && (
               <IconButton
                 onClick={() => handleEditCommand(command)}
