@@ -7,6 +7,7 @@ import {
   Box,
   Typography,
   IconButton,
+  Chip,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { type DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
@@ -71,7 +72,16 @@ export const EditQueuedCommandDialog: React.FC<
           alignItems: "center",
         }}
       >
-        <Box>{viewOnly ? "Command Message" : "Edit Queued Command"}</Box>
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <Box>{viewOnly ? "Command Message" : "Edit Queued Command"}</Box>
+          {command.isRemoved ? (
+            <Chip label="Cancelled" color="error" size="small" />
+          ) : command.executedAt ? (
+            <Chip label="Executed" color="success" size="small" />
+          ) : (
+            <Chip label="Pending" color="warning" size="small" />
+          )}
+        </Box>
         <IconButton
           aria-label="close"
           onClick={onClose}
@@ -124,6 +134,17 @@ export const EditQueuedCommandDialog: React.FC<
               {getFormattedDate(command.scheduled, true, true)}
             </Typography>
           </Box>
+
+          {command.executedAt && (
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary">
+                Executed At
+              </Typography>
+              <Typography variant="body1">
+                {getFormattedDate(command.executedAt, true, true)}
+              </Typography>
+            </Box>
+          )}
 
           {!viewOnly && (
             <Box>
