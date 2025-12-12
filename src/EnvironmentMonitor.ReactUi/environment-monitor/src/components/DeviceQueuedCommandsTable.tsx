@@ -1,9 +1,9 @@
 import { type DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
-import { Box, Typography, Chip, IconButton } from "@mui/material";
+import { Box, Typography, Chip, IconButton, Tooltip } from "@mui/material";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useState } from "react";
-import { Delete, Schedule } from "@mui/icons-material";
+import { Delete, Schedule, Visibility } from "@mui/icons-material";
 import { EditQueuedCommandDialog } from "./EditQueuedCommandDialog";
 import moment from "moment";
 
@@ -56,34 +56,6 @@ export const DeviceQueuedCommandsTable: React.FC<
       headerName: "Type",
       flex: 1,
       minWidth: 80,
-    },
-    {
-      field: "message",
-      headerName: "Message",
-      flex: 2,
-      minWidth: 200,
-      renderCell: (params) => {
-        const command = params.row as DeviceQueuedCommandDto;
-        const message = params.value as string;
-        return (
-          <Box
-            onClick={() => setDialogState({ command, viewOnly: true })}
-            sx={{
-              cursor: message && message.trim() ? "pointer" : "default",
-              color: message && message.trim() ? "primary.main" : "inherit",
-              textDecoration: message && message.trim() ? "underline" : "none",
-              "&:hover": {
-                color: message && message.trim() ? "primary.dark" : "inherit",
-              },
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {message || "-"}
-          </Box>
-        );
-      },
     },
     {
       field: "scheduled",
@@ -174,10 +146,8 @@ export const DeviceQueuedCommandsTable: React.FC<
       width: 120,
       renderCell: (params) => {
         const command = params.row as DeviceQueuedCommandDto;
-        // Only show action buttons for pending commands (not executed or cancelled)
-        if (command.executedAt || command.isRemoved) {
-          return null;
-        }
+
+        const showEditButtons = !command.executedAt && !command.isRemoved;
         return (
           <Box
             display="flex"
@@ -187,25 +157,39 @@ export const DeviceQueuedCommandsTable: React.FC<
               height: "100%",
             }}
           >
-            {onChangeScheduledTime && (
+            <Tooltip title="View">
               <IconButton
-                onClick={() => setDialogState({ command, viewOnly: false })}
+                onClick={() => setDialogState({ command, viewOnly: true })}
                 size="small"
-                color="primary"
-                aria-label="edit schedule"
+                color="info"
+                aria-label="view details"
               >
-                <Schedule />
+                <Visibility />
               </IconButton>
+            </Tooltip>
+            {showEditButtons && onChangeScheduledTime && (
+              <Tooltip title="Edit Schedule">
+                <IconButton
+                  onClick={() => setDialogState({ command, viewOnly: false })}
+                  size="small"
+                  color="primary"
+                  aria-label="edit schedule"
+                >
+                  <Schedule />
+                </IconButton>
+              </Tooltip>
             )}
-            {onDelete && (
-              <IconButton
-                onClick={() => onDelete(command.messageId)}
-                size="small"
-                color="error"
-                aria-label="delete"
-              >
-                <Delete />
-              </IconButton>
+            {showEditButtons && onDelete && (
+              <Tooltip title="Cancel">
+                <IconButton
+                  onClick={() => onDelete(command.messageId)}
+                  size="small"
+                  color="error"
+                  aria-label="delete"
+                >
+                  <Delete />
+                </IconButton>
+              </Tooltip>
             )}
           </Box>
         );
