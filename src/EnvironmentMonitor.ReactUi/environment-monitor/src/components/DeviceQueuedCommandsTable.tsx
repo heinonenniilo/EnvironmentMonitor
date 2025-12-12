@@ -1,17 +1,9 @@
 import { type DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
-import {
-  Box,
-  Typography,
-  Chip,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-} from "@mui/material";
+import { Box, Typography, Chip, IconButton } from "@mui/material";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useState } from "react";
-import { Close, Delete, Schedule } from "@mui/icons-material";
+import { Delete, Schedule } from "@mui/icons-material";
 import { EditQueuedCommandDialog } from "./EditQueuedCommandDialog";
 import moment from "moment";
 
@@ -30,11 +22,10 @@ export interface DeviceQueuedCommandsTableProps {
 export const DeviceQueuedCommandsTable: React.FC<
   DeviceQueuedCommandsTableProps
 > = ({ commands, title, maxHeight, onDelete, onChangeScheduledTime }) => {
-  const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [commandToEdit, setCommandToEdit] =
-    useState<DeviceQueuedCommandDto | null>(null);
+  const [dialogState, setDialogState] = useState<{
+    command: DeviceQueuedCommandDto | null;
+    viewOnly: boolean;
+  }>({ command: null, viewOnly: false });
 
   const formatDate = (input: Date | undefined | null) => {
     if (input) {
@@ -44,26 +35,8 @@ export const DeviceQueuedCommandsTable: React.FC<
     }
   };
 
-  const handleMessageClick = (message: string) => {
-    if (message && message.trim()) {
-      setSelectedMessage(message);
-      setDialogOpen(true);
-    }
-  };
-
   const handleCloseDialog = () => {
-    setDialogOpen(false);
-    setSelectedMessage(null);
-  };
-
-  const handleEditCommand = (command: DeviceQueuedCommandDto) => {
-    setCommandToEdit(command);
-    setEditDialogOpen(true);
-  };
-
-  const handleCloseEditDialog = () => {
-    setEditDialogOpen(false);
-    setCommandToEdit(null);
+    setDialogState({ command: null, viewOnly: false });
   };
 
   const handleConfirmEdit = (
@@ -74,16 +47,7 @@ export const DeviceQueuedCommandsTable: React.FC<
     if (onChangeScheduledTime) {
       onChangeScheduledTime(messageId, deviceIdentifier, newScheduledTime);
     }
-    handleCloseEditDialog();
-  };
-
-  const formatJsonMessage = (message: string) => {
-    try {
-      const parsed = JSON.parse(message);
-      return JSON.stringify(parsed, null, 2);
-    } catch {
-      return message;
-    }
+    handleCloseDialog();
   };
 
   const columns: GridColDef[] = [
@@ -99,10 +63,11 @@ export const DeviceQueuedCommandsTable: React.FC<
       flex: 2,
       minWidth: 200,
       renderCell: (params) => {
+        const command = params.row as DeviceQueuedCommandDto;
         const message = params.value as string;
         return (
           <Box
-            onClick={() => handleMessageClick(message)}
+            onClick={() => setDialogState({ command, viewOnly: true })}
             sx={{
               cursor: message && message.trim() ? "pointer" : "default",
               color: message && message.trim() ? "primary.main" : "inherit",
@@ -224,7 +189,7 @@ export const DeviceQueuedCommandsTable: React.FC<
           >
             {onChangeScheduledTime && (
               <IconButton
-                onClick={() => handleEditCommand(command)}
+                onClick={() => setDialogState({ command, viewOnly: false })}
                 size="small"
                 color="primary"
                 aria-label="edit schedule"
@@ -292,57 +257,12 @@ export const DeviceQueuedCommandsTable: React.FC<
         </Box>
       </Box>
 
-      <Dialog
-        open={dialogOpen}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Box>Command Message</Box>
-          <IconButton
-            aria-label="close"
-            onClick={handleCloseDialog}
-            sx={{
-              color: (theme) => theme.palette.grey[500],
-            }}
-            size="small"
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Box
-            component="pre"
-            sx={{
-              backgroundColor: (theme) => theme.palette.grey[100],
-              padding: 2,
-              borderRadius: 1,
-              overflow: "auto",
-              maxHeight: "60vh",
-              fontFamily: "monospace",
-              fontSize: "0.875rem",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-            }}
-          >
-            {selectedMessage ? formatJsonMessage(selectedMessage) : ""}
-          </Box>
-        </DialogContent>
-      </Dialog>
-
       <EditQueuedCommandDialog
-        open={editDialogOpen}
-        command={commandToEdit}
-        onClose={handleCloseEditDialog}
+        open={dialogState.command !== null}
+        command={dialogState.command}
+        onClose={handleCloseDialog}
         onConfirm={handleConfirmEdit}
+        viewOnly={dialogState.viewOnly}
       />
     </>
   );

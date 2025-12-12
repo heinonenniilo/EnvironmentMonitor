@@ -19,16 +19,17 @@ export interface EditQueuedCommandDialogProps {
   open: boolean;
   command: DeviceQueuedCommandDto | null;
   onClose: () => void;
-  onConfirm: (
+  onConfirm?: (
     messageId: string,
     deviceIdentifier: string,
     newScheduledTime: moment.Moment
   ) => void;
+  viewOnly?: boolean;
 }
 
 export const EditQueuedCommandDialog: React.FC<
   EditQueuedCommandDialogProps
-> = ({ open, command, onClose, onConfirm }) => {
+> = ({ open, command, onClose, onConfirm, viewOnly = false }) => {
   const [scheduledTime, setScheduledTime] = useState<Moment | null>(null);
 
   useEffect(() => {
@@ -40,10 +41,9 @@ export const EditQueuedCommandDialog: React.FC<
   }, [command]);
 
   const handleConfirm = () => {
-    if (!command || !scheduledTime) {
+    if (!command || !scheduledTime || !onConfirm) {
       return;
     }
-    console.log(command);
 
     onConfirm(command.messageId, command.deviceIdentifier, scheduledTime);
   };
@@ -71,7 +71,7 @@ export const EditQueuedCommandDialog: React.FC<
           alignItems: "center",
         }}
       >
-        <Box>Edit Queued Command</Box>
+        <Box>{viewOnly ? "Command Message" : "Edit Queued Command"}</Box>
         <IconButton
           aria-label="close"
           onClick={onClose}
@@ -103,7 +103,7 @@ export const EditQueuedCommandDialog: React.FC<
                 padding: 2,
                 borderRadius: 1,
                 overflow: "auto",
-                maxHeight: "200px",
+                maxHeight: viewOnly ? "60vh" : "200px",
                 fontFamily: "monospace",
                 fontSize: "0.875rem",
                 whiteSpace: "pre-wrap",
@@ -118,40 +118,44 @@ export const EditQueuedCommandDialog: React.FC<
 
           <Box>
             <Typography variant="subtitle2" color="text.secondary">
-              Current Scheduled Time
+              {viewOnly ? "Scheduled Time" : "Current Scheduled Time"}
             </Typography>
             <Typography variant="body1">
               {getFormattedDate(command.scheduled, true, true)}
             </Typography>
           </Box>
 
-          <Box>
-            <Typography variant="subtitle2" color="text.secondary" mb={1}>
-              New Scheduled Time
-            </Typography>
-            <DateTimePicker
-              label="Execute at"
-              value={scheduledTime}
-              onChange={(newValue) => setScheduledTime(newValue)}
-              sx={{ width: "100%" }}
-              format="DD.MM.YYYY HH:mm"
-            />
-          </Box>
+          {!viewOnly && (
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" mb={1}>
+                New Scheduled Time
+              </Typography>
+              <DateTimePicker
+                label="Execute at"
+                value={scheduledTime}
+                onChange={(newValue) => setScheduledTime(newValue)}
+                sx={{ width: "100%" }}
+                format="DD.MM.YYYY HH:mm"
+              />
+            </Box>
+          )}
         </Box>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} color="inherit">
-          Cancel
-        </Button>
-        <Button
-          onClick={handleConfirm}
-          color="primary"
-          variant="contained"
-          disabled={!scheduledTime}
-        >
-          Confirm
-        </Button>
-      </DialogActions>
+      {!viewOnly && (
+        <DialogActions>
+          <Button onClick={onClose} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            color="primary"
+            variant="contained"
+            disabled={!scheduledTime}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 };
