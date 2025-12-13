@@ -119,6 +119,11 @@ interface deviceHook {
     deviceIdentifier: string,
     messageId: string
   ) => Promise<boolean>;
+  updateQueuedCommand: (
+    deviceIdentifier: string,
+    messageId: string,
+    newScheduledTime: moment.Moment
+  ) => Promise<boolean>;
 }
 
 const apiClient = axios.create({
@@ -550,6 +555,27 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError("Failed to delete queued command");
+          throw ex;
+        }
+      },
+      updateQueuedCommand: async (
+        deviceIdentifier: string,
+        messageId: string,
+        newScheduledTime: moment.Moment
+      ) => {
+        try {
+          const res = await apiClient.put<any, AxiosResponse<boolean>>(
+            `/api/devices/queued-commands/schedule`,
+            {
+              deviceIdentifier: deviceIdentifier,
+              messageId: messageId,
+              newScheduledTime: newScheduledTime.format("YYYY-MM-DDTHH:mm:ss"),
+            }
+          );
+          return res.status === 200;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to update queued command");
           throw ex;
         }
       },

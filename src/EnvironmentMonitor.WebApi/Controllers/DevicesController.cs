@@ -153,5 +153,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpDelete("{deviceId}/queued-commands/{messageId}")]
         [Authorize(Roles = "Admin")]
         public async Task RemoveQueuedCommand([FromRoute] Guid deviceId, [FromRoute] string messageId) => await _deviceService.RemoveQueuedCommand(deviceId, messageId);
+
+        [HttpPut("queued-commands/schedule")]
+        [Authorize(Roles = "Admin")]
+        public async Task<DeviceQueuedCommandDto> UpdateQueuedCommandSchedule([FromBody] UpdateQueuedCommand model) => await _deviceService.UpdateQueuedCommandSchedule(model);
     }
 }

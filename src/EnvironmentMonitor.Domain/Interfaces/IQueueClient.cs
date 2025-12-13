@@ -9,5 +9,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<QueueMessageInfo> SendMessage(string queueName, string message, TimeSpan? delay= null);
         Task DeleteMessage(string messageId, string popReceipt);
         Task DeleteMessage(string queueName, string messageId, string popReceipt);
+        Task<QueueMessageInfo> UpdateMessageVisibility(string messageId, string popReceipt, TimeSpan visibilityTimeout);
+        Task<QueueMessageInfo> UpdateMessageVisibility(string queueName, string messageId, string popReceipt, TimeSpan visibilityTimeout);
     }
 }

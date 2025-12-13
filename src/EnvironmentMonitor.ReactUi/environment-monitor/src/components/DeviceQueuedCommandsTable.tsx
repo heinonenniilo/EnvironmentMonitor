@@ -1,30 +1,31 @@
 import { type DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
-import {
-  Box,
-  Typography,
-  Chip,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  IconButton,
-} from "@mui/material";
+import { Box, Typography, Chip, IconButton, Tooltip } from "@mui/material";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useState } from "react";
-import { Close, Delete } from "@mui/icons-material";
+import { Delete, Schedule, Visibility } from "@mui/icons-material";
+import { EditQueuedCommandDialog } from "./EditQueuedCommandDialog";
+import moment from "moment";
 
 export interface DeviceQueuedCommandsTableProps {
   commands: DeviceQueuedCommandDto[];
   title?: string;
   maxHeight?: string;
   onDelete?: (messageId: string) => void;
+  onChangeScheduledTime?: (
+    messageId: string,
+    deviceIdentifier: string,
+    newScheduledTime: moment.Moment
+  ) => void;
 }
 
 export const DeviceQueuedCommandsTable: React.FC<
   DeviceQueuedCommandsTableProps
-> = ({ commands, title, maxHeight, onDelete }) => {
-  const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
+> = ({ commands, title, maxHeight, onDelete, onChangeScheduledTime }) => {
+  const [dialogState, setDialogState] = useState<{
+    command: DeviceQueuedCommandDto | null;
+    viewOnly: boolean;
+  }>({ command: null, viewOnly: false });
 
   const formatDate = (input: Date | undefined | null) => {
     if (input) {
@@ -34,25 +35,19 @@ export const DeviceQueuedCommandsTable: React.FC<
     }
   };
 
-  const handleMessageClick = (message: string) => {
-    if (message && message.trim()) {
-      setSelectedMessage(message);
-      setDialogOpen(true);
-    }
-  };
-
   const handleCloseDialog = () => {
-    setDialogOpen(false);
-    setSelectedMessage(null);
+    setDialogState({ command: null, viewOnly: false });
   };
 
-  const formatJsonMessage = (message: string) => {
-    try {
-      const parsed = JSON.parse(message);
-      return JSON.stringify(parsed, null, 2);
-    } catch {
-      return message;
+  const handleConfirmEdit = (
+    messageId: string,
+    deviceIdentifier: string,
+    newScheduledTime: moment.Moment
+  ) => {
+    if (onChangeScheduledTime) {
+      onChangeScheduledTime(messageId, deviceIdentifier, newScheduledTime);
     }
+    handleCloseDialog();
   };
 
   const columns: GridColDef[] = [
@@ -61,33 +56,6 @@ export const DeviceQueuedCommandsTable: React.FC<
       headerName: "Type",
       flex: 1,
       minWidth: 80,
-    },
-    {
-      field: "message",
-      headerName: "Message",
-      flex: 2,
-      minWidth: 200,
-      renderCell: (params) => {
-        const message = params.value as string;
-        return (
-          <Box
-            onClick={() => handleMessageClick(message)}
-            sx={{
-              cursor: message && message.trim() ? "pointer" : "default",
-              color: message && message.trim() ? "primary.main" : "inherit",
-              textDecoration: message && message.trim() ? "underline" : "none",
-              "&:hover": {
-                color: message && message.trim() ? "primary.dark" : "inherit",
-              },
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {message || "-"}
-          </Box>
-        );
-      },
     },
     {
       field: "scheduled",
@@ -175,22 +143,55 @@ export const DeviceQueuedCommandsTable: React.FC<
       headerName: "Actions",
       sortable: false,
       filterable: false,
-      width: 80,
+      width: 120,
       renderCell: (params) => {
         const command = params.row as DeviceQueuedCommandDto;
-        // Only show delete button for pending commands (not executed or cancelled)
-        if (command.executedAt || command.isRemoved || !onDelete) {
-          return null;
-        }
+
+        const showEditButtons = !command.executedAt && !command.isRemoved;
         return (
-          <IconButton
-            onClick={() => onDelete(command.messageId)}
-            size="small"
-            color="error"
-            aria-label="delete"
+          <Box
+            display="flex"
+            gap={0.5}
+            sx={{
+              alignItems: "center",
+              height: "100%",
+            }}
           >
-            <Delete />
-          </IconButton>
+            <Tooltip title="View">
+              <IconButton
+                onClick={() => setDialogState({ command, viewOnly: true })}
+                size="small"
+                color="info"
+                aria-label="view details"
+              >
+                <Visibility />
+              </IconButton>
+            </Tooltip>
+            {showEditButtons && onChangeScheduledTime && (
+              <Tooltip title="Edit Schedule">
+                <IconButton
+                  onClick={() => setDialogState({ command, viewOnly: false })}
+                  size="small"
+                  color="primary"
+                  aria-label="edit schedule"
+                >
+                  <Schedule />
+                </IconButton>
+              </Tooltip>
+            )}
+            {showEditButtons && onDelete && (
+              <Tooltip title="Cancel">
+                <IconButton
+                  onClick={() => onDelete(command.messageId)}
+                  size="small"
+                  color="error"
+                  aria-label="delete"
+                >
+                  <Delete />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         );
       },
     },
@@ -240,51 +241,13 @@ export const DeviceQueuedCommandsTable: React.FC<
         </Box>
       </Box>
 
-      <Dialog
-        open={dialogOpen}
+      <EditQueuedCommandDialog
+        open={dialogState.command !== null}
+        command={dialogState.command}
         onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Box>Command Message</Box>
-          <IconButton
-            aria-label="close"
-            onClick={handleCloseDialog}
-            sx={{
-              color: (theme) => theme.palette.grey[500],
-            }}
-            size="small"
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent>
-          <Box
-            component="pre"
-            sx={{
-              backgroundColor: (theme) => theme.palette.grey[100],
-              padding: 2,
-              borderRadius: 1,
-              overflow: "auto",
-              maxHeight: "60vh",
-              fontFamily: "monospace",
-              fontSize: "0.875rem",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-            }}
-          >
-            {selectedMessage ? formatJsonMessage(selectedMessage) : ""}
-          </Box>
-        </DialogContent>
-      </Dialog>
+        onConfirm={handleConfirmEdit}
+        viewOnly={dialogState.viewOnly}
+      />
     </>
   );
 };

@@ -287,6 +287,42 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const updateQueuedCommandSchedule = (
+    messageId: string,
+    deviceIdentifier: string,
+    newScheduledTime: moment.Moment
+  ) => {
+    setIsLoading(true);
+    deviceHook
+      .updateQueuedCommand(deviceIdentifier, messageId, newScheduledTime)
+      .then((success) => {
+        if (success) {
+          dispatch(
+            addNotification({
+              title: "Queued command updated",
+              body: "The scheduled time has been updated successfully.",
+              severity: "success",
+            })
+          );
+          // Refresh the queued commands list
+          getQueuedCommands(deviceIdentifier);
+        }
+      })
+      .catch((er) => {
+        console.error(er);
+        dispatch(
+          addNotification({
+            title: "Failed to update queued command",
+            body: "",
+            severity: "error",
+          })
+        );
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   const updateVisible = (device: DeviceInfo) => {
     setIsLoading(true);
     deviceHook
@@ -778,6 +814,7 @@ export const DeviceView: React.FC = () => {
             <DeviceQueuedCommandsTable
               commands={queuedCommands}
               maxHeight={"500px"}
+              onChangeScheduledTime={updateQueuedCommandSchedule}
               onDelete={(messageId: string) => {
                 dispatch(
                   setConfirmDialog({
