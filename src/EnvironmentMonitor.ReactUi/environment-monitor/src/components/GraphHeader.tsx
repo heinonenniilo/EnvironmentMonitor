@@ -86,6 +86,7 @@ export const GraphHeader: React.FC<GraphHeaderProps> = ({
               componentsProps={{
                 typography: { fontSize: "14px" },
               }}
+              sx={{ marginRight: 0 }}
             />
           )}
           {onRefresh && (
