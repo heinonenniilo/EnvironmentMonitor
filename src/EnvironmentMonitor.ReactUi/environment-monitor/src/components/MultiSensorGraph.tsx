@@ -333,6 +333,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         measurements={measurementsToShow}
         onClose={() => {
           setMeasurementsToShow([]);
+          handleRowHover(null);
         }}
         title={dialogTitle}
       />
@@ -492,9 +493,18 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
               if (!row.sensor) {
                 return;
               }
+              if (enableHighlightOnRowHover) {
+                handleRowHover(row);
+              }
               showMeasurementsInDialog(row.sensor.identifier, row.type);
             }}
-            onHover={enableHighlightOnRowHover ? handleRowHover : undefined}
+            onHover={
+              enableHighlightOnRowHover
+                ? measurementsToShow.length === 0
+                  ? handleRowHover
+                  : undefined
+                : undefined
+            }
             infoRows={getInfoValues()}
           />
         </Box>
