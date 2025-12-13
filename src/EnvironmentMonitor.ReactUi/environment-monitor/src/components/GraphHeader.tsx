@@ -7,7 +7,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { Close, Fullscreen } from "@mui/icons-material";
+import { Close, Fullscreen, Refresh } from "@mui/icons-material";
 import { Link } from "react-router";
 
 export interface GraphHeaderProps {
@@ -89,9 +89,11 @@ export const GraphHeader: React.FC<GraphHeaderProps> = ({
             />
           )}
           {onRefresh && (
-            <Button variant="outlined" onClick={onRefresh} size="small">
-              Refresh
-            </Button>
+            <Tooltip title="Refresh">
+              <IconButton onClick={onRefresh} size="small">
+                <Refresh />
+              </IconButton>
+            </Tooltip>
           )}
           {zoomable && onResetZoom && (
             <Button variant="outlined" onClick={onResetZoom} size="small">

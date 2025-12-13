@@ -11,7 +11,7 @@ import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorCompo
 import moment from "moment";
 import { MultiSensorGraph } from "../components/MultiSensorGraph";
 import { Box, IconButton, Tooltip } from "@mui/material";
-import { Fullscreen } from "@mui/icons-material";
+import { Fullscreen, Refresh } from "@mui/icons-material";
 export const PublicMeasurementsView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -58,6 +58,11 @@ export const PublicMeasurementsView: React.FC = () => {
             timeRange={timeRange}
             onSelectTimeRange={handleTimeRangeChange}
           />
+          <Tooltip title="Refresh">
+            <IconButton onClick={loadMeasurements} size="medium">
+              <Refresh />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Full screen">
             <IconButton onClick={() => setIsFullScreen(true)} size="medium">
               <Fullscreen />
