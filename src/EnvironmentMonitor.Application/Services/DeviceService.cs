@@ -509,7 +509,36 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            await _deviceRepository.SetStatus(model, true);
+
+            var updatedStatus = await _deviceRepository.SetStatus(model, true);
+            // Queue email
+            if (updatedStatus != null)
+            {
+                DeviceEmailTemplateTypes messageType = updatedStatus.Value ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
+                var messageToQueue = new DeviceQueueMessage()
+                {
+                    Attributes = new Dictionary<string, string>()
+                    {
+                        { ApplicationConstants.QueuedMessageDefaultKey, ((int)messageType).ToString() },
+                    },
+                    DeviceIdentifier = device.Identifier,
+                    MessageTypeId = (int)QueuedMessages.SendDeviceEmail,
+                };
+                var messageJson = JsonSerializer.Serialize(messageToQueue);
+                var res = await _queueClient.SendMessage(messageJson);
+
+                await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+                {
+                    Type = (int)QueuedMessages.SetMotionControlStatus,
+                    Message = messageJson,
+                    MessageId = res.MessageId,
+                    PopReceipt = res.PopReceipt,
+                    Created = _dateService.CurrentTime(),
+                    CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                    Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
+                    ScheduledUtc = res.ScheludedToExecuteUtc,
+                }, true);
+            }
         }
 
         public async Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model)
@@ -821,6 +850,32 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new ArgumentException($"Invalid triggering time.{target}. Cur date: {compareDate}");
             }
+        }
+
+        public async Task SendDeviceEmail(Guid deviceIdentifier, DeviceEmailTemplateTypes templateType)
+        {
+            _logger.LogInformation($"Preparing to send email for device: {deviceIdentifier} using template: {templateType}");
+            // Get the device
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [deviceIdentifier]
+            })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
+            // Fetch the email template
+            var template = await _deviceRepository.GetEmailTemplate(templateType);
+            if (template == null)
+            {
+                _logger.LogWarning($"Email template '{templateType}' not found.");
+                throw new EntityNotFoundException($"Email template '{templateType}' not found.");
+            }
+            // Replace placeholders in title and message
+            var title = template.Title?.Replace("{DeviceName}", device.Name) ?? string.Empty;
+            title = title.Replace("{DeviceIdentifier}", device.DeviceIdentifier);
+            var message = template.Message?.Replace("{DeviceName}", device.Name) ?? string.Empty;
+            message = message.Replace("{DeviceIdentifier}", device.DeviceIdentifier);
+            _logger.LogInformation($"Email prepared for device '{device.Name}'. Title: {title}");
+            // TODO: Implement actual email sending logic
+            // For now, just log what would be sent
+            _logger.LogInformation($"Would send email - Title: {title}, Message: {message}");
         }
     }
 }

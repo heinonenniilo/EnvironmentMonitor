@@ -192,8 +192,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
         }
 
-        public async Task SetStatus(SetDeviceStatusModel model, bool saveChanges)
+        public async Task<bool?> SetStatus(SetDeviceStatusModel model, bool saveChanges)
         {
+            bool? statusUpdatedTo = null;
             bool statusToSet;
             var device = await _context.Devices.FirstOrDefaultAsync(x => x.Identifier == model.Idenfifier) ?? throw new EntityNotFoundException();
             var latestStatus = await _context.DeviceStatusChanges.Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
@@ -224,11 +225,13 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     Message = model.Message,
                     DeviceMessage = model.DeviceMessage,
                 });
+                statusUpdatedTo = statusToSet;
             }
             if (saveChanges)
             {
                 await _context.SaveChangesAsync();
             }
+            return statusUpdatedTo;
         }
 
         public async Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model)
@@ -650,6 +653,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<DeviceEmailTemplate?> GetEmailTemplate(DeviceEmailTemplateTypes templateType)
+        {
+            return await _context.DeviceEmailTemplates
+                .FirstOrDefaultAsync(x => x.Id == (int)templateType);
         }
     }
 }

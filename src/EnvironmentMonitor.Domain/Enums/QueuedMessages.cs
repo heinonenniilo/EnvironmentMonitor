@@ -14,6 +14,8 @@ namespace EnvironmentMonitor.Domain.Enums
         [Description("Set motion control status")]
         SetMotionControlStatus = 1,
         [Description("Set motion control delay")]
-        SetMotionControlOnDelay = 2
+        SetMotionControlOnDelay = 2,
+        [Description("Send email about a device")]
+        SendDeviceEmail = 3
     }
 }

@@ -18,6 +18,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status, DateTime? triggeringTime = null);
         public Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs, DateTime? triggeringTime = null);
         public Task SendAttributesToDevice(Guid identifier, string? message = null);
+        public Task SendDeviceEmail(Guid deviceIdentifier, DeviceEmailTemplateTypes templateType);
         /// <summary>
         /// Null date indicates error
         /// </summary>

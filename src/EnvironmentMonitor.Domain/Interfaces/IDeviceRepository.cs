@@ -24,6 +24,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<List<SensorExtended>> GetSensors(GetSensorsModel model);
         Task<PaginatedResult<DeviceMessageExtended>> GetDeviceMessages(GetDeviceMessagesModel model);
         Task<List<DeviceQueuedCommand>> GetQueuedCommands(GetQueuedCommandsModel model);
+        Task<DeviceEmailTemplate?> GetEmailTemplate(DeviceEmailTemplateTypes templateType);
 
         public Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc);
         public Task AddAttachment(AddDeviceAttachmentModel model);
@@ -37,7 +38,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task<List<DeviceAttribute>> GetDeviceAttributes(int deviceId);
         public Task<DeviceAttribute?> GetDeviceAttribute(int deviceId, int typeId);
 
-        public Task SetStatus(SetDeviceStatusModel status, bool saveChanges);
+        public Task<bool?> SetStatus(SetDeviceStatusModel status, bool saveChanges);
         public Task SaveChanges();
 
         public Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model);
