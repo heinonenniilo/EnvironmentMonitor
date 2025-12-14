@@ -32,7 +32,7 @@ var host = new HostBuilder()
         var queueServiceUri = opt.Configuration.GetValue<string>("StorageAccountConnection:queueServiceUri");
         var accountName = opt.Configuration.GetValue<string>("StorageAccountConnection:accountName");
         var defaultQueueName = opt.Configuration.GetValue<string>("DeviceMessagesQueueName");
-        
+
         QueueSettings? queueSettings = null;
         if (!string.IsNullOrEmpty(queueServiceUri) || !string.IsNullOrEmpty(accountName))
         {
@@ -48,17 +48,17 @@ var host = new HostBuilder()
         var recipientEmail = opt.Configuration.GetValue<string>("EmailSettings:recipientEmails");
         var senderEmail = opt.Configuration.GetValue<string>("EmailSettings:SenderAddress");
         var subjectPrefix = opt.Configuration.GetValue<string>("EmailSettings:SubjectPrefix");
-        EmailSettings? emailSettings = null;
-        if (!string.IsNullOrEmpty(connectionString) && !string.IsNullOrEmpty(recipientEmail) && !string.IsNullOrEmpty(senderEmail))
+        var emailServiceEndpoint = opt.Configuration.GetValue<string>("EmailSettings:Endpoint");
+
+        var emailSettings = new EmailSettings
         {
-            emailSettings = new EmailSettings
-            {
-                ConnectionString = connectionString,
-                RecipientAddresses = recipientEmail?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? [],
-                SenderAddress = senderEmail,
-                EmailTitlePrefix = subjectPrefix ?? ""
-            };
-        }
+            ConnectionString = connectionString ?? "",
+            RecipientAddresses = recipientEmail?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? [],
+            SenderAddress = senderEmail ?? "",
+            EmailTitlePrefix = subjectPrefix ?? "",
+            Endpoint = emailServiceEndpoint ?? ""
+        };
+
         services.AddInfrastructureServices(opt.Configuration, opt.Configuration.GetValue<string>("DefaultConnection"), hubSettings, queueSettings, emailSettings);
         services.AddApplicationServices(opt.Configuration);
     })

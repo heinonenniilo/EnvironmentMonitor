@@ -1,5 +1,6 @@
 using Azure;
 using Azure.Communication.Email;
+using Azure.Identity;
 using AzureEmailClient = Azure.Communication.Email.EmailClient;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
@@ -16,7 +17,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
     {
         private readonly AzureEmailClient? _emailClient;
         private readonly EmailSettings _settings;
-        private readonly ILogger<EmailClient> _logger;       
+        private readonly ILogger<EmailClient> _logger;      
 
         public EmailClient(EmailSettings settings, ILogger<EmailClient> logger)
         {
@@ -26,11 +27,26 @@ namespace EnvironmentMonitor.Infrastructure.Services
             if (!string.IsNullOrEmpty(_settings.ConnectionString))
             {
                 _emailClient = new AzureEmailClient(_settings.ConnectionString);
-                _logger.LogInformation($"Email client initialized with connection string");
+                _logger.LogInformation("Email client initialized with connection string");
+            }
+            else if (!string.IsNullOrEmpty(_settings.Endpoint))
+            {
+                try
+                {
+                    var endpoint = new Uri(_settings.Endpoint);
+                    var credential = new DefaultAzureCredential();
+                    _emailClient = new AzureEmailClient(endpoint, credential);
+                    _logger.LogInformation("Email client initialized with DefaultAzureCredential and endpoint: {Endpoint}", _settings.Endpoint);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to initialize email client with DefaultAzureCredential");
+                    throw;
+                }
             }
             else
             {
-                _logger.LogWarning("Email client not initialized - no connection string provided");
+                _logger.LogWarning("Email client not initialized - no connection string or endpoint provided");
             }
         }
 
