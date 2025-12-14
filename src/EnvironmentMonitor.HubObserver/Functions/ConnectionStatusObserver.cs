@@ -28,7 +28,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 {
                     Idenfifier = device.Device.Identifier,
                     Message = $"Recurring check"
-                });
+                }, true);
             }
         }
     }

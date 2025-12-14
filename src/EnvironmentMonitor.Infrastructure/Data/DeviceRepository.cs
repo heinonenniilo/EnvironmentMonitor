@@ -192,9 +192,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
         }
 
-        public async Task<bool?> SetStatus(SetDeviceStatusModel model, bool saveChanges)
+        public async Task<DeviceStatus?> SetStatus(SetDeviceStatusModel model, bool saveChanges)
         {
-            bool? statusUpdatedTo = null;
+            DeviceStatus? updatedStatus = null;
             bool statusToSet;
             var device = await _context.Devices.FirstOrDefaultAsync(x => x.Identifier == model.Idenfifier) ?? throw new EntityNotFoundException();
             var latestStatus = await _context.DeviceStatusChanges.Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
@@ -215,23 +215,22 @@ namespace EnvironmentMonitor.Infrastructure.Data
             if (latestStatus == null || (latestStatus.Status != statusToSet && timeStamp > latestStatus.TimeStamp))
             {
                 _logger.LogInformation($"Device status is being set to: {statusToSet}");
-                _context.DeviceStatusChanges.Add(new Domain.Entities.DeviceStatus()
+                updatedStatus = new DeviceStatus()
                 {
-
                     Device = device,
                     Status = statusToSet,
                     TimeStamp = timeStamp,
                     TimeStampUtc = _dateService.LocalToUtc(timeStamp),
                     Message = model.Message,
                     DeviceMessage = model.DeviceMessage,
-                });
-                statusUpdatedTo = statusToSet;
+                };
+                _context.DeviceStatusChanges.Add(updatedStatus);
             }
             if (saveChanges)
             {
                 await _context.SaveChangesAsync();
             }
-            return statusUpdatedTo;
+            return updatedStatus;
         }
 
         public async Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model)

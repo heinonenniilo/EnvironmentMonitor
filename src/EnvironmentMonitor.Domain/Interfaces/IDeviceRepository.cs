@@ -38,7 +38,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task<List<DeviceAttribute>> GetDeviceAttributes(int deviceId);
         public Task<DeviceAttribute?> GetDeviceAttribute(int deviceId, int typeId);
 
-        public Task<bool?> SetStatus(SetDeviceStatusModel status, bool saveChanges);
+        public Task<DeviceStatus?> SetStatus(SetDeviceStatusModel status, bool saveChanges);
         public Task SaveChanges();
 
         public Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model);

@@ -11,7 +11,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public DateTime CurrentTime();
         public DateTime UtcToLocal(DateTime utc);
         public DateTime LocalToUtc(DateTime local);
-
         public TimeZoneInfo GetLocalTimeZone();
+        public string FormatDateTime(DateTime dateTime);
     }
 }
