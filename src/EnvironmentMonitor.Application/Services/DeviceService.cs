@@ -853,15 +853,13 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogError($"Device with identifier: '{deviceIdentifier}' not found.");
                 throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
             }
-            // Fetch the email template
-            var template = await _deviceRepository.GetEmailTemplate(templateType);
 
+            var template = await _deviceRepository.GetEmailTemplate(templateType);
             if (template == null)
             {
                 _logger.LogWarning($"Email template '{templateType}' not found.");
                 throw new EntityNotFoundException($"Email template '{templateType}' not found.");
             }
-
             var tokens = new Dictionary<string, string>
             {
                 { "{DeviceName}", $"{device.Location.Name} - {device.Name}"},
@@ -886,8 +884,7 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {title}");
             try
             {
-                var htmlMessage = message;
-                await _emailClient.SendEmailAsync(title, htmlMessage, message);
+                await _emailClient.SendEmailAsync(title, message);
                 _logger.LogInformation($"Email sent successfully for device '{device.Name}' (Template: {templateType})");
             }
             catch (Exception ex)
