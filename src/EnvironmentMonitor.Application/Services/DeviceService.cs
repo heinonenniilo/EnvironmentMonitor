@@ -843,10 +843,10 @@ namespace EnvironmentMonitor.Application.Services
         {
             _logger.LogInformation($"Preparing to send email for device: {deviceIdentifier} using template: {templateType}");
 
-            // Get the device
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
             {
-                Identifiers = [deviceIdentifier]
+                Identifiers = [deviceIdentifier],
+                GetLocation = true
             })).FirstOrDefault();
             if (device == null)
             {
@@ -861,13 +861,13 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogWarning($"Email template '{templateType}' not found.");
                 throw new EntityNotFoundException($"Email template '{templateType}' not found.");
             }
-            // Build default replacement tokens
+
             var tokens = new Dictionary<string, string>
             {
-                { "{DeviceName}", device.Name },
+                { "{DeviceName}", $"{device.Location.Name} - {device.Name}"},
                 { "{DeviceIdentifier}", device.DeviceIdentifier }
             };
-            // Merge with provided tokens (provided tokens override defaults)
+
             if (replaceTokens != null)
             {
                 foreach (var token in replaceTokens)
@@ -875,7 +875,6 @@ namespace EnvironmentMonitor.Application.Services
                     tokens[token.Key] = token.Value;
                 }
             }
-            // Replace tokens in title and message
             var title = template.Title ?? string.Empty;
             var message = template.Message ?? string.Empty;
 
@@ -887,8 +886,7 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {title}");
             try
             {
-                // Send the email using HTML formatting
-                var htmlMessage = $"<html><body><p>{message.Replace("\n", "<br/>")}</p></body></html>";
+                var htmlMessage = message;
                 await _emailClient.SendEmailAsync(title, htmlMessage, message);
                 _logger.LogInformation($"Email sent successfully for device '{device.Name}' (Template: {templateType})");
             }

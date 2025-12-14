@@ -110,12 +110,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                         if (attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) == true)
                         {
                             var templateTypeValue = int.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
-                            var replaceTokens = new Dictionary<string, string>();                            
-                            if (attributes.ContainsKey(ApplicationConstants.QueuedMessageTimesStampKey))
-                            {
-                                replaceTokens[ApplicationConstants.QueuedMessageTimesStampKey] = attributes[ApplicationConstants.QueuedMessageTimesStampKey];
-                            }                            
-                            await _deviceService.SendDeviceEmail(deviceMessage.DeviceIdentifier, (DeviceEmailTemplateTypes)templateTypeValue, replaceTokens);
+                            await _deviceService.SendDeviceEmail(deviceMessage.DeviceIdentifier, (DeviceEmailTemplateTypes)templateTypeValue, attributes);
                             hasExecuted = true;
                         }
                         break;

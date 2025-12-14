@@ -16,7 +16,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
     {
         private readonly AzureEmailClient? _emailClient;
         private readonly EmailSettings _settings;
-        private readonly ILogger<EmailClient> _logger;
+        private readonly ILogger<EmailClient> _logger;       
 
         public EmailClient(EmailSettings settings, ILogger<EmailClient> logger)
         {
@@ -26,7 +26,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             if (!string.IsNullOrEmpty(_settings.ConnectionString))
             {
                 _emailClient = new AzureEmailClient(_settings.ConnectionString);
-                _logger.LogInformation("Email client initialized with connection string");
+                _logger.LogInformation($"Email client initialized with connection string");
             }
             else
             {
@@ -54,23 +54,24 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             _logger.LogInformation($"Preparing to send email to {_settings.RecipientAddresses.Count} recipient(s). Subject: {subject}");
 
-            var emailContent = new EmailContent(subject)
+            var subjectToUse = string.IsNullOrEmpty(_settings.EmailTitlePrefix)
+                ? subject
+                : $"{_settings.EmailTitlePrefix} {subject}";
+            var emailContent = new EmailContent(subjectToUse)
             {
                 Html = htmlContent
             };
-
             if (!string.IsNullOrEmpty(plainTextContent))
             {
                 emailContent.PlainText = plainTextContent;
             }
 
             var recipients = new EmailRecipients(_settings.RecipientAddresses.Select(addr => new EmailAddress(addr)).ToList());
-
             var emailMessage = new EmailMessage(_settings.SenderAddress, recipients, emailContent);
 
             try
             {
-                EmailSendOperation emailSendOperation = await _emailClient.SendAsync(WaitUntil.Started, emailMessage);
+                EmailSendOperation emailSendOperation = await _emailClient.SendAsync(WaitUntil.Completed, emailMessage);
                 _logger.LogInformation($"Email sent successfully. Message ID: {emailSendOperation.Id}");
             }
             catch (Exception ex)

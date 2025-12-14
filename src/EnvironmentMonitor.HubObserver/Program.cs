@@ -44,7 +44,22 @@ var host = new HostBuilder()
             };
         }
 
-        services.AddInfrastructureServices(opt.Configuration, opt.Configuration.GetValue<string>("DefaultConnection"), hubSettings, queueSettings);
+        var connectionString = opt.Configuration.GetValue<string>("EmailSettings:connectionString");
+        var recipientEmail = opt.Configuration.GetValue<string>("EmailSettings:recipientEmails");
+        var senderEmail = opt.Configuration.GetValue<string>("EmailSettings:SenderAddress");
+        var subjectPrefix = opt.Configuration.GetValue<string>("EmailSettings:SubjectPrefix");
+        EmailSettings? emailSettings = null;
+        if (!string.IsNullOrEmpty(connectionString) && !string.IsNullOrEmpty(recipientEmail) && !string.IsNullOrEmpty(senderEmail))
+        {
+            emailSettings = new EmailSettings
+            {
+                ConnectionString = connectionString,
+                RecipientAddresses = recipientEmail?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? [],
+                SenderAddress = senderEmail,
+                EmailTitlePrefix = subjectPrefix ?? ""
+            };
+        }
+        services.AddInfrastructureServices(opt.Configuration, opt.Configuration.GetValue<string>("DefaultConnection"), hubSettings, queueSettings, emailSettings);
         services.AddApplicationServices(opt.Configuration);
     })
     .Build();
