@@ -930,7 +930,7 @@ namespace EnvironmentMonitor.Application.Services
 
             await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
             {
-                Type = (int)QueuedMessages.SetMotionControlStatus,
+                Type = (int)QueuedMessages.SendDeviceEmail,
                 Message = messageJson,
                 MessageId = res.MessageId,
                 PopReceipt = res.PopReceipt,
