@@ -198,10 +198,33 @@ namespace EnvironmentMonitor.Infrastructure.Data
             bool statusToSet;
             var device = await _context.Devices.FirstOrDefaultAsync(x => x.Identifier == model.Idenfifier) ?? throw new EntityNotFoundException();
             var latestStatus = await _context.DeviceStatusChanges.Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
-            var latestMessage = await _context.Measurements.Where(x => 
+
+            var latestMeasurement = await _context.Measurements.Where(x => 
                 x.Sensor.DeviceId == device.Id
                 && x.Timestamp > _dateService.CurrentTime().AddDays(-1) // Optimization
             ).OrderByDescending(x => x.Timestamp).FirstOrDefaultAsync();
+
+            var latestDeviceMessage = await _context.DeviceMessages.Where(x =>
+                x.DeviceId == device.Id
+                && x.TimeStamp > _dateService.CurrentTime().AddDays(-1) 
+            ).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
+
+            // Determine the latest timestamp from both sources
+            DateTime? latestActivityTimestamp = null;
+            if (latestMeasurement != null && latestDeviceMessage != null)
+            {
+                latestActivityTimestamp = latestMeasurement.Timestamp > latestDeviceMessage.TimeStamp 
+                    ? latestMeasurement.Timestamp 
+                    : latestDeviceMessage.TimeStamp;
+            }
+            else if (latestMeasurement != null)
+            {
+                latestActivityTimestamp = latestMeasurement.Timestamp;
+            }
+            else if (latestDeviceMessage != null)
+            {
+                latestActivityTimestamp = latestDeviceMessage.TimeStamp;
+            }
 
             if (model.Status != null)
             {
@@ -209,7 +232,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
             else
             {
-                statusToSet = latestMessage != null && ((model.TimeStamp ?? _dateService.CurrentTime()) - latestMessage.Timestamp).TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes;
+                statusToSet = latestActivityTimestamp != null && ((model.TimeStamp ?? _dateService.CurrentTime()) - latestActivityTimestamp.Value).TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes;
             }
             var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
             if (latestStatus == null || (latestStatus.Status != statusToSet && timeStamp > latestStatus.TimeStamp))
