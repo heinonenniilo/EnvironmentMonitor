@@ -24,12 +24,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _settings = settings;
             _logger = logger;
 
-            if (!string.IsNullOrEmpty(_settings.ConnectionString))
-            {
-                _emailClient = new AzureEmailClient(_settings.ConnectionString);
-                _logger.LogInformation("Email client initialized with connection string");
-            }
-            else if (!string.IsNullOrEmpty(_settings.Endpoint))
+            if (!string.IsNullOrEmpty(_settings.Endpoint))
             {
                 try
                 {
@@ -43,6 +38,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     _logger.LogError(ex, "Failed to initialize email client with DefaultAzureCredential");
                     throw;
                 }
+            }
+            else if (!string.IsNullOrEmpty(_settings.ConnectionString))
+            {
+                _emailClient = new AzureEmailClient(_settings.ConnectionString);
+                _logger.LogInformation("Email client initialized with connection string");
             }
             else
             {
