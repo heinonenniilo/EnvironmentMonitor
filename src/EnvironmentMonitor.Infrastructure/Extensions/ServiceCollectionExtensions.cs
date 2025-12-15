@@ -23,7 +23,8 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             IConfiguration configuration,
             string? connectionString = null,
             IotHubSettings? iotHubSettings = null,
-            QueueSettings? queueSettings = null
+            QueueSettings? queueSettings = null,
+            EmailSettings? emailSettings = null
             )
         {
             services.AddDbContext<MeasurementDbContext>(options =>
@@ -86,6 +87,17 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 services.AddSingleton(defaultQueueSettings);
             }
 
+            if (emailSettings != null)
+            {
+                services.AddSingleton(emailSettings);
+            }
+            else
+            {
+                var defaultEmailSettings = new EmailSettings();
+                configuration.GetSection("EmailSettings").Bind(defaultEmailSettings);
+                services.AddSingleton(defaultEmailSettings);
+            }
+
             services.AddSingleton<IDateService, DateService>();
             services.AddSingleton<IHubMessageService, HubMessageService>();
             services.AddSingleton<IStorageClient, StorageClient>();
@@ -93,6 +105,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<IPaginationService, PaginationService>();
             services.AddSingleton<IKeyVaultClient, KeyVaultClient>();
             services.AddSingleton<IQueueClient, Services.QueueClient>();
+            services.AddSingleton<IEmailClient, Services.EmailClient>();
 
             return services;
         }

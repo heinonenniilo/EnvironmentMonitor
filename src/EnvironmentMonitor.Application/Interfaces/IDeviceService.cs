@@ -18,6 +18,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status, DateTime? triggeringTime = null);
         public Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs, DateTime? triggeringTime = null);
         public Task SendAttributesToDevice(Guid identifier, string? message = null);
+        public Task SendDeviceEmail(Guid deviceIdentifier, DeviceEmailTemplateTypes templateType, Dictionary<string, string>? replaceTokens = null);
         /// <summary>
         /// Null date indicates error
         /// </summary>
@@ -49,7 +50,7 @@ namespace EnvironmentMonitor.Application.Interfaces
 
         public Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null);
         public Task<List<DeviceEventDto>> GetDeviceEvents(Guid identifier);
-        public Task SetStatus(SetDeviceStatusModel model);
+        public Task SetStatus(SetDeviceStatusModel model, bool saveChanges);
 
         public Task<DeviceInfoDto> UpdateDevice(UpdateDeviceDto model);
     }

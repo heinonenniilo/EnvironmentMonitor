@@ -143,12 +143,12 @@ namespace EnvironmentMonitor.Application.Services
             }
             if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
             {
-                await _deviceRepository.SetStatus(new SetDeviceStatusModel()
+                await _deviceService.SetStatus(new SetDeviceStatusModel()
                 {
                     Idenfifier = device.Identifier,
                     Status = true,
                     TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
-                    Message = $"Measurement count: {measurementsToAdd.Count}",
+                    Message = "Device is online",
                     DeviceMessage = deviceMessage
                 }, false);
             }

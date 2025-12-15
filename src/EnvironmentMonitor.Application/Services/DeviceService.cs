@@ -13,6 +13,7 @@ using EnvironmentMonitor.Domain.Models.Pagination;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -32,9 +33,11 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IImageService _imageService;
         private readonly IKeyVaultClient _keyVaultClient;
         private readonly IQueueClient _queueClient;
+        private readonly IEmailClient _emailClient;
 
         public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService, IImageService imageService, IKeyVaultClient keyVaultClient, IQueueClient queueClient)
+            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService, 
+            IImageService imageService, IKeyVaultClient keyVaultClient, IQueueClient queueClient, IEmailClient emailClient)
         {
             _messageService = messageService;
             _logger = logger;
@@ -46,6 +49,7 @@ namespace EnvironmentMonitor.Application.Services
             _imageService = imageService;
             _keyVaultClient = keyVaultClient;
             _queueClient = queueClient;
+            _emailClient = emailClient;
         }
         public async Task Reboot(Guid identifier)
         {
@@ -490,7 +494,7 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.SetDefaultImage(device.Id, attachmentGuid);
         }
 
-        public async Task SetStatus(SetDeviceStatusModel model)
+        public async Task SetStatus(SetDeviceStatusModel model, bool saveChanges)
         {
             _logger.LogInformation($"Trying to set status for device: {model.Idenfifier}. Status: {model.Status}");
             if (!_userService.HasAccessToDevice(model.Idenfifier, AccessLevels.Write))
@@ -509,7 +513,19 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException();
             }
-            await _deviceRepository.SetStatus(model, true);
+
+            var updatedStatus = await _deviceRepository.SetStatus(model, false);
+            if (updatedStatus == null && saveChanges)
+            {
+                await _deviceRepository.SaveChanges();
+                _logger.LogInformation($"Device status not changed for device: {model.Idenfifier}");
+                return;
+            }
+
+            if (updatedStatus != null)
+            {
+                await QueueDeviceStatusEmail(model, updatedStatus, saveChanges);
+            }
         }
 
         public async Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model)
@@ -821,6 +837,107 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new ArgumentException($"Invalid triggering time.{target}. Cur date: {compareDate}");
             }
+        }
+
+        public async Task SendDeviceEmail(Guid deviceIdentifier, DeviceEmailTemplateTypes templateType, Dictionary<string, string>? replaceTokens = null)
+        {
+            _logger.LogInformation($"Preparing to send email for device: {deviceIdentifier} using template: {templateType}");
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [deviceIdentifier],
+                GetLocation = true
+            })).FirstOrDefault();
+            if (device == null)
+            {
+                _logger.LogError($"Device with identifier: '{deviceIdentifier}' not found.");
+                throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
+            }
+
+            var template = await _deviceRepository.GetEmailTemplate(templateType);
+            if (template == null)
+            {
+                _logger.LogWarning($"Email template '{templateType}' not found.");
+                throw new EntityNotFoundException($"Email template '{templateType}' not found.");
+            }
+            var tokens = new Dictionary<string, string>
+            {
+                { "{DeviceName}", $"{device.Location.Name} - {device.Name}"},
+                { "{DeviceIdentifier}", device.DeviceIdentifier }
+            };
+
+            if (replaceTokens != null)
+            {
+                foreach (var token in replaceTokens)
+                {
+                    tokens[token.Key] = token.Value;
+                }
+            }
+            var title = template.Title ?? string.Empty;
+            var message = template.Message ?? string.Empty;
+
+            foreach (var token in tokens)
+            {
+                title = title.Replace(token.Key, token.Value);
+                message = message.Replace(token.Key, token.Value);
+            }
+            _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {title}");
+            try
+            {
+                await _emailClient.SendEmailAsync(title, message);
+                _logger.LogInformation($"Email sent successfully for device '{device.Name}' (Template: {templateType})");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send email for device '{device.Name}' using template '{templateType}'");
+                throw;
+            }
+        }
+
+        private async Task QueueDeviceStatusEmail(SetDeviceStatusModel model, DeviceStatus deviceStatus, bool saveChanges)
+        {
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [model.Idenfifier],
+                OnlyVisible = false
+            })).FirstOrDefault();
+
+            if (device == null)
+            {
+                _logger.LogError($"Device with identifier '{model.Idenfifier}' not found for queuing email.");
+                return;
+            }
+
+            var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
+
+            DeviceEmailTemplateTypes messageType = deviceStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
+            var messageToQueue = new DeviceQueueMessage()
+            {
+                Attributes = new Dictionary<string, string>()
+                    {
+                        { ApplicationConstants.QueuedMessageDefaultKey, ((int)messageType).ToString() },
+                        { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(deviceStatus.TimeStamp) }
+                    },
+                DeviceIdentifier = model.Idenfifier,
+                MessageTypeId = (int)QueuedMessages.SendDeviceEmail,
+            };
+            var messageJson = JsonSerializer.Serialize(messageToQueue);
+            var res = await _queueClient.SendMessage(messageJson);
+
+            await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+            {
+                Type = (int)QueuedMessages.SendDeviceEmail,
+                Message = messageJson,
+                MessageId = res.MessageId,
+                PopReceipt = res.PopReceipt,
+                Created = _dateService.CurrentTime(),
+                CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
+                ScheduledUtc = res.ScheludedToExecuteUtc,
+
+            }, saveChanges);
+
         }
     }
 }

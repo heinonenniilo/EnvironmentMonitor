@@ -192,15 +192,39 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
         }
 
-        public async Task SetStatus(SetDeviceStatusModel model, bool saveChanges)
+        public async Task<DeviceStatus?> SetStatus(SetDeviceStatusModel model, bool saveChanges)
         {
+            DeviceStatus? updatedStatus = null;
             bool statusToSet;
             var device = await _context.Devices.FirstOrDefaultAsync(x => x.Identifier == model.Idenfifier) ?? throw new EntityNotFoundException();
             var latestStatus = await _context.DeviceStatusChanges.Where(x => x.DeviceId == device.Id).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
-            var latestMessage = await _context.Measurements.Where(x => 
+
+            var latestMeasurement = await _context.Measurements.Where(x => 
                 x.Sensor.DeviceId == device.Id
                 && x.Timestamp > _dateService.CurrentTime().AddDays(-1) // Optimization
             ).OrderByDescending(x => x.Timestamp).FirstOrDefaultAsync();
+
+            var latestDeviceMessage = await _context.DeviceMessages.Where(x =>
+                x.DeviceId == device.Id
+                && x.TimeStamp > _dateService.CurrentTime().AddDays(-1) 
+            ).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
+
+            // Determine the latest timestamp from both sources
+            DateTime? latestActivityTimestamp = null;
+            if (latestMeasurement != null && latestDeviceMessage != null)
+            {
+                latestActivityTimestamp = latestMeasurement.Timestamp > latestDeviceMessage.TimeStamp 
+                    ? latestMeasurement.Timestamp 
+                    : latestDeviceMessage.TimeStamp;
+            }
+            else if (latestMeasurement != null)
+            {
+                latestActivityTimestamp = latestMeasurement.Timestamp;
+            }
+            else if (latestDeviceMessage != null)
+            {
+                latestActivityTimestamp = latestDeviceMessage.TimeStamp;
+            }
 
             if (model.Status != null)
             {
@@ -208,27 +232,28 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
             else
             {
-                statusToSet = latestMessage != null && ((model.TimeStamp ?? _dateService.CurrentTime()) - latestMessage.Timestamp).TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes;
+                statusToSet = latestActivityTimestamp != null && ((model.TimeStamp ?? _dateService.CurrentTime()) - latestActivityTimestamp.Value).TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes;
             }
             var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
             if (latestStatus == null || (latestStatus.Status != statusToSet && timeStamp > latestStatus.TimeStamp))
             {
                 _logger.LogInformation($"Device status is being set to: {statusToSet}");
-                _context.DeviceStatusChanges.Add(new Domain.Entities.DeviceStatus()
+                updatedStatus = new DeviceStatus()
                 {
-
                     Device = device,
                     Status = statusToSet,
                     TimeStamp = timeStamp,
                     TimeStampUtc = _dateService.LocalToUtc(timeStamp),
                     Message = model.Message,
                     DeviceMessage = model.DeviceMessage,
-                });
+                };
+                _context.DeviceStatusChanges.Add(updatedStatus);
             }
             if (saveChanges)
             {
                 await _context.SaveChangesAsync();
             }
+            return updatedStatus;
         }
 
         public async Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model)
@@ -650,6 +675,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<DeviceEmailTemplate?> GetEmailTemplate(DeviceEmailTemplateTypes templateType)
+        {
+            return await _context.DeviceEmailTemplates
+                .FirstOrDefaultAsync(x => x.Id == (int)templateType);
         }
     }
 }

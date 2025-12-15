@@ -17,5 +17,6 @@ namespace EnvironmentMonitor.Domain
         public static int DeviceLastMessageFetchLimitIndays = 1;
 
         public static string QueuedMessageDefaultKey = "VALUE";
+        public static string QueuedMessageTimesStampKey = "{TIMESTAMP}";
     }
 }

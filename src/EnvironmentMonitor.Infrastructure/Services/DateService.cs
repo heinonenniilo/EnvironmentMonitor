@@ -31,5 +31,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
         public DateTime LocalToUtc(DateTime local) => TimeZoneInfo.ConvertTimeToUtc(local, GetLocalTimeZone());
         public DateTime UtcToLocal(DateTime utc) => TimeZoneInfo.ConvertTimeFromUtc(utc, GetLocalTimeZone());
+
+        public string FormatDateTime(DateTime dateTime)
+        {
+            return dateTime.ToString("dd.MM.yyyy HH:mm");
+        }
     }
 }

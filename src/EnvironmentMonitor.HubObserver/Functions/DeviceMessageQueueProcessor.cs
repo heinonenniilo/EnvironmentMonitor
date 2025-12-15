@@ -106,6 +106,14 @@ namespace EnvironmentMonitor.HubObserver.Functions
                             hasExecuted = true;
                         }
                         break;
+                    case QueuedMessages.SendDeviceEmail:
+                        if (attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) == true)
+                        {
+                            var templateTypeValue = int.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
+                            await _deviceService.SendDeviceEmail(deviceMessage.DeviceIdentifier, (DeviceEmailTemplateTypes)templateTypeValue, attributes);
+                            hasExecuted = true;
+                        }
+                        break;
                     default:
                         _logger.LogWarning("Unknown message type: {MessageTypeId}", deviceMessage.MessageTypeId);
                         break;
