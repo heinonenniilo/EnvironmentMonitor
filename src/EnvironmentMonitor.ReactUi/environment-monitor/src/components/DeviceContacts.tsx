@@ -42,6 +42,7 @@ export const DeviceContacts: React.FC<DeviceContactsProps> = ({
             <TableRow>
               <TableCell>Email</TableCell>
               <TableCell>Created</TableCell>
+              <TableCell>Updated</TableCell>
               {showActions && <TableCell align="right">Actions</TableCell>}
             </TableRow>
           </TableHead>
@@ -54,6 +55,11 @@ export const DeviceContacts: React.FC<DeviceContactsProps> = ({
                     {contact.created
                       ? getFormattedDate(contact.created, true, true)
                       : ""}
+                  </TableCell>
+                  <TableCell>
+                    {contact.updated
+                      ? getFormattedDate(contact.updated, true, true)
+                      : "-"}
                   </TableCell>
                   {showActions && (
                     <TableCell align="right">
