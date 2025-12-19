@@ -842,12 +842,17 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task SendDeviceEmail(Guid deviceIdentifier, DeviceEmailTemplateTypes templateType, Dictionary<string, string>? replaceTokens = null)
         {
+            if (!_userService.HasAccessToDevice(deviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
             _logger.LogInformation($"Preparing to send email for device: {deviceIdentifier} using template: {templateType}");
 
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
             {
                 Identifiers = [deviceIdentifier],
-                GetLocation = true
+                GetLocation = true,
+                GetContacts = true
             })).FirstOrDefault();
             if (device == null)
             {
@@ -885,7 +890,7 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {title}");
             try
             {
-                await _emailClient.SendEmailAsync(title, message);
+                await _emailClient.SendEmailAsync([.. device.Contacts.Select(x => x.Email)], title, message);
                 _logger.LogInformation($"Email sent successfully for device '{device.Name}' (Template: {templateType})");
             }
             catch (Exception ex)

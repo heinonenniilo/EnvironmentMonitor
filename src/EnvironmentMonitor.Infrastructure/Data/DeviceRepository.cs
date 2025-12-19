@@ -667,7 +667,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 existingCommand = command;
                 var updatedTime = _dateService.CurrentTime();
                 existingCommand.Updated = updatedTime;
-                existingCommand.UpdatedUtc = _dateService.LocalToUtc(updatedTime),
+                existingCommand.UpdatedUtc = _dateService.LocalToUtc(updatedTime);
                 _logger.LogInformation($"Updated queued command with MessageId: {command.MessageId} for device: {deviceId}");
             }
             else

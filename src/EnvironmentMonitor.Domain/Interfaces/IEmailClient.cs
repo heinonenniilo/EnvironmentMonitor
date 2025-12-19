@@ -8,6 +8,6 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IEmailClient
     {
-        Task SendEmailAsync(string subject, string htmlContent, string plainTextContent = "");
+        Task SendEmailAsync(List<string> emails, string subject, string htmlContent, string plainTextContent = "");
     }
 }

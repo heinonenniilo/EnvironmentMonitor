@@ -50,25 +50,38 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
         }
 
-        public async Task SendEmailAsync(string subject, string htmlContent, string plainTextContent = "")
+        public async Task SendEmailAsync(List<string> emails, string subject, string htmlContent, string plainTextContent = "")
         {
             if (_emailClient == null)
             {
                 throw new InvalidOperationException("Email client not initialized");
             }
-
             if (string.IsNullOrEmpty(_settings.SenderAddress))
             {
                 throw new InvalidOperationException("Sender address not configured");
             }
 
-            if (_settings.RecipientAddresses == null || !_settings.RecipientAddresses.Any())
+            // Combine emails from parameter with recipient addresses from settings
+            var allRecipients = new List<string>();
+            
+            if (_settings.RecipientAddresses != null && _settings.RecipientAddresses.Any())
             {
-                _logger.LogWarning("No recipient addresses configured. Email not sent.");
+                allRecipients.AddRange(_settings.RecipientAddresses);
+            }
+            
+            if (emails != null && emails.Any())
+            {
+                allRecipients.AddRange(emails);
+            }
+            // Remove duplicates
+            allRecipients = allRecipients.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+            if (!allRecipients.Any())
+            {
+                _logger.LogWarning("No recipient addresses configured or provided. Email not sent.");
                 return;
             }
-
-            _logger.LogInformation($"Preparing to send email to {_settings.RecipientAddresses.Count} recipient(s). Subject: {subject}");
+            _logger.LogInformation($"Preparing to send email to {allRecipients.Count} recipient(s). Subject: {subject}");
 
             var subjectToUse = string.IsNullOrEmpty(_settings.EmailTitlePrefix)
                 ? subject
@@ -81,10 +94,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 emailContent.PlainText = plainTextContent;
             }
-
-            var recipients = new EmailRecipients(_settings.RecipientAddresses.Select(addr => new EmailAddress(addr)).ToList());
+            var recipients = new EmailRecipients(allRecipients.Select(addr => new EmailAddress(addr)).ToList());
             var emailMessage = new EmailMessage(_settings.SenderAddress, recipients, emailContent);
-
             try
             {
                 EmailSendOperation emailSendOperation = await _emailClient.SendAsync(WaitUntil.Completed, emailMessage);
