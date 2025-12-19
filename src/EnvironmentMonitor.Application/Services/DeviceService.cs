@@ -303,7 +303,7 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
 
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false)
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false, bool getContacts = false)
         {
             _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
             var infos = new List<DeviceInfo>();
@@ -315,7 +315,8 @@ namespace EnvironmentMonitor.Application.Services
                     OnlyVisible = onlyVisible,
                     GetAttachments = getAttachments,
                     GetLocation = getLocation,
-                    GetAttributes = getAttributes
+                    GetAttributes = getAttributes,
+                    GetContacts = getContacts
                 }))
                 .Where(d => _userService.HasAccessToDevice(d.Device.Identifier, AccessLevels.Read)).ToList();
             }

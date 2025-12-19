@@ -29,10 +29,10 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return await _deviceService.UpdateDeviceContact(model);
         }
 
-        [HttpDelete("{identifier}")]
-        public async Task Delete(Guid identifier)
+        [HttpDelete]
+        public async Task Delete([FromBody] AddOrUpdateDeviceContactDto model)
         {
-            await _deviceService.DeleteDeviceContact(identifier);
+            await _deviceService.DeleteDeviceContact(model);
         }
     }
 }
