@@ -42,5 +42,10 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task SaveChanges();
 
         public Task<List<DeviceStatus>> GetDevicesStatus(GetDeviceStatusModel model);
+        
+        public Task<DeviceContact> AddDeviceContact(int deviceId, string email, bool saveChanges);
+        public Task<DeviceContact> UpdateDeviceContact(Guid identifier, string email, bool saveChanges);
+        public Task DeleteDeviceContact(Guid identifier, bool saveChanges);
+        public Task<DeviceContact?> GetDeviceContact(Guid identifier);
     }
 }

@@ -51,6 +51,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 .WithOne(d => d.Device)
                 .HasForeignKey(d => d.DeviceId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(d => d.Contacts)
+                .WithOne(d => d.Device)
+                .HasForeignKey(d => d.DeviceId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

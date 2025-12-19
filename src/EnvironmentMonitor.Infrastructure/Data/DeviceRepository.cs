@@ -403,6 +403,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Include(x => x.Location);
             }
 
+            if (model.GetContacts)
+            {
+                query = query.Include(x => x.Contacts);
+            }
+
             if (model.GetAttributes)
             {
                 query = query.Include(x => x.DeviceAttributes).ThenInclude(a => a.Type);
@@ -681,6 +686,95 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             return await _context.DeviceEmailTemplates
                 .FirstOrDefaultAsync(x => x.Id == (int)templateType);
+        }
+
+        public async Task<DeviceContact> AddDeviceContact(int deviceId, string email, bool saveChanges)
+        {
+            var device = await _context.Devices.FindAsync(deviceId);
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with id: {deviceId} not found.");
+            }
+
+            // Check if contact with same email already exists for this device
+            var existingContact = await _context.DeviceContacts
+                .FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Email == email);
+
+            if (existingContact != null)
+            {
+                throw new InvalidOperationException($"Contact with email '{email}' already exists for this device.");
+            }
+
+            var contact = new DeviceContact
+            {
+                DeviceId = deviceId,
+                Email = email,
+                Created = _dateService.CurrentTime(),
+                CreatedUtc = DateTime.UtcNow
+            };
+
+            await _context.DeviceContacts.AddAsync(contact);
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return contact;
+        }
+
+        public async Task<DeviceContact> UpdateDeviceContact(Guid identifier, string email, bool saveChanges)
+        {
+            var contact = await _context.DeviceContacts
+                .FirstOrDefaultAsync(x => x.Identifier == identifier);
+
+            if (contact == null)
+            {
+                throw new EntityNotFoundException($"Device contact with identifier: {identifier} not found.");
+            }
+
+            // Check if another contact with the same email already exists for this device
+            var existingContact = await _context.DeviceContacts
+                .FirstOrDefaultAsync(x => x.DeviceId == contact.DeviceId && x.Email == email && x.Identifier != identifier);
+
+            if (existingContact != null)
+            {
+                throw new InvalidOperationException($"Another contact with email '{email}' already exists for this device.");
+            }
+
+            contact.Email = email;
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return contact;
+        }
+
+        public async Task DeleteDeviceContact(Guid identifier, bool saveChanges)
+        {
+            var contact = await _context.DeviceContacts
+                .FirstOrDefaultAsync(x => x.Identifier == identifier);
+
+            if (contact == null)
+            {
+                throw new EntityNotFoundException($"Device contact with identifier: {identifier} not found.");
+            }
+
+            _context.DeviceContacts.Remove(contact);
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<DeviceContact?> GetDeviceContact(Guid identifier)
+        {
+            return await _context.DeviceContacts
+                .Include(x => x.Device)
+                .FirstOrDefaultAsync(x => x.Identifier == identifier);
         }
     }
 }

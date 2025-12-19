@@ -18,6 +18,7 @@ namespace EnvironmentMonitor.Domain.Models
         public bool GetAttachments { get; set; }
         public bool GetLocation { get; set; }
         public bool GetAttributes { get; set; }
+        public bool GetContacts { get; set; }
     }
 
     public class GetSensorsModel

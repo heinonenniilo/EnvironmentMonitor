@@ -939,5 +939,84 @@ namespace EnvironmentMonitor.Application.Services
             }, saveChanges);
 
         }
+
+        public async Task<DeviceContactDto> AddDeviceContact(AddOrUpdateDeviceContactDto model)
+        {
+            if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            _logger.LogInformation($"Adding device contact for device: {model.DeviceIdentifier}");
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [model.DeviceIdentifier],
+                OnlyVisible = false
+            })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{model.DeviceIdentifier}' not found.");
+            var contact = await _deviceRepository.AddDeviceContact(device.Id, model.Email, true);
+
+            _logger.LogInformation($"Successfully added device contact with identifier: {contact.Identifier} for device: {model.DeviceIdentifier}");
+
+            return _mapper.Map<DeviceContactDto>(contact);
+        }
+
+        public async Task<DeviceContactDto> UpdateDeviceContact(AddOrUpdateDeviceContactDto model)
+        {
+            if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            if (model.Identifier == null)
+            {
+                throw new ArgumentException("Identifier is required when updating a device contact.");
+            }
+
+            var existingContact = await _deviceRepository.GetDeviceContact(model.Identifier.Value);
+
+            if (existingContact == null)
+            {
+                throw new EntityNotFoundException($"Device contact with identifier: {model.Identifier} not found.");
+            }
+
+            _logger.LogInformation($"Updating device contact: {model.Identifier}");
+
+            var updatedContact = await _deviceRepository.UpdateDeviceContact(model.Identifier.Value, model.Email, true);
+
+            _logger.LogInformation($"Successfully updated device contact: {model.Identifier}");
+
+            return _mapper.Map<DeviceContactDto>(updatedContact);
+        }
+
+        public async Task DeleteDeviceContact(AddOrUpdateDeviceContactDto model)
+        {
+            if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            if (model.Identifier == null)
+            {
+                throw new ArgumentException("Identifier and DeviceIdentifier are required when deleting a device contact.");
+            }
+            var existingContact = await _deviceRepository.GetDeviceContact(model.Identifier.Value);
+
+            if (existingContact == null)
+            {
+                throw new EntityNotFoundException($"Device contact with identifier: {model.Identifier.Value} not found.");
+            }
+
+            if (!_userService.HasAccessToDevice(existingContact.Device.Identifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            _logger.LogInformation($"Deleting device contact: {model.Identifier.Value}");
+
+            await _deviceRepository.DeleteDeviceContact(model.Identifier.Value, true);
+
+            _logger.LogInformation($"Successfully deleted device contact: {model.Identifier.Value}");
+        }
     }
 }
