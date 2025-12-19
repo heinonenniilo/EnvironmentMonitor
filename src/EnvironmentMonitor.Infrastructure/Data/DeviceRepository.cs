@@ -546,6 +546,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 existingAttribute.Value = value;
                 existingAttribute.TimeStamp = currentTime;
                 existingAttribute.TimeStampUtc = utcTime;
+
+                existingAttribute.Updated = currentTime;
+                existingAttribute.UpdatedUtc = utcTime;
             }
             else
             {
@@ -659,10 +662,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             // Check if a command with the same MessageId already exists
             var existingCommand = await _context.DeviceQueuedCommands
                 .FirstOrDefaultAsync(x => x.MessageId == command.MessageId);
-
             if (existingCommand != null)
             {
                 existingCommand = command;
+                var updatedTime = _dateService.CurrentTime();
+                existingCommand.Updated = updatedTime;
+                existingCommand.UpdatedUtc = _dateService.LocalToUtc(updatedTime),
                 _logger.LogInformation($"Updated queued command with MessageId: {command.MessageId} for device: {deviceId}");
             }
             else
@@ -705,12 +710,14 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 throw new InvalidOperationException($"Contact with email '{email}' already exists for this device.");
             }
 
+            var created = _dateService.CurrentTime();
+
             var contact = new DeviceContact
             {
                 DeviceId = deviceId,
                 Email = email,
-                Created = _dateService.CurrentTime(),
-                CreatedUtc = DateTime.UtcNow
+                Created = created,
+                CreatedUtc = _dateService.LocalToUtc(created),
             };
 
             await _context.DeviceContacts.AddAsync(contact);
@@ -743,6 +750,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
 
             contact.Email = email;
+
+            var now = _dateService.CurrentTime();
+            contact.Updated = now;
+            contact.UpdatedUtc = _dateService.LocalToUtc(now);
 
             if (saveChanges)
             {

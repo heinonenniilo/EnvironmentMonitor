@@ -10,5 +10,8 @@ namespace EnvironmentMonitor.Domain.Entities
     {
         public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
         public required DateTime Created { get; set; }
+
+        public DateTime? Updated { get; set; }
+        public DateTime? UpdatedUtc { get; set; }
     }
 }
