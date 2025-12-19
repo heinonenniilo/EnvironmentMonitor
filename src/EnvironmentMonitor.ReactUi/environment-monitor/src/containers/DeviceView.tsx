@@ -28,7 +28,10 @@ import { setDevices } from "../reducers/measurementReducer";
 import { getEntityTitle } from "../utilities/entityUtils";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 import { DeviceAttachments } from "../components/DeviceAttachments";
-import { Refresh } from "@mui/icons-material";
+import { DeviceContacts } from "../components/DeviceContacts";
+import { DeviceContactDialog } from "../components/DeviceContactDialog";
+import { Refresh, Add } from "@mui/icons-material";
+import { type DeviceContact } from "../models/deviceContact";
 
 interface PromiseInfo {
   type: string;
@@ -62,11 +65,17 @@ export const DeviceView: React.FC = () => {
   );
 
   const [defaultImageVer, setDefaultImageVer] = useState(0);
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<DeviceContact | null>(
+    null
+  );
+
   const dispatch = useDispatch();
 
   const { deviceId } = useParams<{ deviceId?: string }>();
   const deviceHook = useApiHook().deviceHook;
   const measurementApiHook = useApiHook().measureHook;
+  const deviceContactsHook = useApiHook().deviceContactsHook;
 
   const loadMeasurements = () => {
     if (!selectedDevice) {
@@ -577,6 +586,93 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const handleOpenContactDialog = (contact: DeviceContact | null = null) => {
+    setSelectedContact(contact);
+    setContactDialogOpen(true);
+  };
+
+  const handleCloseContactDialog = () => {
+    setContactDialogOpen(false);
+    setSelectedContact(null);
+  };
+
+  const handleSaveContact = (
+    email: string,
+    deviceIdentifier: string,
+    identifier?: string
+  ) => {
+    setIsLoading(true);
+
+    const model = {
+      identifier: identifier,
+      deviceIdentifier: deviceIdentifier,
+      email: email,
+    };
+
+    const apiCall = identifier
+      ? deviceContactsHook.update(model)
+      : deviceContactsHook.create(model);
+
+    apiCall
+      .then(() => {
+        dispatch(
+          addNotification({
+            title: identifier
+              ? "Contact updated successfully"
+              : "Contact added successfully",
+            body: "",
+            severity: "success",
+          })
+        );
+        // Refresh device info to get updated contacts
+        return deviceHook.getDeviceInfo(deviceIdentifier);
+      })
+      .then((res) => {
+        setSelectedDevice(res);
+      })
+      .catch((ex) => {
+        console.error(ex);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const handleDeleteContact = (contact: DeviceContact) => {
+    if (!selectedDevice) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    deviceContactsHook
+      .delete({
+        identifier: contact.identifier,
+        deviceIdentifier: selectedDevice.device.identifier,
+        email: contact.email,
+      })
+      .then(() => {
+        dispatch(
+          addNotification({
+            title: "Contact deleted successfully",
+            body: "",
+            severity: "success",
+          })
+        );
+        // Refresh device info to get updated contacts
+        return deviceHook.getDeviceInfo(selectedDevice.device.identifier);
+      })
+      .then((res) => {
+        setSelectedDevice(res);
+      })
+      .catch((ex) => {
+        console.error(ex);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   return (
     <AppContentWrapper
       title={getEntityTitle(selectedDevice?.device)}
@@ -659,6 +755,39 @@ export const DeviceView: React.FC = () => {
           <Collapsible title="Attributes" isOpen={false}>
             <DeviceAttributesTable
               attributes={selectedDevice?.attributes ?? []}
+            />
+          </Collapsible>
+        )}
+
+        {selectedDevice && (
+          <Collapsible
+            title="Contacts"
+            isOpen={false}
+            customComponent={
+              <IconButton
+                onClick={() => handleOpenContactDialog(null)}
+                sx={{ ml: 1, cursor: "pointer" }}
+                size="small"
+                title="Add new contact"
+              >
+                <Add />
+              </IconButton>
+            }
+          >
+            <DeviceContacts
+              contacts={selectedDevice.contacts ?? []}
+              onUpdate={(contact) => handleOpenContactDialog(contact)}
+              onDelete={(contact) => {
+                dispatch(
+                  setConfirmDialog({
+                    onConfirm: () => {
+                      handleDeleteContact(contact);
+                    },
+                    title: "Delete contact",
+                    body: `Are you sure you want to delete ${contact.email}?`,
+                  })
+                );
+              }}
             />
           </Collapsible>
         )}
@@ -835,6 +964,13 @@ export const DeviceView: React.FC = () => {
           </Collapsible>
         )}
       </Box>
+      <DeviceContactDialog
+        open={contactDialogOpen}
+        contact={selectedContact}
+        deviceIdentifier={selectedDevice?.device.identifier ?? ""}
+        onClose={handleCloseContactDialog}
+        onSave={handleSaveContact}
+      />
     </AppContentWrapper>
   );
 };

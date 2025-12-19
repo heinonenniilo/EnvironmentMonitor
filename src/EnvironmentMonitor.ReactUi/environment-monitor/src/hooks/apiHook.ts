@@ -23,12 +23,15 @@ import type { GetMeasurementsModel } from "../models/getMeasurementsModel";
 import type { DeviceAttribute } from "../models/deviceAttribute";
 import type { GetQueuedCommandsModel } from "../models/getQueuedCommandsModel";
 import type { DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
+import type { DeviceContact } from "../models/deviceContact";
+import type { AddOrUpdateDeviceContact } from "../models/addOrUpdateDeviceContact";
 
 interface ApiHook {
   userHook: userHook;
   measureHook: measureHook;
   deviceHook: deviceHook;
   locationHook: locationHook;
+  deviceContactsHook: deviceContactsHook;
 }
 
 interface userHook {
@@ -124,6 +127,12 @@ interface deviceHook {
     messageId: string,
     newScheduledTime: moment.Moment
   ) => Promise<boolean>;
+}
+
+interface deviceContactsHook {
+  create: (model: AddOrUpdateDeviceContact) => Promise<DeviceContact>;
+  update: (model: AddOrUpdateDeviceContact) => Promise<DeviceContact>;
+  delete: (model: AddOrUpdateDeviceContact) => Promise<void>;
 }
 
 const apiClient = axios.create({
@@ -591,6 +600,43 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           showError("Failed to get locations");
           return [];
+        }
+      },
+    },
+    deviceContactsHook: {
+      create: async (model: AddOrUpdateDeviceContact) => {
+        try {
+          const res = await apiClient.post<any, AxiosResponse<DeviceContact>>(
+            `/api/devicecontacts`,
+            model
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to create device contact");
+          throw ex;
+        }
+      },
+      update: async (model: AddOrUpdateDeviceContact) => {
+        try {
+          const res = await apiClient.put<any, AxiosResponse<DeviceContact>>(
+            `/api/devicecontacts`,
+            model
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to update device contact");
+          throw ex;
+        }
+      },
+      delete: async (model: AddOrUpdateDeviceContact) => {
+        try {
+          await apiClient.delete(`/api/devicecontacts`, { data: model });
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to delete device contact");
+          throw ex;
         }
       },
     },
