@@ -890,7 +890,13 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {title}");
             try
             {
-                await _emailClient.SendEmailAsync([.. device.Contacts.Select(x => x.Email)], title, message);
+                var emailOptions = new SendEmailOptions
+                {
+                    ToAddresses = device.Contacts.Select(x => x.Email).ToList(),
+                    Subject = title,
+                    HtmlContent = message
+                };
+                await _emailClient.SendEmailAsync(emailOptions);
                 _logger.LogInformation($"Email sent successfully for device '{device.Name}' (Template: {templateType})");
             }
             catch (Exception ex)
