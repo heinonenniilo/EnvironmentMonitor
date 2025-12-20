@@ -510,6 +510,12 @@ namespace EnvironmentMonitor.Application.Services
             }))
             .FirstOrDefault();
 
+            var currentStatus = (await _deviceRepository.GetDevicesStatus(new GetDeviceStatusModel()
+            {
+                DeviceIdentifiers = [model.Idenfifier],
+                LatestOnly = true
+            })).FirstOrDefault();
+
             if (device == null || !_userService.HasAccessToDevice(device.Identifier, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
@@ -525,7 +531,7 @@ namespace EnvironmentMonitor.Application.Services
 
             if (updatedStatus != null)
             {
-                await QueueDeviceStatusEmail(model, updatedStatus, saveChanges);
+                await QueueDeviceStatusEmail(model, updatedStatus, currentStatus, saveChanges);
             }
         }
 
@@ -906,7 +912,7 @@ namespace EnvironmentMonitor.Application.Services
             }
         }
 
-        private async Task QueueDeviceStatusEmail(SetDeviceStatusModel model, DeviceStatus deviceStatus, bool saveChanges)
+        private async Task QueueDeviceStatusEmail(SetDeviceStatusModel model, DeviceStatus currentStatus, DeviceStatus? previousStatus, bool saveChanges)
         {
 
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
@@ -922,15 +928,17 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
+            DeviceEmailTemplateTypes messageType = currentStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
 
-            DeviceEmailTemplateTypes messageType = deviceStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
-            var messageToQueue = new DeviceQueueMessage()
-            {
-                Attributes = new Dictionary<string, string>()
+            var attributesToAdd = new Dictionary<string, string>()
                     {
                         { ApplicationConstants.QueuedMessageDefaultKey, ((int)messageType).ToString() },
-                        { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(deviceStatus.TimeStamp) }
-                    },
+                        { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(currentStatus.TimeStamp) },
+                        { ApplicationConstants.QueuedMessageTimesStampPreviousKey, previousStatus != null ? _dateService.FormatDateTime(previousStatus.TimeStamp) : string.Empty }
+                    };
+            var messageToQueue = new DeviceQueueMessage()
+            {
+                Attributes = attributesToAdd,
                 DeviceIdentifier = model.Idenfifier,
                 MessageTypeId = (int)QueuedMessages.SendDeviceEmail,
             };

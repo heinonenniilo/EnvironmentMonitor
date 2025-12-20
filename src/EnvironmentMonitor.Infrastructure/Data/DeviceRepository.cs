@@ -263,6 +263,19 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var devices = await _context.Devices.Where(x => model.DeviceIdentifiers.Contains(x.Identifier)).ToListAsync();
             var deviceIds = devices.Select(x => x.Id).ToList();
 
+            if (model.LatestOnly)
+            {
+                foreach (var deviceId in deviceIds)
+                {
+                    var latestStatus = await _context.DeviceStatusChanges.Where(x => x.DeviceId == deviceId).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
+                    if (latestStatus != null)
+                    {
+                        listToReturn.Add(latestStatus);
+                    }
+                }
+                return listToReturn;
+            }
+
             foreach (var deviceId in deviceIds)
             {
                 var latestStatusBeforeTimeRangeStart = await _context.DeviceStatusChanges.Where(x => x.DeviceId == deviceId && x.TimeStamp < model.From).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
