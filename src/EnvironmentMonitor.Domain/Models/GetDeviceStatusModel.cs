@@ -9,7 +9,8 @@ namespace EnvironmentMonitor.Domain.Models
     public class GetDeviceStatusModel
     {
         public required List<Guid> DeviceIdentifiers { get; set; }
-        public required DateTime From { get; set; } = DateTime.UtcNow.AddDays(-4);
+        public DateTime From { get; set; } = DateTime.UtcNow.AddDays(-4);
         public DateTime? To { get; set; }
+        public bool LatestOnly { get; set; } = false;
     }
 }

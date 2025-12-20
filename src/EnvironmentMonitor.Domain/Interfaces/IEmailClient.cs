@@ -1,3 +1,4 @@
+using EnvironmentMonitor.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +9,6 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IEmailClient
     {
-        Task SendEmailAsync(string subject, string htmlContent, string plainTextContent = "");
+        Task SendEmailAsync(SendEmailOptions options);
     }
 }

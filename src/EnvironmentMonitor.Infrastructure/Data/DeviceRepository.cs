@@ -263,6 +263,19 @@ namespace EnvironmentMonitor.Infrastructure.Data
             var devices = await _context.Devices.Where(x => model.DeviceIdentifiers.Contains(x.Identifier)).ToListAsync();
             var deviceIds = devices.Select(x => x.Id).ToList();
 
+            if (model.LatestOnly)
+            {
+                foreach (var deviceId in deviceIds)
+                {
+                    var latestStatus = await _context.DeviceStatusChanges.Where(x => x.DeviceId == deviceId).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
+                    if (latestStatus != null)
+                    {
+                        listToReturn.Add(latestStatus);
+                    }
+                }
+                return listToReturn;
+            }
+
             foreach (var deviceId in deviceIds)
             {
                 var latestStatusBeforeTimeRangeStart = await _context.DeviceStatusChanges.Where(x => x.DeviceId == deviceId && x.TimeStamp < model.From).OrderByDescending(x => x.TimeStamp).FirstOrDefaultAsync();
@@ -403,6 +416,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Include(x => x.Location);
             }
 
+            if (model.GetContacts)
+            {
+                query = query.Include(x => x.Contacts);
+            }
+
             if (model.GetAttributes)
             {
                 query = query.Include(x => x.DeviceAttributes).ThenInclude(a => a.Type);
@@ -541,6 +559,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 existingAttribute.Value = value;
                 existingAttribute.TimeStamp = currentTime;
                 existingAttribute.TimeStampUtc = utcTime;
+
+                existingAttribute.Updated = currentTime;
+                existingAttribute.UpdatedUtc = utcTime;
             }
             else
             {
@@ -654,10 +675,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             // Check if a command with the same MessageId already exists
             var existingCommand = await _context.DeviceQueuedCommands
                 .FirstOrDefaultAsync(x => x.MessageId == command.MessageId);
-
             if (existingCommand != null)
             {
                 existingCommand = command;
+                var updatedTime = _dateService.CurrentTime();
+                existingCommand.Updated = updatedTime;
+                existingCommand.UpdatedUtc = _dateService.LocalToUtc(updatedTime);
                 _logger.LogInformation($"Updated queued command with MessageId: {command.MessageId} for device: {deviceId}");
             }
             else
@@ -681,6 +704,101 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             return await _context.DeviceEmailTemplates
                 .FirstOrDefaultAsync(x => x.Id == (int)templateType);
+        }
+
+        public async Task<DeviceContact> AddDeviceContact(int deviceId, string email, bool saveChanges)
+        {
+            var device = await _context.Devices.FindAsync(deviceId);
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with id: {deviceId} not found.");
+            }
+
+            // Check if contact with same email already exists for this device
+            var existingContact = await _context.DeviceContacts
+                .FirstOrDefaultAsync(x => x.DeviceId == deviceId && x.Email == email);
+
+            if (existingContact != null)
+            {
+                throw new InvalidOperationException($"Contact with email '{email}' already exists for this device.");
+            }
+
+            var created = _dateService.CurrentTime();
+
+            var contact = new DeviceContact
+            {
+                DeviceId = deviceId,
+                Email = email,
+                Created = created,
+                CreatedUtc = _dateService.LocalToUtc(created),
+            };
+
+            await _context.DeviceContacts.AddAsync(contact);
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return contact;
+        }
+
+        public async Task<DeviceContact> UpdateDeviceContact(Guid identifier, string email, bool saveChanges)
+        {
+            var contact = await _context.DeviceContacts
+                .FirstOrDefaultAsync(x => x.Identifier == identifier);
+
+            if (contact == null)
+            {
+                throw new EntityNotFoundException($"Device contact with identifier: {identifier} not found.");
+            }
+
+            // Check if another contact with the same email already exists for this device
+            var existingContact = await _context.DeviceContacts
+                .FirstOrDefaultAsync(x => x.DeviceId == contact.DeviceId && x.Email == email && x.Identifier != identifier);
+
+            if (existingContact != null)
+            {
+                throw new InvalidOperationException($"Another contact with email '{email}' already exists for this device.");
+            }
+
+            contact.Email = email;
+
+            var now = _dateService.CurrentTime();
+            contact.Updated = now;
+            contact.UpdatedUtc = _dateService.LocalToUtc(now);
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return contact;
+        }
+
+        public async Task DeleteDeviceContact(Guid identifier, bool saveChanges)
+        {
+            var contact = await _context.DeviceContacts
+                .FirstOrDefaultAsync(x => x.Identifier == identifier);
+
+            if (contact == null)
+            {
+                throw new EntityNotFoundException($"Device contact with identifier: {identifier} not found.");
+            }
+
+            _context.DeviceContacts.Remove(contact);
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<DeviceContact?> GetDeviceContact(Guid identifier)
+        {
+            return await _context.DeviceContacts
+                .Include(x => x.Device)
+                .FirstOrDefaultAsync(x => x.Identifier == identifier);
         }
     }
 }

@@ -4,6 +4,7 @@ using EnvironmentMonitor.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    partial class MeasurementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251219215715_AddDeviceContacts")]
+    partial class AddDeviceContacts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -65,12 +68,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(1024)
                         .HasColumnType("nvarchar(1024)");
-
-                    b.Property<DateTime?>("Updated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedUtc")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -163,12 +160,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Property<bool>("IsDeviceImage")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("Updated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedUtc")
-                        .HasColumnType("datetime2");
-
                     b.HasKey("DeviceId", "AttachmentId");
 
                     b.HasIndex("AttachmentId");
@@ -208,12 +199,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.Property<int>("TypeId")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("Updated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedUtc")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Value")
                         .HasMaxLength(1024)
@@ -301,12 +286,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasDefaultValueSql("NEWID()");
-
-                    b.Property<DateTime?>("Updated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedUtc")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -492,12 +471,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Property<DateTime>("TimeStampUtc")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("Updated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedUtc")
-                        .HasColumnType("datetime2");
-
                     b.Property<long?>("Uptime")
                         .HasColumnType("bigint");
 
@@ -563,12 +536,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("Updated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedUtc")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 

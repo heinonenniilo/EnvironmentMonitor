@@ -303,7 +303,7 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
 
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false)
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false, bool getContacts = false)
         {
             _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
             var infos = new List<DeviceInfo>();
@@ -315,7 +315,8 @@ namespace EnvironmentMonitor.Application.Services
                     OnlyVisible = onlyVisible,
                     GetAttachments = getAttachments,
                     GetLocation = getLocation,
-                    GetAttributes = getAttributes
+                    GetAttributes = getAttributes,
+                    GetContacts = getContacts
                 }))
                 .Where(d => _userService.HasAccessToDevice(d.Device.Identifier, AccessLevels.Read)).ToList();
             }
@@ -509,6 +510,12 @@ namespace EnvironmentMonitor.Application.Services
             }))
             .FirstOrDefault();
 
+            var currentStatus = (await _deviceRepository.GetDevicesStatus(new GetDeviceStatusModel()
+            {
+                DeviceIdentifiers = [model.Idenfifier],
+                LatestOnly = true
+            })).FirstOrDefault();
+
             if (device == null || !_userService.HasAccessToDevice(device.Identifier, AccessLevels.Write))
             {
                 throw new UnauthorizedAccessException();
@@ -524,7 +531,7 @@ namespace EnvironmentMonitor.Application.Services
 
             if (updatedStatus != null)
             {
-                await QueueDeviceStatusEmail(model, updatedStatus, saveChanges);
+                await QueueDeviceStatusEmail(model, updatedStatus, currentStatus, saveChanges);
             }
         }
 
@@ -841,12 +848,17 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task SendDeviceEmail(Guid deviceIdentifier, DeviceEmailTemplateTypes templateType, Dictionary<string, string>? replaceTokens = null)
         {
+            if (!_userService.HasAccessToDevice(deviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
             _logger.LogInformation($"Preparing to send email for device: {deviceIdentifier} using template: {templateType}");
 
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
             {
                 Identifiers = [deviceIdentifier],
-                GetLocation = true
+                GetLocation = true,
+                GetContacts = true
             })).FirstOrDefault();
             if (device == null)
             {
@@ -884,7 +896,13 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {title}");
             try
             {
-                await _emailClient.SendEmailAsync(title, message);
+                var emailOptions = new SendEmailOptions
+                {
+                    ToAddresses = device.Contacts.Select(x => x.Email).ToList(),
+                    Subject = title,
+                    HtmlContent = message
+                };
+                await _emailClient.SendEmailAsync(emailOptions);
                 _logger.LogInformation($"Email sent successfully for device '{device.Name}' (Template: {templateType})");
             }
             catch (Exception ex)
@@ -894,7 +912,7 @@ namespace EnvironmentMonitor.Application.Services
             }
         }
 
-        private async Task QueueDeviceStatusEmail(SetDeviceStatusModel model, DeviceStatus deviceStatus, bool saveChanges)
+        private async Task QueueDeviceStatusEmail(SetDeviceStatusModel model, DeviceStatus currentStatus, DeviceStatus? previousStatus, bool saveChanges)
         {
 
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
@@ -910,15 +928,17 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
+            DeviceEmailTemplateTypes messageType = currentStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
 
-            DeviceEmailTemplateTypes messageType = deviceStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
-            var messageToQueue = new DeviceQueueMessage()
-            {
-                Attributes = new Dictionary<string, string>()
+            var attributesToAdd = new Dictionary<string, string>()
                     {
                         { ApplicationConstants.QueuedMessageDefaultKey, ((int)messageType).ToString() },
-                        { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(deviceStatus.TimeStamp) }
-                    },
+                        { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(currentStatus.TimeStamp) },
+                        { ApplicationConstants.QueuedMessageTimesStampPreviousKey, previousStatus != null ? _dateService.FormatDateTime(previousStatus.TimeStamp) : string.Empty }
+                    };
+            var messageToQueue = new DeviceQueueMessage()
+            {
+                Attributes = attributesToAdd,
                 DeviceIdentifier = model.Idenfifier,
                 MessageTypeId = (int)QueuedMessages.SendDeviceEmail,
             };
@@ -938,6 +958,85 @@ namespace EnvironmentMonitor.Application.Services
 
             }, saveChanges);
 
+        }
+
+        public async Task<DeviceContactDto> AddDeviceContact(AddOrUpdateDeviceContactDto model)
+        {
+            if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            _logger.LogInformation($"Adding device contact for device: {model.DeviceIdentifier}");
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [model.DeviceIdentifier],
+                OnlyVisible = false
+            })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{model.DeviceIdentifier}' not found.");
+            var contact = await _deviceRepository.AddDeviceContact(device.Id, model.Email, true);
+
+            _logger.LogInformation($"Successfully added device contact with identifier: {contact.Identifier} for device: {model.DeviceIdentifier}");
+
+            return _mapper.Map<DeviceContactDto>(contact);
+        }
+
+        public async Task<DeviceContactDto> UpdateDeviceContact(AddOrUpdateDeviceContactDto model)
+        {
+            if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            if (model.Identifier == null)
+            {
+                throw new ArgumentException("Identifier is required when updating a device contact.");
+            }
+
+            var existingContact = await _deviceRepository.GetDeviceContact(model.Identifier.Value);
+
+            if (existingContact == null)
+            {
+                throw new EntityNotFoundException($"Device contact with identifier: {model.Identifier} not found.");
+            }
+
+            _logger.LogInformation($"Updating device contact: {model.Identifier}");
+
+            var updatedContact = await _deviceRepository.UpdateDeviceContact(model.Identifier.Value, model.Email, true);
+
+            _logger.LogInformation($"Successfully updated device contact: {model.Identifier}");
+
+            return _mapper.Map<DeviceContactDto>(updatedContact);
+        }
+
+        public async Task DeleteDeviceContact(AddOrUpdateDeviceContactDto model)
+        {
+            if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            if (model.Identifier == null)
+            {
+                throw new ArgumentException("Identifier and DeviceIdentifier are required when deleting a device contact.");
+            }
+            var existingContact = await _deviceRepository.GetDeviceContact(model.Identifier.Value);
+
+            if (existingContact == null)
+            {
+                throw new EntityNotFoundException($"Device contact with identifier: {model.Identifier.Value} not found.");
+            }
+
+            if (!_userService.HasAccessToDevice(existingContact.Device.Identifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            _logger.LogInformation($"Deleting device contact: {model.Identifier.Value}");
+
+            await _deviceRepository.DeleteDeviceContact(model.Identifier.Value, true);
+
+            _logger.LogInformation($"Successfully deleted device contact: {model.Identifier.Value}");
         }
     }
 }
