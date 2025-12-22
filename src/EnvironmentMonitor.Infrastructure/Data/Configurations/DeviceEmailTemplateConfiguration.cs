@@ -18,6 +18,13 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Id).ValueGeneratedNever();
 
+            builder.Property(x => x.Identifier)
+                .IsRequired()
+                .HasDefaultValueSql("NEWID()");
+
+            builder.HasIndex(x => x.Identifier)
+                .IsUnique();
+
             builder.Property(x => x.Title)
                 .IsRequired(false)
                 .HasMaxLength(512);

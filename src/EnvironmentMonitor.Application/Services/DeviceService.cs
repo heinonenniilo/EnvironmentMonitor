@@ -27,29 +27,29 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILogger<DeviceService> _logger;
         private readonly IUserService _userService;
         private readonly IDeviceRepository _deviceRepository;
+        private readonly IDeviceEmailService _deviceEmailService;
         private readonly IStorageClient _storageClient;
         private readonly IMapper _mapper;
         private readonly IDateService _dateService;
         private readonly IImageService _imageService;
         private readonly IKeyVaultClient _keyVaultClient;
         private readonly IQueueClient _queueClient;
-        private readonly IEmailClient _emailClient;
 
         public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IMapper mapper, IStorageClient storageClient, IDateService dateService, 
-            IImageService imageService, IKeyVaultClient keyVaultClient, IQueueClient queueClient, IEmailClient emailClient)
+            IDeviceRepository deviceRepository, IDeviceEmailService deviceEmailService, IMapper mapper, IStorageClient storageClient, IDateService dateService, 
+            IImageService imageService, IKeyVaultClient keyVaultClient, IQueueClient queueClient)
         {
             _messageService = messageService;
             _logger = logger;
             _userService = userService;
             _deviceRepository = deviceRepository;
+            _deviceEmailService = deviceEmailService;
             _mapper = mapper;
             _storageClient = storageClient;
             _dateService = dateService;
             _imageService = imageService;
             _keyVaultClient = keyVaultClient;
             _queueClient = queueClient;
-            _emailClient = emailClient;
         }
         public async Task Reboot(Guid identifier)
         {
@@ -846,75 +846,8 @@ namespace EnvironmentMonitor.Application.Services
             }
         }
 
-        public async Task SendDeviceEmail(Guid deviceIdentifier, DeviceEmailTemplateTypes templateType, Dictionary<string, string>? replaceTokens = null)
-        {
-            if (!_userService.HasAccessToDevice(deviceIdentifier, AccessLevels.Write))
-            {
-                throw new UnauthorizedAccessException();
-            }
-            _logger.LogInformation($"Preparing to send email for device: {deviceIdentifier} using template: {templateType}");
-
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
-            {
-                Identifiers = [deviceIdentifier],
-                GetLocation = true,
-                GetContacts = true
-            })).FirstOrDefault();
-            if (device == null)
-            {
-                _logger.LogError($"Device with identifier: '{deviceIdentifier}' not found.");
-                throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
-            }
-
-            var template = await _deviceRepository.GetEmailTemplate(templateType);
-            if (template == null)
-            {
-                _logger.LogWarning($"Email template '{templateType}' not found.");
-                throw new EntityNotFoundException($"Email template '{templateType}' not found.");
-            }
-            var tokens = new Dictionary<string, string>
-            {
-                { "{DeviceName}", $"{device.Location.Name} - {device.Name}"},
-                { "{DeviceIdentifier}", device.DeviceIdentifier }
-            };
-
-            if (replaceTokens != null)
-            {
-                foreach (var token in replaceTokens)
-                {
-                    tokens[token.Key] = token.Value;
-                }
-            }
-            var title = template.Title ?? string.Empty;
-            var message = template.Message ?? string.Empty;
-
-            foreach (var token in tokens)
-            {
-                title = title.Replace(token.Key, token.Value);
-                message = message.Replace(token.Key, token.Value);
-            }
-            _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {title}");
-            try
-            {
-                var emailOptions = new SendEmailOptions
-                {
-                    ToAddresses = device.Contacts.Select(x => x.Email).ToList(),
-                    Subject = title,
-                    HtmlContent = message
-                };
-                await _emailClient.SendEmailAsync(emailOptions);
-                _logger.LogInformation($"Email sent successfully for device '{device.Name}' (Template: {templateType})");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to send email for device '{device.Name}' using template '{templateType}'");
-                throw;
-            }
-        }
-
         private async Task QueueDeviceStatusEmail(SetDeviceStatusModel model, DeviceStatus currentStatus, DeviceStatus? previousStatus, bool saveChanges)
         {
-
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
             {
                 Identifiers = [model.Idenfifier],

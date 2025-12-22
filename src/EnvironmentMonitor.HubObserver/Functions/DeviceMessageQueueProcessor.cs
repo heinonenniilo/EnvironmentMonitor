@@ -17,14 +17,16 @@ namespace EnvironmentMonitor.HubObserver.Functions
     {
         private readonly ILogger<DeviceMessageQueueProcessor> _logger;
         private readonly IDeviceService _deviceService;
+        private readonly IDeviceEmailService _deviceEmailService;
         private readonly IDateService _dateService;
 
         private const int MessageScheduledLimitInMinutes = 20;
 
-        public DeviceMessageQueueProcessor(ILogger<DeviceMessageQueueProcessor> logger, IDeviceService deviceService, IDateService dateService)
+        public DeviceMessageQueueProcessor(ILogger<DeviceMessageQueueProcessor> logger, IDeviceService deviceService, IDeviceEmailService deviceEmailService, IDateService dateService)
         {
             _logger = logger;
             _deviceService = deviceService;
+            _deviceEmailService = deviceEmailService;
             _dateService = dateService;
         }
 
@@ -110,7 +112,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                         if (attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) == true)
                         {
                             var templateTypeValue = int.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
-                            await _deviceService.SendDeviceEmail(deviceMessage.DeviceIdentifier, (DeviceEmailTemplateTypes)templateTypeValue, attributes);
+                            await _deviceEmailService.SendDeviceEmail(deviceMessage.DeviceIdentifier, (DeviceEmailTemplateTypes)templateTypeValue, attributes);
                             hasExecuted = true;
                         }
                         break;

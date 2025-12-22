@@ -700,12 +700,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
         }
 
-        public async Task<DeviceEmailTemplate?> GetEmailTemplate(DeviceEmailTemplateTypes templateType)
-        {
-            return await _context.DeviceEmailTemplates
-                .FirstOrDefaultAsync(x => x.Id == (int)templateType);
-        }
-
         public async Task<DeviceContact> AddDeviceContact(int deviceId, string email, bool saveChanges)
         {
             var device = await _context.Devices.FindAsync(deviceId);
