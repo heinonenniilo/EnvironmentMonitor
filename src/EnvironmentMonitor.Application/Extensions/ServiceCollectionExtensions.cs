@@ -14,6 +14,7 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IDeviceService, DeviceService>();
             services.AddScoped<ILocationService, LocationService>();
+            services.AddScoped<IDeviceEmailService, DeviceEmailService>();
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
             return services;
         }
