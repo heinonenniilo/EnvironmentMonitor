@@ -2,10 +2,9 @@ using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
-using EnvironmentMonitor.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace EnvironmentMonitor.Infrastructure.Repositories
+namespace EnvironmentMonitor.Infrastructure.Data
 {
     public class DeviceEmailRepository : IDeviceEmailRepository
     {
