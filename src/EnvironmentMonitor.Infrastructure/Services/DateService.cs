@@ -34,7 +34,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
         public string FormatDateTime(DateTime dateTime)
         {
-            return dateTime.ToString("dd.MM.yyyy HH:mm");
+            return dateTime.ToString("dd.MM.yyyy HH:mm:ss");
         }
     }
 }
