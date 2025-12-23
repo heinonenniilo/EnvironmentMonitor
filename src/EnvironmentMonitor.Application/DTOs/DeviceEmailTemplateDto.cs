@@ -16,7 +16,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public void Mapping(Profile profile)
         {
             profile.CreateMap<DeviceEmailTemplate, DeviceEmailTemplateDto>()
-                .ForMember(x => x.DisplayName, opt => opt.MapFrom(x => ((DeviceEmailTemplateTypes)x.Id).ToString()));
+                .ForMember(x => x.DisplayName, opt => opt.MapFrom(x => x.Name.ToString()));
         }
     }
 }
