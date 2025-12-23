@@ -179,6 +179,11 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task QueueDeviceStatusEmail(SetDeviceStatusModel model, DeviceStatus currentStatus, DeviceStatus? previousStatus, bool saveChanges)
         {
+            if (!_userService.HasAccessToDevice(model.Idenfifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
             {
                 Identifiers = [model.Idenfifier],
