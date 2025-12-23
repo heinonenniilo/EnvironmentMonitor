@@ -40,13 +40,24 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 
             builder.Property(x => x.CreatedUtc).HasDefaultValueSql("GETUTCDATE()");
 
+            builder.Property(x => x.Name).HasMaxLength(512);
+
+            builder.HasIndex(x => x.Name).IsUnique();
+
             builder.HasData(Enum.GetValues(typeof(DeviceEmailTemplateTypes))
                 .Cast<DeviceEmailTemplateTypes>()
                 .Select(e => new DeviceEmailTemplate
                 {
-                    Id = (int)e
+                    Id = (int)e,
+                    Name = GetName(e),
                 })
                 .ToList());
         }
+
+        private string GetName(DeviceEmailTemplateTypes type)
+        {
+            return type.GetDescription();
+        }
     }
 }
+

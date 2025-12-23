@@ -10,8 +10,9 @@ namespace EnvironmentMonitor.Domain.Entities
     {
         public int Id { get; set; }
         public Guid Identifier { get; set; }
-        public string? Title { get; set; }        
+        public string? Title { get; set; }
         public string? Message { get; set; }
+        public required string Name { get; set; }
         public DateTime CreatedUtc { get; set; }
         public DateTime? Created { get; set; } = null;
         public DateTime? Updated { get; set; } = null;

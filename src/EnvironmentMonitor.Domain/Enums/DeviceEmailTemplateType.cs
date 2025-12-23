@@ -9,9 +9,9 @@ namespace EnvironmentMonitor.Domain.Enums
 {
     public enum DeviceEmailTemplateTypes
     {
-        [Description("Device '{DeviceName}' / '{DeviceIdentifier}' has lost connection. Last seen: {LastSeen}.")]
+        [Description("Device connection lost")]
         ConnectionLost = 0,
-        [Description("Device '{DeviceName}' / '{DeviceIdentifier}' connection has been restored. Online since: {OnlineSince}.")]
+        [Description("Device connection restored")]
         ConnectionOk = 1
     }
 }
