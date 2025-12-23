@@ -1,12 +1,15 @@
 using AutoMapper;
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain;
+using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace EnvironmentMonitor.Application.Services
 {
@@ -18,14 +21,19 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IEmailClient _emailClient;
         private readonly IMapper _mapper;
         private readonly ILogger<DeviceEmailService> _logger;
+        private readonly IQueueClient _queueClient;
+        private readonly IDateService _dateService;
 
         public DeviceEmailService(
             IDeviceEmailRepository deviceEmailRepository,
             IDeviceRepository deviceRepository,
             IUserService userService,
             IEmailClient emailClient,
+            IQueueClient queueClient,   
             IMapper mapper,
-            ILogger<DeviceEmailService> logger)
+
+            ILogger<DeviceEmailService> logger,
+            IDateService dateService)
         {
             _deviceEmailRepository = deviceEmailRepository;
             _deviceRepository = deviceRepository;
@@ -33,6 +41,8 @@ namespace EnvironmentMonitor.Application.Services
             _emailClient = emailClient;
             _mapper = mapper;
             _logger = logger;
+            _queueClient = queueClient;
+            _dateService = dateService;
         }
 
         public async Task<DeviceEmailTemplateDto?> GetEmailTemplate(DeviceEmailTemplateTypes templateType)
@@ -165,6 +175,52 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogError(ex, $"Failed to send email for device '{device.Name}' using template '{templateType}'");
                 throw;
             }
+        }
+
+        public async Task QueueDeviceStatusEmail(SetDeviceStatusModel model, DeviceStatus currentStatus, DeviceStatus? previousStatus, bool saveChanges)
+        {
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [model.Idenfifier],
+                OnlyVisible = false
+            })).FirstOrDefault();
+
+            if (device == null)
+            {
+                _logger.LogError($"Device with identifier '{model.Idenfifier}' not found for queuing email.");
+                return;
+            }
+            var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
+            _logger.LogInformation($"Queuing device email for devie {device.Name} ({device.Id}). Type: {currentStatus.Status}");
+            DeviceEmailTemplateTypes messageType = currentStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
+
+            var attributesToAdd = new Dictionary<string, string>()
+                    {
+                        { ApplicationConstants.QueuedMessageDefaultKey, ((int)messageType).ToString() },
+                        { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(currentStatus.TimeStamp) },
+                        { ApplicationConstants.QueuedMessageTimesStampPreviousKey, previousStatus != null ? _dateService.FormatDateTime(previousStatus.TimeStamp) : string.Empty }
+                    };
+            var messageToQueue = new DeviceQueueMessage()
+            {
+                Attributes = attributesToAdd,
+                DeviceIdentifier = model.Idenfifier,
+                MessageTypeId = (int)QueuedMessages.SendDeviceEmail,
+            };
+            var messageJson = JsonSerializer.Serialize(messageToQueue);
+            var res = await _queueClient.SendMessage(messageJson);
+
+            await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+            {
+                Type = (int)QueuedMessages.SendDeviceEmail,
+                Message = messageJson,
+                MessageId = res.MessageId,
+                PopReceipt = res.PopReceipt,
+                Created = _dateService.CurrentTime(),
+                CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
+                ScheduledUtc = res.ScheludedToExecuteUtc,
+
+            }, saveChanges);
         }
     }
 }

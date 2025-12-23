@@ -531,7 +531,8 @@ namespace EnvironmentMonitor.Application.Services
 
             if (updatedStatus != null)
             {
-                await QueueDeviceStatusEmail(model, updatedStatus, currentStatus, saveChanges);
+                _logger.LogInformation($"Queuing device email for device {device.Name} ({device.Id}). Type: {currentStatus?.Status}");
+                await _deviceEmailService.QueueDeviceStatusEmail(model, updatedStatus, currentStatus, saveChanges);
             }
         }
 
@@ -837,62 +838,6 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<DeviceQueuedCommandDto>(command);
         }
 
-        private void ValidateTriggeringTime(DateTime target)
-        {
-            var compareDate = _dateService.CurrentTime();
-            if (target < compareDate)
-            {
-                throw new ArgumentException($"Invalid triggering time.{target}. Cur date: {compareDate}");
-            }
-        }
-
-        private async Task QueueDeviceStatusEmail(SetDeviceStatusModel model, DeviceStatus currentStatus, DeviceStatus? previousStatus, bool saveChanges)
-        {
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
-            {
-                Identifiers = [model.Idenfifier],
-                OnlyVisible = false
-            })).FirstOrDefault();
-
-            if (device == null)
-            {
-                _logger.LogError($"Device with identifier '{model.Idenfifier}' not found for queuing email.");
-                return;
-            }
-
-            var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
-            DeviceEmailTemplateTypes messageType = currentStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
-
-            var attributesToAdd = new Dictionary<string, string>()
-                    {
-                        { ApplicationConstants.QueuedMessageDefaultKey, ((int)messageType).ToString() },
-                        { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(currentStatus.TimeStamp) },
-                        { ApplicationConstants.QueuedMessageTimesStampPreviousKey, previousStatus != null ? _dateService.FormatDateTime(previousStatus.TimeStamp) : string.Empty }
-                    };
-            var messageToQueue = new DeviceQueueMessage()
-            {
-                Attributes = attributesToAdd,
-                DeviceIdentifier = model.Idenfifier,
-                MessageTypeId = (int)QueuedMessages.SendDeviceEmail,
-            };
-            var messageJson = JsonSerializer.Serialize(messageToQueue);
-            var res = await _queueClient.SendMessage(messageJson);
-
-            await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
-            {
-                Type = (int)QueuedMessages.SendDeviceEmail,
-                Message = messageJson,
-                MessageId = res.MessageId,
-                PopReceipt = res.PopReceipt,
-                Created = _dateService.CurrentTime(),
-                CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
-                Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
-                ScheduledUtc = res.ScheludedToExecuteUtc,
-
-            }, saveChanges);
-
-        }
-
         public async Task<DeviceContactDto> AddDeviceContact(AddOrUpdateDeviceContactDto model)
         {
             if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
@@ -970,6 +915,15 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.DeleteDeviceContact(model.Identifier.Value, true);
 
             _logger.LogInformation($"Successfully deleted device contact: {model.Identifier.Value}");
+        }
+
+        private void ValidateTriggeringTime(DateTime target)
+        {
+            var compareDate = _dateService.CurrentTime();
+            if (target < compareDate)
+            {
+                throw new ArgumentException($"Invalid triggering time.{target}. Cur date: {compareDate}");
+            }
         }
     }
 }
