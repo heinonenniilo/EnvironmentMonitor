@@ -91,6 +91,7 @@ export const DeviceEmailsView: React.FC = () => {
       <EditEmailTemplateDialog
         open={isDialogOpen}
         template={selectedTemplate}
+        isLoading={isLoading}
         onClose={handleCloseDialog}
         onSave={handleSave}
       />

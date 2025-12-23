@@ -13,17 +13,19 @@ import { Close, Visibility } from "@mui/icons-material";
 import { type DeviceEmailTemplateDto } from "../../models/deviceEmailTemplate";
 import { useState, useEffect } from "react";
 import { EmailTemplatePreview } from "./EmailTemplatePreview";
+import { LoadingOverlay } from "../../framework/LoadingOverlay";
 
 export interface EditEmailTemplateDialogProps {
   open: boolean;
   template: DeviceEmailTemplateDto | null;
+  isLoading?: boolean;
   onClose: () => void;
   onSave?: (identifier: string, title: string, message: string) => void;
 }
 
 export const EditEmailTemplateDialog: React.FC<
   EditEmailTemplateDialogProps
-> = ({ open, template, onClose, onSave }) => {
+> = ({ open, template, isLoading, onClose, onSave }) => {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -62,6 +64,13 @@ export const EditEmailTemplateDialog: React.FC<
     return false;
   };
 
+  const revert = () => {
+    if (template) {
+      setTitle(template.title ?? "");
+      setMessage(template.message ?? "");
+    }
+  };
+
   return (
     <Dialog
       open={open}
@@ -74,6 +83,7 @@ export const EditEmailTemplateDialog: React.FC<
         flexDirection: "column",
       }}
     >
+      <LoadingOverlay isLoading={isLoading ?? false} />
       <DialogTitle
         sx={{
           display: "flex",
@@ -156,6 +166,9 @@ export const EditEmailTemplateDialog: React.FC<
       <DialogActions>
         <Button onClick={onClose} color="inherit">
           Cancel
+        </Button>
+        <Button onClick={revert} color="inherit" disabled={isSaveDisabled()}>
+          Revert
         </Button>
         <Button
           onClick={handleSave}
