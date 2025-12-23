@@ -44,6 +44,13 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 .WithMany(t => t.QueuedCommands)
                 .HasForeignKey(d => d.Type)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Self-referencing relationship for copied commands
+            builder.HasOne(d => d.OriginalCommand)
+                .WithMany()
+                .HasForeignKey(d => d.OriginalId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
         }
     }
 }

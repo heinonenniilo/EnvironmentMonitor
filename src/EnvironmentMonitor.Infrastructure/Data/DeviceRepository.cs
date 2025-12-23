@@ -647,6 +647,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 }
             }
             query = query.Include(x => x.CommandType);
+            query = query.Include(x => x.OriginalCommand);
 
             query = query.OrderByDescending(x => x.ScheduledUtc);
 

@@ -206,7 +206,7 @@ namespace EnvironmentMonitor.Application.Services
             // Send the message to the queue with the new schedule
             var queueResult = await _queueClient.SendMessage(originalCommand.Message, delay);
 
-            // Create new database entry with the new MessageId from the queue
+            // Create new database entry with the new MessageId from the queue and link to original command
             var newCommand = new DeviceQueuedCommand()
             {
                 Type = originalCommand.Type,
@@ -217,6 +217,7 @@ namespace EnvironmentMonitor.Application.Services
                 CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
                 Scheduled = _dateService.UtcToLocal(queueResult.ScheludedToExecuteUtc),
                 ScheduledUtc = queueResult.ScheludedToExecuteUtc,
+                OriginalId = originalCommand.Id
             };
 
             await _deviceRepository.SetQueuedCommand(device.Id, newCommand, true);
