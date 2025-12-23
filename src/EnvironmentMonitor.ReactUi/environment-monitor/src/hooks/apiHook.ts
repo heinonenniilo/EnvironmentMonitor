@@ -29,6 +29,7 @@ import type {
   DeviceEmailTemplateDto,
   UpdateDeviceEmailTemplateDto,
 } from "../models/deviceEmailTemplate";
+import type { CopyQueuedCommand } from "../models/copyQueuedCommand";
 
 interface ApiHook {
   userHook: userHook;
@@ -132,6 +133,9 @@ interface deviceHook {
     messageId: string,
     newScheduledTime: moment.Moment
   ) => Promise<boolean>;
+  copyExecutedQueuedCommand: (
+    model: CopyQueuedCommand
+  ) => Promise<DeviceQueuedCommandDto>;
 }
 
 interface deviceContactsHook {
@@ -597,6 +601,26 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError("Failed to update queued command");
+          throw ex;
+        }
+      },
+      copyExecutedQueuedCommand: async (model: CopyQueuedCommand) => {
+        try {
+          const payload = {
+            deviceIdentifier: model.deviceIdentifier,
+            messageId: model.messageId,
+            scheduledTime: model.scheduledTime
+              ? moment(model.scheduledTime).format("YYYY-MM-DDTHH:mm:ss")
+              : undefined,
+          };
+          const res = await apiClient.post<
+            any,
+            AxiosResponse<DeviceQueuedCommandDto>
+          >(`/api/devices/queued-commands/copy`, payload);
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to copy queued command");
           throw ex;
         }
       },

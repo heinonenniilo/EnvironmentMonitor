@@ -17,7 +17,7 @@ import { type DeviceEvent } from "../models/deviceEvent";
 import { Box, IconButton } from "@mui/material";
 import { DeviceImage } from "../components/DeviceImage";
 import { Collapsible } from "../components/CollabsibleComponent";
-import { DeviceQueuedCommandsTable } from "../components/DeviceQueuedCommandsTable";
+import { DeviceQueuedCommandsTable } from "../components/DeviceQueuedCommands/DeviceQueuedCommandsTable";
 import { type DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
 import { MultiSensorGraph } from "../components/MultiSensorGraph";
 import moment from "moment";
@@ -322,6 +322,39 @@ export const DeviceView: React.FC = () => {
         dispatch(
           addNotification({
             title: "Failed to update queued command",
+            body: "",
+            severity: "error",
+          })
+        );
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const copyQueuedCommand = (messageId: string, deviceIdentifier: string) => {
+    setIsLoading(true);
+    deviceHook
+      .copyExecutedQueuedCommand({
+        deviceIdentifier: deviceIdentifier,
+        messageId: messageId,
+      })
+      .then(() => {
+        dispatch(
+          addNotification({
+            title: "Command copied",
+            body: "The executed command has been copied as a new queued command.",
+            severity: "success",
+          })
+        );
+        // Refresh the queued commands list
+        getQueuedCommands(deviceIdentifier);
+      })
+      .catch((er) => {
+        console.error(er);
+        dispatch(
+          addNotification({
+            title: "Failed to copy command",
             body: "",
             severity: "error",
           })
@@ -952,6 +985,17 @@ export const DeviceView: React.FC = () => {
                     },
                     title: "Delete queued command",
                     body: "Are you sure you want to delete this queued command?",
+                  })
+                );
+              }}
+              onCopy={(messageId: string, deviceIdentifier: string) => {
+                dispatch(
+                  setConfirmDialog({
+                    onConfirm: () => {
+                      copyQueuedCommand(messageId, deviceIdentifier);
+                    },
+                    title: "Copy queued command",
+                    body: "Are you sure you want to copy this executed command as a new queued command?",
                   })
                 );
               }}

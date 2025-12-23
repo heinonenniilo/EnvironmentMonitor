@@ -1,11 +1,11 @@
-import { type DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
+import { type DeviceQueuedCommandDto } from "../../models/deviceQueuedCommand";
 import { Box, Typography, Chip, IconButton, Tooltip } from "@mui/material";
-import { getFormattedDate } from "../utilities/datetimeUtils";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useState } from "react";
-import { Delete, Schedule, Visibility } from "@mui/icons-material";
-import { EditQueuedCommandDialog } from "./EditQueuedCommandDialog";
+import { Delete, Schedule, Visibility, ContentCopy } from "@mui/icons-material";
 import moment from "moment";
+import { EditQueuedCommandDialog } from "./EditQueuedCommandDialog";
 
 export interface DeviceQueuedCommandsTableProps {
   commands: DeviceQueuedCommandDto[];
@@ -17,11 +17,19 @@ export interface DeviceQueuedCommandsTableProps {
     deviceIdentifier: string,
     newScheduledTime: moment.Moment
   ) => void;
+  onCopy?: (messageId: string, deviceIdentifier: string) => void;
 }
 
 export const DeviceQueuedCommandsTable: React.FC<
   DeviceQueuedCommandsTableProps
-> = ({ commands, title, maxHeight, onDelete, onChangeScheduledTime }) => {
+> = ({
+  commands,
+  title,
+  maxHeight,
+  onDelete,
+  onChangeScheduledTime,
+  onCopy,
+}) => {
   const [dialogState, setDialogState] = useState<{
     command: DeviceQueuedCommandDto | null;
     viewOnly: boolean;
@@ -148,6 +156,7 @@ export const DeviceQueuedCommandsTable: React.FC<
         const command = params.row as DeviceQueuedCommandDto;
 
         const showEditButtons = !command.executedAt && !command.isRemoved;
+        const showCopyButton = command.executedAt && onCopy;
         return (
           <Box
             display="flex"
@@ -167,6 +176,20 @@ export const DeviceQueuedCommandsTable: React.FC<
                 <Visibility />
               </IconButton>
             </Tooltip>
+            {showCopyButton && (
+              <Tooltip title="Copy">
+                <IconButton
+                  onClick={() =>
+                    onCopy(command.messageId, command.deviceIdentifier)
+                  }
+                  size="small"
+                  color="secondary"
+                  aria-label="copy command"
+                >
+                  <ContentCopy />
+                </IconButton>
+              </Tooltip>
+            )}
             {showEditButtons && onChangeScheduledTime && (
               <Tooltip title="Edit Schedule">
                 <IconButton
