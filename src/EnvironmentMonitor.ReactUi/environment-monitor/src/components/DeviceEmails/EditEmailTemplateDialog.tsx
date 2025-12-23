@@ -92,7 +92,7 @@ export const EditEmailTemplateDialog: React.FC<
           alignItems: "center",
         }}
       >
-        <Box>Edit Email Template: {template?.identifier}</Box>
+        <Box>Edit Email Template: {template?.displayName}</Box>
         <Box display="flex" gap={1} alignItems="center">
           <Button
             startIcon={<Visibility />}
