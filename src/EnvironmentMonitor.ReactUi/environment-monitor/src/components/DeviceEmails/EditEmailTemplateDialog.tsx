@@ -61,7 +61,17 @@ export const EditEmailTemplateDialog: React.FC<
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullScreen
+      fullWidth
+      sx={{
+        padding: 6,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <DialogTitle
         sx={{
           display: "flex",
@@ -82,8 +92,15 @@ export const EditEmailTemplateDialog: React.FC<
           <Close />
         </IconButton>
       </DialogTitle>
-      <DialogContent>
-        <Box display="flex" flexDirection="column" gap={2} mt={1}>
+      <DialogContent
+        sx={{
+          flex: 1,
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Box display="flex" flexDirection="column" gap={2} mt={1} flex={1}>
           <TextField
             label="Title"
             value={title}
@@ -98,7 +115,7 @@ export const EditEmailTemplateDialog: React.FC<
             fullWidth
             required
             multiline
-            rows={8}
+            sx={{ flex: 1 }}
             helperText="You can use HTML formatting in the message"
           />
         </Box>
