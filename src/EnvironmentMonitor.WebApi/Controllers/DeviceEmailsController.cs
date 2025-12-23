@@ -19,15 +19,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet("templates")]
-        public async Task<List<DeviceEmailTemplateDto>> GetAllEmailTemplates()
-        {
-            return await _deviceEmailService.GetAllEmailTemplates();
-        }
+        public async Task<List<DeviceEmailTemplateDto>> GetAllEmailTemplates() => await _deviceEmailService.GetAllEmailTemplates();
 
         [HttpPut]
-        public async Task<DeviceEmailTemplateDto> UpdateEmailTemplate([FromBody] UpdateDeviceEmailTemplateDto model)
-        {
-            return await _deviceEmailService.UpdateEmailTemplate(model);
-        }
+        public async Task<DeviceEmailTemplateDto> UpdateEmailTemplate([FromBody] UpdateDeviceEmailTemplateDto model) => await _deviceEmailService.UpdateEmailTemplate(model);
     }
 }
