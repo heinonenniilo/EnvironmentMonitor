@@ -17,15 +17,17 @@ namespace EnvironmentMonitor.HubObserver.Functions
     {
         private readonly ILogger<DeviceMessageQueueProcessor> _logger;
         private readonly IDeviceService _deviceService;
+        private readonly IQueuedCommandService _queuedCommandService;
         private readonly IDeviceEmailService _deviceEmailService;
         private readonly IDateService _dateService;
 
         private const int MessageScheduledLimitInMinutes = 20;
 
-        public DeviceMessageQueueProcessor(ILogger<DeviceMessageQueueProcessor> logger, IDeviceService deviceService, IDeviceEmailService deviceEmailService, IDateService dateService)
+        public DeviceMessageQueueProcessor(ILogger<DeviceMessageQueueProcessor> logger, IDeviceService deviceService, IQueuedCommandService queuedCommandService, IDeviceEmailService deviceEmailService, IDateService dateService)
         {
             _logger = logger;
             _deviceService = deviceService;
+            _queuedCommandService = queuedCommandService;
             _deviceEmailService = deviceEmailService;
             _dateService = dateService;
         }
@@ -82,7 +84,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     if ((_dateService.CurrentTime() - messageToCheck.Scheduled).TotalMinutes > MessageScheduledLimitInMinutes)
                     {
                         _logger.LogWarning($"Message with id {messageToCheck.MessageId} was scheduled to run at {messageToCheck.Scheduled}, now it is: {_dateService.CurrentTime()}. Limit is {MessageScheduledLimitInMinutes} min");
-                        await _deviceService.AckQueuedCommand(deviceMessage.DeviceIdentifier, queueMessage.MessageId, null);
+                        await _queuedCommandService.AckQueuedCommand(deviceMessage.DeviceIdentifier, queueMessage.MessageId, null);
                         return;
                     }
                 }
@@ -122,7 +124,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 }
                 if (hasExecuted)
                 {
-                    await _deviceService.AckQueuedCommand(deviceMessage.DeviceIdentifier, queueMessage.MessageId, _dateService.CurrentTime()); 
+                    await _queuedCommandService.AckQueuedCommand(deviceMessage.DeviceIdentifier, queueMessage.MessageId, _dateService.CurrentTime()); 
                     _logger.LogInformation("Successfully processed device message");
                 }
             }

@@ -27,11 +27,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
     {
 
         private readonly IDeviceService _deviceService;
+        private readonly IQueuedCommandService _queuedCommandService;
         private readonly FileUploadSettings _fileUploadSettings;
 
-        public DevicesController(IDeviceService deviceService, FileUploadSettings fileUploadSettings)
+        public DevicesController(IDeviceService deviceService, IQueuedCommandService queuedCommandService, FileUploadSettings fileUploadSettings)
         {
             _deviceService = deviceService;
+            _queuedCommandService = queuedCommandService;
             _fileUploadSettings = fileUploadSettings;
         }
 
@@ -152,10 +154,14 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpDelete("{deviceId}/queued-commands/{messageId}")]
         [Authorize(Roles = "Admin")]
-        public async Task RemoveQueuedCommand([FromRoute] Guid deviceId, [FromRoute] string messageId) => await _deviceService.RemoveQueuedCommand(deviceId, messageId);
+        public async Task RemoveQueuedCommand([FromRoute] Guid deviceId, [FromRoute] string messageId) => await _queuedCommandService.RemoveQueuedCommand(deviceId, messageId);
 
         [HttpPut("queued-commands/schedule")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceQueuedCommandDto> UpdateQueuedCommandSchedule([FromBody] UpdateQueuedCommand model) => await _deviceService.UpdateQueuedCommandSchedule(model);
+        public async Task<DeviceQueuedCommandDto> UpdateQueuedCommandSchedule([FromBody] UpdateQueuedCommand model) => await _queuedCommandService.UpdateQueuedCommandSchedule(model);
+
+        [HttpPost("queued-commands/copy")]
+        [Authorize(Roles = "Admin")]
+        public async Task<DeviceQueuedCommandDto> CopyExecutedQueuedCommand([FromBody] CopyQueuedCommand model) => await _queuedCommandService.CopyExecutedQueuedCommand(model);
     }
 }
