@@ -63,7 +63,14 @@ export const DeviceEmailsView: React.FC = () => {
             severity: "success",
           })
         );
-        getEmailTemplates(identifier);
+        return deviceEmailsHook.getAllEmailTemplates();
+      })
+      .then((res) => {
+        setTemplates(res);
+        const updatedTemplate = res.find((t) => t.identifier === identifier);
+        if (updatedTemplate) {
+          setSelectedTemplate(updatedTemplate);
+        }
       })
       .catch((er) => {
         console.error(er);
