@@ -216,6 +216,14 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             >
               Device messages
             </MenuItem>
+            <MenuItem
+              onClick={(event) => {
+                setManageAnchor(null);
+                handleClick(routes.deviceEmails, event);
+              }}
+            >
+              Email templates
+            </MenuItem>
           </Menu>
           <AuthorizedComponent requiredRole={RoleNames.Admin}>
             <MenuItem

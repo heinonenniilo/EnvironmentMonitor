@@ -25,6 +25,10 @@ import type { GetQueuedCommandsModel } from "../models/getQueuedCommandsModel";
 import type { DeviceQueuedCommandDto } from "../models/deviceQueuedCommand";
 import type { DeviceContact } from "../models/deviceContact";
 import type { AddOrUpdateDeviceContact } from "../models/addOrUpdateDeviceContact";
+import type {
+  DeviceEmailTemplateDto,
+  UpdateDeviceEmailTemplateDto,
+} from "../models/deviceEmailTemplate";
 
 interface ApiHook {
   userHook: userHook;
@@ -32,6 +36,7 @@ interface ApiHook {
   deviceHook: deviceHook;
   locationHook: locationHook;
   deviceContactsHook: deviceContactsHook;
+  deviceEmailsHook: deviceEmailsHook;
 }
 
 interface userHook {
@@ -133,6 +138,13 @@ interface deviceContactsHook {
   create: (model: AddOrUpdateDeviceContact) => Promise<DeviceContact>;
   update: (model: AddOrUpdateDeviceContact) => Promise<DeviceContact>;
   delete: (model: AddOrUpdateDeviceContact) => Promise<void>;
+}
+
+interface deviceEmailsHook {
+  getAllEmailTemplates: () => Promise<DeviceEmailTemplateDto[]>;
+  updateEmailTemplate: (
+    model: UpdateDeviceEmailTemplateDto
+  ) => Promise<DeviceEmailTemplateDto>;
 }
 
 const apiClient = axios.create({
@@ -636,6 +648,34 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError("Failed to delete device contact");
+          throw ex;
+        }
+      },
+    },
+    deviceEmailsHook: {
+      getAllEmailTemplates: async () => {
+        try {
+          const res = await apiClient.get<
+            any,
+            AxiosResponse<DeviceEmailTemplateDto[]>
+          >(`/api/deviceemails/templates`);
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to get email templates");
+          throw ex;
+        }
+      },
+      updateEmailTemplate: async (model: UpdateDeviceEmailTemplateDto) => {
+        try {
+          const res = await apiClient.put<
+            any,
+            AxiosResponse<DeviceEmailTemplateDto>
+          >(`/api/deviceemails`, model);
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to update email template");
           throw ex;
         }
       },
