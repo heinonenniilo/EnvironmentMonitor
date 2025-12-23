@@ -7,10 +7,12 @@ import {
   Box,
   IconButton,
   TextField,
+  Divider,
 } from "@mui/material";
-import { Close } from "@mui/icons-material";
+import { Close, Visibility } from "@mui/icons-material";
 import { type DeviceEmailTemplateDto } from "../../models/deviceEmailTemplate";
 import { useState, useEffect } from "react";
+import { EmailTemplatePreview } from "./EmailTemplatePreview";
 
 export interface EditEmailTemplateDialogProps {
   open: boolean;
@@ -24,6 +26,7 @@ export const EditEmailTemplateDialog: React.FC<
 > = ({ open, template, onClose, onSave }) => {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (template) {
@@ -81,16 +84,26 @@ export const EditEmailTemplateDialog: React.FC<
         }}
       >
         <Box>Edit Email Template: {template?.identifier}</Box>
-        <IconButton
-          aria-label="close"
-          onClick={onClose}
-          sx={{
-            color: (theme) => theme.palette.grey[500],
-          }}
-          size="small"
-        >
-          <Close />
-        </IconButton>
+        <Box display="flex" gap={1} alignItems="center">
+          <Button
+            startIcon={<Visibility />}
+            onClick={() => setShowPreview(!showPreview)}
+            variant={showPreview ? "contained" : "outlined"}
+            size="small"
+          >
+            {showPreview ? "Hide Preview" : "Show Preview"}
+          </Button>
+          <IconButton
+            aria-label="close"
+            onClick={onClose}
+            sx={{
+              color: (theme) => theme.palette.grey[500],
+            }}
+            size="small"
+          >
+            <Close />
+          </IconButton>
+        </Box>
       </DialogTitle>
       <DialogContent
         sx={{
@@ -100,24 +113,45 @@ export const EditEmailTemplateDialog: React.FC<
           flexDirection: "column",
         }}
       >
-        <Box display="flex" flexDirection="column" gap={2} mt={1} flex={1}>
-          <TextField
-            label="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            fullWidth
-            required
-          />
-          <TextField
-            label="Message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            fullWidth
-            required
-            multiline
-            sx={{ flex: 1 }}
-            helperText="You can use HTML formatting in the message"
-          />
+        <Box
+          display="flex"
+          flexDirection={showPreview ? "row" : "column"}
+          gap={2}
+          mt={1}
+          flex={1}
+        >
+          <Box
+            display="flex"
+            flexDirection="column"
+            gap={2}
+            flex={1}
+            minWidth={showPreview ? "50%" : "100%"}
+          >
+            <TextField
+              label="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              fullWidth
+              required
+            />
+            <TextField
+              label="Message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              fullWidth
+              required
+              multiline
+              sx={{ flex: 1 }}
+              helperText="You can use HTML formatting in the message"
+            />
+          </Box>
+
+          {showPreview && (
+            <>
+              <Divider orientation="vertical" flexItem />
+              <EmailTemplatePreview title={title} message={message} />
+            </>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>

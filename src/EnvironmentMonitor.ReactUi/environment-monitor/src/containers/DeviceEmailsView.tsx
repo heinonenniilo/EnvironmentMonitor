@@ -80,7 +80,7 @@ export const DeviceEmailsView: React.FC = () => {
   };
 
   return (
-    <AppContentWrapper title="Device Email Templates" isLoading={isLoading}>
+    <AppContentWrapper title="Email Templates" isLoading={isLoading}>
       <DeviceEmailTemplatesTable templates={templates} onEdit={handleEdit} />
       <EditEmailTemplateDialog
         open={isDialogOpen}
