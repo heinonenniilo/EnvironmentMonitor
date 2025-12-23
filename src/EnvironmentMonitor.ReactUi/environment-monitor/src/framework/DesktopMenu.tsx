@@ -256,6 +256,15 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               >
                 Device messages
               </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  setAnchorE2(null);
+                  onNavigate(routes.deviceEmails);
+                }}
+              >
+                Email templates
+              </MenuItem>
             </Menu>
             <MenuItem
               onClick={(event) => {

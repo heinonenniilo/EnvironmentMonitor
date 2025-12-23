@@ -4,6 +4,7 @@ using EnvironmentMonitor.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    partial class MeasurementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251222233205_AddDeviceEmailTemplateIdentifie")]
+    partial class AddDeviceEmailTemplateIdentifie
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -341,11 +344,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("nvarchar(512)");
-
                     b.Property<string>("Title")
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
@@ -358,9 +356,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Identifier")
                         .IsUnique();
 
-                    b.HasIndex("Name")
-                        .IsUnique();
-
                     b.ToTable("DeviceEmailTemplates");
 
                     b.HasData(
@@ -368,15 +363,13 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         {
                             Id = 0,
                             CreatedUtc = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Identifier = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Name = "Device connection lost"
+                            Identifier = new Guid("00000000-0000-0000-0000-000000000000")
                         },
                         new
                         {
                             Id = 1,
                             CreatedUtc = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Identifier = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Name = "Device connection restored"
+                            Identifier = new Guid("00000000-0000-0000-0000-000000000000")
                         });
                 });
 
