@@ -44,7 +44,6 @@ export const EditEmailTemplateDialog: React.FC<
     }
 
     onSave(template.identifier, title.trim(), message.trim());
-    onClose();
   };
 
   const isSaveDisabled = () => {

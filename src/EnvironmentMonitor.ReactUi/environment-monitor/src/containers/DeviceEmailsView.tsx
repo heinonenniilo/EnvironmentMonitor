@@ -21,12 +21,18 @@ export const DeviceEmailsView: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const getEmailTemplates = () => {
+  const getEmailTemplates = (identifier?: string) => {
     setIsLoading(true);
     deviceEmailsHook
       .getAllEmailTemplates()
       .then((res) => {
         setTemplates(res);
+        if (identifier) {
+          const updatedTemplate = res.find((t) => t.identifier === identifier);
+          if (updatedTemplate) {
+            setSelectedTemplate(updatedTemplate);
+          }
+        }
       })
       .catch((er) => {
         console.error(er);
@@ -57,7 +63,7 @@ export const DeviceEmailsView: React.FC = () => {
             severity: "success",
           })
         );
-        getEmailTemplates();
+        getEmailTemplates(identifier);
       })
       .catch((er) => {
         console.error(er);
