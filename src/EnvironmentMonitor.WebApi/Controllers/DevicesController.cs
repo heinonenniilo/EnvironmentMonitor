@@ -27,11 +27,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
     {
 
         private readonly IDeviceService _deviceService;
+        private readonly IDeviceCommandService _deviceCommandService;
         private readonly FileUploadSettings _fileUploadSettings;
 
-        public DevicesController(IDeviceService deviceService, FileUploadSettings fileUploadSettings)
+        public DevicesController(IDeviceService deviceService, IDeviceCommandService queuedCommandService, FileUploadSettings fileUploadSettings)
         {
             _deviceService = deviceService;
+            _deviceCommandService = queuedCommandService;
             _fileUploadSettings = fileUploadSettings;
         }
 
@@ -40,15 +42,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("reboot")]
         [Authorize(Roles = "Admin")]
-        public async Task Reboot([FromBody] MessageDeviceModel model) => await _deviceService.Reboot(model.DeviceIdentifier);
+        public async Task Reboot([FromBody] MessageDeviceModel model) => await _deviceCommandService.Reboot(model.DeviceIdentifier);
 
         [HttpPost("motion-control-status")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode, model.ExecuteAt);
+        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceCommandService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode, model.ExecuteAt);
 
         [HttpPost("motion-control-delay")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs, model.ExecuteAt);
+        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceCommandService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs, model.ExecuteAt);
 
         [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]
@@ -152,10 +154,14 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpDelete("{deviceId}/queued-commands/{messageId}")]
         [Authorize(Roles = "Admin")]
-        public async Task RemoveQueuedCommand([FromRoute] Guid deviceId, [FromRoute] string messageId) => await _deviceService.RemoveQueuedCommand(deviceId, messageId);
+        public async Task RemoveQueuedCommand([FromRoute] Guid deviceId, [FromRoute] string messageId) => await _deviceCommandService.RemoveQueuedCommand(deviceId, messageId);
 
         [HttpPut("queued-commands/schedule")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceQueuedCommandDto> UpdateQueuedCommandSchedule([FromBody] UpdateQueuedCommand model) => await _deviceService.UpdateQueuedCommandSchedule(model);
+        public async Task<DeviceQueuedCommandDto> UpdateQueuedCommandSchedule([FromBody] UpdateQueuedCommand model) => await _deviceCommandService.UpdateQueuedCommandSchedule(model);
+
+        [HttpPost("queued-commands/copy")]
+        [Authorize(Roles = "Admin")]
+        public async Task<DeviceQueuedCommandDto> CopyExecutedQueuedCommand([FromBody] CopyQueuedCommand model) => await _deviceCommandService.CopyExecutedQueuedCommand(model);
     }
 }

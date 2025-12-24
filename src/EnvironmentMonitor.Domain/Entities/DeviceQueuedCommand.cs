@@ -21,5 +21,8 @@ namespace EnvironmentMonitor.Domain.Entities
         public DeviceQueuedCommandType CommandType { get; set; }
         public required string Message { get; set; }
         public bool IsRemoved { get; set; }
+
+        public int? OriginalId { get; set; }
+        public DeviceQueuedCommand? OriginalCommand { get; set; }
     }
 }
