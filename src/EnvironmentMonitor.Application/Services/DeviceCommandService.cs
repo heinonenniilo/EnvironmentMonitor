@@ -1,6 +1,7 @@
 using AutoMapper;
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
@@ -11,26 +12,29 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.Services
 {
-    public class QueuedCommandService : IQueuedCommandService
+    public class DeviceCommandService : IDeviceCommandService
     {
-        private readonly ILogger<QueuedCommandService> _logger;
+        private readonly ILogger<DeviceCommandService> _logger;
         private readonly IUserService _userService;
         private readonly IDeviceRepository _deviceRepository;
         private readonly IMapper _mapper;
         private readonly IDateService _dateService;
         private readonly IQueueClient _queueClient;
+        private readonly IHubMessageService _messageService;
 
-        public QueuedCommandService(
-            ILogger<QueuedCommandService> logger,
+        public DeviceCommandService(
+            ILogger<DeviceCommandService> logger,
             IUserService userService,
             IDeviceRepository deviceRepository,
             IMapper mapper,
             IDateService dateService,
-            IQueueClient queueClient)
+            IQueueClient queueClient,
+            IHubMessageService messageService)
         {
             _logger = logger;
             _userService = userService;
@@ -38,6 +42,7 @@ namespace EnvironmentMonitor.Application.Services
             _mapper = mapper;
             _dateService = dateService;
             _queueClient = queueClient;
+            _messageService = messageService;
         }
 
         public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(Guid deviceIdentifier)
@@ -61,6 +66,197 @@ namespace EnvironmentMonitor.Application.Services
             });
 
             return _mapper.Map<List<DeviceQueuedCommandDto>>(commands);
+        }
+
+        public async Task Reboot(Guid identifier)
+        {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+            if (device.IsVirtual)
+            {
+                throw new InvalidOperationException($"Cannot reboot a virtual device ({device.Id})");
+            }
+            _logger.LogInformation($"Trying to reboot device with identifier '{identifier}'");
+            await _messageService.SendMessageToDevice(device.DeviceIdentifier, "REBOOT");
+            await _deviceRepository.AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true, null);
+        }
+
+        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status, DateTime? triggeringTime = null)
+        {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+
+            if (device.IsVirtual)
+            {
+                throw new InvalidOperationException($"Cannot send messages to a virtual device ({device.Id})");
+            }
+
+            if (triggeringTime != null)
+            {
+                ValidateTriggeringTime(triggeringTime.Value);
+                var delay = triggeringTime.Value - _dateService.CurrentTime();
+                _logger.LogInformation($"Setting 'SetMotionControlStatus' message to queue. Delay is: {delay}. Target date is: {triggeringTime}");
+                var messageToQueue = new DeviceQueueMessage()
+                {
+                    Attributes = new Dictionary<string, string>()
+                    {
+                        { ApplicationConstants.QueuedMessageDefaultKey, ((int)status).ToString() },
+                    },
+                    DeviceIdentifier = device.Identifier,
+                    MessageTypeId = (int)QueuedMessages.SetMotionControlStatus,
+                };
+                var messageJson = JsonSerializer.Serialize(messageToQueue);
+                var res = await _queueClient.SendMessage(messageJson, delay);
+
+                await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+                {
+                    Type = (int)QueuedMessages.SetMotionControlStatus,
+                    Message = messageJson,
+                    MessageId = res.MessageId,
+                    PopReceipt = res.PopReceipt,
+                    Created = _dateService.CurrentTime(),
+                    CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                    Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
+                    ScheduledUtc = res.ScheludedToExecuteUtc,
+                }, true);
+
+                var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+                return _mapper.Map<List<DeviceAttributeDto>>(attributes);
+            }
+
+            var message = $"MOTIONCONTROLSTATUS:{(int)status}";
+            _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
+            await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.MotionControlStatus, ((int)status).ToString(), false);
+            await _deviceRepository.AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control status set to: {(int)status} ({status.ToString()})", true, null);
+
+            var updatedAttributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+            return _mapper.Map<List<DeviceAttributeDto>>(updatedAttributes);
+        }
+
+        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs, DateTime? triggeringTime = null)
+        {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+            if (device.IsVirtual)
+            {
+                throw new InvalidOperationException($"Cannot send messages to a virtual device ({device.Id})");
+            }
+
+            if (triggeringTime != null)
+            {
+                ValidateTriggeringTime(triggeringTime.Value);
+                var delay = triggeringTime.Value - _dateService.CurrentTime();
+                _logger.LogInformation($"Setting 'SetMotionControlDelay' message to queue. Delay is: {delay}. Target date is: {triggeringTime}");
+                var messageToQueue = new DeviceQueueMessage()
+                {
+                    Attributes = new Dictionary<string, string>()
+                    {
+                        { ApplicationConstants.QueuedMessageDefaultKey, delayMs.ToString() },
+                    },
+                    DeviceIdentifier = device.Identifier,
+                    MessageTypeId = (int)QueuedMessages.SetMotionControlOnDelay,
+                };
+                var messageJson = JsonSerializer.Serialize(messageToQueue);
+                var res = await _queueClient.SendMessage(messageJson, delay);
+
+                await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+                {
+                    Type = (int)QueuedMessages.SetMotionControlOnDelay,
+                    Message = messageJson,
+                    MessageId = res.MessageId,
+                    PopReceipt = res.PopReceipt,
+                    Created = _dateService.CurrentTime(),
+                    CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                    Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
+                    ScheduledUtc = res.ScheludedToExecuteUtc,
+                }, true);
+
+                var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+                return _mapper.Map<List<DeviceAttributeDto>>(attributes);
+            }
+
+            var message = $"MOTIONCONTROLDELAY: {delayMs}";
+            _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
+            await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.OnDelay, delayMs.ToString(), false);
+            await _deviceRepository.AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control delay set to: {(int)delayMs} ms", true, null);
+
+            var updatedAttributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+            return _mapper.Map<List<DeviceAttributeDto>>(updatedAttributes);
+        }
+
+        public async Task SendAttributesToDevice(Guid identifier, string? message = null)
+        {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault();
+
+            if (device == null)
+            {
+                throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
+            }
+
+            var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+            _logger.LogInformation($"Sending {attributes.Count} attributes to device: {device.Id} ({identifier})");
+            if (!attributes.Any())
+            {
+                _logger.LogInformation($"No attributes found for device {device.Id} ({identifier})");
+                return;
+            }
+            foreach (var attribute in attributes)
+            {
+                var type = (DeviceAttributeTypes)attribute.TypeId;
+                if (string.IsNullOrEmpty(attribute.Value))
+                {
+                    _logger.LogInformation($"Skipping attribute type '{type}' for device {device.Id} ({identifier}) - empty value");
+                    continue;
+                }
+
+                switch (type)
+                {
+                    case DeviceAttributeTypes.MotionControlStatus:
+                        if (!int.TryParse(attribute.Value, out int statusValue))
+                        {
+                            _logger.LogError($"Failed to parse MotionControlStatus value '{attribute.Value}' for device {device.Id} ({identifier})");
+                            continue;
+                        }
+                        MotionControlStatus status = (MotionControlStatus)statusValue;
+                        _logger.LogInformation($"Sending MotionControlStatus '{status}' ({statusValue}) to device {device.Id} ({identifier})");
+                        await SetMotionControlStatus(identifier, status);
+                        break;
+
+                    case DeviceAttributeTypes.OnDelay:
+                        if (!long.TryParse(attribute.Value, out long delayMs))
+                        {
+                            _logger.LogError($"Failed to parse OnDelay value '{attribute.Value}' for device {device.Id} ({identifier})");
+                            continue;
+                        }
+                        _logger.LogInformation($"Sending OnDelay '{delayMs}' ms to device {device.Id} ({identifier})");
+                        await SetMotionControlDelay(identifier, delayMs);
+                        break;
+
+                    default:
+                        _logger.LogInformation($"Skipping unknown attribute type '{type}' for device {device.Id} ({identifier})");
+                        continue;
+                }
+            }
+
+            var messageToSend = string.IsNullOrEmpty(message) ? "Sent device attributes to device" : message;
+            await _deviceRepository.AddEvent(device.Id, DeviceEventTypes.SendAttributes, messageToSend, true, null);
+            _logger.LogInformation($"Completed sending attributes to device {device.Id} ({identifier})");
         }
 
         public async Task<DeviceQueuedCommandDto> UpdateQueuedCommandSchedule(UpdateQueuedCommand model)

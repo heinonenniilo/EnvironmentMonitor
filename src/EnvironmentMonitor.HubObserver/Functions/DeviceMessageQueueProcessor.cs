@@ -17,17 +17,22 @@ namespace EnvironmentMonitor.HubObserver.Functions
     {
         private readonly ILogger<DeviceMessageQueueProcessor> _logger;
         private readonly IDeviceService _deviceService;
-        private readonly IQueuedCommandService _queuedCommandService;
+        private readonly IDeviceCommandService _commandService;
         private readonly IDeviceEmailService _deviceEmailService;
         private readonly IDateService _dateService;
 
         private const int MessageScheduledLimitInMinutes = 20;
 
-        public DeviceMessageQueueProcessor(ILogger<DeviceMessageQueueProcessor> logger, IDeviceService deviceService, IQueuedCommandService queuedCommandService, IDeviceEmailService deviceEmailService, IDateService dateService)
+        public DeviceMessageQueueProcessor(
+            ILogger<DeviceMessageQueueProcessor> logger, 
+            IDeviceService deviceService, 
+            IDeviceCommandService commandService, 
+            IDeviceEmailService deviceEmailService, 
+            IDateService dateService)
         {
             _logger = logger;
             _deviceService = deviceService;
-            _queuedCommandService = queuedCommandService;
+            _commandService = commandService;
             _deviceEmailService = deviceEmailService;
             _dateService = dateService;
         }
@@ -84,7 +89,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     if ((_dateService.CurrentTime() - messageToCheck.Scheduled).TotalMinutes > MessageScheduledLimitInMinutes)
                     {
                         _logger.LogWarning($"Message with id {messageToCheck.MessageId} was scheduled to run at {messageToCheck.Scheduled}, now it is: {_dateService.CurrentTime()}. Limit is {MessageScheduledLimitInMinutes} min");
-                        await _queuedCommandService.AckQueuedCommand(deviceMessage.DeviceIdentifier, queueMessage.MessageId, null);
+                        await _commandService.AckQueuedCommand(deviceMessage.DeviceIdentifier, queueMessage.MessageId, null);
                         return;
                     }
                 }
@@ -92,13 +97,13 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 switch (messageType)
                 {
                     case QueuedMessages.SendDeviceAttributes:
-                        await _deviceService.SendAttributesToDevice(deviceMessage.DeviceIdentifier, "Sent stored attributes to device. Triggered from storage queue.");
+                        await _commandService.SendAttributesToDevice(deviceMessage.DeviceIdentifier, "Sent stored attributes to device. Triggered from storage queue.");
                         break;
                     case QueuedMessages.SetMotionControlStatus:                       
                         if (attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) == true)
                         {
                             var valueToSet = int.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
-                            await _deviceService.SetMotionControlStatus(deviceMessage.DeviceIdentifier, (MotionControlStatus)valueToSet);
+                            await _commandService.SetMotionControlStatus(deviceMessage.DeviceIdentifier, (MotionControlStatus)valueToSet);
                             hasExecuted = true;
                         }
                         break;
@@ -106,7 +111,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                         if (attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) == true)
                         {
                             var valueToSet = long.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
-                            await _deviceService.SetMotionControlDelay(deviceMessage.DeviceIdentifier, valueToSet);
+                            await _commandService.SetMotionControlDelay(deviceMessage.DeviceIdentifier, valueToSet);
                             hasExecuted = true;
                         }
                         break;
@@ -124,7 +129,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 }
                 if (hasExecuted)
                 {
-                    await _queuedCommandService.AckQueuedCommand(deviceMessage.DeviceIdentifier, queueMessage.MessageId, _dateService.CurrentTime()); 
+                    await _commandService.AckQueuedCommand(deviceMessage.DeviceIdentifier, queueMessage.MessageId, _dateService.CurrentTime()); 
                     _logger.LogInformation("Successfully processed device message");
                 }
             }
