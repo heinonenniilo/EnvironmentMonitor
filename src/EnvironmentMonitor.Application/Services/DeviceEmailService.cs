@@ -140,8 +140,10 @@ namespace EnvironmentMonitor.Application.Services
             
             var tokens = new Dictionary<string, string>
             {
-                { "{DeviceName}", $"{device.Location.Name} - {device.Name}"},
-                { "{DeviceIdentifier}", device.DeviceIdentifier }
+                { "{Location}", $"{device.Location.Name}"},
+                { "{DeviceName}", $"{device.Name}"},
+                { "{DeviceIdentifier}", device.DeviceIdentifier },
+                { "{DisplayName}", $"{device.Location.Name} -  {device.Name}"}
             };
 
             if (replaceTokens != null)
@@ -190,7 +192,8 @@ namespace EnvironmentMonitor.Application.Services
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
             {
                 Identifiers = [model.Idenfifier],
-                OnlyVisible = false
+                OnlyVisible = false,
+                GetLocation = true
             })).FirstOrDefault();
 
             if (device == null)
