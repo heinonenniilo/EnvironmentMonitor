@@ -559,14 +559,5 @@ namespace EnvironmentMonitor.Application.Services
 
             _logger.LogInformation($"Successfully deleted device contact: {model.Identifier.Value}");
         }
-
-        private void ValidateTriggeringTime(DateTime target)
-        {
-            var compareDate = _dateService.CurrentTime();
-            if (target < compareDate)
-            {
-                throw new ArgumentException($"Invalid triggering time.{target}. Cur date: {compareDate}");
-            }
-        }
     }
 }
