@@ -347,8 +347,8 @@ export const DeviceView: React.FC = () => {
             severity: "success",
           })
         );
-        // Refresh the queued commands list
-        getQueuedCommands(deviceIdentifier);
+        // Refresh the queued commands list (setLoading=true so it manages isLoading state)
+        getQueuedCommands(deviceIdentifier, true);
       })
       .catch((er) => {
         console.error(er);
@@ -359,8 +359,6 @@ export const DeviceView: React.FC = () => {
             severity: "error",
           })
         );
-      })
-      .finally(() => {
         setIsLoading(false);
       });
   };
