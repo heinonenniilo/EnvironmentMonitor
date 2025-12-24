@@ -24,7 +24,8 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             string? connectionString = null,
             IotHubSettings? iotHubSettings = null,
             QueueSettings? queueSettings = null,
-            EmailSettings? emailSettings = null
+            EmailSettings? emailSettings = null,
+            ApplicationSettings? applicationSettings = null
             )
         {
             services.AddDbContext<MeasurementDbContext>(options =>
@@ -65,9 +66,19 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             }
 
             var storageAccountSettings = new StorageAccountSettings();
-            configuration.GetSection("StorageSettings").Bind(storageAccountSettings);
-            
+            configuration.GetSection("StorageSettings").Bind(storageAccountSettings);           
             services.AddSingleton(storageAccountSettings);
+
+            if (applicationSettings != null)
+            {
+                services.AddSingleton(applicationSettings);
+            }
+            else
+            {
+                var defaultAppSettings = new ApplicationSettings();
+                configuration.GetSection("ApplicationSettings").Bind(defaultAppSettings);
+                services.AddSingleton(defaultAppSettings);
+            }
 
             var fileUploadDefaultSettings = new FileUploadSettings();
             configuration.GetSection("FileUploadSettings").Bind(fileUploadDefaultSettings);

@@ -59,7 +59,14 @@ var host = new HostBuilder()
             Endpoint = emailServiceEndpoint ?? ""
         };
 
-        services.AddInfrastructureServices(opt.Configuration, opt.Configuration.GetValue<string>("DefaultConnection"), hubSettings, queueSettings, emailSettings);
+        var baseUrl = opt.Configuration.GetValue<string>("ApplicationSettings:BaseUrl");
+
+        var applicationSettings = new ApplicationSettings
+        {
+            BaseUrl = baseUrl ?? ""
+        };
+
+        services.AddInfrastructureServices(opt.Configuration, opt.Configuration.GetValue<string>("DefaultConnection"), hubSettings, queueSettings, emailSettings, applicationSettings);
         services.AddApplicationServices(opt.Configuration);
     })
     .Build();
