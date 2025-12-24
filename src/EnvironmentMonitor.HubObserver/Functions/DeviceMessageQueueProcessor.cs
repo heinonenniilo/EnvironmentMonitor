@@ -74,7 +74,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 var attributes = deviceMessage.Attributes;
                 var hasExecuted = false;
 
-                var matchingMessages = await _deviceService.GetQueuedCommands( new GetQueuedCommandsModel
+                var matchingMessages = await _commandService.GetQueuedCommands( new GetQueuedCommandsModel
                 {
                     DeviceIdentifiers = [deviceMessage.DeviceIdentifier],
                     MessageIds = [queueMessage.MessageId],

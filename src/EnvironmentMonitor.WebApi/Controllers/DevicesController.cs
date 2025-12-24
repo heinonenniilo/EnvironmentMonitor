@@ -150,7 +150,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpGet("queued-commands")]
         [Authorize(Roles = "Viewer, Admin")]
-        public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands([FromQuery] GetQueuedCommandsModel model) => await _deviceService.GetQueuedCommands(model);
+        public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands([FromQuery] GetQueuedCommandsModel model) => await _deviceCommandService.GetQueuedCommands(model);
 
         [HttpDelete("{deviceId}/queued-commands/{messageId}")]
         [Authorize(Roles = "Admin")]

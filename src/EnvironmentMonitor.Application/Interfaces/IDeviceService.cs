@@ -23,7 +23,6 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
         public Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
         public Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model);
-        public Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(GetQueuedCommandsModel model);
 
         public Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model);
         public Task AddAttachment(UploadDeviceAttachmentModel fileModel);
