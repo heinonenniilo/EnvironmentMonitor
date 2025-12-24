@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Models.GetModels;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace EnvironmentMonitor.Application.Interfaces
     public interface IDeviceCommandService
     {
         Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(Guid deviceIdentifier);
+        Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(GetQueuedCommandsModel model);
         Task<DeviceQueuedCommandDto> UpdateQueuedCommandSchedule(UpdateQueuedCommand model);
         Task RemoveQueuedCommand(Guid deviceIdentifier, string messageId);
         Task<DeviceQueuedCommandDto> CopyExecutedQueuedCommand(CopyQueuedCommand model);

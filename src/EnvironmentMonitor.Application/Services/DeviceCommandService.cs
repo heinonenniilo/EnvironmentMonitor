@@ -45,26 +45,36 @@ namespace EnvironmentMonitor.Application.Services
             _messageService = messageService;
         }
 
-        public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(Guid deviceIdentifier)
+        public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(Guid deviceIdentifier) => await GetQueuedCommands(new GetQueuedCommandsModel()
         {
-            if (!_userService.HasAccessToDevice(deviceIdentifier, AccessLevels.Write))
+            DeviceIdentifiers = [deviceIdentifier]
+        });
+
+        public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(GetQueuedCommandsModel model)
+        {
+            _logger.LogInformation($"Fetching queued commands. Device Identifiers: {string.Join(",", model.DeviceIdentifiers ?? [])}");
+
+            if (model.DeviceIdentifiers?.Any() == true)
             {
-                throw new UnauthorizedAccessException();
+                if (!_userService.HasAccessToDevices(model.DeviceIdentifiers, AccessLevels.Write))
+                {
+                    _logger.LogWarning($"No access to devices: {string.Join(",", model.DeviceIdentifiers)}");
+                    throw new UnauthorizedAccessException();
+                }
+            }
+            else if (!_userService.IsAdmin)
+            {
+                // If no specific devices requested and not admin, filter by user's devices
+                var deviceIds = _userService.GetDevices();
+                _logger.LogInformation($"User has access to: {deviceIds.Count} devices");
+                if (deviceIds.Count == 0)
+                {
+                    throw new UnauthorizedAccessException();
+                }
+                model.DeviceIdentifiers = deviceIds;
             }
 
-            _logger.LogInformation($"Fetching queued commands for device: {deviceIdentifier}");
-
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
-            {
-                Identifiers = [deviceIdentifier],
-                OnlyVisible = false
-            })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
-
-            var commands = await _deviceRepository.GetQueuedCommands(new GetQueuedCommandsModel()
-            {
-                DeviceIds = [device.Id]
-            });
-
+            var commands = await _deviceRepository.GetQueuedCommands(model);
             return _mapper.Map<List<DeviceQueuedCommandDto>>(commands);
         }
 

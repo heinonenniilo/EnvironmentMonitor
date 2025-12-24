@@ -481,34 +481,6 @@ namespace EnvironmentMonitor.Application.Services
             };
         }
 
-        public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(GetQueuedCommandsModel model)
-        {
-            _logger.LogInformation($"Fetching queued commands. Device Identifiers: {string.Join(",", model.DeviceIdentifiers ?? [])}");
-
-            if (model.DeviceIdentifiers?.Any() == true)
-            {
-                if (!_userService.HasAccessToDevices(model.DeviceIdentifiers, AccessLevels.Write))
-                {
-                    _logger.LogWarning($"No access to devices: {string.Join(",", model.DeviceIdentifiers)}");
-                    throw new UnauthorizedAccessException();
-                }
-            }
-            else if (!_userService.IsAdmin)
-            {
-                // If no specific devices requested and not admin, filter by user's devices
-                var deviceIds = _userService.GetDevices();
-                _logger.LogInformation($"User has access to: {deviceIds.Count} devices");
-                if (deviceIds.Count == 0)
-                {
-                    throw new UnauthorizedAccessException();
-                }
-                model.DeviceIdentifiers = deviceIds;
-            }
-
-            var commands = await _deviceRepository.GetQueuedCommands(model);
-            return _mapper.Map<List<DeviceQueuedCommandDto>>(commands);
-        }
-
         public async Task<DeviceContactDto> AddDeviceContact(AddOrUpdateDeviceContactDto model)
         {
             if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
