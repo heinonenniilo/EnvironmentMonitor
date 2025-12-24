@@ -19,5 +19,7 @@ namespace EnvironmentMonitor.Domain
         public static string QueuedMessageDefaultKey = "VALUE";
         public static string QueuedMessageTimesStampKey = "{TIMESTAMP}";
         public static string QueuedMessageTimesStampPreviousKey = "{TIMESTAMP_PREVIOUS}";
+        public static string QueuedMessageDeviceLink = "{DEVICE_LINK}";
+        public static string QueuedMessageLocation = "{LOCATION}";
     }
 }

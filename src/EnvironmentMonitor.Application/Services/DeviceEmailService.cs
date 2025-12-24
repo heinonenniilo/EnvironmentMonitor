@@ -23,6 +23,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILogger<DeviceEmailService> _logger;
         private readonly IQueueClient _queueClient;
         private readonly IDateService _dateService;
+        private readonly ApplicationSettings _applicationSettings;
 
         public DeviceEmailService(
             IDeviceEmailRepository deviceEmailRepository,
@@ -33,7 +34,8 @@ namespace EnvironmentMonitor.Application.Services
             IMapper mapper,
 
             ILogger<DeviceEmailService> logger,
-            IDateService dateService)
+            IDateService dateService,
+            ApplicationSettings applicationSettings)
         {
             _deviceEmailRepository = deviceEmailRepository;
             _deviceRepository = deviceRepository;
@@ -43,6 +45,7 @@ namespace EnvironmentMonitor.Application.Services
             _logger = logger;
             _queueClient = queueClient;
             _dateService = dateService;
+            _applicationSettings = applicationSettings;
         }
 
         public async Task<DeviceEmailTemplateDto?> GetEmailTemplate(DeviceEmailTemplateTypes templateType)
@@ -137,8 +140,10 @@ namespace EnvironmentMonitor.Application.Services
             
             var tokens = new Dictionary<string, string>
             {
-                { "{DeviceName}", $"{device.Location.Name} - {device.Name}"},
-                { "{DeviceIdentifier}", device.DeviceIdentifier }
+                { "{Location}", $"{device.Location.Name}"},
+                { "{DeviceName}", $"{device.Name}"},
+                { "{DeviceIdentifier}", device.DeviceIdentifier },
+                { "{DisplayName}", $"{device.Location.Name} -  {device.Name}"}
             };
 
             if (replaceTokens != null)
@@ -187,7 +192,8 @@ namespace EnvironmentMonitor.Application.Services
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
             {
                 Identifiers = [model.Idenfifier],
-                OnlyVisible = false
+                OnlyVisible = false,
+                GetLocation = true
             })).FirstOrDefault();
 
             if (device == null)
@@ -199,11 +205,14 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Queuing device email for devie {device.Name} ({device.Id}). Type: {currentStatus.Status}");
             DeviceEmailTemplateTypes messageType = currentStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
 
+            var linkToDevice = BuildDeviceUrl(device.Identifier);
+
             var attributesToAdd = new Dictionary<string, string>()
                     {
                         { ApplicationConstants.QueuedMessageDefaultKey, ((int)messageType).ToString() },
                         { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(currentStatus.TimeStamp) },
-                        { ApplicationConstants.QueuedMessageTimesStampPreviousKey, previousStatus != null ? _dateService.FormatDateTime(previousStatus.TimeStamp) : string.Empty }
+                        { ApplicationConstants.QueuedMessageTimesStampPreviousKey, previousStatus != null ? _dateService.FormatDateTime(previousStatus.TimeStamp) : string.Empty },
+                        { ApplicationConstants.QueuedMessageDeviceLink, linkToDevice  }
                     };
             var messageToQueue = new DeviceQueueMessage()
             {
@@ -226,6 +235,16 @@ namespace EnvironmentMonitor.Application.Services
                 ScheduledUtc = res.ScheludedToExecuteUtc,
 
             }, saveChanges);
+        }
+
+        private string BuildDeviceUrl(Guid deviceIdentifier)
+        {
+            var baseUrl = _applicationSettings.BaseUrl.TrimEnd('/');
+            var uriBuilder = new UriBuilder(baseUrl)
+            {
+                Path = $"/devices/{deviceIdentifier}"
+            };
+            return uriBuilder.Uri.ToString();
         }
     }
 }
