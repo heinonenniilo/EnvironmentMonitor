@@ -143,7 +143,8 @@ namespace EnvironmentMonitor.Application.Services
                 { "{Location}", $"{device.Location.Name}"},
                 { "{DeviceName}", $"{device.Name}"},
                 { "{DeviceIdentifier}", device.DeviceIdentifier },
-                { "{DisplayName}", $"{device.Location.Name} -  {device.Name}"}
+                { "{DisplayName}", $"{device.Location.Name} -  {device.Name}"},
+                { ApplicationConstants.QueuedMessageDeviceLink, BuildDeviceUrl(device.Identifier) }
             };
 
             if (replaceTokens != null)
@@ -205,15 +206,13 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Queuing device email for devie {device.Name} ({device.Id}). Type: {currentStatus.Status}");
             DeviceEmailTemplateTypes messageType = currentStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
 
-            var linkToDevice = BuildDeviceUrl(device.Identifier);
-
             var attributesToAdd = new Dictionary<string, string>()
                     {
                         { ApplicationConstants.QueuedMessageDefaultKey, ((int)messageType).ToString() },
                         { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(currentStatus.TimeStamp) },
-                        { ApplicationConstants.QueuedMessageTimesStampPreviousKey, previousStatus != null ? _dateService.FormatDateTime(previousStatus.TimeStamp) : string.Empty },
-                        { ApplicationConstants.QueuedMessageDeviceLink, linkToDevice  }
+                        { ApplicationConstants.QueuedMessageTimesStampPreviousKey, previousStatus != null ? _dateService.FormatDateTime(previousStatus.TimeStamp) : string.Empty }
                     };
+
             var messageToQueue = new DeviceQueueMessage()
             {
                 Attributes = attributesToAdd,
