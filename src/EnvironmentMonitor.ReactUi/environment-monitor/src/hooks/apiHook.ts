@@ -55,6 +55,10 @@ interface userHook {
     newPassword: string
   ) => Promise<string | undefined>;
   forgotPassword: (email: string) => Promise<string | undefined>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<string | undefined>;
 }
 
 interface locationHook {
@@ -243,6 +247,23 @@ export const useApiHook = (): ApiHook => {
           throw new Error(errorMessage);
         }
       },
+      forgotPassword: async (email) => {
+        try {
+          const response = await apiClient.post<
+            any,
+            AxiosResponse<{ message: string }>
+          >("/api/authentication/forgot-password", {
+            email: email,
+          });
+          return response.data.message;
+        } catch (ex: any) {
+          console.error(ex);
+          const errorMessage =
+            ex?.response?.data?.message || "Failed to send reset email";
+          showError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      },
       resetPassword: async (email, token, newPassword) => {
         try {
           const response = await apiClient.post<
@@ -257,24 +278,25 @@ export const useApiHook = (): ApiHook => {
         } catch (ex: any) {
           console.error(ex);
           const errorMessage =
-            ex?.response?.data?.message || "Password reset failed";
+            ex?.response?.data?.message || "Failed to reset password";
           showError(errorMessage);
           throw new Error(errorMessage);
         }
       },
-      forgotPassword: async (email) => {
+      changePassword: async (currentPassword, newPassword) => {
         try {
           const response = await apiClient.post<
             any,
             AxiosResponse<{ message: string }>
-          >("/api/authentication/forgot-password", {
-            email: email,
+          >("/api/authentication/change-password", {
+            currentPassword: currentPassword,
+            newPassword: newPassword,
           });
           return response.data.message;
         } catch (ex: any) {
           console.error(ex);
           const errorMessage =
-            ex?.response?.data?.message || "Failed to send reset email";
+            ex?.response?.data?.message || "Failed to change password";
           showError(errorMessage);
           throw new Error(errorMessage);
         }

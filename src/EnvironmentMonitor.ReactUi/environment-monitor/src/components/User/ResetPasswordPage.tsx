@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import {
-  TextField,
-  Button,
   Box,
-  Typography,
+  Button,
   Paper,
+  TextField,
+  Typography,
   Alert,
 } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router";
-import { routes } from "../../utilities/routes";
 import { useApiHook } from "../../hooks/apiHook";
+import { routes } from "../../utilities/routes";
 
 const ResetPasswordPage: React.FC = () => {
   const navigate = useNavigate();

@@ -90,7 +90,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               color="inherit"
               onClick={() => {
                 handleClose();
-                navigate(routes.resetPassword);
+                navigate(routes.changePassword);
               }}
             >
               Change Password
