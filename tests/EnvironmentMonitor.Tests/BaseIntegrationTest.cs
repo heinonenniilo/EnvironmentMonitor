@@ -102,6 +102,106 @@ namespace EnvironmentMonitor.Tests
             return loginResponse.IsSuccessStatusCode;
         }
 
+        protected async Task<(bool success, string userId)> RegisterUserAsync(string email, string password)
+        {
+            var registerData = new
+            {
+                Email = email,
+                Password = password
+            };
+
+            var content = new StringContent(JsonConvert.SerializeObject(registerData), Encoding.UTF8, "application/json");
+            var registerResponse = await _client.PostAsync("/api/Authentication/register", content);
+            
+            if (!registerResponse.IsSuccessStatusCode)
+            {
+                return (false, string.Empty);
+            }
+
+            // Get the user ID from the database
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = await userManager.FindByEmailAsync(email);
+                return (true, user?.Id ?? string.Empty);
+            }
+        }
+
+        protected async Task<string> GenerateEmailConfirmationTokenAsync(string userId)
+        {
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = await userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    throw new InvalidOperationException($"User not found: {userId}");
+                }
+                return await userManager.GenerateEmailConfirmationTokenAsync(user);
+            }
+        }
+
+        protected async Task<bool> ConfirmEmailAsync(string userId, string token)
+        {
+            var confirmResponse = await _client.GetAsync($"/api/Authentication/confirm-email?userId={Uri.EscapeDataString(userId)}&token={Uri.EscapeDataString(token)}");
+            return confirmResponse.IsSuccessStatusCode;
+        }
+
+        protected async Task<bool> IsEmailConfirmedAsync(string email)
+        {
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = await userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    return false;
+                }
+                return await userManager.IsEmailConfirmedAsync(user);
+            }
+        }
+
+        protected async Task<string> GeneratePasswordResetTokenAsync(string email)
+        {
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var user = await userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    throw new InvalidOperationException($"User not found: {email}");
+                }
+                return await userManager.GeneratePasswordResetTokenAsync(user);
+            }
+        }
+
+        protected async Task<bool> ResetPasswordAsync(string email, string token, string newPassword)
+        {
+            var resetData = new
+            {
+                Email = email,
+                Token = token,
+                NewPassword = newPassword
+            };
+
+            var content = new StringContent(JsonConvert.SerializeObject(resetData), Encoding.UTF8, "application/json");
+            var resetResponse = await _client.PostAsync("/api/Authentication/reset-password", content);
+            return resetResponse.IsSuccessStatusCode;
+        }
+
+        protected async Task<bool> ChangePasswordAsync(string currentPassword, string newPassword)
+        {
+            var changeData = new
+            {
+                CurrentPassword = currentPassword,
+                NewPassword = newPassword
+            };
+
+            var content = new StringContent(JsonConvert.SerializeObject(changeData), Encoding.UTF8, "application/json");
+            var changeResponse = await _client.PostAsync("/api/Authentication/change-password", content);
+            return changeResponse.IsSuccessStatusCode;
+        }
+
         protected async Task AddLocationSensorsAndMeasurements(
             int locationId,
             int sensorId,
@@ -156,10 +256,12 @@ namespace EnvironmentMonitor.Tests
             {
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                 var measurementDbContext = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
-                var adminUser = await userManager.CreateAsync(new ApplicationUser() { UserName = AdminUserName, Email = AdminUserName }, AdminPassword);
-                var viewerUser = await userManager.CreateAsync(new ApplicationUser() { UserName = ViewerUserName, Email = ViewerUserName }, ViewerPassword);
-                var basicUser = await userManager.CreateAsync(new ApplicationUser() { UserName = LocationUserName, Email = LocationUserName }, LocationUserPassword);
-                var deviceUser = await userManager.CreateAsync(new ApplicationUser() { UserName = DeviceUserName, Email = DeviceUserName }, DeviceUserPassword);
+                
+                // Create users
+                var adminUserResult = await userManager.CreateAsync(new ApplicationUser() { UserName = AdminUserName, Email = AdminUserName, EmailConfirmed = true }, AdminPassword);
+                var viewerUserResult = await userManager.CreateAsync(new ApplicationUser() { UserName = ViewerUserName, Email = ViewerUserName, EmailConfirmed = true }, ViewerPassword);
+                var basicUserResult = await userManager.CreateAsync(new ApplicationUser() { UserName = LocationUserName, Email = LocationUserName, EmailConfirmed = true }, LocationUserPassword);
+                var deviceUserResult = await userManager.CreateAsync(new ApplicationUser() { UserName = DeviceUserName, Email = DeviceUserName, EmailConfirmed = true }, DeviceUserPassword);
 
                 var location = new Location()
                 {

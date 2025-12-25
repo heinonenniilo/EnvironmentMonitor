@@ -64,13 +64,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
             }
 
             var result = await _userService.ConfirmEmail(userId, token);
-            
+
             if (result)
             {
                 return Redirect("/email-confirmation?status=success");
             }
-            
-            return Redirect("/email-confirmation?status=failed");
+
+            throw new InvalidOperationException();
         }
 
         [HttpPost("change-password")]
