@@ -38,11 +38,36 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpPost("register")]
-        [ApiKeyRequired]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            await _userService.RegisterUser(new RegisterUserModel() { Email = request.Email, Password = request.Password });
-            return Ok(new { Message = "User registered successfully" });
+            // Build the base URL from the current request
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            
+            await _userService.RegisterUser(new RegisterUserModel() 
+            { 
+                Email = request.Email, 
+                Password = request.Password,
+                ConfirmPassword = request.Password
+            });
+            return Ok(new { Message = "User registered successfully. Please check your email to confirm your account." });
+        }
+
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string userId, [FromQuery] string token)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
+            {
+                return BadRequest(new { Message = "Invalid confirmation link." });
+            }
+
+            var result = await _userService.ConfirmEmail(userId, token);
+            
+            if (result)
+            {
+                return Ok(new { Message = "Email confirmed successfully! You can now log in." });
+            }
+            
+            return BadRequest(new { Message = "Email confirmation failed. The link may be invalid or expired." });
         }
 
         [HttpPost("login")]

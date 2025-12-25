@@ -17,13 +17,16 @@ namespace EnvironmentMonitor.Application.Services
     {
         private readonly ICurrentUser _currentUser;
         private readonly IUserAuthService _userAuthService;
+        private readonly ApplicationSettings _applicationSettings;
 
         public UserService(
             ICurrentUser currentUser,
-            IUserAuthService userAuthService)
+            IUserAuthService userAuthService,
+            ApplicationSettings applicationSettings)
         {
             _currentUser = currentUser;
             _userAuthService = userAuthService;
+            _applicationSettings = applicationSettings;
         }
 
         public bool HasAccessToDevice(Guid id, AccessLevels accessLevel) => HasAccessTo(EntityRoles.Device, id, accessLevel);
@@ -74,7 +77,13 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task RegisterUser(RegisterUserModel model)
         {
+            model.BaseUrl = _applicationSettings.BaseUrl;
             await _userAuthService.RegisterUser(model);
+        }
+
+        public async Task<bool> ConfirmEmail(string userId, string token)
+        {
+            return await _userAuthService.ConfirmEmail(userId, token);
         }
 
         public List<Guid> GetDevices()

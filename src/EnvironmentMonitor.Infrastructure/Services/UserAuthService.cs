@@ -24,14 +24,16 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IDeviceRepository _deviceRepository;
         private readonly ILogger<UserAuthService> _logger;
+        private readonly IEmailClient _emailClient;
 
         public UserAuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
-            IDeviceRepository deviceRepository, ILogger<UserAuthService> logger)
+            IDeviceRepository deviceRepository, ILogger<UserAuthService> logger, IEmailClient emailClient)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _deviceRepository = deviceRepository;
             _logger = logger;
+            _emailClient = emailClient;
         }
         public async Task Login(LoginModel model)
         {
@@ -40,6 +42,13 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 throw new UnauthorizedAccessException();
             }
+            
+            // Check if email is confirmed
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                throw new InvalidOperationException("Email not confirmed. Please check your email and confirm your account before logging in.");
+            }
+            
             var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: false);
             if (!result.Succeeded)
             {
@@ -121,7 +130,60 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             if (!result.Succeeded)
                 throw new InvalidOperationException("Failed to create user");
+            
             _logger.LogInformation($"User with email {model.Email} created.");
+            
+            // Generate email confirmation token
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            
+            // Build confirmation URL properly
+            var baseUri = new Uri(model?.BaseUrl?.TrimEnd('/') ?? "/");
+            var confirmationPath = "/api/authentication/confirm-email";
+
+            var uriBuilder = new UriBuilder(baseUri.Scheme, baseUri.Host, baseUri.Port, confirmationPath);
+            
+            var queryParams = new StringBuilder();
+            queryParams.Append($"?userId={Uri.EscapeDataString(user.Id)}");
+            queryParams.Append($"&token={Uri.EscapeDataString(token)}");
+            
+            var confirmationUrl = uriBuilder.Uri + queryParams.ToString();
+            
+            // Send confirmation email
+            await _emailClient.SendEmailAsync(new SendEmailOptions
+            {
+                ToAddresses = new List<string> { user.Email! },
+                Subject = "Confirm your email address",
+                HtmlContent = $@"
+                    <h2>Welcome to Environment Monitor!</h2>
+                    <p>Please confirm your email address by clicking the link below:</p>
+                    <p><a href=""{confirmationUrl}"">Confirm Email</a></p>
+                    <p>If the link doesn't work, copy and paste this URL into your browser:</p>
+                    <p>{confirmationUrl}</p>
+                    <p>This link will expire in 24 hours.</p>",
+                PlainTextContent = $"Welcome to Environment Monitor! Please confirm your email address by visiting: {confirmationUrl}"
+            });
+            
+            _logger.LogInformation($"Confirmation email sent to {model.Email}");
+        }
+
+        public async Task<bool> ConfirmEmail(string userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found for email confirmation: {userId}");
+                return false;
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation($"Email confirmed for user: {user.Email}");
+                return true;
+            }
+            
+            _logger.LogWarning($"Email confirmation failed for user: {user.Email}. Errors: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            return false;
         }
         /// <summary>
         /// Get calculated claims. Each location gives a claim to devices in the location. Each device gives a claim to each sensor attached to the device.
