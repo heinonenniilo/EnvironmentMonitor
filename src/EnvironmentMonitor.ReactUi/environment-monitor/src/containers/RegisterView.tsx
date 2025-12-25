@@ -1,5 +1,5 @@
 import { useDispatch } from "react-redux";
-import RegisterPage from "../components/RegisterPage";
+import RegisterPage from "../components/User/RegisterPage";
 import { addNotification } from "../reducers/userInterfaceReducer";
 import { routes } from "../utilities/routes";
 import { useNavigate } from "react-router";

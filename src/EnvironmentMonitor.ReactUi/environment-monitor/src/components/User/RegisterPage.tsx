@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { TextField, Button, Box, Typography } from "@mui/material";
-import { useApiHook } from "../hooks/apiHook";
+import { useApiHook } from "../../hooks/apiHook";
 import { useNavigate } from "react-router";
-import { routes } from "../utilities/routes";
+import { routes } from "../../utilities/routes";
 
 export interface RegisterPageProps {
   onRegistered?: () => void;

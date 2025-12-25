@@ -7,9 +7,9 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { useApiHook } from "../hooks/apiHook";
+import { useApiHook } from "../../hooks/apiHook";
 import { useNavigate } from "react-router";
-import { routes } from "../utilities/routes";
+import { routes } from "../../utilities/routes";
 
 export interface LoginPageProps {
   onLoggedIn: () => void;

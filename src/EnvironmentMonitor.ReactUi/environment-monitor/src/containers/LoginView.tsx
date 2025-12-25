@@ -1,4 +1,4 @@
-import LoginPage from "../components/LoginPage";
+import LoginPage from "../components/User/LoginPage";
 import { useNavigate } from "react-router";
 import { routes } from "../utilities/routes";
 import { useApiHook } from "../hooks/apiHook";
