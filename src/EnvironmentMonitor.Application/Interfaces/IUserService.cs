@@ -16,6 +16,9 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task ExternalLogin(ExternalLoginModel model);
         public Task RegisterUser(RegisterUserModel model);
         public Task<bool> ConfirmEmail(string userId, string token);
+        public Task ChangePassword(ChangePasswordModel model);
+        public Task ForgotPassword(ForgotPasswordModel model);
+        public Task<bool> ResetPassword(ResetPasswordModel model);
         bool HasAccessTo(EntityRoles entity, Guid id, AccessLevels accessLevel);
 
         bool HasAccessToDevice(Guid id, AccessLevels accessLevel);

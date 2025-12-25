@@ -77,13 +77,39 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task RegisterUser(RegisterUserModel model)
         {
-            model.BaseUrl =  !string.IsNullOrEmpty(_applicationSettings.BaseUrl) ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/api/Authentication/confirm-email"  : "/api/Authentication/confirm-email";
+            model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl) 
+                ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/api/authentication/confirm-email" 
+                : "/api/authentication/confirm-email";
             await _userAuthService.RegisterUser(model);
         }
 
         public async Task<bool> ConfirmEmail(string userId, string token)
         {
             return await _userAuthService.ConfirmEmail(userId, token);
+        }
+
+        public async Task ChangePassword(ChangePasswordModel model)
+        {
+            var userId = _currentUser.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new UnauthorizedAccessException("User not authenticated");
+            }
+            
+            await _userAuthService.ChangePassword(userId, model);
+        }
+
+        public async Task ForgotPassword(ForgotPasswordModel model)
+        {
+            model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl) 
+                ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/api/authentication/reset-password" 
+                : "/api/authentication/reset-password";
+            await _userAuthService.ForgotPassword(model);
+        }
+
+        public async Task<bool> ResetPassword(ResetPasswordModel model)
+        {
+            return await _userAuthService.ResetPassword(model);
         }
 
         public List<Guid> GetDevices()

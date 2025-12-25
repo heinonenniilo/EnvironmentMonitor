@@ -136,17 +136,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
             // Generate email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             
-            // Build confirmation URL properly
-            var baseUri = new Uri(model?.BaseUrl?.TrimEnd('/') ?? "/");
-            var confirmationPath = "/api/authentication/confirm-email";
-
-            var uriBuilder = new UriBuilder(baseUri.Scheme, baseUri.Host, baseUri.Port, confirmationPath);
-            
+            // Build confirmation URL using the full path from model
             var queryParams = new StringBuilder();
             queryParams.Append($"?userId={Uri.EscapeDataString(user.Id)}");
             queryParams.Append($"&token={Uri.EscapeDataString(token)}");
             
-            var confirmationUrl = uriBuilder.Uri + queryParams.ToString();
+            var confirmationUrl = model.BaseUrl + queryParams.ToString();
             
             // Send confirmation email
             await _emailClient.SendEmailAsync(new SendEmailOptions
@@ -185,6 +180,88 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _logger.LogWarning($"Email confirmation failed for user: {user.Email}. Errors: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             return false;
         }
+
+        public async Task ChangePassword(string userId, ChangePasswordModel model)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found for password change: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogWarning($"Password change failed for user: {user.Email}. Errors: {errors}");
+                throw new InvalidOperationException($"Password change failed: {errors}");
+            }
+            
+            _logger.LogInformation($"Password changed successfully for user: {user.Email}");
+        }
+
+        public async Task ForgotPassword(ForgotPasswordModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
+            {
+                // Don't reveal that the user does not exist or is not confirmed
+                _logger.LogInformation($"Forgot password requested for non-existent or unconfirmed email: {model.Email}");
+                return;
+            }
+
+            // Generate password reset token
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            
+            // Build reset URL using the full path from model
+            var queryParams = new StringBuilder();
+            queryParams.Append($"?email={Uri.EscapeDataString(user.Email!)}");
+            queryParams.Append($"&token={Uri.EscapeDataString(token)}");
+            
+            var resetUrl = model.BaseUrl + queryParams.ToString();
+            
+            // Send reset email
+            await _emailClient.SendEmailAsync(new SendEmailOptions
+            {
+                ToAddresses = new List<string> { user.Email! },
+                Subject = "Reset your password",
+                HtmlContent = $@"
+                    <h2>Password Reset Request</h2>
+                    <p>You requested to reset your password. Click the link below to reset it:</p>
+                    <p><a href=""{resetUrl}"">Reset Password</a></p>
+                    <p>If the link doesn't work, copy and paste this URL into your browser:</p>
+                    <p>{resetUrl}</p>
+                    <p>This link will expire in 24 hours.</p>
+                    <p>If you didn't request a password reset, please ignore this email.</p>",
+                PlainTextContent = $"Password Reset Request: Please visit {resetUrl} to reset your password. This link expires in 24 hours."
+            });
+            
+            _logger.LogInformation($"Password reset email sent to {model.Email}");
+        }
+
+        public async Task<bool> ResetPassword(ResetPasswordModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found for password reset: {model.Email}");
+                return false;
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            
+            if (result.Succeeded)
+            {
+                _logger.LogInformation($"Password reset successfully for user: {user.Email}");
+                return true;
+            }
+            
+            _logger.LogWarning($"Password reset failed for user: {user.Email}. Errors: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            return false;
+        }
+
         /// <summary>
         /// Get calculated claims. Each location gives a claim to devices in the location. Each device gives a claim to each sensor attached to the device.
         /// </summary>

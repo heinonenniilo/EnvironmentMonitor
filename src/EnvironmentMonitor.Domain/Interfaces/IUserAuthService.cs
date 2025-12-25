@@ -13,5 +13,8 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task LoginWithExternalProvider(ExternalLoginModel model);
         public Task RegisterUser(RegisterUserModel model);
         public Task<bool> ConfirmEmail(string userId, string token);
+        public Task ChangePassword(string userId, ChangePasswordModel model);
+        public Task ForgotPassword(ForgotPasswordModel model);
+        public Task<bool> ResetPassword(ResetPasswordModel model);
     }
 }
