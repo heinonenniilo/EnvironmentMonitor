@@ -7,6 +7,7 @@ export interface NotificationMessage {
   body: string;
   severity?: "success" | "info" | "warning" | "error";
   id?: number;
+  duration?: number; // Duration in milliseconds, default is 6000
 }
 
 export interface NotificationMessageProps {
@@ -24,10 +25,16 @@ export const NotificationsComponent: React.FC<NotificationMessageProps> = ({
     dispatch(removeNotification(id));
   };
 
+  // Use custom duration if any message has it defined, otherwise use default 6000ms
+  const duration =
+    messages.length > 0 && messages[0].duration !== undefined
+      ? messages[0].duration
+      : 6000;
+
   return (
     <Snackbar
       open={messages.length > 0}
-      autoHideDuration={6000}
+      autoHideDuration={duration}
       anchorOrigin={{ vertical: "top", horizontal: "center" }}
       onClose={(_x, y) => {
         handleClose(y);
@@ -37,7 +44,7 @@ export const NotificationsComponent: React.FC<NotificationMessageProps> = ({
         {messages.map((r) => {
           return (
             <Alert
-              onClose={(_x) => {
+              onClose={() => {
                 handleClose(undefined, r.id);
               }}
               severity={r.severity}

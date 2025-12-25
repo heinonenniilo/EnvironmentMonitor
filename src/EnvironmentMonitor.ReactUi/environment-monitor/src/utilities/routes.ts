@@ -2,6 +2,8 @@ export const routes = {
   main: "/",
   home: "/home",
   login: "/login",
+  register: "/register",
+  emailConfirmation: "/email-confirmation",
   measurements: "/measurements/device",
   measurementsByDevice: "/measurements/device/:deviceId",
   locationMeasurements: "/measurements/location",
