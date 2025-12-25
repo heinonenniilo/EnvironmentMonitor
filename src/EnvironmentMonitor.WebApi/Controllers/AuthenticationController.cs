@@ -47,7 +47,8 @@ namespace EnvironmentMonitor.WebApi.Controllers
             { 
                 Email = request.Email, 
                 Password = request.Password,
-                ConfirmPassword = request.Password
+                ConfirmPassword = request.Password,
+                BaseUrl = baseUrl
             });
             return Ok(new { Message = "User registered successfully. Please check your email to confirm your account." });
         }
@@ -57,17 +58,17 @@ namespace EnvironmentMonitor.WebApi.Controllers
         {
             if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
             {
-                return BadRequest(new { Message = "Invalid confirmation link." });
+                return Redirect("/email-confirmation?status=invalid");
             }
 
             var result = await _userService.ConfirmEmail(userId, token);
             
             if (result)
             {
-                return Ok(new { Message = "Email confirmed successfully! You can now log in." });
+                return Redirect("/email-confirmation?status=success");
             }
             
-            return BadRequest(new { Message = "Email confirmation failed. The link may be invalid or expired." });
+            return Redirect("/email-confirmation?status=failed");
         }
 
         [HttpPost("login")]
