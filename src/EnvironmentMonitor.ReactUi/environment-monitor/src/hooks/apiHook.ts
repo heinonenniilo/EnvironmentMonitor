@@ -49,6 +49,12 @@ interface userHook {
   ) => Promise<boolean>;
   logOut: () => Promise<boolean>;
   register: (email: string, password: string) => Promise<string | undefined>;
+  resetPassword: (
+    email: string,
+    token: string,
+    newPassword: string
+  ) => Promise<string | undefined>;
+  forgotPassword: (email: string) => Promise<string | undefined>;
 }
 
 interface locationHook {
@@ -233,6 +239,42 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           const errorMessage =
             ex?.response?.data?.message || "Registration failed";
+          showError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      },
+      resetPassword: async (email, token, newPassword) => {
+        try {
+          const response = await apiClient.post<
+            any,
+            AxiosResponse<{ message: string }>
+          >("/api/authentication/reset-password", {
+            email: email,
+            token: token,
+            newPassword: newPassword,
+          });
+          return response.data.message;
+        } catch (ex: any) {
+          console.error(ex);
+          const errorMessage =
+            ex?.response?.data?.message || "Password reset failed";
+          showError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      },
+      forgotPassword: async (email) => {
+        try {
+          const response = await apiClient.post<
+            any,
+            AxiosResponse<{ message: string }>
+          >("/api/authentication/forgot-password", {
+            email: email,
+          });
+          return response.data.message;
+        } catch (ex: any) {
+          console.error(ex);
+          const errorMessage =
+            ex?.response?.data?.message || "Failed to send reset email";
           showError(errorMessage);
           throw new Error(errorMessage);
         }

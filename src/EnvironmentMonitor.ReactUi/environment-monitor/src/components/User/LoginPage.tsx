@@ -6,6 +6,7 @@ import {
   Typography,
   FormControlLabel,
   Checkbox,
+  Link,
 } from "@mui/material";
 import { useApiHook } from "../../hooks/apiHook";
 import { useNavigate } from "react-router";
@@ -82,6 +83,17 @@ const LoginPage: React.FC<LoginPageProps> = ({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <Box sx={{ textAlign: "right", marginTop: 1 }}>
+          <Link
+            component="button"
+            variant="body2"
+            type="button"
+            onClick={() => navigate(routes.forgotPassword)}
+            sx={{ cursor: "pointer" }}
+          >
+            Forgot Password?
+          </Link>
+        </Box>
         {error && (
           <Typography color="error" variant="body2" mt={1}>
             {error}
