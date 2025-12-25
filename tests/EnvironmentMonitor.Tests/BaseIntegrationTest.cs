@@ -118,11 +118,11 @@ namespace EnvironmentMonitor.Tests
                 return (false, string.Empty);
             }
 
-            // Get the user ID from the database
+            // Get the user ID from the database - optimized with AsNoTracking
             using (var scope = _factory.Services.CreateScope())
             {
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var user = await userManager.FindByEmailAsync(email);
+                var user = await userManager.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
                 return (true, user?.Id ?? string.Empty);
             }
         }
@@ -132,7 +132,7 @@ namespace EnvironmentMonitor.Tests
             using (var scope = _factory.Services.CreateScope())
             {
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var user = await userManager.FindByIdAsync(userId);
+                var user = await userManager.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
                 if (user == null)
                 {
                     throw new InvalidOperationException($"User not found: {userId}");
@@ -152,12 +152,12 @@ namespace EnvironmentMonitor.Tests
             using (var scope = _factory.Services.CreateScope())
             {
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var user = await userManager.FindByEmailAsync(email);
+                var user = await userManager.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
                 if (user == null)
                 {
                     return false;
                 }
-                return await userManager.IsEmailConfirmedAsync(user);
+                return user.EmailConfirmed;
             }
         }
 
@@ -166,7 +166,7 @@ namespace EnvironmentMonitor.Tests
             using (var scope = _factory.Services.CreateScope())
             {
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var user = await userManager.FindByEmailAsync(email);
+                var user = await userManager.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email == email);
                 if (user == null)
                 {
                     throw new InvalidOperationException($"User not found: {email}");
