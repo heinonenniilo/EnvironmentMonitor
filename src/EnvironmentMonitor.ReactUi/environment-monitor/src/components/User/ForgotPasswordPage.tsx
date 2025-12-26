@@ -7,16 +7,19 @@ import {
   Paper,
   Alert,
 } from "@mui/material";
-import { useNavigate } from "react-router";
-import { routes } from "../../utilities/routes";
-import { useApiHook } from "../../hooks/apiHook";
 
-const ForgotPasswordPage: React.FC = () => {
-  const navigate = useNavigate();
-  const apiHook = useApiHook();
+export interface ForgotPasswordPageProps {
+  isLoading: boolean;
+  onForgotPassword: (email: string) => Promise<void>;
+  onNavigateToLogin: () => void;
+}
 
+const ForgotPasswordPage: React.FC<ForgotPasswordPageProps> = ({
+  isLoading,
+  onForgotPassword,
+  onNavigateToLogin,
+}) => {
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -32,16 +35,10 @@ const ForgotPasswordPage: React.FC = () => {
     }
 
     try {
-      setIsLoading(true);
-      const message = await apiHook.userHook.forgotPassword(email);
-      setIsLoading(false);
-
-      if (message) {
-        setSuccessMessage(message);
-        setEmail("");
-      }
+      await onForgotPassword(email);
+      setSuccessMessage("Password reset email sent successfully!");
+      setEmail("");
     } catch (err: any) {
-      setIsLoading(false);
       console.error("Error sending reset email:", err);
       setError(err?.message || "Failed to send reset email. Please try again.");
     }
@@ -124,7 +121,7 @@ const ForgotPasswordPage: React.FC = () => {
             color="secondary"
             fullWidth
             sx={{ marginTop: 2 }}
-            onClick={() => navigate(routes.login)}
+            onClick={onNavigateToLogin}
             disabled={isLoading}
           >
             Back to Login

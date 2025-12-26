@@ -7,14 +7,24 @@ import {
   Typography,
   Alert,
 } from "@mui/material";
-import { useNavigate, useSearchParams } from "react-router";
-import { useApiHook } from "../../hooks/apiHook";
-import { routes } from "../../utilities/routes";
+import { useSearchParams } from "react-router";
 
-const ResetPasswordPage: React.FC = () => {
-  const navigate = useNavigate();
+export interface ResetPasswordPageProps {
+  isLoading: boolean;
+  onResetPassword: (
+    email: string,
+    token: string,
+    newPassword: string
+  ) => Promise<void>;
+  onNavigateToLogin: () => void;
+}
+
+const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
+  isLoading,
+  onResetPassword,
+  onNavigateToLogin,
+}) => {
   const [searchParams] = useSearchParams();
-  const apiHook = useApiHook();
 
   const email = searchParams.get("email") || "";
   const token = searchParams.get("token") || "";
@@ -22,7 +32,6 @@ const ResetPasswordPage: React.FC = () => {
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -63,7 +72,7 @@ const ResetPasswordPage: React.FC = () => {
             variant="contained"
             color="primary"
             fullWidth
-            onClick={() => navigate(routes.login)}
+            onClick={onNavigateToLogin}
             sx={{ marginBottom: 1 }}
           >
             Go to Login
@@ -99,23 +108,10 @@ const ResetPasswordPage: React.FC = () => {
     }
 
     try {
-      setIsLoading(true);
-      const message = await apiHook.userHook.resetPassword(
-        email,
-        token,
-        newPassword
-      );
-      setIsLoading(false);
-
-      if (message) {
-        setSuccessMessage(message);
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          navigate(routes.login);
-        }, 3000);
-      }
+      await onResetPassword(email, token, newPassword);
+      setSuccessMessage("Password reset successfully!");
+      // Navigation will be handled by the view
     } catch (err: any) {
-      setIsLoading(false);
       console.error("Error resetting password:", err);
       setError(err?.message || "Failed to reset password. Please try again.");
     }
@@ -204,7 +200,7 @@ const ResetPasswordPage: React.FC = () => {
             color="secondary"
             fullWidth
             sx={{ marginTop: 2 }}
-            onClick={() => navigate(routes.login)}
+            onClick={onNavigateToLogin}
             disabled={isLoading}
           >
             Back to Login

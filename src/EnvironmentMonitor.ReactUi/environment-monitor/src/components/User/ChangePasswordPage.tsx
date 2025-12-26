@@ -7,13 +7,21 @@ import {
   Typography,
   Alert,
 } from "@mui/material";
-import { useNavigate } from "react-router";
-import { useApiHook } from "../../hooks/apiHook";
-import { routes } from "../../utilities/routes";
 
-const ChangePasswordPage: React.FC = () => {
-  const navigate = useNavigate();
-  const apiHook = useApiHook();
+export interface ChangePasswordPageProps {
+  isLoading: boolean;
+  onChangePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<void>;
+  onCancel: () => void;
+}
+
+const ChangePasswordPage: React.FC<ChangePasswordPageProps> = ({
+  isLoading,
+  onChangePassword,
+  onCancel,
+}) => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -42,22 +50,14 @@ const ChangePasswordPage: React.FC = () => {
     }
 
     try {
-      const message = await apiHook.userHook.changePassword(
-        currentPassword,
-        newPassword
-      );
-      setSuccess(message || "Password changed successfully!");
+      await onChangePassword(currentPassword, newPassword);
+      setSuccess("Password changed successfully!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-
-      // Redirect to home after 3 seconds
-      setTimeout(() => {
-        navigate(routes.home);
-      }, 3000);
-    } catch (error) {
-      // Error is already handled by apiHook
+    } catch (error: any) {
       console.error("Password change failed:", error);
+      setError(error?.message || "Failed to change password.");
     }
   };
 
@@ -68,7 +68,6 @@ const ChangePasswordPage: React.FC = () => {
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
       }}
     >
       <Paper
@@ -104,7 +103,7 @@ const ChangePasswordPage: React.FC = () => {
             onChange={(e) => setCurrentPassword(e.target.value)}
             margin="normal"
             required
-            disabled={!!success}
+            disabled={isLoading || !!success}
           />
 
           <TextField
@@ -115,7 +114,7 @@ const ChangePasswordPage: React.FC = () => {
             onChange={(e) => setNewPassword(e.target.value)}
             margin="normal"
             required
-            disabled={!!success}
+            disabled={isLoading || !!success}
           />
 
           <TextField
@@ -126,7 +125,7 @@ const ChangePasswordPage: React.FC = () => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             margin="normal"
             required
-            disabled={!!success}
+            disabled={isLoading || !!success}
           />
 
           <Button
@@ -135,9 +134,9 @@ const ChangePasswordPage: React.FC = () => {
             variant="contained"
             color="primary"
             sx={{ mt: 2 }}
-            disabled={!!success}
+            disabled={isLoading || !!success}
           >
-            Change Password
+            {isLoading ? "Changing..." : "Change Password"}
           </Button>
 
           <Button
@@ -145,7 +144,8 @@ const ChangePasswordPage: React.FC = () => {
             variant="text"
             color="primary"
             sx={{ mt: 1 }}
-            onClick={() => navigate(routes.home)}
+            onClick={onCancel}
+            disabled={isLoading}
           >
             Cancel
           </Button>
