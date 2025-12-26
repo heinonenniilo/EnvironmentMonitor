@@ -1,55 +1,40 @@
 import React, { useState } from "react";
 import { TextField, Button, Box, Typography } from "@mui/material";
-import { useApiHook } from "../../hooks/apiHook";
-import { useNavigate } from "react-router";
-import { routes } from "../../utilities/routes";
 
 export interface RegisterPageProps {
-  onRegistered?: () => void;
+  isLoading: boolean;
+  onRegister: (email: string, password: string) => Promise<void>;
+  onNavigateToLogin: () => void;
 }
 
-const RegisterPage: React.FC<RegisterPageProps> = ({ onRegistered }) => {
+const RegisterPage: React.FC<RegisterPageProps> = ({
+  isLoading,
+  onRegister,
+  onNavigateToLogin,
+}) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const apiHook = useApiHook();
-  const navigate = useNavigate();
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccessMessage("");
 
-    // Validate password match
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
     try {
-      setIsLoading(true);
-      const message = await apiHook.userHook.register(email, password);
-      setIsLoading(false);
-      if (message) {
-        setSuccessMessage(message);
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
-
-        if (onRegistered) {
-          onRegistered();
-        }
-
-        // Redirect to login page after 3 seconds
-        setTimeout(() => {
-          navigate(routes.login);
-        }, 3000);
-      }
+      await onRegister(email, password);
+      setSuccessMessage("Registration successful!");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
     } catch (err: any) {
-      setIsLoading(false);
       console.error("Error registering:", err);
       setError(err?.message || "Registration failed.");
     }
@@ -128,7 +113,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegistered }) => {
           color="secondary"
           fullWidth
           sx={{ marginTop: 2 }}
-          onClick={() => navigate(routes.login)}
+          onClick={onNavigateToLogin}
           disabled={isLoading}
         >
           Already have an account? Login

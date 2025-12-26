@@ -28,7 +28,7 @@ export interface AppContentWrapperProps {
   leftMenu?: JSX.Element;
   titleComponent?: JSX.Element;
   useSmallTitle?: boolean;
-  title: string;
+  title?: string;
 }
 
 const PageContent = styled.div<{ max?: number }>`
@@ -60,6 +60,9 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
     }
   }, [props.leftMenu, dispatch, hasLeftMenu]);
   const drawTitle = () => {
+    if (!props.title) {
+      return null;
+    }
     return (
       <Box
         sx={{
