@@ -107,13 +107,6 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return Ok(new { Message = "If the email exists, a password reset link has been sent." });
         }
 
-        [HttpGet("reset-password")]
-        public IActionResult ResetPasswordPage([FromQuery] string email, [FromQuery] string token)
-        {
-            // Redirect to React page with email and token as query params
-            return Redirect($"/reset-password?email={Uri.EscapeDataString(email)}&token={Uri.EscapeDataString(token)}");
-        }
-
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {

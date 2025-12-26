@@ -102,8 +102,8 @@ namespace EnvironmentMonitor.Application.Services
         public async Task ForgotPassword(ForgotPasswordModel model)
         {
             model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl) 
-                ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/api/authentication/reset-password" 
-                : "/api/authentication/reset-password";
+                ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/reset-password" 
+                : "/reset-password";
             await _userAuthService.ForgotPassword(model);
         }
 
