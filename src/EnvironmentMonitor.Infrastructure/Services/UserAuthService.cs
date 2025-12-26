@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
@@ -92,6 +93,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             if (user != null)
             {
                 var additionalClaims = await GetCalculatedClaims(user);
+                additionalClaims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
             else
@@ -112,8 +114,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 {
                     throw new InvalidOperationException("Failed to add login");
                 }
-
-                await _signInManager.SignInAsync(user, isPersistent: model.Persistent);
+                var additionalClaims = new List<Claim>
+                {
+                    new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider)
+                };
+                await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
         }
 

@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Infrastructure.Data.Migrations.Application;
 using EnvironmentMonitor.Infrastructure.Identity;
@@ -160,12 +161,17 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 return Ok(null);
             }
             var roles = User.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value);
+            
+            // Check for external login provider claim
+            var externalProviderClaim = User.Claims.FirstOrDefault(c => c.Type == ApplicationConstants.ExternalLoginProviderClaim);
+            string? authProvider = externalProviderClaim?.Value;
 
             return Ok(new UserDto()
             {
                 Email = User.FindFirstValue(ClaimTypes.Email),
                 Id = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Roles = roles.ToList(),
+                AuthenticationProvider = authProvider
             });
         }
 
