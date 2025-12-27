@@ -48,7 +48,7 @@ namespace EnvironmentMonitor.Application.Services
             _applicationSettings = applicationSettings;
         }
 
-        public async Task<DeviceEmailTemplateDto?> GetEmailTemplate(DeviceEmailTemplateTypes templateType)
+        public async Task<DeviceEmailTemplateDto?> GetEmailTemplate(EmailTemplateTypes templateType)
         {
             if (!_userService.IsAdmin)
             {
@@ -110,7 +110,7 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<DeviceEmailTemplateDto>(updatedTemplate);
         }
 
-        public async Task SendDeviceEmail(Guid deviceIdentifier, DeviceEmailTemplateTypes templateType, Dictionary<string, string>? replaceTokens = null)
+        public async Task SendDeviceEmail(Guid deviceIdentifier, EmailTemplateTypes templateType, Dictionary<string, string>? replaceTokens = null)
         {
             if (!_userService.HasAccessToDevice(deviceIdentifier, AccessLevels.Write))
             {
@@ -204,7 +204,7 @@ namespace EnvironmentMonitor.Application.Services
             }
             var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
             _logger.LogInformation($"Queuing device email for devie {device.Name} ({device.Id}). Type: {currentStatus.Status}");
-            DeviceEmailTemplateTypes messageType = currentStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
+            EmailTemplateTypes messageType = currentStatus.Status ? EmailTemplateTypes.ConnectionOk : EmailTemplateTypes.ConnectionLost;
 
             var attributesToAdd = new Dictionary<string, string>()
                     {

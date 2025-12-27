@@ -44,8 +44,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 
             builder.HasIndex(x => x.Name).IsUnique();
 
-            builder.HasData(Enum.GetValues(typeof(DeviceEmailTemplateTypes))
-                .Cast<DeviceEmailTemplateTypes>()
+            builder.HasData(Enum.GetValues(typeof(EmailTemplateTypes))
+                .Cast<EmailTemplateTypes>()
                 .Select(e => new EmailTemplate
                 {
                     Id = (int)e,
@@ -54,7 +54,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 .ToList());
         }
 
-        private string GetName(DeviceEmailTemplateTypes type)
+        private string GetName(EmailTemplateTypes type)
         {
             return type.GetDescription();
         }

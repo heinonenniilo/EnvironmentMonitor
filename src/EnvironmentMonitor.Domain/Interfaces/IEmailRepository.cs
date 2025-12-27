@@ -5,7 +5,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IEmailRepository
     {
-        Task<EmailTemplate?> GetEmailTemplate(DeviceEmailTemplateTypes templateType);
+        Task<EmailTemplate?> GetEmailTemplate(EmailTemplateTypes templateType);
         Task<EmailTemplate?> GetEmailTemplateByIdentifier(Guid identifier);
         Task<List<EmailTemplate>> GetAllEmailTemplates();
         Task<EmailTemplate> UpdateEmailTemplate(Guid identifier, string? title, string? message, bool saveChanges);

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Enums
 {
-    public enum DeviceEmailTemplateTypes
+    public enum EmailTemplateTypes
     {
         [Description("Device connection lost")]
         ConnectionLost = 0,

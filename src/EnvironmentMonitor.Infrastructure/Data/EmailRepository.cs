@@ -17,7 +17,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             _dateService = dateService;
         }
 
-        public async Task<EmailTemplate?> GetEmailTemplate(DeviceEmailTemplateTypes templateType)
+        public async Task<EmailTemplate?> GetEmailTemplate(EmailTemplateTypes templateType)
         {
             return await _context.EmailTemplates
                 .FirstOrDefaultAsync(x => x.Id == (int)templateType);
