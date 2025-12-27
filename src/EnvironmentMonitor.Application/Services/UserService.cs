@@ -155,14 +155,3 @@ namespace EnvironmentMonitor.Application.Services
         }
     }
 }
-
-/*
-            var messageToQueue = new DeviceQueueMessage()
-            {
-                Attributes = attributesToAdd,
-                DeviceIdentifier = model.Idenfifier,
-                MessageTypeId = (int)QueuedMessages.SendDeviceEmail,
-            };
-            var messageJson = JsonSerializer.Serialize(messageToQueue);
-            var res = await _queueClient.SendMessage(messageJson);
- * */
