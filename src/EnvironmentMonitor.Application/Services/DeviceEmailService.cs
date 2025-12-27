@@ -155,24 +155,17 @@ namespace EnvironmentMonitor.Application.Services
                 }
             }
             
-            var title = template.Title ?? string.Empty;
-            var message = template.Message ?? string.Empty;
-
-            foreach (var token in tokens)
-            {
-                title = title.Replace(token.Key, token.Value);
-                message = message.Replace(token.Key, token.Value);
-            }
-            
-            _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {title}");
+            _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {template.Title}");
             try
             {
                 var emailOptions = new SendEmailOptions
                 {
                     ToAddresses = device.Contacts.Select(x => x.Email).ToList(),
-                    Subject = title,
-                    HtmlContent = message
+                    Subject = template.Title ?? string.Empty,
+                    HtmlContent = template.Message ?? string.Empty,
+                    ReplaceTokens = tokens
                 };
+                
                 await _emailClient.SendEmailAsync(emailOptions);
                 _logger.LogInformation($"Email sent successfully for device '{device.Name}' (Template: {templateType})");
             }

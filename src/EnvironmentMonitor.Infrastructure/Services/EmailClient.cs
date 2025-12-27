@@ -17,7 +17,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
     {
         private readonly AzureEmailClient? _emailClient;
         private readonly EmailSettings _settings;
-        private readonly ILogger<EmailClient> _logger;     
+        private readonly ILogger<EmailClient> _logger;
 
         public EmailClient(EmailSettings settings, ILogger<EmailClient> logger)
         {
@@ -59,6 +59,17 @@ namespace EnvironmentMonitor.Infrastructure.Services
             if (string.IsNullOrEmpty(_settings.SenderAddress))
             {
                 throw new InvalidOperationException("Sender address not configured");
+            }
+
+            // Apply token replacement if tokens are provided
+            if (options.ReplaceTokens != null && options.ReplaceTokens.Any())
+            {
+                foreach (var token in options.ReplaceTokens)
+                {
+                    options.Subject = options.Subject.Replace(token.Key, token.Value);
+                    options.HtmlContent = options.HtmlContent.Replace(token.Key, token.Value);
+                    options.PlainTextContent = options.PlainTextContent.Replace(token.Key, token.Value);
+                }
             }
 
             var toAddresses = GetValidatedAndDistinctAddresses(options.ToAddresses);

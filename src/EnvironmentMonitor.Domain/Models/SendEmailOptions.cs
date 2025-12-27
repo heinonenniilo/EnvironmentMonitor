@@ -14,5 +14,6 @@ namespace EnvironmentMonitor.Domain.Models
         public string Subject { get; set; } = string.Empty;
         public string HtmlContent { get; set; } = string.Empty;
         public string PlainTextContent { get; set; } = string.Empty;
+        public Dictionary<string, string>? ReplaceTokens { get; set; }
     }
 }

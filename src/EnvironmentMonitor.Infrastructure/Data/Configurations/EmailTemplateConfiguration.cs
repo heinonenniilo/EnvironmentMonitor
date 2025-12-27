@@ -50,6 +50,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 {
                     Id = (int)e,
                     Name = GetName(e),
+                    Title = GetDefaultTitle(e),
+                    Message = GetDefaultMessage(e)
                 })
                 .ToList());
         }
@@ -57,6 +59,26 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
         private string GetName(EmailTemplateTypes type)
         {
             return type.GetDescription();
+        }
+
+        private string? GetDefaultTitle(EmailTemplateTypes type)
+        {
+            return type switch
+            {
+                EmailTemplateTypes.ConfirmUserEmail => "Confirm Your Email Address",
+                EmailTemplateTypes.UserPasswordReset => "Reset Your Password",
+                _ => null
+            };
+        }
+
+        private string? GetDefaultMessage(EmailTemplateTypes type)
+        {
+            return type switch
+            {
+                EmailTemplateTypes.ConfirmUserEmail => "Please confirm your email address by clicking the link below:\n\n{ConfirmationLink}\n\nIf you did not create an account, please ignore this email.",
+                EmailTemplateTypes.UserPasswordReset => "You have requested to reset your password. Please click the link below to set a new password:\n\n{ResetLink}\n\nIf you did not request a password reset, please ignore this email.",
+                _ => null
+            };
         }
     }
 }

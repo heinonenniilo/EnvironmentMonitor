@@ -26,16 +26,23 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly IDeviceRepository _deviceRepository;
         private readonly ILogger<UserAuthService> _logger;
         private readonly IEmailClient _emailClient;
+        private readonly IEmailRepository _emailRepository;
 
-        public UserAuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
-            IDeviceRepository deviceRepository, ILogger<UserAuthService> logger, IEmailClient emailClient)
+        public UserAuthService(UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            IDeviceRepository deviceRepository,
+            ILogger<UserAuthService> logger,
+            IEmailClient emailClient,
+            IEmailRepository emailRepository)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _deviceRepository = deviceRepository;
             _logger = logger;
             _emailClient = emailClient;
+            _emailRepository = emailRepository;
         }
+
         public async Task Login(LoginModel model)
         {
             var user = await _userManager.FindByNameAsync(model.UserName);
@@ -132,12 +139,9 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 Email = model.Email,
             };
             var result = await _userManager.CreateAsync(user, model.Password);
-
             if (!result.Succeeded)
-                throw new InvalidOperationException("Failed to create user");
-            
-            _logger.LogInformation($"User with email {model.Email} created.");
-            
+                throw new InvalidOperationException("Failed to create user");            
+            _logger.LogInformation($"User with email {model.Email} created.");           
             // Generate email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             
@@ -147,22 +151,24 @@ namespace EnvironmentMonitor.Infrastructure.Services
             queryParams.Append($"&token={Uri.EscapeDataString(token)}");
             
             var confirmationUrl = model.BaseUrl + queryParams.ToString();
-            
+            var emailTemplate = await _emailRepository.GetEmailTemplate(EmailTemplateTypes.ConfirmUserEmail);
+
+            if (string.IsNullOrEmpty(emailTemplate?.Message) || string.IsNullOrEmpty(emailTemplate?.Title))
+            {
+                _logger.LogError("Email template for ConfirmUserEmail is missing or incomplete.");
+                throw new InvalidOperationException("Email template for ConfirmUserEmail is missing or incomplete.");
+            }
             // Send confirmation email
             await _emailClient.SendEmailAsync(new SendEmailOptions
             {
                 ToAddresses = new List<string> { user.Email! },
-                Subject = "Confirm your email address",
-                HtmlContent = $@"
-                    <h2>Welcome to Environment Monitor!</h2>
-                    <p>Please confirm your email address by clicking the link below:</p>
-                    <p><a href=""{confirmationUrl}"">Confirm Email</a></p>
-                    <p>If the link doesn't work, copy and paste this URL into your browser:</p>
-                    <p>{confirmationUrl}</p>
-                    <p>This link will expire in 24 hours.</p>",
-                PlainTextContent = $"Welcome to Environment Monitor! Please confirm your email address by visiting: {confirmationUrl}"
-            });
-            
+                Subject = emailTemplate.Title ,
+                HtmlContent = emailTemplate.Message,
+                ReplaceTokens = new Dictionary<string, string>
+                {
+                    { ApplicationConstants.EmailTemplateConfirmationLinkKey, confirmationUrl },
+                }
+            });           
             _logger.LogInformation($"Confirmation email sent to {model.Email}");
         }
 
@@ -212,35 +218,32 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
             {
-                // Don't reveal that the user does not exist or is not confirmed
                 _logger.LogInformation($"Forgot password requested for non-existent or unconfirmed email: {model.Email}");
                 return;
             }
 
-            // Generate password reset token
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            
-            // Build reset URL using the full path from model
+            // Generate password reset token and construct reset URL
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);           
             var queryParams = new StringBuilder();
             queryParams.Append($"?email={Uri.EscapeDataString(user.Email!)}");
-            queryParams.Append($"&token={Uri.EscapeDataString(token)}");
-            
+            queryParams.Append($"&token={Uri.EscapeDataString(token)}");            
             var resetUrl = model.BaseUrl + queryParams.ToString();
-            
+
+            var emailTemplate = await _emailRepository.GetEmailTemplate(EmailTemplateTypes.UserPasswordReset);
+            if (string.IsNullOrEmpty(emailTemplate?.Message) || string.IsNullOrEmpty(emailTemplate?.Title))
+            {
+                throw new InvalidOperationException("Email template for UserPasswordReset is missing or incomplete.");
+            }
             // Send reset email
             await _emailClient.SendEmailAsync(new SendEmailOptions
             {
                 ToAddresses = new List<string> { user.Email! },
-                Subject = "Reset your password",
-                HtmlContent = $@"
-                    <h2>Password Reset Request</h2>
-                    <p>You requested to reset your password. Click the link below to reset it:</p>
-                    <p><a href=""{resetUrl}"">Reset Password</a></p>
-                    <p>If the link doesn't work, copy and paste this URL into your browser:</p>
-                    <p>{resetUrl}</p>
-                    <p>This link will expire in 24 hours.</p>
-                    <p>If you didn't request a password reset, please ignore this email.</p>",
-                PlainTextContent = $"Password Reset Request: Please visit {resetUrl} to reset your password. This link expires in 24 hours."
+                Subject = emailTemplate.Title,
+                HtmlContent = emailTemplate.Message,
+                ReplaceTokens = new Dictionary<string, string>
+                {
+                    { ApplicationConstants.EmailTemplatePasswordResetLinkKey, resetUrl },
+                }
             });
             
             _logger.LogInformation($"Password reset email sent to {model.Email}");
