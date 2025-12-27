@@ -15,7 +15,7 @@ namespace EnvironmentMonitor.Application.Services
 {
     public class DeviceEmailService : IDeviceEmailService
     {
-        private readonly IDeviceEmailRepository _deviceEmailRepository;
+        private readonly IEmailRepository _deviceEmailRepository;
         private readonly IDeviceRepository _deviceRepository;
         private readonly IUserService _userService;
         private readonly IEmailClient _emailClient;
@@ -26,7 +26,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ApplicationSettings _applicationSettings;
 
         public DeviceEmailService(
-            IDeviceEmailRepository deviceEmailRepository,
+            IEmailRepository deviceEmailRepository,
             IDeviceRepository deviceRepository,
             IUserService userService,
             IEmailClient emailClient,

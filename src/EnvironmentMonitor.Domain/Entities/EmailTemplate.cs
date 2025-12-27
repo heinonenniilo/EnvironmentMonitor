@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Entities
 {
-    public class DeviceEmailTemplate
+    public class EmailTemplate
     {
         public int Id { get; set; }
         public Guid Identifier { get; set; }

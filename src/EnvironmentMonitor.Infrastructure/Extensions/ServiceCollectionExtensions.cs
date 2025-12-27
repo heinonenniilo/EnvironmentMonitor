@@ -43,7 +43,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<IMeasurementRepository, MeasurementRepository>();
             services.AddScoped<IDeviceRepository, DeviceRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>();
-            services.AddScoped<IDeviceEmailRepository, DeviceEmailRepository>();
+            services.AddScoped<IEmailRepository, EmailRepository>();
             // Identity stuff
             services.AddIdentity<ApplicationUser, ApplicationUserRole>(options =>
             {

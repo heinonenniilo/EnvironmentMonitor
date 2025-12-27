@@ -11,9 +11,9 @@ using EnvironmentMonitor.Domain.Extensions;
 
 namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 {
-    public class DeviceEmailTemplateConfiguration : IEntityTypeConfiguration<DeviceEmailTemplate>
+    public class EmailTemplateConfiguration : IEntityTypeConfiguration<EmailTemplate>
     {
-        public void Configure(EntityTypeBuilder<DeviceEmailTemplate> builder)
+        public void Configure(EntityTypeBuilder<EmailTemplate> builder)
         {
             builder.HasKey(x => x.Id);
             builder.Property(x => x.Id).ValueGeneratedNever();
@@ -46,7 +46,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 
             builder.HasData(Enum.GetValues(typeof(DeviceEmailTemplateTypes))
                 .Cast<DeviceEmailTemplateTypes>()
-                .Select(e => new DeviceEmailTemplate
+                .Select(e => new EmailTemplate
                 {
                     Id = (int)e,
                     Name = GetName(e),
