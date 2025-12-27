@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
@@ -24,14 +25,16 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IDeviceRepository _deviceRepository;
         private readonly ILogger<UserAuthService> _logger;
+        private readonly IEmailClient _emailClient;
 
         public UserAuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,
-            IDeviceRepository deviceRepository, ILogger<UserAuthService> logger)
+            IDeviceRepository deviceRepository, ILogger<UserAuthService> logger, IEmailClient emailClient)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _deviceRepository = deviceRepository;
             _logger = logger;
+            _emailClient = emailClient;
         }
         public async Task Login(LoginModel model)
         {
@@ -40,6 +43,13 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 throw new UnauthorizedAccessException();
             }
+            
+            // Check if email is confirmed
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                throw new InvalidOperationException("Email not confirmed. Please check your email and confirm your account before logging in.");
+            }
+            
             var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: false);
             if (!result.Succeeded)
             {
@@ -83,6 +93,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             if (user != null)
             {
                 var additionalClaims = await GetCalculatedClaims(user);
+                additionalClaims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
             else
@@ -103,8 +114,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 {
                     throw new InvalidOperationException("Failed to add login");
                 }
-
-                await _signInManager.SignInAsync(user, isPersistent: model.Persistent);
+                var additionalClaims = new List<Claim>
+                {
+                    new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider)
+                };
+                await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
         }
 
@@ -121,8 +135,138 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             if (!result.Succeeded)
                 throw new InvalidOperationException("Failed to create user");
+            
             _logger.LogInformation($"User with email {model.Email} created.");
+            
+            // Generate email confirmation token
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            
+            // Build confirmation URL using the full path from model
+            var queryParams = new StringBuilder();
+            queryParams.Append($"?userId={Uri.EscapeDataString(user.Id)}");
+            queryParams.Append($"&token={Uri.EscapeDataString(token)}");
+            
+            var confirmationUrl = model.BaseUrl + queryParams.ToString();
+            
+            // Send confirmation email
+            await _emailClient.SendEmailAsync(new SendEmailOptions
+            {
+                ToAddresses = new List<string> { user.Email! },
+                Subject = "Confirm your email address",
+                HtmlContent = $@"
+                    <h2>Welcome to Environment Monitor!</h2>
+                    <p>Please confirm your email address by clicking the link below:</p>
+                    <p><a href=""{confirmationUrl}"">Confirm Email</a></p>
+                    <p>If the link doesn't work, copy and paste this URL into your browser:</p>
+                    <p>{confirmationUrl}</p>
+                    <p>This link will expire in 24 hours.</p>",
+                PlainTextContent = $"Welcome to Environment Monitor! Please confirm your email address by visiting: {confirmationUrl}"
+            });
+            
+            _logger.LogInformation($"Confirmation email sent to {model.Email}");
         }
+
+        public async Task<bool> ConfirmEmail(string userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found for email confirmation: {userId}");
+                return false;
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation($"Email confirmed for user: {user.Email}");
+                return true;
+            }
+            
+            _logger.LogWarning($"Email confirmation failed for user: {user.Email}. Errors: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            return false;
+        }
+
+        public async Task ChangePassword(string userId, ChangePasswordModel model)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found for password change: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+
+            var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+            
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogWarning($"Password change failed for user: {user.Email}. Errors: {errors}");
+                throw new InvalidOperationException($"Password change failed: {errors}");
+            }
+            
+            _logger.LogInformation($"Password changed successfully for user: {user.Email}");
+        }
+
+        public async Task ForgotPassword(ForgotPasswordModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
+            {
+                // Don't reveal that the user does not exist or is not confirmed
+                _logger.LogInformation($"Forgot password requested for non-existent or unconfirmed email: {model.Email}");
+                return;
+            }
+
+            // Generate password reset token
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            
+            // Build reset URL using the full path from model
+            var queryParams = new StringBuilder();
+            queryParams.Append($"?email={Uri.EscapeDataString(user.Email!)}");
+            queryParams.Append($"&token={Uri.EscapeDataString(token)}");
+            
+            var resetUrl = model.BaseUrl + queryParams.ToString();
+            
+            // Send reset email
+            await _emailClient.SendEmailAsync(new SendEmailOptions
+            {
+                ToAddresses = new List<string> { user.Email! },
+                Subject = "Reset your password",
+                HtmlContent = $@"
+                    <h2>Password Reset Request</h2>
+                    <p>You requested to reset your password. Click the link below to reset it:</p>
+                    <p><a href=""{resetUrl}"">Reset Password</a></p>
+                    <p>If the link doesn't work, copy and paste this URL into your browser:</p>
+                    <p>{resetUrl}</p>
+                    <p>This link will expire in 24 hours.</p>
+                    <p>If you didn't request a password reset, please ignore this email.</p>",
+                PlainTextContent = $"Password Reset Request: Please visit {resetUrl} to reset your password. This link expires in 24 hours."
+            });
+            
+            _logger.LogInformation($"Password reset email sent to {model.Email}");
+        }
+
+        public async Task<bool> ResetPassword(ResetPasswordModel model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found for password reset: {model.Email}");
+                return false;
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            
+            if (result.Succeeded)
+            {
+                _logger.LogInformation($"Password reset successfully for user: {user.Email}");
+                return true;
+            }
+            
+            _logger.LogWarning($"Password reset failed for user: {user.Email}. Errors: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            return false;
+        }
+
         /// <summary>
         /// Get calculated claims. Each location gives a claim to devices in the location. Each device gives a claim to each sensor attached to the device.
         /// </summary>

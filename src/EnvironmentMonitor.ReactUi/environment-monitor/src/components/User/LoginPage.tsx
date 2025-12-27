@@ -6,8 +6,11 @@ import {
   Typography,
   FormControlLabel,
   Checkbox,
+  Link,
 } from "@mui/material";
-import { useApiHook } from "../hooks/apiHook";
+import { useApiHook } from "../../hooks/apiHook";
+import { useNavigate } from "react-router";
+import { routes } from "../../utilities/routes";
 
 export interface LoginPageProps {
   onLoggedIn: () => void;
@@ -24,6 +27,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const apiHook = useApiHook();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -79,6 +83,17 @@ const LoginPage: React.FC<LoginPageProps> = ({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+        <Box sx={{ textAlign: "right", marginTop: 1 }}>
+          <Link
+            component="button"
+            variant="body2"
+            type="button"
+            onClick={() => navigate(routes.forgotPassword)}
+            sx={{ cursor: "pointer" }}
+          >
+            Forgot Password?
+          </Link>
+        </Box>
         {error && (
           <Typography color="error" variant="body2" mt={1}>
             {error}
@@ -118,6 +133,16 @@ const LoginPage: React.FC<LoginPageProps> = ({
           label="Remember Me"
           sx={{ marginTop: 1 }}
         />
+        <Button
+          type="button"
+          variant="outlined"
+          color="secondary"
+          fullWidth
+          sx={{ marginTop: 2 }}
+          onClick={() => navigate(routes.register)}
+        >
+          Register
+        </Button>
       </form>
     </Box>
   );

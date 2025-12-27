@@ -9,6 +9,8 @@ import {
 } from "@mui/material";
 import React from "react";
 import type { User } from "../models/user";
+import { useNavigate } from "react-router";
+import { routes } from "../utilities/routes";
 
 export interface UserMenuProps {
   handleLogOut: () => void;
@@ -27,6 +29,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 }) => {
   const [userMenuAcnhor, setUserMenuAcnhor] =
     React.useState<null | HTMLElement>(null);
+  const navigate = useNavigate();
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setUserMenuAcnhor(event.currentTarget);
@@ -35,6 +38,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   const handleClose = () => {
     setUserMenuAcnhor(null);
   };
+
+  const canChangePassword = user && !user.authenticationProvider;
 
   if (user) {
     return (
@@ -80,6 +85,19 @@ export const UserMenu: React.FC<UserMenuProps> = ({
                 {user.email}
               </Typography>
             </Box>
+          )}
+          {canChangePassword && (
+            <MenuItem>
+              <Button
+                color="inherit"
+                onClick={() => {
+                  handleClose();
+                  navigate(routes.changePassword);
+                }}
+              >
+                Change Password
+              </Button>
+            </MenuItem>
           )}
 
           <MenuItem>

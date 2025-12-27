@@ -21,5 +21,8 @@ namespace EnvironmentMonitor.Domain
         public static string QueuedMessageTimesStampPreviousKey = "{TIMESTAMP_PREVIOUS}";
         public static string QueuedMessageDeviceLink = "{DEVICE_LINK}";
         public static string QueuedMessageLocation = "{LOCATION}";
+        
+        // Authentication claim types
+        public static string ExternalLoginProviderClaim = "ExternalLoginProvider";
     }
 }

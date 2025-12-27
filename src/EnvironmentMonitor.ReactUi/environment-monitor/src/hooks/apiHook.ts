@@ -48,6 +48,17 @@ interface userHook {
     persistent: boolean
   ) => Promise<boolean>;
   logOut: () => Promise<boolean>;
+  register: (email: string, password: string) => Promise<string | undefined>;
+  resetPassword: (
+    email: string,
+    token: string,
+    newPassword: string
+  ) => Promise<string | undefined>;
+  forgotPassword: (email: string) => Promise<string | undefined>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string
+  ) => Promise<string | undefined>;
 }
 
 interface locationHook {
@@ -218,6 +229,78 @@ export const useApiHook = (): ApiHook => {
           return false;
         }
       },
+      register: async (email, password) => {
+        try {
+          const response = await apiClient.post<
+            any,
+            AxiosResponse<{ message: string }>
+          >("/api/authentication/register", {
+            email: email,
+            password: password,
+          });
+          return response.data.message;
+        } catch (ex: any) {
+          console.error(ex);
+          const errorMessage =
+            ex?.response?.data?.message || "Registration failed";
+          showError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      },
+      forgotPassword: async (email) => {
+        try {
+          const response = await apiClient.post<
+            any,
+            AxiosResponse<{ message: string }>
+          >("/api/authentication/forgot-password", {
+            email: email,
+          });
+          return response.data.message;
+        } catch (ex: any) {
+          console.error(ex);
+          const errorMessage =
+            ex?.response?.data?.message || "Failed to send reset email";
+          showError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      },
+      resetPassword: async (email, token, newPassword) => {
+        try {
+          const response = await apiClient.post<
+            any,
+            AxiosResponse<{ message: string }>
+          >("/api/authentication/reset-password", {
+            email: email,
+            token: token,
+            newPassword: newPassword,
+          });
+          return response.data.message;
+        } catch (ex: any) {
+          console.error(ex);
+          const errorMessage =
+            ex?.response?.data?.message || "Failed to reset password";
+          showError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      },
+      changePassword: async (currentPassword, newPassword) => {
+        try {
+          const response = await apiClient.post<
+            any,
+            AxiosResponse<{ message: string }>
+          >("/api/authentication/change-password", {
+            currentPassword: currentPassword,
+            newPassword: newPassword,
+          });
+          return response.data.message;
+        } catch (ex: any) {
+          console.error(ex);
+          const errorMessage =
+            ex?.response?.data?.message || "Failed to change password";
+          showError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      },
     },
     measureHook: {
       getDevices: async () => {
@@ -228,7 +311,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError();
+          showError("Fetching devices failed");
           return undefined;
         }
       },

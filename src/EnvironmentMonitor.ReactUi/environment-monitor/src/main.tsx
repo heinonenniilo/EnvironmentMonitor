@@ -18,6 +18,11 @@ import { ThemeProvider } from "@mui/material";
 import { baseTheme } from "./utilities/baseTheme";
 import { PublicMeasurementsView } from "./containers/PublicMeasurementsView";
 import { LoginView } from "./containers/LoginView";
+import { RegisterView } from "./containers/RegisterView";
+import { EmailConfirmationView } from "./containers/EmailConfirmationView";
+import { ForgotPasswordView } from "./containers/ForgotPasswordView";
+import { ResetPasswordView } from "./containers/ResetPasswordView";
+import { ChangePasswordView } from "./containers/ChangePasswordView";
 import { AuthorizedComponent } from "./components/AuthorizedComponent";
 import { RoleNames } from "./enums/roleNames";
 import { DeviceEmailsView } from "./containers/DeviceEmailsView";
@@ -39,6 +44,27 @@ createRoot(document.getElementById("root")!).render(
                 }
               />
               <Route path={routes.login} element={<LoginView />} />
+              <Route path={routes.register} element={<RegisterView />} />
+              <Route
+                path={routes.emailConfirmation}
+                element={<EmailConfirmationView />}
+              />
+              <Route
+                path={routes.forgotPassword}
+                element={<ForgotPasswordView />}
+              />
+              <Route
+                path={routes.resetPassword}
+                element={<ResetPasswordView />}
+              />
+              <Route
+                path={routes.changePassword}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.User}>
+                    <ChangePasswordView />
+                  </AuthorizedComponent>
+                }
+              />
               <Route
                 path={routes.dashboard}
                 element={

@@ -45,7 +45,11 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<IDeviceEmailRepository, DeviceEmailRepository>();
             // Identity stuff
-            services.AddIdentity<ApplicationUser, ApplicationUserRole>()
+            services.AddIdentity<ApplicationUser, ApplicationUserRole>(options =>
+            {
+                // Require confirmed email to sign in
+                options.SignIn.RequireConfirmedEmail = true;
+            })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders()
                 .AddRoles<ApplicationUserRole>()
