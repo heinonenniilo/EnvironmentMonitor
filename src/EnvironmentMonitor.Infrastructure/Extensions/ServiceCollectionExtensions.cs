@@ -5,6 +5,7 @@ using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.Infrastructure.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -25,21 +26,58 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             IotHubSettings? iotHubSettings = null,
             QueueSettings? queueSettings = null,
             EmailSettings? emailSettings = null,
-            ApplicationSettings? applicationSettings = null
+            ApplicationSettings? applicationSettings = null,
+            DataProtectionKeysSettings? dataProtectionKeysSettings = null
             )
         {
+            var connectionStringToUse = connectionString ?? configuration.GetConnectionString("DefaultConnection");
+
             services.AddDbContext<MeasurementDbContext>(options =>
             {
-                var connectionStringToUse = connectionString ?? configuration.GetConnectionString("DefaultConnection");
                 options.UseSqlServer(connectionStringToUse,
                     builder => builder.MigrationsAssembly(typeof(MeasurementDbContext).Assembly.FullName));
             });
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                var connectionStringToUse = connectionString ?? configuration.GetConnectionString("DefaultConnection");
                 options.UseSqlServer(connectionStringToUse,
                     builder => builder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
             });
+            services.AddDbContext<DataProtectionKeysContext>(options =>
+            {
+                options.UseSqlServer(connectionStringToUse,
+                    builder => builder.MigrationsAssembly(typeof(DataProtectionKeysContext).Assembly.FullName));
+            });
+
+            DataProtectionKeysSettings? dataProtectionKeysSettingsToCheck;
+            if (dataProtectionKeysSettings != null)
+            {
+                services.AddSingleton(dataProtectionKeysSettings);
+                dataProtectionKeysSettingsToCheck = dataProtectionKeysSettings;
+            }
+            else
+            {
+                var defaultDataProtectionKeysSettings = new DataProtectionKeysSettings();
+                configuration.GetSection("DataProtectionKeysSettings").Bind(defaultDataProtectionKeysSettings);
+                services.AddSingleton(defaultDataProtectionKeysSettings);
+                dataProtectionKeysSettingsToCheck = configuration.GetSection("DataProtectionKeysSettings").Get<DataProtectionKeysSettings>();
+            }
+ 
+            if (dataProtectionKeysSettingsToCheck != null && dataProtectionKeysSettingsToCheck.StoreInDatabase)
+            {
+                // Configure Data Protection to use the database
+                var dataProtectionBuilder = services.AddDataProtection()
+                    .PersistKeysToDbContext<DataProtectionKeysContext>()
+                    .SetApplicationName("EnvironmentMonitor");
+
+                if (dataProtectionKeysSettingsToCheck.EncryptWithKeyVault && 
+                    !string.IsNullOrEmpty(dataProtectionKeysSettingsToCheck.KeyVaultKeyIdentifier))
+                {
+                    dataProtectionBuilder.ProtectKeysWithAzureKeyVault(
+                        new Uri(dataProtectionKeysSettingsToCheck.KeyVaultKeyIdentifier),
+                        new DefaultAzureCredential());
+                }
+            }
+
             services.AddScoped<IMeasurementRepository, MeasurementRepository>();
             services.AddScoped<IDeviceRepository, DeviceRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>();

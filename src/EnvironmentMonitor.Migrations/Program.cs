@@ -28,6 +28,7 @@ static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider, int tim
             Console.WriteLine("Start running migrations");
             var measureDbContext = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
             var applicationDbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var keysDbContect = scope.ServiceProvider.GetRequiredService<DataProtectionKeysContext>();
             var connectionString = measureDbContext.Database.GetConnectionString();
 
             Console.WriteLine($"Apply migrations? Write y and press enter to start. ConnectionString: '{connectionString}'");
@@ -40,6 +41,8 @@ static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider, int tim
                 await measureDbContext.Database.MigrateAsync();
                 Console.WriteLine("Migrating ApplicationDbContex");
                 await applicationDbContext.Database.MigrateAsync();
+                Console.WriteLine("Migrating DataProtectionKeysContext");
+                await keysDbContect.Database.MigrateAsync();
             }
             else
             {
@@ -110,5 +113,34 @@ class DesignTimeDbContextFactoryApplicationDb : IDesignTimeDbContextFactory<Appl
         builder.UseSqlServer(connectionString);
 
         return new ApplicationDbContext(builder.Options);
+    }
+}
+
+class DesignTimeDbContextFactorDataProtectionKeysDb : IDesignTimeDbContextFactory<DataProtectionKeysContext>
+{
+    public DataProtectionKeysContext CreateDbContext(string[] args)
+    {
+        // Build configuration
+        IConfigurationRoot configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true)
+            .AddUserSecrets<Program>()
+            .Build();
+
+        // Create DbContextOptionsBuilder
+        var builder = new DbContextOptionsBuilder<DataProtectionKeysContext>();
+
+        // Get connection string
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new InvalidOperationException("Could not find a connection string named 'MeasurementDb'.");
+        }
+
+        // Configure the DbContext to use SQL Server
+        builder.UseSqlServer(connectionString);
+
+        return new DataProtectionKeysContext(builder.Options);
     }
 }

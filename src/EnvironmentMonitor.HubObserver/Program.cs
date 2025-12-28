@@ -66,7 +66,19 @@ var host = new HostBuilder()
             BaseUrl = baseUrl ?? ""
         };
 
-        services.AddInfrastructureServices(opt.Configuration, opt.Configuration.GetValue<string>("DefaultConnection"), hubSettings, queueSettings, emailSettings, applicationSettings);
+        // Read Data Protection Keys settings from configuration
+        var storeInDatabase = opt.Configuration.GetValue<bool>("DataProtectionKeysSettings:StoreInDatabase");
+        var encryptWithKeyVault = opt.Configuration.GetValue<bool>("DataProtectionKeysSettings:EncryptWithKeyVault");
+        var keyVaultKeyIdentifier = opt.Configuration.GetValue<string>("DataProtectionKeysSettings:KeyVaultKeyIdentifier");
+
+        var dataProtectionKeysSettings = new DataProtectionKeysSettings
+        {
+            StoreInDatabase = storeInDatabase,
+            EncryptWithKeyVault = encryptWithKeyVault,
+            KeyVaultKeyIdentifier = keyVaultKeyIdentifier ?? ""
+        };
+
+        services.AddInfrastructureServices(opt.Configuration, opt.Configuration.GetValue<string>("DefaultConnection"), hubSettings, queueSettings, emailSettings, applicationSettings, dataProtectionKeysSettings);
         services.AddApplicationServices(opt.Configuration);
     })
     .Build();

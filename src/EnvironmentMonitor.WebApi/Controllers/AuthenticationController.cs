@@ -101,7 +101,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
             {
                 Email = request.Email,
                 BaseUrl = "", // Will be set by UserService,
-                Enqueue = false // TODO Add to true once data protection keys are stored in the same location
+                Enqueue = true
             });
 
             return Ok(new { Message = "If the email exists, a password reset link has been sent." });
