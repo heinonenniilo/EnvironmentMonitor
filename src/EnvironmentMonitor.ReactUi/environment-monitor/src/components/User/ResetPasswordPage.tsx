@@ -15,7 +15,7 @@ export interface ResetPasswordPageProps {
     email: string,
     token: string,
     newPassword: string
-  ) => Promise<void>;
+  ) => Promise<boolean>;
   onNavigateToLogin: () => void;
 }
 
@@ -107,13 +107,12 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
       return;
     }
 
-    try {
-      await onResetPassword(email, token, newPassword);
-      setSuccessMessage("Password reset successfully!");
-      // Navigation will be handled by the view
-    } catch (err: any) {
-      console.error("Error resetting password:", err);
-      setError(err?.message || "Failed to reset password. Please try again.");
+    if (await onResetPassword(email, token, newPassword)) {
+      setSuccessMessage(
+        "Password reset successfully! Navigate to login and login with the new password."
+      );
+    } else {
+      setError("Failed to reset password.");
     }
   };
 

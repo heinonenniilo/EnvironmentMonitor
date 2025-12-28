@@ -14,15 +14,21 @@ export const ResetPasswordView = () => {
     email: string,
     token: string,
     newPassword: string
-  ) => {
+  ): Promise<boolean> => {
     setIsLoading(true);
-    await apiHook.userHook.resetPassword(email, token, newPassword);
-    setIsLoading(false);
 
-    // Redirect to login after 3 seconds
-    setTimeout(() => {
-      navigate(routes.login);
-    }, 3000);
+    return apiHook.userHook
+      .resetPassword(email, token, newPassword)
+      .then(() => {
+        return true;
+      })
+      .catch((er) => {
+        console.error("Failed to reset password", er);
+        return false;
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const handleNavigateToLogin = () => {
