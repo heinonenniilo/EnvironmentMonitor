@@ -5,6 +5,7 @@ using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.Infrastructure.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -28,18 +29,29 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             ApplicationSettings? applicationSettings = null
             )
         {
+            var connectionStringToUse = connectionString ?? configuration.GetConnectionString("DefaultConnection");
+
             services.AddDbContext<MeasurementDbContext>(options =>
             {
-                var connectionStringToUse = connectionString ?? configuration.GetConnectionString("DefaultConnection");
                 options.UseSqlServer(connectionStringToUse,
                     builder => builder.MigrationsAssembly(typeof(MeasurementDbContext).Assembly.FullName));
             });
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                var connectionStringToUse = connectionString ?? configuration.GetConnectionString("DefaultConnection");
                 options.UseSqlServer(connectionStringToUse,
                     builder => builder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
             });
+            services.AddDbContext<DataProtectionKeysContext>(options =>
+            {
+                options.UseSqlServer(connectionStringToUse,
+                    builder => builder.MigrationsAssembly(typeof(DataProtectionKeysContext).Assembly.FullName));
+            });
+
+            // Configure Data Protection to use the database
+            services.AddDataProtection()
+                .PersistKeysToDbContext<DataProtectionKeysContext>()
+                .SetApplicationName("EnvironmentMonitor");
+
             services.AddScoped<IMeasurementRepository, MeasurementRepository>();
             services.AddScoped<IDeviceRepository, DeviceRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>();
