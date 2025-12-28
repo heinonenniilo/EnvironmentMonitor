@@ -16,25 +16,25 @@ namespace EnvironmentMonitor.HubObserver.Functions
     public class DeviceMessageQueueProcessor
     {
         private readonly ILogger<DeviceMessageQueueProcessor> _logger;
-        private readonly IDeviceService _deviceService;
         private readonly IDeviceCommandService _commandService;
         private readonly IDeviceEmailService _deviceEmailService;
         private readonly IDateService _dateService;
+        private readonly IUserService _userService;
 
         private const int MessageScheduledLimitInMinutes = 20;
 
         public DeviceMessageQueueProcessor(
-            ILogger<DeviceMessageQueueProcessor> logger, 
-            IDeviceService deviceService, 
-            IDeviceCommandService commandService, 
-            IDeviceEmailService deviceEmailService, 
+            ILogger<DeviceMessageQueueProcessor> logger,
+            IDeviceCommandService commandService,
+            IDeviceEmailService deviceEmailService,
+            IUserService userService,
             IDateService dateService)
         {
             _logger = logger;
-            _deviceService = deviceService;
             _commandService = commandService;
             _deviceEmailService = deviceEmailService;
             _dateService = dateService;
+            _userService = userService;
         }
 
         [Function(nameof(DeviceMessageQueueProcessor))]
@@ -119,8 +119,21 @@ namespace EnvironmentMonitor.HubObserver.Functions
                         if (attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) == true)
                         {
                             var templateTypeValue = int.Parse(attributes[ApplicationConstants.QueuedMessageDefaultKey]);
-                            await _deviceEmailService.SendDeviceEmail(deviceMessage.DeviceIdentifier, (DeviceEmailTemplateTypes)templateTypeValue, attributes);
+                            await _deviceEmailService.SendDeviceEmail(deviceMessage.DeviceIdentifier, (EmailTemplateTypes)templateTypeValue, attributes);
                             hasExecuted = true;
+                        }
+                        break;
+                    case QueuedMessages.ProcessForgetUserPasswordRequest:
+                        if (attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) == true)
+                        {
+                            var userEmail = attributes[ApplicationConstants.QueuedMessageDefaultKey];
+                            _logger.LogInformation("Triggering processing of forget user password request from hub observer");
+                            await _userService.ForgotPassword(new ForgotPasswordModel
+                            {
+                                Email = userEmail,
+                                Enqueue = false
+                            });
+                            hasExecuted = false; // Messages not stored to DB yet.
                         }
                         break;
                     default:

@@ -5,7 +5,7 @@ using EnvironmentMonitor.Domain.Enums;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class DeviceEmailTemplateDto : EntityDto, IMapFrom<DeviceEmailTemplate>
+    public class DeviceEmailTemplateDto : EntityDto, IMapFrom<EmailTemplate>
     {
         public string? Title { get; set; }
         public string? Message { get; set; }
@@ -15,7 +15,7 @@ namespace EnvironmentMonitor.Application.DTOs
 
         public void Mapping(Profile profile)
         {
-            profile.CreateMap<DeviceEmailTemplate, DeviceEmailTemplateDto>()
+            profile.CreateMap<EmailTemplate, DeviceEmailTemplateDto>()
                 .ForMember(x => x.DisplayName, opt => opt.MapFrom(x => x.Name.ToString()));
         }
     }

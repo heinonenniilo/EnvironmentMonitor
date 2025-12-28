@@ -42,7 +42,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<DeviceAttribute> DeviceAttributes { get; set; }
         public DbSet<DeviceQueuedCommand> DeviceQueuedCommands { get; set; }
         public DbSet<DeviceQueuedCommandType> DeviceQueuedCommandTypes { get; set; }
-        public DbSet<DeviceEmailTemplate> DeviceEmailTemplates { get; set; }
+        public DbSet<EmailTemplate> EmailTemplates { get; set; }
         public DbSet<DeviceContact> DeviceContacts { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)

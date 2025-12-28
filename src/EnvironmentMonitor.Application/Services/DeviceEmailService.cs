@@ -15,7 +15,7 @@ namespace EnvironmentMonitor.Application.Services
 {
     public class DeviceEmailService : IDeviceEmailService
     {
-        private readonly IDeviceEmailRepository _deviceEmailRepository;
+        private readonly IEmailRepository _deviceEmailRepository;
         private readonly IDeviceRepository _deviceRepository;
         private readonly IUserService _userService;
         private readonly IEmailClient _emailClient;
@@ -26,7 +26,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ApplicationSettings _applicationSettings;
 
         public DeviceEmailService(
-            IDeviceEmailRepository deviceEmailRepository,
+            IEmailRepository deviceEmailRepository,
             IDeviceRepository deviceRepository,
             IUserService userService,
             IEmailClient emailClient,
@@ -48,7 +48,7 @@ namespace EnvironmentMonitor.Application.Services
             _applicationSettings = applicationSettings;
         }
 
-        public async Task<DeviceEmailTemplateDto?> GetEmailTemplate(DeviceEmailTemplateTypes templateType)
+        public async Task<DeviceEmailTemplateDto?> GetEmailTemplate(EmailTemplateTypes templateType)
         {
             if (!_userService.IsAdmin)
             {
@@ -110,7 +110,7 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<DeviceEmailTemplateDto>(updatedTemplate);
         }
 
-        public async Task SendDeviceEmail(Guid deviceIdentifier, DeviceEmailTemplateTypes templateType, Dictionary<string, string>? replaceTokens = null)
+        public async Task SendDeviceEmail(Guid deviceIdentifier, EmailTemplateTypes templateType, Dictionary<string, string>? replaceTokens = null)
         {
             if (!_userService.HasAccessToDevice(deviceIdentifier, AccessLevels.Write))
             {
@@ -155,24 +155,17 @@ namespace EnvironmentMonitor.Application.Services
                 }
             }
             
-            var title = template.Title ?? string.Empty;
-            var message = template.Message ?? string.Empty;
-
-            foreach (var token in tokens)
-            {
-                title = title.Replace(token.Key, token.Value);
-                message = message.Replace(token.Key, token.Value);
-            }
-            
-            _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {title}");
+            _logger.LogInformation($"Sending email for device '{device.Name}'. Subject: {template.Title}");
             try
             {
                 var emailOptions = new SendEmailOptions
                 {
                     ToAddresses = device.Contacts.Select(x => x.Email).ToList(),
-                    Subject = title,
-                    HtmlContent = message
+                    Subject = template.Title ?? string.Empty,
+                    HtmlContent = template.Message ?? string.Empty,
+                    ReplaceTokens = tokens
                 };
+                
                 await _emailClient.SendEmailAsync(emailOptions);
                 _logger.LogInformation($"Email sent successfully for device '{device.Name}' (Template: {templateType})");
             }
@@ -204,7 +197,7 @@ namespace EnvironmentMonitor.Application.Services
             }
             var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
             _logger.LogInformation($"Queuing device email for devie {device.Name} ({device.Id}). Type: {currentStatus.Status}");
-            DeviceEmailTemplateTypes messageType = currentStatus.Status ? DeviceEmailTemplateTypes.ConnectionOk : DeviceEmailTemplateTypes.ConnectionLost;
+            EmailTemplateTypes messageType = currentStatus.Status ? EmailTemplateTypes.ConnectionOk : EmailTemplateTypes.ConnectionLost;
 
             var attributesToAdd = new Dictionary<string, string>()
                     {

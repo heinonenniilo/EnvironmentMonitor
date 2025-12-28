@@ -6,39 +6,39 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EnvironmentMonitor.Infrastructure.Data
 {
-    public class DeviceEmailRepository : IDeviceEmailRepository
+    public class EmailRepository : IEmailRepository
     {
         private readonly MeasurementDbContext _context;
         private readonly IDateService _dateService;
 
-        public DeviceEmailRepository(MeasurementDbContext context, IDateService dateService)
+        public EmailRepository(MeasurementDbContext context, IDateService dateService)
         {
             _context = context;
             _dateService = dateService;
         }
 
-        public async Task<DeviceEmailTemplate?> GetEmailTemplate(DeviceEmailTemplateTypes templateType)
+        public async Task<EmailTemplate?> GetEmailTemplate(EmailTemplateTypes templateType)
         {
-            return await _context.DeviceEmailTemplates
+            return await _context.EmailTemplates
                 .FirstOrDefaultAsync(x => x.Id == (int)templateType);
         }
 
-        public async Task<DeviceEmailTemplate?> GetEmailTemplateByIdentifier(Guid identifier)
+        public async Task<EmailTemplate?> GetEmailTemplateByIdentifier(Guid identifier)
         {
-            return await _context.DeviceEmailTemplates
+            return await _context.EmailTemplates
                 .FirstOrDefaultAsync(x => x.Identifier == identifier);
         }
 
-        public async Task<List<DeviceEmailTemplate>> GetAllEmailTemplates()
+        public async Task<List<EmailTemplate>> GetAllEmailTemplates()
         {
-            return await _context.DeviceEmailTemplates
+            return await _context.EmailTemplates
                 .OrderBy(x => x.Id)
                 .ToListAsync();
         }
 
-        public async Task<DeviceEmailTemplate> UpdateEmailTemplate(Guid identifier, string? title, string? message, bool saveChanges)
+        public async Task<EmailTemplate> UpdateEmailTemplate(Guid identifier, string? title, string? message, bool saveChanges)
         {
-            var template = await _context.DeviceEmailTemplates
+            var template = await _context.EmailTemplates
                 .FirstOrDefaultAsync(x => x.Identifier == identifier);
 
             if (template == null)

@@ -7,11 +7,15 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Enums
 {
-    public enum DeviceEmailTemplateTypes
+    public enum EmailTemplateTypes
     {
         [Description("Device connection lost")]
         ConnectionLost = 0,
         [Description("Device connection restored")]
-        ConnectionOk = 1
+        ConnectionOk = 1,
+        [Description("Confirm Email")]
+        ConfirmUserEmail = 2,
+        [Description("User Password Reset")]
+        UserPasswordReset = 3
     }
 }

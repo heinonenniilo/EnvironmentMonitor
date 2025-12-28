@@ -4,6 +4,7 @@ using EnvironmentMonitor.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    partial class MeasurementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251227185204_RenameDeviceEmailTemplatesEmailTemplates")]
+    partial class RenameDeviceEmailTemplatesEmailTemplates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -594,12 +597,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                             Id = 3,
                             Description = "Send email about a device",
                             Name = "SendDeviceEmail"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Description = "Process forget user password request",
-                            Name = "ProcessForgetUserPasswordRequest"
                         });
                 });
 
@@ -722,24 +719,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                             CreatedUtc = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Identifier = new Guid("00000000-0000-0000-0000-000000000000"),
                             Name = "Device connection restored"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            CreatedUtc = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Identifier = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Message = "Please confirm your email address by clicking the link below:\n\n{ConfirmationLink}\n\nIf you did not create an account, please ignore this email.",
-                            Name = "Confirm Email",
-                            Title = "Confirm Your Email Address"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CreatedUtc = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Identifier = new Guid("00000000-0000-0000-0000-000000000000"),
-                            Message = "You have requested to reset your password. Please click the link below to set a new password:\n\n{ResetLink}\n\nIf you did not request a password reset, please ignore this email.",
-                            Name = "User Password Reset",
-                            Title = "Reset Your Password"
                         });
                 });
 

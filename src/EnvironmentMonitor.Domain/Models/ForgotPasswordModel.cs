@@ -10,5 +10,6 @@ namespace EnvironmentMonitor.Domain.Models
     {
         public required string Email { get; set; }
         public string? BaseUrl { get; set; }
+        public bool Enqueue { get; set; } = false;
     }
 }

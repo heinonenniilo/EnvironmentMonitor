@@ -23,7 +23,6 @@ namespace EnvironmentMonitor.Application.Services
 {
     public class DeviceService : IDeviceService
     {
-        private readonly IHubMessageService _messageService;
         private readonly ILogger<DeviceService> _logger;
         private readonly IUserService _userService;
         private readonly IDeviceRepository _deviceRepository;
@@ -33,13 +32,11 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDateService _dateService;
         private readonly IImageService _imageService;
         private readonly IKeyVaultClient _keyVaultClient;
-        private readonly IQueueClient _queueClient;
 
-        public DeviceService(IHubMessageService messageService, ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IDeviceEmailService deviceEmailService, IMapper mapper, IStorageClient storageClient, IDateService dateService, 
-            IImageService imageService, IKeyVaultClient keyVaultClient, IQueueClient queueClient)
+        public DeviceService(ILogger<DeviceService> logger, IUserService userService,
+            IDeviceRepository deviceRepository, IDeviceEmailService deviceEmailService, IMapper mapper, IStorageClient storageClient, IDateService dateService,
+            IImageService imageService, IKeyVaultClient keyVaultClient)
         {
-            _messageService = messageService;
             _logger = logger;
             _userService = userService;
             _deviceRepository = deviceRepository;
@@ -49,7 +46,6 @@ namespace EnvironmentMonitor.Application.Services
             _dateService = dateService;
             _imageService = imageService;
             _keyVaultClient = keyVaultClient;
-            _queueClient = queueClient;
         }
 
         public async Task<List<DeviceDto>> GetDevices(bool onlyVisible, bool getLocation)

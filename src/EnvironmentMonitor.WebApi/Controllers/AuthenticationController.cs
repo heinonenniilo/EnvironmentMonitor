@@ -100,10 +100,10 @@ namespace EnvironmentMonitor.WebApi.Controllers
             await _userService.ForgotPassword(new ForgotPasswordModel
             {
                 Email = request.Email,
-                BaseUrl = "" // Will be set by UserService
+                BaseUrl = "", // Will be set by UserService,
+                Enqueue = false // TODO Add to true once data protection keys are stored in the same location
             });
-            
-            // Always return success to prevent email enumeration
+
             return Ok(new { Message = "If the email exists, a password reset link has been sent." });
         }
 

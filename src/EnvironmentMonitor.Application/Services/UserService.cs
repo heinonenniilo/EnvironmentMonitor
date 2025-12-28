@@ -1,5 +1,6 @@
 ﻿using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
@@ -9,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.Services
@@ -18,15 +20,18 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ICurrentUser _currentUser;
         private readonly IUserAuthService _userAuthService;
         private readonly ApplicationSettings _applicationSettings;
+        private readonly IQueueClient _queueClient;
 
         public UserService(
             ICurrentUser currentUser,
             IUserAuthService userAuthService,
-            ApplicationSettings applicationSettings)
+            ApplicationSettings applicationSettings,
+            IQueueClient queueClient)
         {
             _currentUser = currentUser;
             _userAuthService = userAuthService;
             _applicationSettings = applicationSettings;
+            _queueClient = queueClient;
         }
 
         public bool HasAccessToDevice(Guid id, AccessLevels accessLevel) => HasAccessTo(EntityRoles.Device, id, accessLevel);
@@ -101,8 +106,25 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task ForgotPassword(ForgotPasswordModel model)
         {
-            model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl) 
-                ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/reset-password" 
+            if (model.Enqueue)
+            {
+                var attributesToAdd = new Dictionary<string, string>()
+                    {
+                        { ApplicationConstants.QueuedMessageDefaultKey, model.Email }
+                    };
+                var messageToQueue = new DeviceQueueMessage()
+                {
+                    Attributes = attributesToAdd,
+                    DeviceIdentifier = Guid.Empty,
+                    MessageTypeId = (int)QueuedMessages.ProcessForgetUserPasswordRequest,
+                };
+                var messageJson = JsonSerializer.Serialize(messageToQueue);
+                var res = await _queueClient.SendMessage(messageJson);
+                return;
+            }
+
+            model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl)
+                ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/reset-password"
                 : "/reset-password";
             await _userAuthService.ForgotPassword(model);
         }
