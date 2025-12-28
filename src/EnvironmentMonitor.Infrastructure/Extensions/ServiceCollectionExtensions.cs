@@ -26,7 +26,8 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             IotHubSettings? iotHubSettings = null,
             QueueSettings? queueSettings = null,
             EmailSettings? emailSettings = null,
-            ApplicationSettings? applicationSettings = null
+            ApplicationSettings? applicationSettings = null,
+            DataProtectionKeysSettings? dataProtectionKeysSettings = null
             )
         {
             var connectionStringToUse = connectionString ?? configuration.GetConnectionString("DefaultConnection");
@@ -47,10 +48,35 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                     builder => builder.MigrationsAssembly(typeof(DataProtectionKeysContext).Assembly.FullName));
             });
 
-            // Configure Data Protection to use the database
-            services.AddDataProtection()
-                .PersistKeysToDbContext<DataProtectionKeysContext>()
-                .SetApplicationName("EnvironmentMonitor");
+            DataProtectionKeysSettings? dataProtectionKeysSettingsToCheck;
+            if (dataProtectionKeysSettings != null)
+            {
+                services.AddSingleton(dataProtectionKeysSettings);
+                dataProtectionKeysSettingsToCheck = dataProtectionKeysSettings;
+            }
+            else
+            {
+                var defaultDataProtectionKeysSettings = new DataProtectionKeysSettings();
+                configuration.GetSection("DataProtectionKeysSettings").Bind(defaultDataProtectionKeysSettings);
+                services.AddSingleton(defaultDataProtectionKeysSettings);
+                dataProtectionKeysSettingsToCheck = configuration.GetSection("DataProtectionKeysSettings").Get<DataProtectionKeysSettings>();
+            }
+ 
+            if (dataProtectionKeysSettingsToCheck != null && dataProtectionKeysSettingsToCheck.StoreInDatabase)
+            {
+                // Configure Data Protection to use the database
+                var dataProtectionBuilder = services.AddDataProtection()
+                    .PersistKeysToDbContext<DataProtectionKeysContext>()
+                    .SetApplicationName("EnvironmentMonitor");
+
+                if (dataProtectionKeysSettingsToCheck.EncryptWithKeyVault && 
+                    !string.IsNullOrEmpty(dataProtectionKeysSettingsToCheck.KeyVaultKeyIdentifier))
+                {
+                    dataProtectionBuilder.ProtectKeysWithAzureKeyVault(
+                        new Uri(dataProtectionKeysSettingsToCheck.KeyVaultKeyIdentifier),
+                        new DefaultAzureCredential());
+                }
+            }
 
             services.AddScoped<IMeasurementRepository, MeasurementRepository>();
             services.AddScoped<IDeviceRepository, DeviceRepository>();
