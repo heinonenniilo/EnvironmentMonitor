@@ -9,6 +9,7 @@ using EnvironmentMonitor.WebApi.Attributes;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
@@ -183,6 +184,30 @@ namespace EnvironmentMonitor.WebApi.Controllers
             if (!authenticateResult.Succeeded)
             {
                 _logger.LogWarning($"Not authenticated at GoogleCallback");
+                return Unauthorized(new { Message = "Authentication failed." });
+            }
+            await _userService.ExternalLogin(new ExternalLoginModel()
+            {
+                Persistent = persistent
+            });
+            return Redirect(returnUrl ?? "/");
+        }
+
+        [HttpGet("microsoft")]
+        public IActionResult MicrosoftLogin([FromQuery] bool persistent = false)
+        {
+            var redirectUrl = Url.Action(nameof(MicrosoftCallback), "Authentication", new { returnUrl = "/", persistent });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(MicrosoftAccountDefaults.AuthenticationScheme, redirectUrl);
+            return Challenge(properties, MicrosoftAccountDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("microsoft-callback")]
+        public async Task<IActionResult> MicrosoftCallback(string returnUrl = "/", bool persistent = false)
+        {
+            var authenticateResult = await HttpContext.AuthenticateAsync(MicrosoftAccountDefaults.AuthenticationScheme);
+            if (!authenticateResult.Succeeded)
+            {
+                _logger.LogWarning($"Not authenticated at MicrosoftCallback");
                 return Unauthorized(new { Message = "Authentication failed." });
             }
             await _userService.ExternalLogin(new ExternalLoginModel()

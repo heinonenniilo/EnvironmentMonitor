@@ -6,6 +6,7 @@ using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.WebApi.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
@@ -24,6 +25,32 @@ if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientS
         googleOptions.ClientId = googleClientId;
         googleOptions.ClientSecret = googleClientSecret;
         googleOptions.Events.OnRedirectToAuthorizationEndpoint = context =>
+        {
+            var redirect = QueryHelpers.AddQueryString(context.RedirectUri, "prompt", "select_account");
+            context.Response.Redirect(redirect);
+            return Task.CompletedTask;
+        };
+    });
+}
+
+var microsoftClientId = builder.Configuration["Microsoft:ClientId"];
+var microsoftClientSecret = builder.Configuration["Microsoft:ClientSecret"];
+var microsoftTenantId = builder.Configuration["Microsoft:TenantId"]; // Add optional tenant ID
+if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftClientSecret)) {
+    builder.Services.AddAuthentication().AddMicrosoftAccount(microsoftOptions =>
+    {
+        microsoftOptions.SaveTokens = true;
+        microsoftOptions.ClientId = microsoftClientId;
+        microsoftOptions.ClientSecret = microsoftClientSecret;
+        
+        // Use tenant-specific endpoint if TenantId is provided, otherwise use common (multi-tenant)
+        if (!string.IsNullOrEmpty(microsoftTenantId))
+        {
+            microsoftOptions.AuthorizationEndpoint = $"https://login.microsoftonline.com/{microsoftTenantId}/oauth2/v2.0/authorize";
+            microsoftOptions.TokenEndpoint = $"https://login.microsoftonline.com/{microsoftTenantId}/oauth2/v2.0/token";
+        }
+        
+        microsoftOptions.Events.OnRedirectToAuthorizationEndpoint = context =>
         {
             var redirect = QueryHelpers.AddQueryString(context.RedirectUri, "prompt", "select_account");
             context.Response.Redirect(redirect);
