@@ -294,7 +294,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 locationIdentifiersAsClaims = await _measurementDbContext.Locations
                     .Select(l => l.Identifier)
                     .ToListAsync();
-                return locationIdentifiersAsClaims.Distinct().Select(x => new Claim(EntityRoles.Location.ToString(), x.ToString())).ToList();
             }
             else
             {
