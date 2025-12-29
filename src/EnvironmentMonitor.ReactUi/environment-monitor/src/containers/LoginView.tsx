@@ -24,6 +24,14 @@ export const LoginView: React.FC = () => {
     }
   };
 
+  const loginWithMicrosoftAuthCode = (persistent: boolean) => {
+    if (process.env.NODE_ENV === "production") {
+      window.location.href = `api/authentication/microsoft?persistent=${persistent}`;
+    } else {
+      window.location.href = `https://localhost:7135/api/authentication/microsoft?persistent=${persistent}`;
+    }
+  };
+
   const onLoggedIn = () => {
     setIsLoading(true);
 
@@ -64,6 +72,7 @@ export const LoginView: React.FC = () => {
       <LoginPage
         onLoggedIn={onLoggedIn}
         onLogInWithGoogle={loginWithGoogleAuthCode}
+        onLogInWithMicrosoft={loginWithMicrosoftAuthCode}
       />
     </AppContentWrapper>
   );

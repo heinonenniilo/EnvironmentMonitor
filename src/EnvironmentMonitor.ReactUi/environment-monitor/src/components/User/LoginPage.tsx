@@ -15,11 +15,13 @@ import { routes } from "../../utilities/routes";
 export interface LoginPageProps {
   onLoggedIn: () => void;
   onLogInWithGoogle: (persistent: boolean) => void;
+  onLogInWithMicrosoft: (persistent: boolean) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({
   onLoggedIn,
   onLogInWithGoogle,
+  onLogInWithMicrosoft,
 }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -121,6 +123,18 @@ const LoginPage: React.FC<LoginPageProps> = ({
           }}
         >
           Google login
+        </Button>
+        <Button
+          type="button"
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ marginTop: 2 }}
+          onClick={() => {
+            onLogInWithMicrosoft(rememberMe);
+          }}
+        >
+          Microsoft login
         </Button>
         <FormControlLabel
           control={
