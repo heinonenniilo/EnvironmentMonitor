@@ -218,11 +218,9 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
             {
-                _logger.LogInformation($"Forgot password requested for non-existent or unconfirmed email: {model.Email}");
-                return;
+                _logger.LogError($"Forgot password requested for non-existent or unconfirmed email: {model.Email}");
+                throw new InvalidOperationException($"Forgot password requested for non-existent or unconfirmed email: {model.Email}");
             }
-
-            // Generate password reset token and construct reset URL
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);           
             var queryParams = new StringBuilder();
             queryParams.Append($"?email={Uri.EscapeDataString(user.Email!)}");
