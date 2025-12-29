@@ -31,11 +31,22 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
           <Typography variant="body1">{user.email}</Typography>
         </Box>
 
-        <Box>
+        <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" color="text.secondary">
             Authentication Provider:
           </Typography>
           <Typography variant="body1">{authProvider}</Typography>
+        </Box>
+
+        <Box>
+          <Typography variant="subtitle2" color="text.secondary">
+            Roles:
+          </Typography>
+          <Typography variant="body1">
+            {user.roles && user.roles.length > 0
+              ? user.roles.join(", ")
+              : "No roles assigned"}
+          </Typography>
         </Box>
       </Paper>
 
