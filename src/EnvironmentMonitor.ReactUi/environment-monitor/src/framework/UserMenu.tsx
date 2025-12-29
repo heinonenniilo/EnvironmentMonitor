@@ -39,8 +39,6 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     setUserMenuAcnhor(null);
   };
 
-  const canChangePassword = user && !user.authenticationProvider;
-
   if (user) {
     return (
       <Box sx={{ display: "flex", flexDirection: "row" }}>
@@ -86,19 +84,17 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               </Typography>
             </Box>
           )}
-          {canChangePassword && (
-            <MenuItem>
-              <Button
-                color="inherit"
-                onClick={() => {
-                  handleClose();
-                  navigate(routes.changePassword);
-                }}
-              >
-                Change Password
-              </Button>
-            </MenuItem>
-          )}
+          <MenuItem>
+            <Button
+              color="inherit"
+              onClick={() => {
+                handleClose();
+                navigate(routes.userInfo);
+              }}
+            >
+              User Info
+            </Button>
+          </MenuItem>
 
           <MenuItem>
             <Button
