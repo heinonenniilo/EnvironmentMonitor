@@ -11,6 +11,7 @@ import React from "react";
 import type { User } from "../models/user";
 import { useNavigate } from "react-router";
 import { routes } from "../utilities/routes";
+import { RoleNames } from "../enums/roleNames";
 
 export interface UserMenuProps {
   handleLogOut: () => void;
@@ -39,6 +40,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({
     setUserMenuAcnhor(null);
   };
 
+  const canSeeOwnInfo = user?.roles?.some(
+    (r) =>
+      r === RoleNames.Admin ||
+      r === RoleNames.User ||
+      r === RoleNames.Registered
+  );
   if (user) {
     return (
       <Box sx={{ display: "flex", flexDirection: "row" }}>
@@ -84,17 +91,19 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               </Typography>
             </Box>
           )}
-          <MenuItem>
-            <Button
-              color="inherit"
-              onClick={() => {
-                handleClose();
-                navigate(routes.userInfo);
-              }}
-            >
-              User Info
-            </Button>
-          </MenuItem>
+          {canSeeOwnInfo && (
+            <MenuItem>
+              <Button
+                color="inherit"
+                onClick={() => {
+                  handleClose();
+                  navigate(routes.userInfo);
+                }}
+              >
+                User Info
+              </Button>
+            </MenuItem>
+          )}
 
           <MenuItem>
             <Button

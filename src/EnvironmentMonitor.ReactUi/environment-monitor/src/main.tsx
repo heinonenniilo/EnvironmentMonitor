@@ -60,7 +60,14 @@ createRoot(document.getElementById("root")!).render(
               <Route
                 path={routes.userInfo}
                 element={
-                  <AuthorizedComponent requiredRole={RoleNames.User}>
+                  <AuthorizedComponent
+                    roleLogic="OR"
+                    requiredRoles={[
+                      RoleNames.Registered,
+                      RoleNames.User,
+                      RoleNames.Admin,
+                    ]}
+                  >
                     <UserInfoView />
                   </AuthorizedComponent>
                 }

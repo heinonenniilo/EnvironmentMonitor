@@ -59,6 +59,7 @@ interface userHook {
     currentPassword: string,
     newPassword: string
   ) => Promise<string | undefined>;
+  deleteOwnUser: () => Promise<string | undefined>;
 }
 
 interface locationHook {
@@ -297,6 +298,21 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           const errorMessage =
             ex?.response?.data?.message || "Failed to change password";
+          showError(errorMessage);
+          throw new Error(errorMessage);
+        }
+      },
+      deleteOwnUser: async () => {
+        try {
+          const response = await apiClient.delete<
+            any,
+            AxiosResponse<{ message: string }>
+          >("/api/authentication/");
+          return response.data.message;
+        } catch (ex: any) {
+          console.error(ex);
+          const errorMessage =
+            ex?.response?.data?.message || "Failed to delete user account";
           showError(errorMessage);
           throw new Error(errorMessage);
         }

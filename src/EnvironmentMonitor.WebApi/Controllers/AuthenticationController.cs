@@ -220,5 +220,14 @@ namespace EnvironmentMonitor.WebApi.Controllers
             });
             return Redirect(returnUrl ?? "/");
         }
+
+        [HttpDelete("")]
+        [Authorize]
+        public async Task<IActionResult> DeleteOwnUser()
+        {
+            await _userService.DeleteOwnUser();
+            await _signInManager.SignOutAsync();
+            return Ok(new { Message = "User deleted" });
+        }
     }
 }
