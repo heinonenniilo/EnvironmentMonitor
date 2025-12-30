@@ -51,6 +51,16 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
             <Typography variant="body1">{authProvider}</Typography>
           </Box>
         </Box>
+        {user.upnExternal && (
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" color="text.secondary">
+              UPN (External):
+            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <Typography variant="body1">{user.upnExternal}</Typography>
+            </Box>
+          </Box>
+        )}
 
         <Box>
           <Typography variant="subtitle2" color="text.secondary">

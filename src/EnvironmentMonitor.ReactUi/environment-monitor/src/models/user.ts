@@ -3,4 +3,5 @@ export interface User {
   loggedIn: boolean;
   roles: string[];
   authenticationProvider?: string;
+  upnExternal?: string;
 }
