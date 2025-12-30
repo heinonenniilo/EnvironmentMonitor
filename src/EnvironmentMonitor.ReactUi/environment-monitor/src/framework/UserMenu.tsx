@@ -1,4 +1,4 @@
-import { AccountCircle } from "@mui/icons-material";
+import { AccountCircle, Google, Microsoft, GitHub } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -46,6 +46,31 @@ export const UserMenu: React.FC<UserMenuProps> = ({
       r === RoleNames.User ||
       r === RoleNames.Registered
   );
+
+  const getProviderIcon = () => {
+    if (!user?.authenticationProvider) return null;
+
+    const baseIconProps = {
+      fontSize: 24,
+      mr: 0.5,
+      verticalAlign: "middle",
+      color: "#000000",
+    };
+
+    const provider = user.authenticationProvider.toLowerCase();
+
+    if (provider === "google") {
+      return <Google sx={{ ...baseIconProps }} />;
+    }
+    if (provider === "microsoft") {
+      return <Microsoft sx={{ ...baseIconProps }} />;
+    }
+    if (provider === "github") {
+      return <GitHub sx={{ ...baseIconProps }} />;
+    }
+    return null;
+  };
+
   if (user) {
     return (
       <Box sx={{ display: "flex", flexDirection: "row" }}>
@@ -54,7 +79,9 @@ export const UserMenu: React.FC<UserMenuProps> = ({
             variant={!isMobile ? "h6" : "body1"}
             marginTop={"auto"}
             marginBottom={"auto"}
+            sx={{ display: "flex", alignItems: "center" }}
           >
+            {getProviderIcon()}
             {user.email}
           </Typography>
         )}
@@ -86,7 +113,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({
         >
           {!drawUserInMenu && (
             <Box sx={{ alignItems: "center", margin: 2 }}>
-              <Typography variant="subtitle2" color="text.secondary">
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                sx={{ display: "flex", alignItems: "center" }}
+              >
+                {getProviderIcon()}
                 {user.email}
               </Typography>
             </Box>

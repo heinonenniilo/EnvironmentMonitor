@@ -27,14 +27,20 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
   const canChangePassword = !user.authenticationProvider;
 
   const getProviderIcon = () => {
-    if (user.authenticationProvider === "Google") {
-      return <Google sx={{ mr: 1, verticalAlign: "middle" }} />;
+    if (!user.authenticationProvider) return null;
+
+    const provider = user.authenticationProvider.toLowerCase();
+
+    if (provider === "google") {
+      return <Google sx={{ mr: 1, verticalAlign: "middle", fontSize: 24 }} />;
     }
-    if (user.authenticationProvider === "Microsoft") {
-      return <Microsoft sx={{ mr: 1, verticalAlign: "middle" }} />;
+    if (provider === "microsoft") {
+      return (
+        <Microsoft sx={{ mr: 1, verticalAlign: "middle", fontSize: 24 }} />
+      );
     }
-    if (user.authenticationProvider === "GitHub") {
-      return <GitHub sx={{ mr: 1, verticalAlign: "middle" }} />;
+    if (provider === "github") {
+      return <GitHub sx={{ mr: 1, verticalAlign: "middle", fontSize: 24 }} />;
     }
     return null;
   };
