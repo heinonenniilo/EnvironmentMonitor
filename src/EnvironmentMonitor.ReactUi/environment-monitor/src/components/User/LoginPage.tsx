@@ -65,6 +65,9 @@ const LoginPage: React.FC<LoginPageProps> = ({
         borderRadius: "8px",
       }}
     >
+      <Typography variant="h5" textAlign="center" mb={2}>
+        Login
+      </Typography>
       <form onSubmit={handleSubmit}>
         <TextField
           label="User ID"

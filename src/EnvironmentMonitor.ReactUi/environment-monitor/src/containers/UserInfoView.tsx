@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { getUserInfo } from "../reducers/userReducer";
-import { UserInfoComponent } from "../components/UserInfoComponent";
+import { UserInfoComponent } from "../components/User/UserInfoComponent";
 import { useApiHook } from "../hooks/apiHook";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { addNotification } from "../reducers/userInterfaceReducer";

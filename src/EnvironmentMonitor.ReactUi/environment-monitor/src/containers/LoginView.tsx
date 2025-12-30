@@ -68,7 +68,7 @@ export const LoginView: React.FC = () => {
   };
 
   return (
-    <AppContentWrapper title="Login" isLoading={isLoading}>
+    <AppContentWrapper isLoading={isLoading}>
       <LoginPage
         onLoggedIn={onLoggedIn}
         onLogInWithGoogle={loginWithGoogleAuthCode}

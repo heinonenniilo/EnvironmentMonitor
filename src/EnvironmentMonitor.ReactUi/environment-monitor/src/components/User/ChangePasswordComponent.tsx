@@ -8,11 +8,12 @@ export interface ChangePasswordComponentProps {
     newPassword: string
   ) => Promise<void>;
   title?: string;
+  elevation?: boolean;
 }
 
 export const ChangePasswordComponent: React.FC<
   ChangePasswordComponentProps
-> = ({ isLoading, onChangePassword, title }) => {
+> = ({ isLoading, onChangePassword, title, elevation = false }) => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -54,9 +55,8 @@ export const ChangePasswordComponent: React.FC<
 
   return (
     <Paper
-      elevation={3}
+      elevation={elevation ? 3 : 0}
       sx={{
-        padding: 4,
         maxWidth: 500,
         width: "100%",
       }}

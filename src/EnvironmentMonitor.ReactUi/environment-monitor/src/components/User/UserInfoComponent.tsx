@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Paper, Typography } from "@mui/material";
 import { Google, Microsoft } from "@mui/icons-material";
-import type { User } from "../models/user";
-import { ChangePasswordComponent } from "./User/ChangePasswordComponent";
-import { Collapsible } from "./CollabsibleComponent";
+import type { User } from "../../models/user";
+import { ChangePasswordComponent } from "./ChangePasswordComponent";
+import { Collapsible } from "../CollabsibleComponent";
 
 export interface UserInfoComponentProps {
   user: User;
@@ -12,12 +12,14 @@ export interface UserInfoComponentProps {
     currentPassword: string,
     newPassword: string
   ) => Promise<void>;
+  elevation?: boolean;
 }
 
 export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
   user,
   isLoading,
   onChangePassword,
+  elevation = false,
 }) => {
   const authProvider = user.authenticationProvider || "Internal";
   const canChangePassword = !user.authenticationProvider;
@@ -34,7 +36,7 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
 
   return (
     <Box sx={{ p: 2 }}>
-      <Paper elevation={3} sx={{ p: 3, mb: 2 }}>
+      <Paper elevation={elevation ? 3 : 0} sx={{ p: 3, mb: 2 }}>
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" color="text.secondary">
             Email:
