@@ -28,6 +28,7 @@ import { ConfirmationDialog } from "./ConfirmationDialog";
 import { NotificationsComponent } from "./NotificationsComponent";
 import type { User } from "../models/user";
 import { routes } from "../utilities/routes";
+import { RoleNames } from "../enums/roleNames";
 
 interface AppProps {
   children: React.ReactNode;
@@ -85,13 +86,23 @@ export const App: React.FC<AppProps> = (props) => {
   useEffect(() => {
     if (isLoggedIn && measurementApiHook && !inited) {
       setInited(true);
-      measurementApiHook.getDevices().then((res) => {
-        dispath(setDevices(res ?? []));
-      });
 
-      locationApiHook.getLocations().then((res) => {
-        dispath(setLocations(res));
-      });
+      if (
+        user?.roles.some(
+          (r) =>
+            r === RoleNames.Admin ||
+            r === RoleNames.User ||
+            r === RoleNames.Viewer
+        )
+      ) {
+        measurementApiHook.getDevices().then((res) => {
+          dispath(setDevices(res ?? []));
+        });
+
+        locationApiHook.getLocations().then((res) => {
+          dispath(setLocations(res));
+        });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, dispath, inited]);
