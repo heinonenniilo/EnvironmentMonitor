@@ -169,7 +169,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 Id = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Roles = roles.ToList(),
                 AuthenticationProvider = authProvider,
-                Upn = upn
+                UpnExternal = upn
             });
         }
 
