@@ -3,4 +3,5 @@ export enum RoleNames {
   Viewer = "Viewer",
   User = "User",
   Location = "Location",
+  Registered = "Registered",
 }

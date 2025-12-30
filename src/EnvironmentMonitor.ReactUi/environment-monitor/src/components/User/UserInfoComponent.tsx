@@ -1,6 +1,6 @@
 import React from "react";
-import { Box, Paper, Typography } from "@mui/material";
-import { Google, Microsoft } from "@mui/icons-material";
+import { Box, Paper, Typography, Button } from "@mui/material";
+import { Google, Microsoft, DeleteForever } from "@mui/icons-material";
 import type { User } from "../../models/user";
 import { ChangePasswordComponent } from "./ChangePasswordComponent";
 import { Collapsible } from "../CollabsibleComponent";
@@ -12,6 +12,7 @@ export interface UserInfoComponentProps {
     currentPassword: string,
     newPassword: string
   ) => Promise<void>;
+  onRemove: (user: User) => void;
   elevation?: boolean;
 }
 
@@ -19,6 +20,7 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
   user,
   isLoading,
   onChangePassword,
+  onRemove,
   elevation = false,
 }) => {
   const authProvider = user.authenticationProvider || "Internal";
@@ -84,6 +86,25 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
           />
         </Collapsible>
       )}
+
+      <Paper elevation={elevation ? 3 : 0} sx={{ p: 3, mt: 2 }}>
+        <Typography variant="h6" color="error" gutterBottom>
+          Danger Zone
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Once you delete your account, there is no going back. Please be
+          certain.
+        </Typography>
+        <Button
+          variant="outlined"
+          color="error"
+          startIcon={<DeleteForever />}
+          onClick={() => onRemove(user)}
+          disabled={isLoading}
+        >
+          Remove account
+        </Button>
+      </Paper>
     </Box>
   );
 };
