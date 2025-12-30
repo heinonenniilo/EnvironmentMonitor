@@ -160,12 +160,16 @@ namespace EnvironmentMonitor.WebApi.Controllers
             var externalProviderClaim = User.Claims.FirstOrDefault(c => c.Type == ApplicationConstants.ExternalLoginProviderClaim);
             string? authProvider = externalProviderClaim?.Value;
 
+            // Get UPN (User Principal Name) - check only ClaimTypes.Upn and preferred_username
+            string? upn = User.FindFirstValue(ClaimTypes.Upn);
+
             return Ok(new UserDto()
             {
                 Email = User.FindFirstValue(ClaimTypes.Email),
                 Id = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Roles = roles.ToList(),
-                AuthenticationProvider = authProvider
+                AuthenticationProvider = authProvider,
+                Upn = upn
             });
         }
 

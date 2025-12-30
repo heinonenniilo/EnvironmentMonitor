@@ -80,6 +80,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new InvalidOperationException();
             }
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var upn = info.Principal.FindFirstValue(ClaimTypes.Upn);
             if (string.IsNullOrEmpty(email))
             {
                 throw new InvalidOperationException("Failed to fetch email");
@@ -105,6 +106,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 var additionalClaims = await GetCalculatedClaims(user);
                 additionalClaims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
+                additionalClaims.Add(new Claim (ClaimTypes.Upn, upn ?? string.Empty));
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
             else
