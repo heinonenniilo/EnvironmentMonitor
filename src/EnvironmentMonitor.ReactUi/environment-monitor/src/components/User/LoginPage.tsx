@@ -8,7 +8,7 @@ import {
   Checkbox,
   Link,
 } from "@mui/material";
-import { Google, Microsoft } from "@mui/icons-material";
+import { Google, Microsoft, GitHub } from "@mui/icons-material";
 import { useApiHook } from "../../hooks/apiHook";
 import { useNavigate } from "react-router";
 import { routes } from "../../utilities/routes";
@@ -17,12 +17,14 @@ export interface LoginPageProps {
   onLoggedIn: () => void;
   onLogInWithGoogle: (persistent: boolean) => void;
   onLogInWithMicrosoft: (persistent: boolean) => void;
+  onLogInWithGitHub: (persistent: boolean) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({
   onLoggedIn,
   onLogInWithGoogle,
   onLogInWithMicrosoft,
+  onLogInWithGitHub,
 }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -162,6 +164,31 @@ const LoginPage: React.FC<LoginPageProps> = ({
           }}
         >
           Sign in with Microsoft
+        </Button>
+        <Button
+          type="button"
+          variant="outlined"
+          fullWidth
+          startIcon={<GitHub />}
+          sx={{
+            marginTop: 2,
+            backgroundColor: "#fff",
+            color: "#24292e",
+            border: "1px solid #d0d7de",
+            textTransform: "none",
+            fontSize: "15px",
+            fontWeight: 500,
+            padding: "8px 12px",
+            "&:hover": {
+              backgroundColor: "#f6f8fa",
+              border: "1px solid #d0d7de",
+            },
+          }}
+          onClick={() => {
+            onLogInWithGitHub(rememberMe);
+          }}
+        >
+          Sign in with GitHub
         </Button>
         <FormControlLabel
           control={

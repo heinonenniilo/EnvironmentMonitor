@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Paper, Typography, Button } from "@mui/material";
-import { Google, Microsoft, DeleteForever } from "@mui/icons-material";
+import { Google, Microsoft, GitHub, DeleteForever } from "@mui/icons-material";
 import type { User } from "../../models/user";
 import { ChangePasswordComponent } from "./ChangePasswordComponent";
 import { Collapsible } from "../CollabsibleComponent";
@@ -32,6 +32,9 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
     }
     if (user.authenticationProvider === "Microsoft") {
       return <Microsoft sx={{ mr: 1, verticalAlign: "middle" }} />;
+    }
+    if (user.authenticationProvider === "GitHub") {
+      return <GitHub sx={{ mr: 1, verticalAlign: "middle" }} />;
     }
     return null;
   };

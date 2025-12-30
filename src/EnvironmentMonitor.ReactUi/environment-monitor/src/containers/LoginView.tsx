@@ -32,6 +32,14 @@ export const LoginView: React.FC = () => {
     }
   };
 
+  const loginWithGitHubAuthCode = (persistent: boolean) => {
+    if (process.env.NODE_ENV === "production") {
+      window.location.href = `api/authentication/github?persistent=${persistent}`;
+    } else {
+      window.location.href = `https://localhost:7135/api/authentication/github?persistent=${persistent}`;
+    }
+  };
+
   const onLoggedIn = () => {
     setIsLoading(true);
 
@@ -73,6 +81,7 @@ export const LoginView: React.FC = () => {
         onLoggedIn={onLoggedIn}
         onLogInWithGoogle={loginWithGoogleAuthCode}
         onLogInWithMicrosoft={loginWithMicrosoftAuthCode}
+        onLogInWithGitHub={loginWithGitHubAuthCode}
       />
     </AppContentWrapper>
   );
