@@ -38,7 +38,7 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
 
   return (
     <Box sx={{ p: 2 }}>
-      <Paper elevation={elevation ? 3 : 0} sx={{ p: 3, mb: 2 }}>
+      <Paper elevation={elevation ? 3 : 0} sx={{ p: 3 }}>
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" color="text.secondary">
             Email:
@@ -87,7 +87,7 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
         </Collapsible>
       )}
 
-      <Paper elevation={elevation ? 3 : 0} sx={{ p: 3, mt: 2 }}>
+      <Paper elevation={elevation ? 3 : 0} sx={{ p: 3 }}>
         <Typography variant="h6" color="error" gutterBottom>
           Danger Zone
         </Typography>
