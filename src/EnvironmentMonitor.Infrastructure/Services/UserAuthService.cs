@@ -70,6 +70,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
             await _signInManager.SignInWithClaimsAsync(user, model.Persistent, calculatedClaims);
         }
 
+        public Task Logout()
+        {
+            return _signInManager.SignOutAsync();
+        }
+
         public async Task LoginWithExternalProvider(ExternalLoginModel model)
         {
             string loginProvider;
@@ -122,8 +127,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     loginProvider,
                     providerKey, providerKey
                     ));
-
-                await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
 
                 if (!addLoginResult.Succeeded)
                 {
@@ -193,7 +196,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var result = await _userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
-                await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
                 _logger.LogInformation($"Email confirmed for user: {user.Email}");
                 return true;
             }

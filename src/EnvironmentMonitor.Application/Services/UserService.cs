@@ -163,6 +163,7 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             await _userAuthService.DeleteUser(userId);
+            await _userAuthService.Logout();
         }
 
         public async Task DeleteUser(string userId)
