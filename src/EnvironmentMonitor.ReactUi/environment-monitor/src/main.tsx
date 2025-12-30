@@ -22,10 +22,10 @@ import { RegisterView } from "./containers/RegisterView";
 import { EmailConfirmationView } from "./containers/EmailConfirmationView";
 import { ForgotPasswordView } from "./containers/ForgotPasswordView";
 import { ResetPasswordView } from "./containers/ResetPasswordView";
-import { ChangePasswordView } from "./containers/ChangePasswordView";
 import { AuthorizedComponent } from "./components/AuthorizedComponent";
 import { RoleNames } from "./enums/roleNames";
 import { DeviceEmailsView } from "./containers/DeviceEmailsView";
+import { UserInfoView } from "./containers/UserInfoView";
 
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
@@ -58,10 +58,10 @@ createRoot(document.getElementById("root")!).render(
                 element={<ResetPasswordView />}
               />
               <Route
-                path={routes.changePassword}
+                path={routes.userInfo}
                 element={
                   <AuthorizedComponent requiredRole={RoleNames.User}>
-                    <ChangePasswordView />
+                    <UserInfoView />
                   </AuthorizedComponent>
                 }
               />

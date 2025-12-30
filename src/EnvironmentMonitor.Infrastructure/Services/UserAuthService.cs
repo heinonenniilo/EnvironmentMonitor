@@ -8,6 +8,7 @@ using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Logging;
 using System;
@@ -27,13 +28,15 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly ILogger<UserAuthService> _logger;
         private readonly IEmailClient _emailClient;
         private readonly IEmailRepository _emailRepository;
+        private readonly MeasurementDbContext _measurementDbContext;
 
         public UserAuthService(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IDeviceRepository deviceRepository,
             ILogger<UserAuthService> logger,
             IEmailClient emailClient,
-            IEmailRepository emailRepository)
+            IEmailRepository emailRepository,
+            MeasurementDbContext measurementDbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -41,6 +44,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _logger = logger;
             _emailClient = emailClient;
             _emailRepository = emailRepository;
+            _measurementDbContext = measurementDbContext;
         }
 
         public async Task Login(LoginModel model)
@@ -76,6 +80,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new InvalidOperationException();
             }
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var upn = info.Principal.FindFirstValue(ClaimTypes.Upn);
             if (string.IsNullOrEmpty(email))
             {
                 throw new InvalidOperationException("Failed to fetch email");
@@ -101,6 +106,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 var additionalClaims = await GetCalculatedClaims(user);
                 additionalClaims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
+                additionalClaims.Add(new Claim (ClaimTypes.Upn, upn ?? string.Empty));
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
             else
@@ -270,14 +276,39 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
         /// <summary>
         /// Get calculated claims. Each location gives a claim to devices in the location. Each device gives a claim to each sensor attached to the device.
+        /// Users with Viewer role get claims to all locations.
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
         private async Task<List<Claim>> GetCalculatedClaims(ApplicationUser user)
         {
             var claims = await _userManager.GetClaimsAsync(user);
+            var userRoles = await _userManager.GetRolesAsync(user);
             
-            var locationIdentifiersAsClaims = claims
+            // Check if user has Viewer role
+            var isViewer = userRoles.Any(r => r.Equals(GlobalRoles.Viewer.ToString(), StringComparison.OrdinalIgnoreCase));
+            
+            List<Guid> locationIdentifiersAsClaims;
+
+            // If user is a Viewer, grant access to all locations
+            if (isViewer)
+            {
+                locationIdentifiersAsClaims = await _measurementDbContext.Locations
+                    .Select(l => l.Identifier)
+                    .ToListAsync();
+            }
+            else
+            {
+                // For non-Viewer users, get locations from their claims
+                locationIdentifiersAsClaims = claims
+                    .Where(x => x.Type == EntityRoles.Location.ToString())
+                    .Select(x => Guid.TryParse(x.Value, out var guid) ? (Guid?)guid : null)
+                    .Where(x => x.HasValue)
+                    .Select(x => x.Value)
+                    .ToList();
+            }
+
+            var existingLocationIdsInClaims = claims
                 .Where(x => x.Type == EntityRoles.Location.ToString())
                 .Select(x => Guid.TryParse(x.Value, out var guid) ? (Guid?)guid : null)
                 .Where(x => x.HasValue)
@@ -301,7 +332,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var deviceIdentifiersMatchingsLocations = (await _deviceRepository.GetDevices(new GetDevicesModel() { LocationIdentifiers = locationIdentifiersAsClaims })).Select(x => x.Identifier).ToList();
 
             var deviceIdentifiers = new List<Guid>(deviceIdentifiersAsClaims);
-
             deviceIdentifiers.AddRange(deviceIdentifiersMatchingsLocations);
 
             var claimsToReturn = new List<Claim>();
@@ -321,6 +351,13 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 .Where(x => !deviceIdentifiersAsClaims.Contains(x))
                 .Distinct()
                 .Select(x => new Claim(EntityRoles.Device.ToString(), x.ToString())));
+            
+            // Add location claims that aren't already in user's existing claims
+            claimsToReturn.AddRange(locationIdentifiersAsClaims
+                .Where(x => !existingLocationIdsInClaims.Contains(x))
+                .Distinct()
+                .Select(x => new Claim(EntityRoles.Location.ToString(), x.ToString())));
+            
             return claimsToReturn;
         }
     }

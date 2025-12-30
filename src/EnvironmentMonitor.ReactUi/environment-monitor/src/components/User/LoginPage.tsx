@@ -8,6 +8,7 @@ import {
   Checkbox,
   Link,
 } from "@mui/material";
+import { Google, Microsoft } from "@mui/icons-material";
 import { useApiHook } from "../../hooks/apiHook";
 import { useNavigate } from "react-router";
 import { routes } from "../../utilities/routes";
@@ -15,11 +16,13 @@ import { routes } from "../../utilities/routes";
 export interface LoginPageProps {
   onLoggedIn: () => void;
   onLogInWithGoogle: (persistent: boolean) => void;
+  onLogInWithMicrosoft: (persistent: boolean) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({
   onLoggedIn,
   onLogInWithGoogle,
+  onLogInWithMicrosoft,
 }) => {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -112,15 +115,53 @@ const LoginPage: React.FC<LoginPageProps> = ({
         </Button>
         <Button
           type="button"
-          variant="contained"
-          color="primary"
+          variant="outlined"
           fullWidth
-          sx={{ marginTop: 2 }}
+          startIcon={<Google />}
+          sx={{
+            marginTop: 2,
+            backgroundColor: "#fff",
+            color: "#3c4043",
+            border: "1px solid #dadce0",
+            textTransform: "none",
+            fontSize: "15px",
+            fontWeight: 500,
+            padding: "8px 12px",
+            "&:hover": {
+              backgroundColor: "#f7f8f8",
+              border: "1px solid #dadce0",
+            },
+          }}
           onClick={() => {
             onLogInWithGoogle(rememberMe);
           }}
         >
-          Google login
+          Sign in with Google
+        </Button>
+        <Button
+          type="button"
+          variant="outlined"
+          fullWidth
+          startIcon={<Microsoft />}
+          sx={{
+            marginTop: 2,
+            backgroundColor: "#fff",
+            color: "#5e5e5e",
+            border: "1px solid #8c8c8c",
+            textTransform: "none",
+            fontSize: "15px",
+            fontWeight: 500,
+            padding: "8px 12px",
+            "&:hover": {
+              backgroundColor: "#f3f3f3",
+              border: "1px solid #8c8c8c",
+            },
+          }}
+          onClick={() => {
+            onLogInWithMicrosoft(rememberMe);
+          }}
+        >
+          Sign in with Microsoft
         </Button>
         <FormControlLabel
           control={

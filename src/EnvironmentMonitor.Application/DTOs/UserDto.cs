@@ -15,5 +15,8 @@ namespace EnvironmentMonitor.Application.DTOs
         
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? AuthenticationProvider { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? UpnExternal { get; set; }
     }
 }

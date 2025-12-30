@@ -6,7 +6,7 @@ export const routes = {
   emailConfirmation: "/email-confirmation",
   resetPassword: "/reset-password",
   forgotPassword: "/forgot-password",
-  changePassword: "/change-password",
+  userInfo: "/user-info",
   measurements: "/measurements/device",
   measurementsByDevice: "/measurements/device/:deviceId",
   locationMeasurements: "/measurements/location",

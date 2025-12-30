@@ -6,6 +6,7 @@ using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.WebApi.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
@@ -18,7 +19,9 @@ var isDevelopment = builder.Environment.IsDevelopment();
 var googleClientId = builder.Configuration["Google:ClientId"];
 var googleClientSecret = builder.Configuration["Google:ClientSecret"];
 if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret)) {
-    builder.Services.AddAuthentication().AddGoogle(googleOptions =>
+    builder.Services.AddAuthentication(x =>
+    {
+    }).AddGoogle(googleOptions =>
     {
         googleOptions.SaveTokens = true;
         googleOptions.ClientId = googleClientId;
@@ -27,6 +30,51 @@ if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientS
         {
             var redirect = QueryHelpers.AddQueryString(context.RedirectUri, "prompt", "select_account");
             context.Response.Redirect(redirect);
+            return Task.CompletedTask;
+        };
+    });
+}
+
+var microsoftClientId = builder.Configuration["Microsoft:ClientId"];
+var microsoftClientSecret = builder.Configuration["Microsoft:ClientSecret"];
+var microsoftTenantId = builder.Configuration["Microsoft:TenantId"]; // Add optional tenant ID
+if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftClientSecret)) {
+    builder.Services.AddAuthentication().AddMicrosoftAccount(options =>
+    {
+        options.ClientId = microsoftClientId;
+        options.ClientSecret = microsoftClientSecret;
+        options.SaveTokens = false;        
+        // Use tenant-specific endpoint if TenantId is provided, otherwise use common (multi-tenant)
+        if (!string.IsNullOrEmpty(microsoftTenantId))
+        {
+            options.AuthorizationEndpoint = $"https://login.microsoftonline.com/{microsoftTenantId}/oauth2/v2.0/authorize";
+            options.TokenEndpoint = $"https://login.microsoftonline.com/{microsoftTenantId}/oauth2/v2.0/token";
+        }
+        
+        options.Events.OnRedirectToAuthorizationEndpoint = context =>
+        {
+            var redirect = QueryHelpers.AddQueryString(context.RedirectUri, "prompt", "select_account");
+            context.Response.Redirect(redirect);
+            return Task.CompletedTask;
+        };
+
+        // Fetch UPN from AccesssToken and set it as claim.
+        options.Events.OnCreatingTicket = context =>
+        {
+            if (!string.IsNullOrWhiteSpace(context.AccessToken))
+            {
+                var accessToken = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler()
+                    .ReadJwtToken(context.AccessToken);
+
+                var upn = accessToken.Claims.FirstOrDefault(c => c.Type == "upn")?.Value
+                       ?? accessToken.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+
+                if (!string.IsNullOrWhiteSpace(upn))
+                {
+                    var id = (ClaimsIdentity)context.Principal!.Identity!;
+                    id.AddClaim(new Claim(ClaimTypes.Upn, upn));
+                }
+            }
             return Task.CompletedTask;
         };
     });
