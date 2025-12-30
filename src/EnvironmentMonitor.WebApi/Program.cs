@@ -41,7 +41,6 @@ var microsoftTenantId = builder.Configuration["Microsoft:TenantId"]; // Add opti
 if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftClientSecret)) {
     builder.Services.AddAuthentication().AddMicrosoftAccount(options =>
     {
-        options.SaveTokens = true;
         options.ClientId = microsoftClientId;
         options.ClientSecret = microsoftClientSecret;
         options.SaveTokens = false;        
