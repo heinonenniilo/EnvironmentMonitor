@@ -14,6 +14,8 @@ namespace EnvironmentMonitor.Domain.Enums
         [Description("Admin access")]
         Admin = 1,
         [Description("User")]
-        User = 2
+        User = 2,
+        [Description("Registered")]
+        Registered = 3
     }
 }

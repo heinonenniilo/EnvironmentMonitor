@@ -106,7 +106,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 var additionalClaims = await GetCalculatedClaims(user);
                 additionalClaims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
-                additionalClaims.Add(new Claim (ClaimTypes.Upn, upn ?? string.Empty));
+                additionalClaims.Add(new Claim(ClaimTypes.Upn, upn ?? string.Empty));
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
             else
@@ -123,13 +123,16 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     providerKey, providerKey
                     ));
 
+                await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
+
                 if (!addLoginResult.Succeeded)
                 {
                     throw new InvalidOperationException("Failed to add login");
                 }
                 var additionalClaims = new List<Claim>
                 {
-                    new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider)
+                    new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider),
+                    new Claim (ClaimTypes.Upn, upn ?? string.Empty)
                 };
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
@@ -190,6 +193,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var result = await _userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
+                await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
                 _logger.LogInformation($"Email confirmed for user: {user.Email}");
                 return true;
             }
@@ -272,6 +276,26 @@ namespace EnvironmentMonitor.Infrastructure.Services
             
             _logger.LogWarning($"Password reset failed for user: {user.Email}. Errors: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             return false;
+        }
+
+        public async Task DeleteUser(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found for deletion: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                _logger.LogError($"Failed to delete user {userId}: {errors}");
+                throw new InvalidOperationException($"Failed to delete user: {errors}");
+            }
+
+            _logger.LogInformation($"User deleted: {userId}");
         }
 
         /// <summary>

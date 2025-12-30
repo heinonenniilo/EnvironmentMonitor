@@ -153,5 +153,26 @@ namespace EnvironmentMonitor.Application.Services
                 return _currentUser.Roles.Any(r => r.Equals(GlobalRoles.Admin.ToString()));
             }
         }
+
+        public async Task DeleteOwnUser()
+        {
+            var userId = _currentUser.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new UnauthorizedAccessException("User not authenticated");
+            }
+
+            await _userAuthService.DeleteUser(userId);
+        }
+
+        public async Task DeleteUser(string userId)
+        {
+            if (!IsAdmin)
+            {
+                throw new UnauthorizedAccessException("Only admins can delete other users");
+            }
+
+            await _userAuthService.DeleteUser(userId);
+        }
     }
 }

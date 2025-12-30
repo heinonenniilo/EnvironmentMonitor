@@ -29,5 +29,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public List<Guid> GetDevices();
         public List<Guid> GetLocations();
         public bool IsAdmin { get; }
+        Task DeleteOwnUser();
+        Task DeleteUser(string userId);
     }
 }

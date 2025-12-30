@@ -16,5 +16,6 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task ChangePassword(string userId, ChangePasswordModel model);
         public Task ForgotPassword(ForgotPasswordModel model);
         public Task<bool> ResetPassword(ResetPasswordModel model);
+        public Task DeleteUser(string userId);
     }
 }
