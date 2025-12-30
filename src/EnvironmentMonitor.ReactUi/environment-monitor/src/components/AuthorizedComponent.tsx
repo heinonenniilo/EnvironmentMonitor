@@ -17,12 +17,10 @@ export const AuthorizedComponent: React.FunctionComponent<
 
   const isAdmin = user?.roles?.some((r) => r === RoleNames.Admin);
 
-  // If user is admin, always grant access
   if (isAdmin) {
     return <>{children}</>;
   }
 
-  // Determine which roles to check
   const rolesToCheck = requiredRoles ?? (requiredRole ? [requiredRole] : []);
 
   // If no roles specified, deny access
