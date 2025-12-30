@@ -221,7 +221,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
             return Redirect(returnUrl ?? "/");
         }
 
-        [HttpDelete("me")]
+        [HttpDelete("")]
         [Authorize]
         public async Task<IActionResult> DeleteOwnUser()
         {
