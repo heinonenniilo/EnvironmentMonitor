@@ -19,6 +19,7 @@ export interface UserMenuProps {
   user: User | undefined;
   isMobile?: boolean;
   drawUserInMenu?: boolean;
+  showProviderIcon?: boolean;
 }
 
 export const UserMenu: React.FC<UserMenuProps> = ({
@@ -27,6 +28,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   isMobile,
   drawUserInMenu,
   handleLogIn,
+  showProviderIcon,
 }) => {
   const [userMenuAcnhor, setUserMenuAcnhor] =
     React.useState<null | HTMLElement>(null);
@@ -48,7 +50,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
   );
 
   const getProviderIcon = () => {
-    if (!user?.authenticationProvider) return null;
+    if (!showProviderIcon || !user?.authenticationProvider) return null;
 
     const baseIconProps = {
       fontSize: 24,
