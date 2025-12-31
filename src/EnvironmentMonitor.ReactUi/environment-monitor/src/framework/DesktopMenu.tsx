@@ -283,6 +283,7 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               handleLogOut={onLogOut}
               drawUserInMenu
               handleLogIn={onLogin}
+              showProviderIcon
             />
           </MenuArea>
         </Box>

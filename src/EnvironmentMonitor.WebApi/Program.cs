@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using System;
 using System.Security.Claims;
+using AspNet.Security.OAuth.GitHub; // GitHub OAuth
 
 var builder = WebApplication.CreateBuilder(args);
 var isDevelopment = builder.Environment.IsDevelopment();
@@ -78,6 +79,37 @@ if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftC
             return Task.CompletedTask;
         };
     });
+}
+
+// GitHub OAuth configuration
+var githubClientId = builder.Configuration["GitHub:ClientId"];
+var githubClientSecret = builder.Configuration["GitHub:ClientSecret"];
+if (!string.IsNullOrEmpty(githubClientId) && !string.IsNullOrEmpty(githubClientSecret))
+{
+    builder.Services
+        .AddAuthentication()
+        .AddGitHub(options =>
+        {
+            options.ClientId = githubClientId;
+            options.ClientSecret = githubClientSecret;
+            options.SaveTokens = true;
+            // Request email scope to get primary email
+            options.Scope.Add("user:email");
+            options.Events.OnCreatingTicket = context =>
+            {
+                // Try to add email claim if available
+                var email = context.Identity?.FindFirst(ClaimTypes.Email)?.Value;
+                if (string.IsNullOrEmpty(email) && context.User.TryGetProperty("email", out var emailProp))
+                {
+                    var emailValue = emailProp.GetString();
+                    if (!string.IsNullOrEmpty(emailValue))
+                    {
+                        context.Identity!.AddClaim(new Claim(ClaimTypes.Email, emailValue));
+                    }
+                }
+                return Task.CompletedTask;
+            };
+        });
 }
 
 builder.Services.AddAuthorization();

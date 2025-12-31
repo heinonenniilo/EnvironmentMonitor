@@ -24,6 +24,7 @@ using ChangePasswordRequest = EnvironmentMonitor.Application.DTOs.ChangePassword
 using ForgotPasswordModel = EnvironmentMonitor.Domain.Models.ForgotPasswordModel;
 using ResetPasswordModel = EnvironmentMonitor.Domain.Models.ResetPasswordModel;
 using ChangePasswordModel = EnvironmentMonitor.Domain.Models.ChangePasswordModel;
+using AspNet.Security.OAuth.GitHub; // GitHub OAuth
 
 namespace EnvironmentMonitor.WebApi.Controllers
 {
@@ -212,6 +213,31 @@ namespace EnvironmentMonitor.WebApi.Controllers
             if (!authenticateResult.Succeeded)
             {
                 _logger.LogWarning($"Not authenticated at MicrosoftCallback");
+                return Unauthorized(new { Message = "Authentication failed." });
+            }
+            await _userService.ExternalLogin(new ExternalLoginModel()
+            {
+                Persistent = persistent
+            });
+            return Redirect(returnUrl ?? "/");
+        }
+
+        // GitHub OAuth endpoints
+        [HttpGet("github")]
+        public IActionResult GitHubLogin([FromQuery] bool persistent = false)
+        {
+            var redirectUrl = Url.Action(nameof(GitHubCallback), "Authentication", new { returnUrl = "/", persistent });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(GitHubAuthenticationDefaults.AuthenticationScheme, redirectUrl);
+            return Challenge(properties, GitHubAuthenticationDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("github-callback")]
+        public async Task<IActionResult> GitHubCallback(string returnUrl = "/", bool persistent = false)
+        {
+            var authenticateResult = await HttpContext.AuthenticateAsync(GitHubAuthenticationDefaults.AuthenticationScheme);
+            if (!authenticateResult.Succeeded)
+            {
+                _logger.LogWarning($"Not authenticated at GitHubCallback");
                 return Unauthorized(new { Message = "Authentication failed." });
             }
             await _userService.ExternalLogin(new ExternalLoginModel()
