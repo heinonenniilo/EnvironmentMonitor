@@ -50,16 +50,20 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             var message = new MimeMessage();
             message.From.Add(MailboxAddress.Parse(_settings.SenderAddress));
-            foreach (var addr in toAddresses) message.To.Add(MailboxAddress.Parse(addr));
-            foreach (var addr in ccAddresses) message.Cc.Add(MailboxAddress.Parse(addr));
-            foreach (var addr in bccAddresses) message.Bcc.Add(MailboxAddress.Parse(addr));
+            message.To.AddRange(toAddresses.Select(addr => MailboxAddress.Parse(addr)));
+            message.Cc.AddRange(ccAddresses.Select(addr => MailboxAddress.Parse(addr)));
+            message.Bcc.AddRange(bccAddresses.Select(addr => MailboxAddress.Parse(addr)));
             message.Subject = subjectToUse;
 
             var bodyBuilder = new BodyBuilder();
             if (!string.IsNullOrWhiteSpace(options.HtmlContent))
+            {
                 bodyBuilder.HtmlBody = options.HtmlContent;
+            }
             if (!string.IsNullOrWhiteSpace(options.PlainTextContent))
+            {
                 bodyBuilder.TextBody = options.PlainTextContent;
+            }
             message.Body = bodyBuilder.ToMessageBody();
 
             using var client = new SmtpClient();
@@ -83,7 +87,14 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
             finally
             {
-                try { await client.DisconnectAsync(true); } catch { }
+                try
+                {
+                    await client.DisconnectAsync(true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to disconnect from SMTP host");
+                }
             }
         }
     }
