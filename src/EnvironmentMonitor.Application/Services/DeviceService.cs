@@ -32,10 +32,11 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDateService _dateService;
         private readonly IImageService _imageService;
         private readonly IKeyVaultClient _keyVaultClient;
+        private readonly DeviceSettings _deviceSettings;
 
         public DeviceService(ILogger<DeviceService> logger, IUserService userService,
             IDeviceRepository deviceRepository, IDeviceEmailService deviceEmailService, IMapper mapper, IStorageClient storageClient, IDateService dateService,
-            IImageService imageService, IKeyVaultClient keyVaultClient)
+            IImageService imageService, IKeyVaultClient keyVaultClient, DeviceSettings deviceSettings)
         {
             _logger = logger;
             _userService = userService;
@@ -46,6 +47,7 @@ namespace EnvironmentMonitor.Application.Services
             _dateService = dateService;
             _imageService = imageService;
             _keyVaultClient = keyVaultClient;
+            _deviceSettings = deviceSettings;
         }
 
         public async Task<List<DeviceDto>> GetDevices(bool onlyVisible, bool getLocation)
@@ -401,8 +403,15 @@ namespace EnvironmentMonitor.Application.Services
 
             if (updatedStatus != null)
             {
-                _logger.LogInformation($"Queuing device email for device {device.Name} ({device.Id}). Type: {currentStatus?.Status}");
-                await _deviceEmailService.QueueDeviceStatusEmail(model, updatedStatus, currentStatus, saveChanges);
+                if (_deviceSettings.SendDeviceEmails)
+                {
+                    _logger.LogInformation($"Queuing device email for device {device.Name} ({device.Id}). Type: {currentStatus?.Status}");
+                    await _deviceEmailService.QueueDeviceStatusEmail(model, updatedStatus, currentStatus, saveChanges);
+                }
+                else
+                {
+                    _logger.LogWarning($"Device emails are disabled. Not sending email for device {device.Name} ({device.Id}). Type: {currentStatus?.Status}");
+                }
             }
         }
 
