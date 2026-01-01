@@ -4,49 +4,51 @@ using Azure.Identity;
 using AzureEmailClient = Azure.Communication.Email.EmailClient;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Utils;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Infrastructure.Services
 {
-    public class EmailClient : IEmailClient
+    public class AzureCommunicationServiceClient : IEmailClient
     {
         private readonly AzureEmailClient? _emailClient;
         private readonly EmailSettings _settings;
-        private readonly ILogger<EmailClient> _logger;
+        private readonly ILogger<AzureCommunicationServiceClient> _logger;
 
-        public EmailClient(EmailSettings settings, ILogger<EmailClient> logger)
+        public AzureCommunicationServiceClient(EmailSettings settings, ILogger<AzureCommunicationServiceClient> logger)
         {
             _settings = settings;
             _logger = logger;
 
-            if (!string.IsNullOrEmpty(_settings.Endpoint))
+            var azure = _settings.Azure ?? new AzureEmailSettings();
+
+            if (!string.IsNullOrEmpty(azure.Endpoint))
             {
                 try
                 {
-                    var endpoint = new Uri(_settings.Endpoint);
+                    var endpoint = new Uri(azure.Endpoint);
                     var credential = new DefaultAzureCredential();
                     _emailClient = new AzureEmailClient(endpoint, credential);
-                    _logger.LogInformation("Email client initialized with DefaultAzureCredential and endpoint: {Endpoint}", _settings.Endpoint);
+                    _logger.LogInformation("Azure Email client initialized with DefaultAzureCredential and endpoint: {Endpoint}", azure.Endpoint);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Failed to initialize email client with DefaultAzureCredential");
+                    _logger.LogError(ex, "Failed to initialize Azure email client with DefaultAzureCredential");
                     throw;
                 }
             }
-            else if (!string.IsNullOrEmpty(_settings.ConnectionString))
+            else if (!string.IsNullOrEmpty(azure.ConnectionString))
             {
-                _emailClient = new AzureEmailClient(_settings.ConnectionString);
-                _logger.LogInformation("Email client initialized with connection string");
+                _emailClient = new AzureEmailClient(azure.ConnectionString);
+                _logger.LogInformation("Azure Email client initialized with connection string");
             }
             else
             {
-                _logger.LogWarning("Email client not initialized - no connection string or endpoint provided");
+                _logger.LogWarning("Azure Email client not initialized - no connection string or endpoint provided");
             }
         }
 
@@ -61,22 +63,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new InvalidOperationException("Sender address not configured");
             }
 
-            // Apply token replacement if tokens are provided
-            if (options.ReplaceTokens != null && options.ReplaceTokens.Any())
-            {
-                foreach (var token in options.ReplaceTokens)
-                {
-                    options.Subject = options.Subject.Replace(token.Key, token.Value);
-                    options.HtmlContent = options.HtmlContent.Replace(token.Key, token.Value);
-                    options.PlainTextContent = options.PlainTextContent.Replace(token.Key, token.Value);
-                }
-            }
+            EmailUtils.ReplaceTokens(options);
 
-            var toAddresses = GetValidatedAndDistinctAddresses(options.ToAddresses);
-            var ccAddresses = GetValidatedAndDistinctAddresses(options.CcAddresses);
-            var bccAddresses = GetValidatedAndDistinctAddresses(_settings.RecipientAddresses, options.BccAddresses);
+            var toAddresses = EmailUtils.GetValidatedAndDistinctAddresses(options.ToAddresses);
+            var ccAddresses = EmailUtils.GetValidatedAndDistinctAddresses(options.CcAddresses);
+            var bccAddresses = EmailUtils.GetValidatedAndDistinctAddresses(_settings.RecipientAddresses, options.BccAddresses);
 
-            // Validate that we have at least one recipient
             if (!toAddresses.Any() && !ccAddresses.Any() && !bccAddresses.Any())
             {
                 _logger.LogWarning("No recipient addresses configured or provided. Email not sent.");
@@ -101,13 +93,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             var recipients = new EmailRecipients(toAddresses.Select(addr => new EmailAddress(addr)).ToList());
 
-            // Add CC recipients
             foreach (var ccAddr in ccAddresses)
             {
                 recipients.CC.Add(new EmailAddress(ccAddr));
             }
 
-            // Add BCC recipients
             foreach (var bccAddr in bccAddresses)
             {
                 recipients.BCC.Add(new EmailAddress(bccAddr));
@@ -125,31 +115,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 _logger.LogError(ex, $"Failed to send email. Subject: {options.Subject}");
                 throw;
             }
-        }
-
-        private static List<string> GetValidatedAndDistinctAddresses(params object?[] addressSources)
-        {
-            var addresses = new List<string>();
-            
-            foreach (var source in addressSources)
-            {
-                if (source == null)
-                    continue;
-
-                if (source is string singleAddress)
-                {
-                    if (!string.IsNullOrWhiteSpace(singleAddress))
-                    {
-                        addresses.Add(singleAddress);
-                    }
-                }
-                else if (source is IEnumerable<string> addressList)
-                {
-                    addresses.AddRange(addressList.Where(addr => !string.IsNullOrWhiteSpace(addr)));
-                }
-            }
-
-            return addresses.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         }
     }
 }

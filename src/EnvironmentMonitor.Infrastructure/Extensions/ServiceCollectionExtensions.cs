@@ -1,5 +1,6 @@
 ﻿using Azure.Identity;
 using Azure.Storage.Queues;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
@@ -11,10 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Infrastructure.Extensions
 {
@@ -64,7 +61,6 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
  
             if (dataProtectionKeysSettingsToCheck != null && dataProtectionKeysSettingsToCheck.StoreInDatabase)
             {
-                // Configure Data Protection to use the database
                 var dataProtectionBuilder = services.AddDataProtection()
                     .PersistKeysToDbContext<DataProtectionKeysContext>()
                     .SetApplicationName("EnvironmentMonitor");
@@ -141,15 +137,18 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 services.AddSingleton(defaultQueueSettings);
             }
 
+            EmailSettings emailSettingsToUse;
             if (emailSettings != null)
             {
                 services.AddSingleton(emailSettings);
+                emailSettingsToUse = emailSettings;
             }
             else
             {
                 var defaultEmailSettings = new EmailSettings();
                 configuration.GetSection("EmailSettings").Bind(defaultEmailSettings);
                 services.AddSingleton(defaultEmailSettings);
+                emailSettingsToUse = defaultEmailSettings;
             }
 
             services.AddSingleton<IDateService, DateService>();
@@ -159,7 +158,22 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<IPaginationService, PaginationService>();
             services.AddSingleton<IKeyVaultClient, KeyVaultClient>();
             services.AddSingleton<IQueueClient, Services.QueueClient>();
-            services.AddSingleton<IEmailClient, Services.EmailClient>();
+
+            services.AddHttpClient("MailGun");
+
+            switch (emailSettingsToUse.ClientType)
+            {
+                case EmailClientTypes.Smtp:
+                    services.AddSingleton<IEmailClient, SmtpEmailClient>();
+                    break;
+                case EmailClientTypes.MailGun:
+                    services.AddSingleton<IEmailClient, MailGunEmailClient>();
+                    break;
+                case EmailClientTypes.AzureCommunicationService:
+                default:
+                    services.AddSingleton<IEmailClient, AzureCommunicationServiceClient>();
+                    break;
+            }
 
             return services;
         }
