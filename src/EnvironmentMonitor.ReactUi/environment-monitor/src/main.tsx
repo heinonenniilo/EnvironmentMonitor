@@ -26,6 +26,8 @@ import { AuthorizedComponent } from "./components/AuthorizedComponent";
 import { RoleNames } from "./enums/roleNames";
 import { DeviceEmailsView } from "./containers/DeviceEmailsView";
 import { UserInfoView } from "./containers/UserInfoView";
+import { UsersView } from "./containers/UsersView";
+import { UserView } from "./containers/UserView";
 
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
@@ -149,6 +151,22 @@ createRoot(document.getElementById("root")!).render(
                 element={
                   <AuthorizedComponent requiredRole={RoleNames.Admin}>
                     <DeviceEmailsView />
+                  </AuthorizedComponent>
+                }
+              />
+              <Route
+                path={routes.users}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.Admin}>
+                    <UsersView />
+                  </AuthorizedComponent>
+                }
+              />
+              <Route
+                path={routes.userView}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.Admin}>
+                    <UserView />
                   </AuthorizedComponent>
                 }
               />
