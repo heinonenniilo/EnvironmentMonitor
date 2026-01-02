@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   Chip,
+  IconButton,
   Paper,
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import {
@@ -21,16 +23,20 @@ import {
   Google,
   Microsoft,
   GitHub,
+  Edit,
 } from "@mui/icons-material";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useApiHook } from "../hooks/apiHook";
-import type { UserInfoDto } from "../models/userInfoDto";
-import { useDispatch } from "react-redux";
+import type { UserInfoDto, UserClaimDto } from "../models/userInfoDto";
+import { useDispatch, useSelector } from "react-redux";
 import {
   addNotification,
   setConfirmDialog,
 } from "../reducers/userInterfaceReducer";
 import { routes } from "../utilities/routes";
+import { ManageRolesDialog } from "../components/UserManagement/ManageRolesDialog";
+import { ManageClaimsDialog } from "../components/UserManagement/ManageClaimsDialog";
+import { getDevices, getLocations } from "../reducers/measurementReducer";
 
 const getProviderIcon = (provider: string) => {
   const providerLower = provider.toLowerCase();
@@ -47,10 +53,36 @@ const getProviderIcon = (provider: string) => {
 export const UserView: React.FC = () => {
   const [user, setUser] = useState<UserInfoDto | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
+  const [rolesDialogOpen, setRolesDialogOpen] = useState(false);
+  const [claimsDialogOpen, setClaimsDialogOpen] = useState(false);
   const { userId } = useParams<{ userId?: string }>();
   const navigate = useNavigate();
   const userManagementHook = useApiHook().userManagementHook;
   const dispatch = useDispatch();
+
+  const locations = useSelector(getLocations);
+  const devices = useSelector(getDevices);
+
+  // Helper function to get display value for claims
+  const getClaimDisplayValue = (claim: UserClaimDto): string => {
+    const claimTypeLower = claim.type.toLowerCase();
+
+    if (claimTypeLower === "location") {
+      const location = locations.find(
+        (l) => l.identifier.toLowerCase() === claim.value.toLowerCase()
+      );
+      return location ? location.name : claim.value;
+    }
+
+    if (claimTypeLower === "device") {
+      const device = devices.find(
+        (d) => d.identifier.toLowerCase() === claim.value.toLowerCase()
+      );
+      return device ? device.displayName || device.name : claim.value;
+    }
+
+    return claim.value;
+  };
 
   useEffect(() => {
     if (userId) {
@@ -139,6 +171,85 @@ export const UserView: React.FC = () => {
         body: `Are you sure you want to delete user ${user.email}? This action cannot be undone.`,
       })
     );
+  };
+
+  const handleManageRoles = (rolesToAdd: string[], rolesToRemove: string[]) => {
+    if (!userId) return;
+
+    setIsLoading(true);
+    userManagementHook
+      .manageUserRoles({
+        userId,
+        rolesToAdd,
+        rolesToRemove,
+      })
+      .then((success) => {
+        if (success) {
+          dispatch(
+            addNotification({
+              title: "Roles updated successfully",
+              body: "",
+              severity: "success",
+            })
+          );
+          loadUser(userId);
+        } else {
+          dispatch(
+            addNotification({
+              title: "Failed to update roles",
+              body: "",
+              severity: "error",
+            })
+          );
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const handleManageClaims = (
+    claimsToAdd: UserClaimDto[],
+    claimsToRemove: UserClaimDto[]
+  ) => {
+    if (!userId) return;
+
+    setIsLoading(true);
+    userManagementHook
+      .manageUserClaims({
+        userId,
+        claimsToAdd,
+        claimsToRemove,
+      })
+      .then((success) => {
+        if (success) {
+          dispatch(
+            addNotification({
+              title: "Claims updated successfully",
+              body: "",
+              severity: "success",
+            })
+          );
+          loadUser(userId);
+        } else {
+          dispatch(
+            addNotification({
+              title: "Failed to update claims",
+              body: "",
+              severity: "error",
+            })
+          );
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   if (!user && !isLoading) {
@@ -263,13 +374,26 @@ export const UserView: React.FC = () => {
               <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {/* Roles Section */}
                 <Box>
-                  <Typography
-                    variant="subtitle2"
-                    color="text.secondary"
-                    gutterBottom
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      mb: 1,
+                    }}
                   >
-                    Roles
-                  </Typography>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Roles
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => setRolesDialogOpen(true)}
+                      title="Manage Roles"
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  </Box>
                   {user.roles.length > 0 ? (
                     <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                       {user.roles.map((role) => (
@@ -285,13 +409,26 @@ export const UserView: React.FC = () => {
 
                 {/* Claims Section */}
                 <Box>
-                  <Typography
-                    variant="subtitle2"
-                    color="text.secondary"
-                    gutterBottom
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      mb: 1,
+                    }}
                   >
-                    Claims
-                  </Typography>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Claims
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => setClaimsDialogOpen(true)}
+                      title="Manage Claims"
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  </Box>
                   {user.claims.length > 0 ? (
                     <TableContainer component={Paper} variant="outlined">
                       <Table size="small">
@@ -305,7 +442,16 @@ export const UserView: React.FC = () => {
                           {user.claims.map((claim, index) => (
                             <TableRow key={index}>
                               <TableCell>{claim.type}</TableCell>
-                              <TableCell>{claim.value}</TableCell>
+                              <TableCell>
+                                <Tooltip
+                                  title={`Identifier: ${claim.value}`}
+                                  arrow
+                                >
+                                  <span style={{ cursor: "help" }}>
+                                    {getClaimDisplayValue(claim)}
+                                  </span>
+                                </Tooltip>
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -321,6 +467,25 @@ export const UserView: React.FC = () => {
             </CardContent>
           </Card>
         </Box>
+      )}
+
+      {user && userId && (
+        <>
+          <ManageRolesDialog
+            open={rolesDialogOpen}
+            onClose={() => setRolesDialogOpen(false)}
+            onSave={handleManageRoles}
+            currentRoles={user.roles}
+            userId={userId}
+          />
+          <ManageClaimsDialog
+            open={claimsDialogOpen}
+            onClose={() => setClaimsDialogOpen(false)}
+            onSave={handleManageClaims}
+            currentClaims={user.claims}
+            userId={userId}
+          />
+        </>
       )}
     </AppContentWrapper>
   );

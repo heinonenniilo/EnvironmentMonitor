@@ -31,6 +31,8 @@ import type {
 } from "../models/deviceEmailTemplate";
 import type { CopyQueuedCommand } from "../models/copyQueuedCommand";
 import type { UserInfoDto } from "../models/userInfoDto";
+import type { ManageUserRolesRequest } from "../models/manageUserRolesRequest";
+import type { ManageUserClaimsRequest } from "../models/manageUserClaimsRequest";
 
 interface ApiHook {
   userHook: userHook;
@@ -169,6 +171,8 @@ interface userManagementHook {
   getAllUsers: () => Promise<UserInfoDto[]>;
   getUser: (userId: string) => Promise<UserInfoDto | undefined>;
   deleteUser: (userId: string) => Promise<boolean>;
+  manageUserRoles: (request: ManageUserRolesRequest) => Promise<boolean>;
+  manageUserClaims: (request: ManageUserClaimsRequest) => Promise<boolean>;
 }
 
 const apiClient = axios.create({
@@ -847,6 +851,26 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError("Failed to delete user");
+          return false;
+        }
+      },
+      manageUserRoles: async (request: ManageUserRolesRequest) => {
+        try {
+          await apiClient.post(`/api/usermanagement/roles`, request);
+          return true;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to manage user roles");
+          return false;
+        }
+      },
+      manageUserClaims: async (request: ManageUserClaimsRequest) => {
+        try {
+          await apiClient.post(`/api/usermanagement/claims`, request);
+          return true;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to manage user claims");
           return false;
         }
       },
