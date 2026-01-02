@@ -47,5 +47,37 @@ namespace EnvironmentMonitor.WebApi.Controllers
             await _userService.DeleteUser(userId);
             return Ok(new { Message = $"User {userId} deleted" });
         }
+
+        // POST api/usermanagement/claims
+        [HttpPost("claims")]
+        public async Task<IActionResult> ManageUserClaims([FromBody] ManageUserClaimsRequest request)
+        {
+            await _userService.ManageUserClaims(request);
+            
+            var addedCount = request.ClaimsToAdd?.Count ?? 0;
+            var removedCount = request.ClaimsToRemove?.Count ?? 0;
+            
+            return Ok(new { 
+                Message = $"Claims managed for user {request.UserId}. Added: {addedCount}, Removed: {removedCount}",
+                ClaimsAdded = addedCount,
+                ClaimsRemoved = removedCount
+            });
+        }
+
+        // POST api/usermanagement/roles
+        [HttpPost("roles")]
+        public async Task<IActionResult> ManageUserRoles([FromBody] ManageUserRolesRequest request)
+        {
+            await _userService.ManageUserRoles(request);
+            
+            var addedCount = request.RolesToAdd?.Count ?? 0;
+            var removedCount = request.RolesToRemove?.Count ?? 0;
+            
+            return Ok(new { 
+                Message = $"Roles managed for user {request.UserId}. Added: {addedCount}, Removed: {removedCount}",
+                RolesAdded = addedCount,
+                RolesRemoved = removedCount
+            });
+        }
     }
 }

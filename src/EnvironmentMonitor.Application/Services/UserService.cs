@@ -198,7 +198,8 @@ namespace EnvironmentMonitor.Application.Services
                 }).ToList(),
                 ExternalLogins = u.ExternalLogins.Select(l => new ExternalLoginInfoDto
                 {
-                    LoginProvider = l.LoginProvider
+                    LoginProvider = l.LoginProvider,
+                    ProviderDisplayName = l.ProviderDisplayName
                 }).ToList(),
                 LockoutEnd = u.LockoutEnd,
                 LockoutEnabled = u.LockoutEnabled,
@@ -233,12 +234,36 @@ namespace EnvironmentMonitor.Application.Services
                 }).ToList(),
                 ExternalLogins = user.ExternalLogins.Select(l => new ExternalLoginInfoDto
                 {
-                    LoginProvider = l.LoginProvider
+                    LoginProvider = l.LoginProvider,
+                    ProviderDisplayName = l.ProviderDisplayName
                 }).ToList(),
                 LockoutEnd = user.LockoutEnd,
                 LockoutEnabled = user.LockoutEnabled,
                 AccessFailedCount = user.AccessFailedCount
             };
+        }
+
+        public async Task ManageUserClaims(ManageUserClaimsRequest request)
+        {
+            if (!IsAdmin)
+            {
+                throw new UnauthorizedAccessException("Only admins can manage user claims");
+            }
+
+            var claimsToAdd = request.ClaimsToAdd?.Select(c => new Claim(c.Type, c.Value)).ToList();
+            var claimsToRemove = request.ClaimsToRemove?.Select(c => new Claim(c.Type, c.Value)).ToList();
+
+            await _userAuthService.ManageUserClaims(request.UserId, claimsToAdd, claimsToRemove);
+        }
+
+        public async Task ManageUserRoles(ManageUserRolesRequest request)
+        {
+            if (!IsAdmin)
+            {
+                throw new UnauthorizedAccessException("Only admins can manage user roles");
+            }
+
+            await _userAuthService.ManageUserRoles(request.UserId, request.RolesToAdd, request.RolesToRemove);
         }
     }
 }

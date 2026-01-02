@@ -31,5 +31,6 @@ namespace EnvironmentMonitor.Application.DTOs
     public class ExternalLoginInfoDto
     {
         public string LoginProvider { get; set; } = string.Empty;
+        public string? ProviderDisplayName { get; set; }
     }
 }

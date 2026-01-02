@@ -373,6 +373,163 @@ namespace EnvironmentMonitor.Infrastructure.Services
             };
         }
 
+        public async Task ManageUserClaims(string userId, List<Claim>? claimsToAdd, List<Claim>? claimsToRemove)
+        {
+            _logger.LogInformation($"Managing claims for user: {userId}. Adding: {claimsToAdd?.Count ?? 0}, Removing: {claimsToRemove?.Count ?? 0}");
+            var user = await _userManager.FindByIdAsync(userId);
+            
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+
+            var existingClaims = await _userManager.GetClaimsAsync(user);
+            var errors = new List<string>();
+
+            // Add claims
+            if (claimsToAdd?.Any() == true)
+            {
+                foreach (var claim in claimsToAdd)
+                {
+                    // Check if claim already exists
+                    if (existingClaims.Any(c => c.Type == claim.Type && c.Value == claim.Value))
+                    {
+                        _logger.LogInformation($"Claim '{claim.Type}:{claim.Value}' already exists for user: {userId}, skipping");
+                        continue;
+                    }
+
+                    var result = await _userManager.AddClaimAsync(user, claim);
+                    
+                    if (!result.Succeeded)
+                    {
+                        var error = $"Failed to add claim '{claim.Type}:{claim.Value}': {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                        _logger.LogError(error);
+                        errors.Add(error);
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Successfully added claim '{claim.Type}:{claim.Value}' to user: {userId}");
+                    }
+                }
+            }
+
+            // Remove claims
+            if (claimsToRemove?.Any() == true)
+            {
+                // Refresh existing claims after additions
+                existingClaims = await _userManager.GetClaimsAsync(user);
+                
+                foreach (var claim in claimsToRemove)
+                {
+                    var claimToRemove = existingClaims.FirstOrDefault(c => c.Type == claim.Type && c.Value == claim.Value);
+
+                    if (claimToRemove == null)
+                    {
+                        var warning = $"Claim '{claim.Type}:{claim.Value}' not found for user: {userId}, skipping";
+                        _logger.LogWarning(warning);
+                        continue;
+                    }
+
+                    var result = await _userManager.RemoveClaimAsync(user, claimToRemove);
+                    
+                    if (!result.Succeeded)
+                    {
+                        var error = $"Failed to remove claim '{claim.Type}:{claim.Value}': {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                        _logger.LogError(error);
+                        errors.Add(error);
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Successfully removed claim '{claim.Type}:{claim.Value}' from user: {userId}");
+                    }
+                }
+            }
+
+            if (errors.Any())
+            {
+                throw new InvalidOperationException($"Some operations failed: {string.Join("; ", errors)}");
+            }
+
+            _logger.LogInformation($"Successfully managed claims for user: {userId}");
+        }
+
+        public async Task ManageUserRoles(string userId, List<string>? rolesToAdd, List<string>? rolesToRemove)
+        {
+            _logger.LogInformation($"Managing roles for user: {userId}. Adding: {rolesToAdd?.Count ?? 0}, Removing: {rolesToRemove?.Count ?? 0}");
+            var user = await _userManager.FindByIdAsync(userId);
+            
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+
+            var errors = new List<string>();
+
+            // Add roles
+            if (rolesToAdd?.Any() == true)
+            {
+                foreach (var roleName in rolesToAdd)
+                {
+                    // Check if user already has the role
+                    if (await _userManager.IsInRoleAsync(user, roleName))
+                    {
+                        _logger.LogInformation($"User {userId} already has role '{roleName}', skipping");
+                        continue;
+                    }
+
+                    var result = await _userManager.AddToRoleAsync(user, roleName);
+                    
+                    if (!result.Succeeded)
+                    {
+                        var error = $"Failed to add role '{roleName}': {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                        _logger.LogError(error);
+                        errors.Add(error);
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Successfully added role '{roleName}' to user: {userId}");
+                    }
+                }
+            }
+
+            // Remove roles
+            if (rolesToRemove?.Any() == true)
+            {
+                foreach (var roleName in rolesToRemove)
+                {
+                    // Check if user has the role
+                    if (!await _userManager.IsInRoleAsync(user, roleName))
+                    {
+                        var warning = $"User {userId} does not have role '{roleName}', skipping";
+                        _logger.LogWarning(warning);
+                        continue;
+                    }
+
+                    var result = await _userManager.RemoveFromRoleAsync(user, roleName);
+                    
+                    if (!result.Succeeded)
+                    {
+                        var error = $"Failed to remove role '{roleName}': {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                        _logger.LogError(error);
+                        errors.Add(error);
+                    }
+                    else
+                    {
+                        _logger.LogInformation($"Successfully removed role '{roleName}' from user: {userId}");
+                    }
+                }
+            }
+
+            if (errors.Any())
+            {
+                throw new InvalidOperationException($"Some operations failed: {string.Join("; ", errors)}");
+            }
+
+            _logger.LogInformation($"Successfully managed roles for user: {userId}");
+        }
+
         /// <summary>
         /// Get calculated claims. Each location gives a claim to devices in the location. Each device gives a claim to each sensor attached to the device.
         /// Users with Viewer role get claims to all locations.

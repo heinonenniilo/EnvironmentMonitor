@@ -33,5 +33,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         Task DeleteUser(string userId);
         Task<List<UserInfoDto>> GetAllUsers();
         Task<UserInfoDto?> GetUser(string userId);
+        Task ManageUserClaims(ManageUserClaimsRequest request);
+        Task ManageUserRoles(ManageUserRolesRequest request);
     }
 }
