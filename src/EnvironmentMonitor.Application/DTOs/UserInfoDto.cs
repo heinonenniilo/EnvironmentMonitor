@@ -16,6 +16,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public bool EmailConfirmed { get; set; }
         public List<string> Roles { get; set; } = new();
         public List<UserClaimDto> Claims { get; set; } = new();
+        public List<ExternalLoginInfoDto> ExternalLogins { get; set; } = new();
         public DateTime? LockoutEnd { get; set; }
         public bool LockoutEnabled { get; set; }
         public int AccessFailedCount { get; set; }
@@ -25,5 +26,10 @@ namespace EnvironmentMonitor.Application.DTOs
     {
         public string Type { get; set; } = string.Empty;
         public string Value { get; set; } = string.Empty;
+    }
+
+    public class ExternalLoginInfoDto
+    {
+        public string LoginProvider { get; set; } = string.Empty;
     }
 }

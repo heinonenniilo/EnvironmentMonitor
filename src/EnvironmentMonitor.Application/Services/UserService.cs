@@ -196,6 +196,10 @@ namespace EnvironmentMonitor.Application.Services
                     Type = c.Type,
                     Value = c.Value
                 }).ToList(),
+                ExternalLogins = u.ExternalLogins.Select(l => new ExternalLoginInfoDto
+                {
+                    LoginProvider = l.LoginProvider
+                }).ToList(),
                 LockoutEnd = u.LockoutEnd,
                 LockoutEnabled = u.LockoutEnabled,
                 AccessFailedCount = u.AccessFailedCount
@@ -226,6 +230,10 @@ namespace EnvironmentMonitor.Application.Services
                 {
                     Type = c.Type,
                     Value = c.Value
+                }).ToList(),
+                ExternalLogins = user.ExternalLogins.Select(l => new ExternalLoginInfoDto
+                {
+                    LoginProvider = l.LoginProvider
                 }).ToList(),
                 LockoutEnd = user.LockoutEnd,
                 LockoutEnabled = user.LockoutEnabled,

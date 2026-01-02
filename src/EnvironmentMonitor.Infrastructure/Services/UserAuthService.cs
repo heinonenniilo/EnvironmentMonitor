@@ -312,6 +312,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 var roles = await _userManager.GetRolesAsync(user);
                 var claims = await _userManager.GetClaimsAsync(user);
+                var logins = await _userManager.GetLoginsAsync(user);
 
                 userInfoList.Add(new UserInfoModel
                 {
@@ -321,6 +322,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     EmailConfirmed = user.EmailConfirmed,
                     Roles = roles.ToList(),
                     Claims = claims.ToList(),
+                    ExternalLogins = logins.Select(l => new Domain.Models.ExternalLoginInfo
+                    {
+                        LoginProvider = l.LoginProvider,
+                        ProviderKey = l.ProviderKey,
+                        ProviderDisplayName = l.ProviderDisplayName
+                    }).ToList(),
                     LockoutEnd = user.LockoutEnd?.UtcDateTime,
                     LockoutEnabled = user.LockoutEnabled,
                     AccessFailedCount = user.AccessFailedCount
@@ -344,6 +351,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             var roles = await _userManager.GetRolesAsync(user);
             var claims = await _userManager.GetClaimsAsync(user);
+            var logins = await _userManager.GetLoginsAsync(user);
 
             return new UserInfoModel
             {
@@ -353,6 +361,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 EmailConfirmed = user.EmailConfirmed,
                 Roles = roles.ToList(),
                 Claims = claims.ToList(),
+                ExternalLogins = logins.Select(l => new Domain.Models.ExternalLoginInfo
+                {
+                    LoginProvider = l.LoginProvider,
+                    ProviderKey = l.ProviderKey,
+                    ProviderDisplayName = l.ProviderDisplayName
+                }).ToList(),
                 LockoutEnd = user.LockoutEnd?.UtcDateTime,
                 LockoutEnabled = user.LockoutEnabled,
                 AccessFailedCount = user.AccessFailedCount
