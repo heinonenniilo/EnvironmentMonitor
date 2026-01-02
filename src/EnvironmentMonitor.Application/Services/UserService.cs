@@ -175,5 +175,62 @@ namespace EnvironmentMonitor.Application.Services
 
             await _userAuthService.DeleteUser(userId);
         }
+
+        public async Task<List<UserInfoDto>> GetAllUsers()
+        {
+            if (!IsAdmin)
+            {
+                throw new UnauthorizedAccessException("Only admins can list users");
+            }
+
+            var users = await _userAuthService.GetAllUsers();
+            return users.Select(u => new UserInfoDto
+            {
+                Id = u.Id,
+                Email = u.Email,
+                UserName = u.UserName,
+                EmailConfirmed = u.EmailConfirmed,
+                Roles = u.Roles,
+                Claims = u.Claims.Select(c => new UserClaimDto
+                {
+                    Type = c.Type,
+                    Value = c.Value
+                }).ToList(),
+                LockoutEnd = u.LockoutEnd,
+                LockoutEnabled = u.LockoutEnabled,
+                AccessFailedCount = u.AccessFailedCount
+            }).ToList();
+        }
+
+        public async Task<UserInfoDto?> GetUser(string userId)
+        {
+            if (!IsAdmin)
+            {
+                throw new UnauthorizedAccessException("Only admins can view user details");
+            }
+
+            var user = await _userAuthService.GetUser(userId);
+            if (user == null)
+            {
+                return null;
+            }
+
+            return new UserInfoDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.UserName,
+                EmailConfirmed = user.EmailConfirmed,
+                Roles = user.Roles,
+                Claims = user.Claims.Select(c => new UserClaimDto
+                {
+                    Type = c.Type,
+                    Value = c.Value
+                }).ToList(),
+                LockoutEnd = user.LockoutEnd,
+                LockoutEnabled = user.LockoutEnabled,
+                AccessFailedCount = user.AccessFailedCount
+            };
+        }
     }
 }

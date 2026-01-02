@@ -1,3 +1,4 @@
+using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -15,6 +16,28 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public UserManagementController(IUserService userService)
         {
             _userService = userService;
+        }
+
+        // GET api/usermanagement
+        [HttpGet]
+        public async Task<ActionResult<List<UserInfoDto>>> GetAllUsers()
+        {
+            var users = await _userService.GetAllUsers();
+            return Ok(users);
+        }
+
+        // GET api/usermanagement/{userId}
+        [HttpGet("{userId}")]
+        public async Task<ActionResult<UserInfoDto>> GetUser(string userId)
+        {
+            var user = await _userService.GetUser(userId);
+            
+            if (user == null)
+            {
+                return NotFound(new { Message = $"User with id '{userId}' not found" });
+            }
+
+            return Ok(user);
         }
 
         // DELETE api/usermanagement/{userId}

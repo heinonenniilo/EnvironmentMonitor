@@ -302,6 +302,63 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _logger.LogInformation($"User deleted: {userId}");
         }
 
+        public async Task<List<UserInfoModel>> GetAllUsers()
+        {
+            _logger.LogInformation("Fetching all users");
+            var users = _userManager.Users.ToList();
+            var userInfoList = new List<UserInfoModel>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var claims = await _userManager.GetClaimsAsync(user);
+
+                userInfoList.Add(new UserInfoModel
+                {
+                    Id = user.Id,
+                    Email = user.Email ?? string.Empty,
+                    UserName = user.UserName,
+                    EmailConfirmed = user.EmailConfirmed,
+                    Roles = roles.ToList(),
+                    Claims = claims.ToList(),
+                    LockoutEnd = user.LockoutEnd?.UtcDateTime,
+                    LockoutEnabled = user.LockoutEnabled,
+                    AccessFailedCount = user.AccessFailedCount
+                });
+            }
+
+            _logger.LogInformation($"Fetched {userInfoList.Count} users");
+            return userInfoList;
+        }
+
+        public async Task<UserInfoModel?> GetUser(string userId)
+        {
+            _logger.LogInformation($"Fetching user: {userId}");
+            var user = await _userManager.FindByIdAsync(userId);
+            
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found: {userId}");
+                return null;
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var claims = await _userManager.GetClaimsAsync(user);
+
+            return new UserInfoModel
+            {
+                Id = user.Id,
+                Email = user.Email ?? string.Empty,
+                UserName = user.UserName,
+                EmailConfirmed = user.EmailConfirmed,
+                Roles = roles.ToList(),
+                Claims = claims.ToList(),
+                LockoutEnd = user.LockoutEnd?.UtcDateTime,
+                LockoutEnabled = user.LockoutEnabled,
+                AccessFailedCount = user.AccessFailedCount
+            };
+        }
+
         /// <summary>
         /// Get calculated claims. Each location gives a claim to devices in the location. Each device gives a claim to each sensor attached to the device.
         /// Users with Viewer role get claims to all locations.
