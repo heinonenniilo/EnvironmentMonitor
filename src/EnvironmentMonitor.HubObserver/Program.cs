@@ -1,4 +1,5 @@
 using EnvironmentMonitor.Application.Extensions;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.HubObserver.Services;
@@ -28,7 +29,6 @@ var host = new HostBuilder()
             };
         }
 
-        // Read queue settings from configuration
         var queueServiceUri = opt.Configuration.GetValue<string>("StorageAccountConnection:queueServiceUri");
         var accountName = opt.Configuration.GetValue<string>("StorageAccountConnection:accountName");
         var defaultQueueName = opt.Configuration.GetValue<string>("DeviceMessagesQueueName");
@@ -44,29 +44,12 @@ var host = new HostBuilder()
             };
         }
 
-        var connectionString = opt.Configuration.GetValue<string>("EmailSettings:connectionString");
-        var recipientEmail = opt.Configuration.GetValue<string>("EmailSettings:recipientEmails");
-        var senderEmail = opt.Configuration.GetValue<string>("EmailSettings:SenderAddress");
-        var subjectPrefix = opt.Configuration.GetValue<string>("EmailSettings:SubjectPrefix");
-        var emailServiceEndpoint = opt.Configuration.GetValue<string>("EmailSettings:Endpoint");
-
-        var emailSettings = new EmailSettings
-        {
-            ConnectionString = connectionString ?? "",
-            RecipientAddresses = recipientEmail?.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList() ?? [],
-            SenderAddress = senderEmail ?? "",
-            EmailTitlePrefix = subjectPrefix ?? "",
-            Endpoint = emailServiceEndpoint ?? ""
-        };
+        var emailSettings = new EmailSettings();
+        opt.Configuration.GetSection("EmailSettings").Bind(emailSettings);
 
         var baseUrl = opt.Configuration.GetValue<string>("ApplicationSettings:BaseUrl");
+        var applicationSettings = new ApplicationSettings { BaseUrl = baseUrl ?? "" };
 
-        var applicationSettings = new ApplicationSettings
-        {
-            BaseUrl = baseUrl ?? ""
-        };
-
-        // Read Data Protection Keys settings from configuration
         var storeInDatabase = opt.Configuration.GetValue<bool>("DataProtectionKeysSettings:StoreInDatabase");
         var encryptWithKeyVault = opt.Configuration.GetValue<bool>("DataProtectionKeysSettings:EncryptWithKeyVault");
         var keyVaultKeyIdentifier = opt.Configuration.GetValue<string>("DataProtectionKeysSettings:KeyVaultKeyIdentifier");
