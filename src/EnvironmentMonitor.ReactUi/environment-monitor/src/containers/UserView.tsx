@@ -15,7 +15,13 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { Delete, ArrowBack } from "@mui/icons-material";
+import {
+  Delete,
+  ArrowBack,
+  Google,
+  Microsoft,
+  GitHub,
+} from "@mui/icons-material";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useApiHook } from "../hooks/apiHook";
 import type { UserInfoDto } from "../models/userInfoDto";
@@ -25,6 +31,18 @@ import {
   setConfirmDialog,
 } from "../reducers/userInterfaceReducer";
 import { routes } from "../utilities/routes";
+
+const getProviderIcon = (provider: string) => {
+  const providerLower = provider.toLowerCase();
+  if (providerLower.includes("google")) {
+    return <Google />;
+  } else if (providerLower.includes("microsoft")) {
+    return <Microsoft />;
+  } else if (providerLower.includes("github")) {
+    return <GitHub />;
+  }
+  return null;
+};
 
 export const UserView: React.FC = () => {
   const [user, setUser] = useState<UserInfoDto | undefined>(undefined);
@@ -197,6 +215,41 @@ export const UserView: React.FC = () => {
                     sx={{ mt: 0.5 }}
                   />
                 </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    External Logins
+                  </Typography>
+                  {user.externalLogins && user.externalLogins.length > 0 ? (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        gap: 1,
+                        flexWrap: "wrap",
+                        mt: 0.5,
+                      }}
+                    >
+                      {user.externalLogins.map((login, index) => (
+                        <Chip
+                          key={index}
+                          icon={
+                            getProviderIcon(login.loginProvider) || undefined
+                          }
+                          label={login.loginProvider}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                  ) : (
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mt: 0.5 }}
+                    >
+                      None
+                    </Typography>
+                  )}
+                </Box>
               </Box>
             </CardContent>
           </Card>
@@ -210,7 +263,11 @@ export const UserView: React.FC = () => {
               <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 {/* Roles Section */}
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
                     Roles
                   </Typography>
                   {user.roles.length > 0 ? (
@@ -228,7 +285,11 @@ export const UserView: React.FC = () => {
 
                 {/* Claims Section */}
                 <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
                     Claims
                   </Typography>
                   {user.claims.length > 0 ? (

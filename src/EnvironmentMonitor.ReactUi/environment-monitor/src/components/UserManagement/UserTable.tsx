@@ -25,12 +25,7 @@ export const UserTable: React.FC<UserTableProps> = ({
       renderCell: (params) => {
         const user = params.row as UserInfoDto;
         return renderLink ? (
-          <Link
-            to={`${routes.users}/${user.id}`}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            {user.email}
-          </Link>
+          <Link to={`${routes.users}/${user.id}`}>{user.email}</Link>
         ) : (
           user.email
         );

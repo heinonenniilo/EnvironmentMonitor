@@ -3,6 +3,10 @@ export interface UserClaimDto {
   value: string;
 }
 
+export interface ExternalLoginInfoDto {
+  loginProvider: string;
+}
+
 export interface UserInfoDto {
   id: string;
   email: string;
@@ -10,4 +14,5 @@ export interface UserInfoDto {
   emailConfirmed: boolean;
   roles: string[];
   claims: UserClaimDto[];
+  externalLogins: ExternalLoginInfoDto[];
 }
