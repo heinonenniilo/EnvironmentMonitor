@@ -7,6 +7,12 @@ import {
   Button,
   Box,
   Typography,
+  Chip,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Tooltip,
   Paper,
   Table,
   TableBody,
@@ -15,13 +21,8 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-  Tooltip,
 } from "@mui/material";
-import { Delete, Add } from "@mui/icons-material";
+import { Delete } from "@mui/icons-material";
 import type { UserClaimDto } from "../../models/userInfoDto";
 import { useSelector } from "react-redux";
 import { getDevices, getLocations } from "../../reducers/measurementReducer";
@@ -267,50 +268,27 @@ export const ManageClaimsDialog: React.FC<ManageClaimsDialogProps> = ({
               <Button
                 variant="contained"
                 onClick={handleAddClaim}
-                startIcon={<Add />}
                 disabled={!newClaimType || !newClaimValue}
               >
                 Add
               </Button>
             </Box>
             {claimsToAdd.length > 0 && (
-              <TableContainer component={Paper} variant="outlined">
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Type</TableCell>
-                      <TableCell>Value</TableCell>
-                      <TableCell width={60}>Action</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {claimsToAdd.map((claim, index) => (
-                      <TableRow
-                        key={index}
-                        sx={{ backgroundColor: "success.light" }}
-                      >
-                        <TableCell>{claim.type}</TableCell>
-                        <TableCell>
-                          <Tooltip title={`Identifier: ${claim.value}`} arrow>
-                            <span style={{ cursor: "help" }}>
-                              {getClaimDisplayValue(claim)}
-                            </span>
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell>
-                          <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => handleRemoveFromAdding(index)}
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                {claimsToAdd.map((claim, index) => (
+                  <Tooltip
+                    key={index}
+                    title={`${claim.type}: ${claim.value}`}
+                    arrow
+                  >
+                    <Chip
+                      label={`${claim.type}: ${getClaimDisplayValue(claim)}`}
+                      color="success"
+                      onDelete={() => handleRemoveFromAdding(index)}
+                    />
+                  </Tooltip>
+                ))}
+              </Box>
             )}
           </Box>
         </Box>
