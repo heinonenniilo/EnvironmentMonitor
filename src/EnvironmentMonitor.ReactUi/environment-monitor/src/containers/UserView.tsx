@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
   Box,
-  Button,
   Card,
   CardContent,
   Chip,
@@ -261,25 +260,24 @@ export const UserView: React.FC = () => {
   }
 
   return (
-    <AppContentWrapper title={user?.email || "User"} isLoading={isLoading}>
-      <Box sx={{ mb: 2, display: "flex", gap: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<ArrowBack />}
-          onClick={() => navigate(routes.users)}
-        >
-          Back to Users
-        </Button>
-        <Button
-          variant="contained"
-          color="error"
-          startIcon={<Delete />}
-          onClick={handleDeleteUser}
-        >
-          Delete User
-        </Button>
-      </Box>
-
+    <AppContentWrapper
+      title={user?.email || "User"}
+      isLoading={isLoading}
+      titleComponent={
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Tooltip title="Back to Users">
+            <IconButton onClick={() => navigate(routes.users)} size="medium">
+              <ArrowBack />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete User">
+            <IconButton onClick={handleDeleteUser} size="medium" color="error">
+              <Delete />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      }
+    >
       {user && (
         <Box
           sx={{
