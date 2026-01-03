@@ -16,14 +16,7 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import {
-  Delete,
-  ArrowBack,
-  Google,
-  Microsoft,
-  GitHub,
-  Edit,
-} from "@mui/icons-material";
+import { Google, Microsoft, GitHub, Edit } from "@mui/icons-material";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useApiHook } from "../hooks/apiHook";
 import type { UserInfoDto, UserClaimDto } from "../models/userInfoDto";
@@ -35,6 +28,7 @@ import {
 import { routes } from "../utilities/routes";
 import { ManageRolesDialog } from "../components/UserManagement/ManageRolesDialog";
 import { ManageClaimsDialog } from "../components/UserManagement/ManageClaimsDialog";
+import { UserActionsComponent } from "../components/UserManagement/UserActionsComponent";
 import { getDevices, getLocations } from "../reducers/measurementReducer";
 
 const getProviderIcon = (provider: string) => {
@@ -264,18 +258,10 @@ export const UserView: React.FC = () => {
       title={user?.email || "User"}
       isLoading={isLoading}
       titleComponent={
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Tooltip title="Back to Users">
-            <IconButton onClick={() => navigate(routes.users)} size="medium">
-              <ArrowBack />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete User">
-            <IconButton onClick={handleDeleteUser} size="medium" color="error">
-              <Delete />
-            </IconButton>
-          </Tooltip>
-        </Box>
+        <UserActionsComponent
+          onBack={() => navigate(routes.users)}
+          onDelete={handleDeleteUser}
+        />
       }
     >
       {user && (
