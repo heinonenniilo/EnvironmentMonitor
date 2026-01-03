@@ -4,6 +4,7 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { Link } from "react-router";
 import { routes } from "../../utilities/routes";
 import type { UserInfoDto } from "../../models/userInfoDto";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
 
 export interface UserTableProps {
   users: UserInfoDto[];
@@ -38,15 +39,28 @@ export const UserTable: React.FC<UserTableProps> = ({
       },
     },
     {
-      field: "userName",
-      headerName: "Username",
+      field: "updated",
+      headerName: "Last Updated",
       flex: 1,
-      minWidth: 150,
+      minWidth: 200,
+      renderCell: (params) => {
+        const user = params.row as UserInfoDto;
+        if (!user.updated) return "";
+
+        const formattedDate = getFormattedDate(user.updated, true);
+        const updatedByUser = user.updatedById
+          ? users.find((u) => u.id === user.updatedById)
+          : undefined;
+
+        return updatedByUser
+          ? `${formattedDate} (${updatedByUser.email})`
+          : formattedDate;
+      },
       valueGetter: (_value, row) => {
         if (!row) {
           return "";
         }
-        return (row as UserInfoDto).userName || "";
+        return (row as UserInfoDto).updated || "";
       },
     },
     {
