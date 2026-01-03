@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
@@ -41,17 +42,21 @@ namespace EnvironmentMonitor.Tests
                 .AddJsonFile("appsettings.testing.json")
                 .AddEnvironmentVariables()
                 .Build();
-            var services = new ServiceCollection();
+            var services = new ServiceCollection(); 
+            services.AddSingleton<ICurrentUser, TestUser>();
             services.AddInfrastructureServices(_configuration);
             var serviceProvider = services.BuildServiceProvider();
             using (var scope = serviceProvider.CreateScope())
             {
                 var measureDbContext = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
                 var applicationDbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var keysDbContext = scope.ServiceProvider.GetRequiredService<DataProtectionKeysContext>();
                 measureDbContext.Database.EnsureDeleted();
                 applicationDbContext.Database.EnsureDeleted();
+                keysDbContext.Database.EnsureDeleted();
                 measureDbContext.Database.Migrate();
                 applicationDbContext.Database.Migrate();
+                keysDbContext.Database.Migrate();
             }
             _factory = new CustomWebApplicationFactory<Program>();
             _respawner = await Respawner.CreateAsync(_configuration.GetConnectionString("DefaultConnection"), new RespawnerOptions
@@ -112,7 +117,7 @@ namespace EnvironmentMonitor.Tests
 
             var content = new StringContent(JsonConvert.SerializeObject(registerData), Encoding.UTF8, "application/json");
             var registerResponse = await _client.PostAsync("/api/Authentication/register", content);
-            
+
             if (!registerResponse.IsSuccessStatusCode)
             {
                 return (false, string.Empty);
@@ -256,7 +261,7 @@ namespace EnvironmentMonitor.Tests
             {
                 var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                 var measurementDbContext = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
-                
+
                 // Create users
                 var adminUserResult = await userManager.CreateAsync(new ApplicationUser() { UserName = AdminUserName, Email = AdminUserName, EmailConfirmed = true }, AdminPassword);
                 var viewerUserResult = await userManager.CreateAsync(new ApplicationUser() { UserName = ViewerUserName, Email = ViewerUserName, EmailConfirmed = true }, ViewerPassword);
@@ -357,6 +362,16 @@ namespace EnvironmentMonitor.Tests
             public Location Location { get; set; }
             public Location LocationWithNoDefinedAccess { get; set; }
             public List<Sensor> Sensors { get; set; }
+        }
+
+        protected class TestUser : ICurrentUser
+        {
+            public string? Id { get; set; }
+            public List<System.Security.Claims.Claim> Claims { get; set; } = [];
+
+            public string Email => "test_user@tester.com";
+
+            public List<string> Roles => ["Admin", "TEST"];
         }
     }
 }
