@@ -330,7 +330,9 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     }).ToList(),
                     LockoutEnd = user.LockoutEnd?.UtcDateTime,
                     LockoutEnabled = user.LockoutEnabled,
-                    AccessFailedCount = user.AccessFailedCount
+                    AccessFailedCount = user.AccessFailedCount,
+                    Updated = user.Updated,
+                    UpdatedById = user.UpdatedById
                 });
             }
 
@@ -342,7 +344,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         {
             _logger.LogInformation($"Fetching user: {userId}");
             var user = await _userManager.FindByIdAsync(userId);
-            
+
             if (user == null)
             {
                 _logger.LogWarning($"User not found: {userId}");
@@ -369,7 +371,9 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 }).ToList(),
                 LockoutEnd = user.LockoutEnd?.UtcDateTime,
                 LockoutEnabled = user.LockoutEnabled,
-                AccessFailedCount = user.AccessFailedCount
+                AccessFailedCount = user.AccessFailedCount,
+                Updated = user.Updated,
+                UpdatedById = user.UpdatedById
             };
         }
 

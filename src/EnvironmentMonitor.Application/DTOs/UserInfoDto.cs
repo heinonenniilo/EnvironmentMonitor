@@ -24,12 +24,11 @@ namespace EnvironmentMonitor.Application.DTOs
         public bool LockoutEnabled { get; set; }
         public int AccessFailedCount { get; set; }
         public DateTime? Updated { get; set; }
+        public string? UpdatedById { get; set; }
 
         public void Mapping(Profile profile)
         {
-            profile.CreateMap<UserInfoModel, UserInfoDto>()
-                // UserInfoModel doesn't currently have Updated; keep it unmapped.
-                .ForMember(d => d.Updated, opt => opt.Ignore());
+            profile.CreateMap<UserInfoModel, UserInfoDto>();
         }
     }
 
