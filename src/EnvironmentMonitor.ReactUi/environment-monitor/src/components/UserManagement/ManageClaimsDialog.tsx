@@ -26,6 +26,7 @@ import { Delete } from "@mui/icons-material";
 import type { UserClaimDto } from "../../models/userInfoDto";
 import { useSelector } from "react-redux";
 import { getDevices, getLocations } from "../../reducers/measurementReducer";
+import { stringSort } from "../../utilities/stringUtils";
 
 export interface ManageClaimsDialogProps {
   open: boolean;
@@ -245,23 +246,32 @@ export const ManageClaimsDialog: React.FC<ManageClaimsDialogProps> = ({
                   onChange={(e) => setNewClaimValue(e.target.value)}
                 >
                   {isLocationClaim &&
-                    locations.map((location) => (
-                      <MenuItem
-                        key={location.identifier}
-                        value={location.identifier}
-                      >
-                        {location.name}
-                      </MenuItem>
-                    ))}
+                    [...locations]
+                      .sort((a, b) => stringSort(a.name, b.name))
+                      .map((location) => (
+                        <MenuItem
+                          key={location.identifier}
+                          value={location.identifier}
+                        >
+                          {location.name}
+                        </MenuItem>
+                      ))}
                   {isDeviceClaim &&
-                    devices.map((device) => (
-                      <MenuItem
-                        key={device.identifier}
-                        value={device.identifier}
-                      >
-                        {device.displayName || device.name}
-                      </MenuItem>
-                    ))}
+                    [...devices]
+                      .sort((a, b) =>
+                        stringSort(
+                          a.displayName || a.name,
+                          b.displayName || b.name
+                        )
+                      )
+                      .map((device) => (
+                        <MenuItem
+                          key={device.identifier}
+                          value={device.identifier}
+                        >
+                          {device.displayName || device.name}
+                        </MenuItem>
+                      ))}
                 </Select>
               </FormControl>
 
