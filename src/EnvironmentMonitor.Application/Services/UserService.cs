@@ -1,4 +1,5 @@
-﻿using EnvironmentMonitor.Application.DTOs;
+﻿using AutoMapper;
+using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
@@ -21,17 +22,20 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IUserAuthService _userAuthService;
         private readonly ApplicationSettings _applicationSettings;
         private readonly IQueueClient _queueClient;
+        private readonly IMapper _mapper;
 
         public UserService(
             ICurrentUser currentUser,
             IUserAuthService userAuthService,
             ApplicationSettings applicationSettings,
-            IQueueClient queueClient)
+            IQueueClient queueClient,
+            IMapper mapper)
         {
             _currentUser = currentUser;
             _userAuthService = userAuthService;
             _applicationSettings = applicationSettings;
             _queueClient = queueClient;
+            _mapper = mapper;
         }
 
         public bool HasAccessToDevice(Guid id, AccessLevels accessLevel) => HasAccessTo(EntityRoles.Device, id, accessLevel);
@@ -184,27 +188,7 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             var users = await _userAuthService.GetAllUsers();
-            return users.Select(u => new UserInfoDto
-            {
-                Id = u.Id,
-                Email = u.Email,
-                UserName = u.UserName,
-                EmailConfirmed = u.EmailConfirmed,
-                Roles = u.Roles,
-                Claims = u.Claims.Select(c => new UserClaimDto
-                {
-                    Type = c.Type,
-                    Value = c.Value
-                }).ToList(),
-                ExternalLogins = u.ExternalLogins.Select(l => new ExternalLoginInfoDto
-                {
-                    LoginProvider = l.LoginProvider,
-                    ProviderDisplayName = l.ProviderDisplayName
-                }).ToList(),
-                LockoutEnd = u.LockoutEnd,
-                LockoutEnabled = u.LockoutEnabled,
-                AccessFailedCount = u.AccessFailedCount
-            }).ToList();
+            return _mapper.Map<List<UserInfoDto>>(users);
         }
 
         public async Task<UserInfoDto?> GetUser(string userId)
@@ -215,32 +199,7 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             var user = await _userAuthService.GetUser(userId);
-            if (user == null)
-            {
-                return null;
-            }
-
-            return new UserInfoDto
-            {
-                Id = user.Id,
-                Email = user.Email,
-                UserName = user.UserName,
-                EmailConfirmed = user.EmailConfirmed,
-                Roles = user.Roles,
-                Claims = user.Claims.Select(c => new UserClaimDto
-                {
-                    Type = c.Type,
-                    Value = c.Value
-                }).ToList(),
-                ExternalLogins = user.ExternalLogins.Select(l => new ExternalLoginInfoDto
-                {
-                    LoginProvider = l.LoginProvider,
-                    ProviderDisplayName = l.ProviderDisplayName
-                }).ToList(),
-                LockoutEnd = user.LockoutEnd,
-                LockoutEnabled = user.LockoutEnabled,
-                AccessFailedCount = user.AccessFailedCount
-            };
+            return user == null ? null : _mapper.Map<UserInfoDto>(user);
         }
 
         public async Task ManageUserClaims(ManageUserClaimsRequest request)

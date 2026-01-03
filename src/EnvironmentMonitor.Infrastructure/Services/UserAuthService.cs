@@ -322,7 +322,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     EmailConfirmed = user.EmailConfirmed,
                     Roles = roles.ToList(),
                     Claims = claims.ToList(),
-                    ExternalLogins = logins.Select(l => new Domain.Models.ExternalLoginInfo
+                    ExternalLogins = logins.Select(l => new Domain.Models.ExternalLoginInfoModel
                     {
                         LoginProvider = l.LoginProvider,
                         ProviderKey = l.ProviderKey,
@@ -361,7 +361,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 EmailConfirmed = user.EmailConfirmed,
                 Roles = roles.ToList(),
                 Claims = claims.ToList(),
-                ExternalLogins = logins.Select(l => new Domain.Models.ExternalLoginInfo
+                ExternalLogins = logins.Select(l => new ExternalLoginInfoModel
                 {
                     LoginProvider = l.LoginProvider,
                     ProviderKey = l.ProviderKey,

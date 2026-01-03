@@ -1,3 +1,6 @@
+using AutoMapper;
+using EnvironmentMonitor.Application.Mappings;
+using EnvironmentMonitor.Domain.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.DTOs
 {
-    public class UserInfoDto
+    public class UserInfoDto : IMapFrom<UserInfoModel>
     {
         public string Id { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
@@ -20,17 +23,35 @@ namespace EnvironmentMonitor.Application.DTOs
         public DateTime? LockoutEnd { get; set; }
         public bool LockoutEnabled { get; set; }
         public int AccessFailedCount { get; set; }
+        public DateTime? Updated { get; set; }
+
+        public void Mapping(Profile profile)
+        {
+            profile.CreateMap<UserInfoModel, UserInfoDto>()
+                // UserInfoModel doesn't currently have Updated; keep it unmapped.
+                .ForMember(d => d.Updated, opt => opt.Ignore());
+        }
     }
 
-    public class UserClaimDto
+    public class UserClaimDto : IMapFrom<Claim>
     {
         public string Type { get; set; } = string.Empty;
         public string Value { get; set; } = string.Empty;
+
+        public void Mapping(Profile profile)
+        {
+            profile.CreateMap<Claim, UserClaimDto>();
+        }
     }
 
-    public class ExternalLoginInfoDto
+    public class ExternalLoginInfoDto : IMapFrom<ExternalLoginInfoModel>
     {
         public string LoginProvider { get; set; } = string.Empty;
         public string? ProviderDisplayName { get; set; }
+
+        public void Mapping(Profile profile)
+        {
+            profile.CreateMap<ExternalLoginInfoModel, ExternalLoginInfoDto>();
+        }
     }
 }

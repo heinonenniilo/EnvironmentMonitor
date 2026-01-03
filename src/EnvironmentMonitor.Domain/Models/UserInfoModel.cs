@@ -15,13 +15,13 @@ namespace EnvironmentMonitor.Domain.Models
         public bool EmailConfirmed { get; set; }
         public List<string> Roles { get; set; } = new();
         public List<Claim> Claims { get; set; } = new();
-        public List<ExternalLoginInfo> ExternalLogins { get; set; } = new();
+        public List<ExternalLoginInfoModel> ExternalLogins { get; set; } = new();
         public DateTime? LockoutEnd { get; set; }
         public bool LockoutEnabled { get; set; }
         public int AccessFailedCount { get; set; }
     }
 
-    public class ExternalLoginInfo
+    public class ExternalLoginInfoModel
     {
         public string LoginProvider { get; set; } = string.Empty;
         public string ProviderKey { get; set; } = string.Empty;
