@@ -423,21 +423,29 @@ export const UserView: React.FC = () => {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {user.claims.map((claim, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{claim.type}</TableCell>
-                              <TableCell>
-                                <Tooltip
-                                  title={`Identifier: ${claim.value}`}
-                                  arrow
-                                >
-                                  <span style={{ cursor: "help" }}>
-                                    {getClaimDisplayValue(claim)}
-                                  </span>
-                                </Tooltip>
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                          {[...user.claims]
+                            .sort((a, b) => {
+                              const typeCompare = a.type.localeCompare(b.type);
+                              if (typeCompare !== 0) return typeCompare;
+                              return getClaimDisplayValue(a).localeCompare(
+                                getClaimDisplayValue(b)
+                              );
+                            })
+                            .map((claim, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{claim.type}</TableCell>
+                                <TableCell>
+                                  <Tooltip
+                                    title={`Identifier: ${claim.value}`}
+                                    arrow
+                                  >
+                                    <span style={{ cursor: "help" }}>
+                                      {getClaimDisplayValue(claim)}
+                                    </span>
+                                  </Tooltip>
+                                </TableCell>
+                              </TableRow>
+                            ))}
                         </TableBody>
                       </Table>
                     </TableContainer>
