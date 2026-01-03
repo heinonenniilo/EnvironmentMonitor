@@ -30,6 +30,7 @@ import { ManageRolesDialog } from "../components/UserManagement/ManageRolesDialo
 import { ManageClaimsDialog } from "../components/UserManagement/ManageClaimsDialog";
 import { UserActionsComponent } from "../components/UserManagement/UserActionsComponent";
 import { getDevices, getLocations } from "../reducers/measurementReducer";
+import { getFormattedDate } from "../utilities/datetimeUtils";
 
 const getProviderIcon = (provider: string) => {
   const providerLower = provider.toLowerCase();
@@ -48,6 +49,7 @@ export const UserView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [rolesDialogOpen, setRolesDialogOpen] = useState(false);
   const [claimsDialogOpen, setClaimsDialogOpen] = useState(false);
+  const [allUsers, setAllUsers] = useState<UserInfoDto[]>([]);
   const { userId } = useParams<{ userId?: string }>();
   const navigate = useNavigate();
   const userManagementHook = useApiHook().userManagementHook;
@@ -55,6 +57,13 @@ export const UserView: React.FC = () => {
 
   const locations = useSelector(getLocations);
   const devices = useSelector(getDevices);
+
+  // Helper function to get email from updatedById
+  const getUpdatedByEmail = (updatedById: string | undefined): string => {
+    if (!updatedById) return "N/A";
+    const updatedByUser = allUsers.find((u) => u.id === updatedById);
+    return updatedByUser ? updatedByUser.email : updatedById;
+  };
 
   // Helper function to get display value for claims
   const getClaimDisplayValue = (claim: UserClaimDto): string => {
@@ -81,8 +90,23 @@ export const UserView: React.FC = () => {
     if (userId) {
       loadUser(userId);
     }
+    // Load all users for the updatedById lookup
+    loadAllUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  const loadAllUsers = () => {
+    userManagementHook
+      .getAllUsers()
+      .then((users) => {
+        if (users) {
+          setAllUsers(users);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load users for lookup:", error);
+      });
+  };
 
   const loadUser = (id: string) => {
     setIsLoading(true);
@@ -345,6 +369,18 @@ export const UserView: React.FC = () => {
                     </Typography>
                   )}
                 </Box>
+                {user.updated && (
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">
+                      Last Updated
+                    </Typography>
+                    <Typography variant="body1">
+                      {getFormattedDate(user.updated, true)}
+                      {user.updatedById &&
+                        ` (${getUpdatedByEmail(user.updatedById)})`}
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             </CardContent>
           </Card>

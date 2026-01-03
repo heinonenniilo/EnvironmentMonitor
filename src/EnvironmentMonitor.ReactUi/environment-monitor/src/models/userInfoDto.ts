@@ -15,4 +15,6 @@ export interface UserInfoDto {
   roles: string[];
   claims: UserClaimDto[];
   externalLogins: ExternalLoginInfoDto[];
+  updated?: Date;
+  updatedById?: string;
 }
