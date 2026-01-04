@@ -48,13 +48,7 @@ export const UserTable: React.FC<UserTableProps> = ({
         if (!user.updated) return "";
 
         const formattedDate = getFormattedDate(user.updated, true);
-        const updatedByUser = user.updatedById
-          ? users.find((u) => u.id === user.updatedById)
-          : undefined;
-
-        return updatedByUser
-          ? `${formattedDate} (${updatedByUser.email})`
-          : formattedDate;
+        return formattedDate;
       },
       valueGetter: (_value, row) => {
         if (!row) {
