@@ -27,6 +27,7 @@ import type { UserClaimDto } from "../../models/userInfoDto";
 import { useSelector } from "react-redux";
 import { getDevices, getLocations } from "../../reducers/measurementReducer";
 import { stringSort } from "../../utilities/stringUtils";
+import { sortClaims, getClaimDisplayValue } from "../../utilities/claimUtils";
 
 export interface ManageClaimsDialogProps {
   open: boolean;
@@ -59,23 +60,20 @@ export const ManageClaimsDialog: React.FC<ManageClaimsDialogProps> = ({
   const isLocationClaim = newClaimType === "Location";
   const isDeviceClaim = newClaimType === "Device";
 
-  // Helper function to get display value for claims
-  const getClaimDisplayValue = (claim: UserClaimDto): string => {
-    if (claim.type === "Location") {
-      const location = locations.find(
-        (l) => l.identifier.toLowerCase() === claim.value.toLowerCase()
-      );
-      return location ? location.name : claim.value;
-    }
+  const isClaimAlreadyAssigned = (type: string, value: string): boolean => {
+    const inCurrentClaims = currentClaims.some(
+      (c) =>
+        c.type.toLowerCase() === type.toLowerCase() &&
+        c.value.toLowerCase() === value.toLowerCase()
+    );
 
-    if (claim.type === "Device") {
-      const device = devices.find(
-        (d) => d.identifier.toLowerCase() === claim.value.toLowerCase()
-      );
-      return device ? device.displayName || device.name : claim.value;
-    }
+    const inClaimsToAdd = claimsToAdd.some(
+      (c) =>
+        c.type.toLowerCase() === type.toLowerCase() &&
+        c.value.toLowerCase() === value.toLowerCase()
+    );
 
-    return claim.value;
+    return inCurrentClaims || inClaimsToAdd;
   };
 
   const handleAddClaim = () => {
@@ -155,43 +153,49 @@ export const ManageClaimsDialog: React.FC<ManageClaimsDialogProps> = ({
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {currentClaims.map((claim, index) => (
-                      <TableRow
-                        key={index}
-                        sx={{
-                          textDecoration: isMarkedForRemoval(claim)
-                            ? "line-through"
-                            : "none",
-                          backgroundColor: isMarkedForRemoval(claim)
-                            ? "action.hover"
-                            : "inherit",
-                        }}
-                      >
-                        <TableCell>{claim.type}</TableCell>
-                        <TableCell>
-                          <Tooltip title={`Identifier: ${claim.value}`} arrow>
-                            <span style={{ cursor: "help" }}>
-                              {getClaimDisplayValue(claim)}
-                            </span>
-                          </Tooltip>
-                        </TableCell>
-                        <TableCell>
-                          <IconButton
-                            size="small"
-                            color={
-                              isMarkedForRemoval(claim) ? "default" : "error"
-                            }
-                            onClick={() =>
-                              isMarkedForRemoval(claim)
-                                ? handleUnmarkForRemoval(claim)
-                                : handleMarkForRemoval(claim)
-                            }
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {sortClaims(currentClaims, locations, devices).map(
+                      (claim, index) => (
+                        <TableRow
+                          key={index}
+                          sx={{
+                            textDecoration: isMarkedForRemoval(claim)
+                              ? "line-through"
+                              : "none",
+                            backgroundColor: isMarkedForRemoval(claim)
+                              ? "action.hover"
+                              : "inherit",
+                          }}
+                        >
+                          <TableCell>{claim.type}</TableCell>
+                          <TableCell>
+                            <Tooltip title={`Identifier: ${claim.value}`} arrow>
+                              <span style={{ cursor: "help" }}>
+                                {getClaimDisplayValue(
+                                  claim,
+                                  locations,
+                                  devices
+                                )}
+                              </span>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell>
+                            <IconButton
+                              size="small"
+                              color={
+                                isMarkedForRemoval(claim) ? "default" : "error"
+                              }
+                              onClick={() =>
+                                isMarkedForRemoval(claim)
+                                  ? handleUnmarkForRemoval(claim)
+                                  : handleMarkForRemoval(claim)
+                              }
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -247,6 +251,13 @@ export const ManageClaimsDialog: React.FC<ManageClaimsDialogProps> = ({
                 >
                   {isLocationClaim &&
                     [...locations]
+                      .filter(
+                        (location) =>
+                          !isClaimAlreadyAssigned(
+                            "Location",
+                            location.identifier
+                          )
+                      )
                       .sort((a, b) => stringSort(a.name, b.name))
                       .map((location) => (
                         <MenuItem
@@ -258,6 +269,10 @@ export const ManageClaimsDialog: React.FC<ManageClaimsDialogProps> = ({
                       ))}
                   {isDeviceClaim &&
                     [...devices]
+                      .filter(
+                        (device) =>
+                          !isClaimAlreadyAssigned("Device", device.identifier)
+                      )
                       .sort((a, b) =>
                         stringSort(
                           a.displayName || a.name,
@@ -292,7 +307,11 @@ export const ManageClaimsDialog: React.FC<ManageClaimsDialogProps> = ({
                     arrow
                   >
                     <Chip
-                      label={`${claim.type}: ${getClaimDisplayValue(claim)}`}
+                      label={`${claim.type}: ${getClaimDisplayValue(
+                        claim,
+                        locations,
+                        devices
+                      )}`}
                       color="success"
                       onDelete={() => handleRemoveFromAdding(index)}
                     />

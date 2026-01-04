@@ -31,6 +31,7 @@ import { ManageClaimsDialog } from "../components/UserManagement/ManageClaimsDia
 import { UserActionsComponent } from "../components/UserManagement/UserActionsComponent";
 import { getDevices, getLocations } from "../reducers/measurementReducer";
 import { getFormattedDate } from "../utilities/datetimeUtils";
+import { sortClaims, getClaimDisplayValue } from "../utilities/claimUtils";
 
 const getProviderIcon = (provider: string) => {
   const providerLower = provider.toLowerCase();
@@ -63,27 +64,6 @@ export const UserView: React.FC = () => {
     if (!updatedById) return "N/A";
     const updatedByUser = allUsers.find((u) => u.id === updatedById);
     return updatedByUser ? updatedByUser.email : updatedById;
-  };
-
-  // Helper function to get display value for claims
-  const getClaimDisplayValue = (claim: UserClaimDto): string => {
-    const claimTypeLower = claim.type.toLowerCase();
-
-    if (claimTypeLower === "location") {
-      const location = locations.find(
-        (l) => l.identifier.toLowerCase() === claim.value.toLowerCase()
-      );
-      return location ? location.name : claim.value;
-    }
-
-    if (claimTypeLower === "device") {
-      const device = devices.find(
-        (d) => d.identifier.toLowerCase() === claim.value.toLowerCase()
-      );
-      return device ? device.displayName || device.name : claim.value;
-    }
-
-    return claim.value;
   };
 
   useEffect(() => {
@@ -459,15 +439,8 @@ export const UserView: React.FC = () => {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          {[...user.claims]
-                            .sort((a, b) => {
-                              const typeCompare = a.type.localeCompare(b.type);
-                              if (typeCompare !== 0) return typeCompare;
-                              return getClaimDisplayValue(a).localeCompare(
-                                getClaimDisplayValue(b)
-                              );
-                            })
-                            .map((claim, index) => (
+                          {sortClaims(user.claims, locations, devices).map(
+                            (claim, index) => (
                               <TableRow key={index}>
                                 <TableCell>{claim.type}</TableCell>
                                 <TableCell>
@@ -476,12 +449,17 @@ export const UserView: React.FC = () => {
                                     arrow
                                   >
                                     <span style={{ cursor: "help" }}>
-                                      {getClaimDisplayValue(claim)}
+                                      {getClaimDisplayValue(
+                                        claim,
+                                        locations,
+                                        devices
+                                      )}
                                     </span>
                                   </Tooltip>
                                 </TableCell>
                               </TableRow>
-                            ))}
+                            )
+                          )}
                         </TableBody>
                       </Table>
                     </TableContainer>
