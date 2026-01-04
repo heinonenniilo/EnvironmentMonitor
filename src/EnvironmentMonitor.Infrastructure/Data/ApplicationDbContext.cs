@@ -1,5 +1,6 @@
 ﻿using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Infrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Infrastructure.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationUserRole, string>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationUserRole, string, ApplicationUserClaim, IdentityUserRole<string>, IdentityUserLogin<string>, IdentityRoleClaim<string>, IdentityUserToken<string>>
     {
         private readonly ICurrentUser? _currentUser;
         private readonly IDateService _dateService;
@@ -35,17 +36,17 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public override int SaveChanges()
         {
-            StampUsers();
+            StampEntities();
             return base.SaveChanges();
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            StampUsers();
+            StampEntities();
             return base.SaveChangesAsync(cancellationToken);
         }
 
-        private void StampUsers()
+        private void StampEntities()
         {
             var updatedById = _currentUser?.Claims?.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             var now = _dateService.CurrentTime();
@@ -55,10 +56,25 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 if (entry.State == EntityState.Modified)
                 {
-
                     entry.Entity.Updated = now;
                     entry.Entity.UpdatedUtc = utcNow;
                     entry.Entity.UpdatedById = updatedById;
+                }
+            }
+            foreach (var entry in ChangeTracker.Entries<ApplicationUserClaim>())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entry.Entity.Created = now;
+                        entry.Entity.CreatedUtc = utcNow;
+                        entry.Entity.UpdatedById = updatedById;
+                        break;
+                    case EntityState.Modified:
+                        entry.Entity.Updated = now;
+                        entry.Entity.UpdatedUtc = utcNow;
+                        entry.Entity.UpdatedById = updatedById;
+                        break;
                 }
             }
         }

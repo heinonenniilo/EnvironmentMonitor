@@ -91,6 +91,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 .AddDefaultTokenProviders()
                 .AddRoles<ApplicationUserRole>()
                 .AddRoleManager<RoleManager<ApplicationUserRole>>();
+
             services.AddScoped<IRoleManager, RoleManager>();
             services.AddScoped<IUserAuthService, UserAuthService>();
 
