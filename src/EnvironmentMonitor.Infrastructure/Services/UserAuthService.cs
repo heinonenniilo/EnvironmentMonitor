@@ -390,72 +390,68 @@ namespace EnvironmentMonitor.Infrastructure.Services
         {
             _logger.LogInformation($"Managing claims for user: {userId}. Adding: {claimsToAdd?.Count ?? 0}, Removing: {claimsToRemove?.Count ?? 0}");
             var user = await _userManager.FindByIdAsync(userId);
-            
+
             if (user == null)
             {
                 _logger.LogWarning($"User not found: {userId}");
-                throw new InvalidOperationException("User not found");
+                throw new ArgumentException("User not found");
             }
 
-            var existingClaims = await _userManager.GetClaimsAsync(user);
             var errors = new List<string>();
 
-            // Add claims
+            var userCurrentClaims = await _userManager.GetClaimsAsync(user);
+
+            // Validate before proceeding
+            var duplicateClaimsToAdd = claimsToAdd?
+                .Where(c => userCurrentClaims.Any(currentClaim => currentClaim.Type.Equals(c.Type) && currentClaim.Value.Equals(c.Value, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (duplicateClaimsToAdd != null && duplicateClaimsToAdd.Any())
+            {
+                throw new ArgumentException($"The following claims already exist for the user and cannot be added again: {string.Join(", ", duplicateClaimsToAdd.Select(c => $"{c.Type}:{c.Value}"))}");
+            }
+
+            var nonExistingClaimsToRemove = claimsToRemove?
+                .Where(c => !userCurrentClaims.Any(currentClaim => currentClaim.Type.Equals(c.Type) && currentClaim.Value.Equals(c.Value, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (nonExistingClaimsToRemove != null && nonExistingClaimsToRemove.Any())
+            {
+                throw new ArgumentException($"The following claims do not exist for the user and cannot be removed: {string.Join(", ", nonExistingClaimsToRemove.Select(c => $"{c.Type}:{c.Value}"))}");
+            }
+
             if (claimsToAdd?.Any() == true)
             {
-                foreach (var claim in claimsToAdd)
-                {
-                    // Check if claim already exists
-                    if (existingClaims.Any(c => c.Type == claim.Type && c.Value == claim.Value))
-                    {
-                        _logger.LogInformation($"Claim '{claim.Type}:{claim.Value}' already exists for user: {userId}, skipping");
-                        continue;
-                    }
+                var result = await _userManager.AddClaimsAsync(user, claimsToAdd);
 
-                    var result = await _userManager.AddClaimAsync(user, claim);
-                    
-                    if (!result.Succeeded)
-                    {
-                        var error = $"Failed to add claim '{claim.Type}:{claim.Value}': {string.Join(", ", result.Errors.Select(e => e.Description))}";
-                        _logger.LogError(error);
-                        errors.Add(error);
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"Successfully added claim '{claim.Type}:{claim.Value}' to user: {userId}");
-                    }
+                if (!result.Succeeded)
+                {
+                    var error = $"Failed to add claims: {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                    _logger.LogError(error);
+                    errors.Add(error);
+                }
+                else
+                {
+                    var addedClaimsList = claimsToAdd.Select(c => $"{c.Type}:{c.Value}");
+                    _logger.LogInformation($"Successfully added claims [{string.Join(", ", addedClaimsList)}] to user: {userId}");
                 }
             }
 
             // Remove claims
             if (claimsToRemove?.Any() == true)
             {
-                // Refresh existing claims after additions
-                existingClaims = await _userManager.GetClaimsAsync(user);
-                
-                foreach (var claim in claimsToRemove)
+                var result = await _userManager.RemoveClaimsAsync(user, claimsToRemove);
+
+                if (!result.Succeeded)
                 {
-                    var claimToRemove = existingClaims.FirstOrDefault(c => c.Type == claim.Type && c.Value == claim.Value);
-
-                    if (claimToRemove == null)
-                    {
-                        var warning = $"Claim '{claim.Type}:{claim.Value}' not found for user: {userId}, skipping";
-                        _logger.LogWarning(warning);
-                        continue;
-                    }
-
-                    var result = await _userManager.RemoveClaimAsync(user, claimToRemove);
-                    
-                    if (!result.Succeeded)
-                    {
-                        var error = $"Failed to remove claim '{claim.Type}:{claim.Value}': {string.Join(", ", result.Errors.Select(e => e.Description))}";
-                        _logger.LogError(error);
-                        errors.Add(error);
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"Successfully removed claim '{claim.Type}:{claim.Value}' from user: {userId}");
-                    }
+                    var error = $"Failed to remove claims: {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                    _logger.LogError(error);
+                    errors.Add(error);
+                }
+                else
+                {
+                    var removedClaimsList = claimsToRemove.Select(c => $"{c.Type}:{c.Value}");
+                    _logger.LogInformation($"Successfully removed claims [{string.Join(", ", removedClaimsList)}] from user: {userId}");
                 }
             }
 
@@ -480,58 +476,58 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             var errors = new List<string>();
 
+            var userCurrentRoles = await _userManager.GetRolesAsync(user);
+
+            // Validate before proceeding
+            var duplicateRolesToAdd = rolesToAdd?
+                .Where(r => userCurrentRoles.Any(currentRole => currentRole.Equals(r, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (duplicateRolesToAdd != null && duplicateRolesToAdd.Any())
+            {
+                throw new ArgumentException($"The following roles already exist for the user and cannot be added again: {string.Join(", ", duplicateRolesToAdd)}");
+            }
+
+            var nonExistingRolesToRemove = rolesToRemove?
+                .Where(r => !userCurrentRoles.Any(currentRole => currentRole.Equals(r, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (nonExistingRolesToRemove != null && nonExistingRolesToRemove.Any())
+            {
+                throw new ArgumentException($"The following roles do not exist for the user and cannot be removed: {string.Join(", ", nonExistingRolesToRemove)}");
+            }
+
             // Add roles
             if (rolesToAdd?.Any() == true)
             {
-                foreach (var roleName in rolesToAdd)
+                var result = await _userManager.AddToRolesAsync(user, rolesToAdd);
+                
+                if (!result.Succeeded)
                 {
-                    // Check if user already has the role
-                    if (await _userManager.IsInRoleAsync(user, roleName))
-                    {
-                        _logger.LogInformation($"User {userId} already has role '{roleName}', skipping");
-                        continue;
-                    }
-
-                    var result = await _userManager.AddToRoleAsync(user, roleName);
-                    
-                    if (!result.Succeeded)
-                    {
-                        var error = $"Failed to add role '{roleName}': {string.Join(", ", result.Errors.Select(e => e.Description))}";
-                        _logger.LogError(error);
-                        errors.Add(error);
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"Successfully added role '{roleName}' to user: {userId}");
-                    }
+                    var error = $"Failed to add roles: {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                    _logger.LogError(error);
+                    errors.Add(error);
+                }
+                else
+                {
+                    _logger.LogInformation($"Successfully added roles [{string.Join(", ", rolesToAdd)}] to user: {userId}");
                 }
             }
 
             // Remove roles
             if (rolesToRemove?.Any() == true)
             {
-                foreach (var roleName in rolesToRemove)
+                var result = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+                
+                if (!result.Succeeded)
                 {
-                    // Check if user has the role
-                    if (!await _userManager.IsInRoleAsync(user, roleName))
-                    {
-                        var warning = $"User {userId} does not have role '{roleName}', skipping";
-                        _logger.LogWarning(warning);
-                        continue;
-                    }
-
-                    var result = await _userManager.RemoveFromRoleAsync(user, roleName);
-                    
-                    if (!result.Succeeded)
-                    {
-                        var error = $"Failed to remove role '{roleName}': {string.Join(", ", result.Errors.Select(e => e.Description))}";
-                        _logger.LogError(error);
-                        errors.Add(error);
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"Successfully removed role '{roleName}' from user: {userId}");
-                    }
+                    var error = $"Failed to remove roles: {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                    _logger.LogError(error);
+                    errors.Add(error);
+                }
+                else
+                {
+                    _logger.LogInformation($"Successfully removed roles [{string.Join(", ", rolesToRemove)}] from user: {userId}");
                 }
             }
 
