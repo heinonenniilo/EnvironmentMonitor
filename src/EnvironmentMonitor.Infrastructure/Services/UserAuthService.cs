@@ -108,11 +108,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             var user = await _userManager.FindByLoginAsync(loginProvider, providerKey);
             if (user != null)
-            {
+            {                
                 var additionalClaims = await GetCalculatedClaims(user);
                 additionalClaims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
                 additionalClaims.Add(new Claim(ClaimTypes.Upn, upn ?? string.Empty));
-                additionalClaims.Add(new Claim(ClaimTypes.Role, GlobalRoles.Registered.ToString()));
                 await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
@@ -124,11 +123,15 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 {
                     throw new InvalidOperationException($"Failed to create user: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
                 }
+                // Registered role
+                await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
 
                 var addLoginResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(
                     loginProvider,
                     providerKey, providerKey
                     ));
+
+                var userToLogIn = await _userManager.FindByLoginAsync(loginProvider, providerKey);
 
                 if (!addLoginResult.Succeeded)
                 {
@@ -139,7 +142,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider),
                     new Claim (ClaimTypes.Upn, upn ?? string.Empty)
                 };
-                await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
+                await _signInManager.SignInWithClaimsAsync(userToLogIn, model.Persistent, additionalClaims);
             }
         }
 
@@ -199,9 +202,15 @@ namespace EnvironmentMonitor.Infrastructure.Services
             if (result.Succeeded)
             {
                 _logger.LogInformation($"Email confirmed for user: {user.Email}");
+                // Add registed role
+                var addToRegisteredRoleResult = await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
+                if (!addToRegisteredRoleResult.Succeeded)
+                {
+                    _logger.LogWarning($"Failed to add Registered role to user: {user.Email}. Errors: {string.Join(", ", addToRegisteredRoleResult.Errors.Select(e => e.Description))}");
+                    return false;
+                }
                 return true;
             }
-            
             _logger.LogWarning($"Email confirmation failed for user: {user.Email}. Errors: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             return false;
         }
