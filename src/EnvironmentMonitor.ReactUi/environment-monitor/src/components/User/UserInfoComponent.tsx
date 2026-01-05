@@ -19,6 +19,7 @@ import type { LocationModel } from "../../models/location";
 import { ChangePasswordComponent } from "./ChangePasswordComponent";
 import { Collapsible } from "../CollabsibleComponent";
 import { RoleNames } from "../../enums/roleNames";
+import { stringSort } from "../../utilities/stringUtils";
 
 export interface UserInfoComponentProps {
   user: User;
@@ -132,20 +133,24 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {devices.map((device, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              <Tooltip
-                                title={`Identifier: ${device.identifier}`}
-                                arrow
-                              >
-                                <span style={{ cursor: "help" }}>
-                                  {device.displayName || device.name}
-                                </span>
-                              </Tooltip>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {[...devices]
+                          .sort((a, b) =>
+                            stringSort(a.displayName, b.displayName)
+                          )
+                          .map((device, index) => (
+                            <TableRow key={index}>
+                              <TableCell>
+                                <Tooltip
+                                  title={`Identifier: ${device.identifier}`}
+                                  arrow
+                                >
+                                  <span style={{ cursor: "help" }}>
+                                    {device.displayName || device.name}
+                                  </span>
+                                </Tooltip>
+                              </TableCell>
+                            </TableRow>
+                          ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
@@ -170,20 +175,22 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {locations.map((location, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              <Tooltip
-                                title={`Identifier: ${location.identifier}`}
-                                arrow
-                              >
-                                <span style={{ cursor: "help" }}>
-                                  {location.name}
-                                </span>
-                              </Tooltip>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {locations
+                          .sort((a, b) => stringSort(a.name, b.name))
+                          .map((location, index) => (
+                            <TableRow key={index}>
+                              <TableCell>
+                                <Tooltip
+                                  title={`Identifier: ${location.identifier}`}
+                                  arrow
+                                >
+                                  <span style={{ cursor: "help" }}>
+                                    {location.name}
+                                  </span>
+                                </Tooltip>
+                              </TableCell>
+                            </TableRow>
+                          ))}
                       </TableBody>
                     </Table>
                   </TableContainer>
