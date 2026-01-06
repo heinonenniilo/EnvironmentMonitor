@@ -67,11 +67,11 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
       <Box
         sx={{
           display: "flex",
-          gap: 1, // Space between grid items
-          padding: 1, // Padding around the grid container
-          // flexGrow: 1,
+          gap: 1,
+          padding: 1,
           height: "100%",
-          flexDirection: "row",
+          flexDirection: { xs: "column", sm: "row" },
+          alignItems: { xs: "flex-start", sm: "center" },
         }}
       >
         <Typography variant={props.useSmallTitle ? "h6" : "h5"}>
