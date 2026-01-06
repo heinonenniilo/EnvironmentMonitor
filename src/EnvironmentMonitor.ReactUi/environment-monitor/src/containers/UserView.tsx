@@ -4,6 +4,7 @@ import {
   Box,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   IconButton,
   Paper,
@@ -307,11 +308,11 @@ export const UserView: React.FC = () => {
                   <Typography variant="body2" color="text.secondary">
                     Email Confirmed
                   </Typography>
-                  <Chip
-                    label={user.emailConfirmed ? "Yes" : "No"}
+                  <Checkbox
+                    checked={user.emailConfirmed}
+                    disabled
                     size="small"
-                    color={user.emailConfirmed ? "success" : "warning"}
-                    sx={{ mt: 0.5 }}
+                    sx={{ padding: 0, mt: 0.5 }}
                   />
                 </Box>
                 <Box>
