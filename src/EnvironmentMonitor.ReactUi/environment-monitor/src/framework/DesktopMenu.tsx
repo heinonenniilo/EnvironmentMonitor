@@ -265,6 +265,15 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               >
                 Email templates
               </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  setAnchorE2(null);
+                  onNavigate(routes.users);
+                }}
+              >
+                Users
+              </MenuItem>
             </Menu>
             <MenuItem
               onClick={(event) => {

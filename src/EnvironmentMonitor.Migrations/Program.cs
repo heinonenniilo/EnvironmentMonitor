@@ -1,5 +1,7 @@
-﻿using EnvironmentMonitor.Infrastructure.Data;
+﻿using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
+using EnvironmentMonitor.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +16,7 @@ if (!AppDomain.CurrentDomain.FriendlyName.Contains("ef"))
 
     var services = new ServiceCollection();
     var timeout = configuration.GetSection("Timeout").Get<int?>();
+    services.AddSingleton<ICurrentUser, EmptyCurrentUser>();
     services.AddInfrastructureServices(configuration);
     var serviceProvider = services.BuildServiceProvider();
     await ApplyMigrationsAsync(serviceProvider, timeout ?? 300);
@@ -112,8 +115,12 @@ class DesignTimeDbContextFactoryApplicationDb : IDesignTimeDbContextFactory<Appl
         // Configure the DbContext to use SQL Server
         builder.UseSqlServer(connectionString);
 
-        return new ApplicationDbContext(builder.Options);
+        var currentUser = new EmptyCurrentUser();
+        var dateService = new DateService(new Microsoft.Extensions.Logging.Abstractions.NullLogger<DateService>());
+
+        return new ApplicationDbContext(builder.Options, currentUser, dateService);
     }
+
 }
 
 class DesignTimeDbContextFactorDataProtectionKeysDb : IDesignTimeDbContextFactory<DataProtectionKeysContext>
@@ -143,4 +150,12 @@ class DesignTimeDbContextFactorDataProtectionKeysDb : IDesignTimeDbContextFactor
 
         return new DataProtectionKeysContext(builder.Options);
     }
+}
+
+
+class EmptyCurrentUser : ICurrentUser
+{
+    public string Email => string.Empty;
+    public List<System.Security.Claims.Claim> Claims => [];
+    public List<string> Roles => [];
 }

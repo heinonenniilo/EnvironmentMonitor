@@ -1,9 +1,25 @@
 import React from "react";
-import { Box, Paper, Typography, Button } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Tooltip,
+} from "@mui/material";
 import { Google, Microsoft, GitHub, DeleteForever } from "@mui/icons-material";
 import type { User } from "../../models/user";
+import type { Device } from "../../models/device";
+import type { LocationModel } from "../../models/location";
 import { ChangePasswordComponent } from "./ChangePasswordComponent";
 import { Collapsible } from "../CollabsibleComponent";
+import { RoleNames } from "../../enums/roleNames";
+import { stringSort } from "../../utilities/stringUtils";
 
 export interface UserInfoComponentProps {
   user: User;
@@ -14,6 +30,8 @@ export interface UserInfoComponentProps {
   ) => Promise<void>;
   onRemove: (user: User) => void;
   elevation?: boolean;
+  devices?: Device[];
+  locations?: LocationModel[];
 }
 
 export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
@@ -21,10 +39,16 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
   isLoading,
   onChangePassword,
   onRemove,
-  elevation = false,
+  devices = [],
+  locations = [],
 }) => {
   const authProvider = user.authenticationProvider || "Internal";
   const canChangePassword = !user.authenticationProvider;
+
+  // Check if user has Admin or Viewer role
+  const hasAdminOrViewerRole = user.roles.some(
+    (role) => role === RoleNames.Admin || role === RoleNames.Viewer
+  );
 
   const getProviderIcon = () => {
     if (!user.authenticationProvider) return null;
@@ -47,7 +71,7 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
 
   return (
     <Box sx={{ p: 2 }}>
-      <Paper elevation={elevation ? 3 : 0} sx={{ p: 3 }}>
+      <Collapsible title="User Information" isOpen={true}>
         <Box sx={{ mb: 2 }}>
           <Typography variant="subtitle2" color="text.secondary">
             Email:
@@ -85,7 +109,96 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
               : "No roles assigned"}
           </Typography>
         </Box>
-      </Paper>
+      </Collapsible>
+
+      {/* Show available devices and locations if user doesn't have Admin or Viewer role */}
+      {!hasAdminOrViewerRole &&
+        (devices.length > 0 || locations.length > 0) && (
+          <Collapsible title="Available Access" isOpen={false}>
+            <Box sx={{ mt: 3 }}>
+              {devices.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Devices
+                  </Typography>
+                  <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Device Name</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {[...devices]
+                          .sort((a, b) =>
+                            stringSort(a.displayName, b.displayName)
+                          )
+                          .map((device, index) => (
+                            <TableRow key={index}>
+                              <TableCell>
+                                <Tooltip
+                                  title={`Identifier: ${device.identifier}`}
+                                  arrow
+                                >
+                                  <span style={{ cursor: "help" }}>
+                                    {device.displayName || device.name}
+                                  </span>
+                                </Tooltip>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              )}
+
+              {/* Locations */}
+              {locations.length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography
+                    variant="subtitle2"
+                    color="text.secondary"
+                    gutterBottom
+                  >
+                    Locations
+                  </Typography>
+                  <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Location Name</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {locations
+                          .sort((a, b) => stringSort(a.name, b.name))
+                          .map((location, index) => (
+                            <TableRow key={index}>
+                              <TableCell>
+                                <Tooltip
+                                  title={`Identifier: ${location.identifier}`}
+                                  arrow
+                                >
+                                  <span style={{ cursor: "help" }}>
+                                    {location.name}
+                                  </span>
+                                </Tooltip>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              )}
+            </Box>
+          </Collapsible>
+        )}
 
       {canChangePassword && (
         <Collapsible title="Change Password" isOpen={false}>
@@ -96,24 +209,22 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
         </Collapsible>
       )}
 
-      <Paper elevation={elevation ? 3 : 0} sx={{ p: 3 }}>
-        <Typography variant="h6" color="error" gutterBottom>
-          Danger Zone
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Once you delete your account, there is no going back. Please be
-          certain.
-        </Typography>
-        <Button
-          variant="outlined"
-          color="error"
-          startIcon={<DeleteForever />}
-          onClick={() => onRemove(user)}
-          disabled={isLoading}
-        >
-          Remove account
-        </Button>
-      </Paper>
+      <Collapsible title="Delete Account" isOpen={false}>
+        <Box sx={{ p: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            This action cannot be undone.
+          </Typography>
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<DeleteForever />}
+            onClick={() => onRemove(user)}
+            disabled={isLoading}
+          >
+            Delete Account
+          </Button>
+        </Box>
+      </Collapsible>
     </Box>
   );
 };

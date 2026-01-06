@@ -17,4 +17,6 @@ export const routes = {
   deviceView: "/devices/:deviceId",
   deviceMessages: "/devices/messages",
   deviceEmails: "/device-emails",
+  users: "/users",
+  userView: "/users/:userId",
 };

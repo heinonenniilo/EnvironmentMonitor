@@ -31,5 +31,9 @@ namespace EnvironmentMonitor.Application.Interfaces
         public bool IsAdmin { get; }
         Task DeleteOwnUser();
         Task DeleteUser(string userId);
+        Task<List<UserInfoDto>> GetAllUsers();
+        Task<UserInfoDto?> GetUser(string userId);
+        Task ManageUserClaims(ManageUserClaimsRequest request);
+        Task ManageUserRoles(ManageUserRolesRequest request);
     }
 }

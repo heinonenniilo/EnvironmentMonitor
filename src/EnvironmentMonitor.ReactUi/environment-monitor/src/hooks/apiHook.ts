@@ -30,6 +30,9 @@ import type {
   UpdateDeviceEmailTemplateDto,
 } from "../models/deviceEmailTemplate";
 import type { CopyQueuedCommand } from "../models/copyQueuedCommand";
+import type { UserInfoDto } from "../models/userInfoDto";
+import type { ManageUserRolesRequest } from "../models/manageUserRolesRequest";
+import type { ManageUserClaimsRequest } from "../models/manageUserClaimsRequest";
 
 interface ApiHook {
   userHook: userHook;
@@ -38,6 +41,7 @@ interface ApiHook {
   locationHook: locationHook;
   deviceContactsHook: deviceContactsHook;
   deviceEmailsHook: deviceEmailsHook;
+  userManagementHook: userManagementHook;
 }
 
 interface userHook {
@@ -161,6 +165,14 @@ interface deviceEmailsHook {
   updateEmailTemplate: (
     model: UpdateDeviceEmailTemplateDto
   ) => Promise<DeviceEmailTemplateDto>;
+}
+
+interface userManagementHook {
+  getAllUsers: () => Promise<UserInfoDto[]>;
+  getUser: (userId: string) => Promise<UserInfoDto | undefined>;
+  deleteUser: (userId: string) => Promise<boolean>;
+  manageUserRoles: (request: ManageUserRolesRequest) => Promise<boolean>;
+  manageUserClaims: (request: ManageUserClaimsRequest) => Promise<boolean>;
 }
 
 const apiClient = axios.create({
@@ -800,6 +812,66 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           showError("Failed to update email template");
           throw ex;
+        }
+      },
+    },
+    userManagementHook: {
+      getAllUsers: async () => {
+        try {
+          const res = await apiClient.get<any, AxiosResponse<UserInfoDto[]>>(
+            `/api/usermanagement`
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to get users");
+          throw ex;
+        }
+      },
+      getUser: async (userId: string) => {
+        try {
+          const res = await apiClient.get<any, AxiosResponse<UserInfoDto>>(
+            `/api/usermanagement/${userId}`
+          );
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          if (ex?.response?.status === 404) {
+            showError("User not found");
+          } else {
+            showError("Failed to get user");
+          }
+          return undefined;
+        }
+      },
+      deleteUser: async (userId: string) => {
+        try {
+          await apiClient.delete(`/api/usermanagement/${userId}`);
+          return true;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to delete user");
+          return false;
+        }
+      },
+      manageUserRoles: async (request: ManageUserRolesRequest) => {
+        try {
+          await apiClient.post(`/api/usermanagement/roles`, request);
+          return true;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to manage user roles");
+          return false;
+        }
+      },
+      manageUserClaims: async (request: ManageUserClaimsRequest) => {
+        try {
+          await apiClient.post(`/api/usermanagement/claims`, request);
+          return true;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to manage user claims");
+          return false;
         }
       },
     },

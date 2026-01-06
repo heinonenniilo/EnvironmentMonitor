@@ -29,6 +29,9 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
         {
             var connectionStringToUse = connectionString ?? configuration.GetConnectionString("DefaultConnection");
 
+            // Needed by WebApi's ICurrentUser implementation; harmless in non-web hosts.
+            services.AddHttpContextAccessor();
+
             services.AddDbContext<MeasurementDbContext>(options =>
             {
                 options.UseSqlServer(connectionStringToUse,
@@ -88,9 +91,9 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 .AddDefaultTokenProviders()
                 .AddRoles<ApplicationUserRole>()
                 .AddRoleManager<RoleManager<ApplicationUserRole>>();
+
             services.AddScoped<IRoleManager, RoleManager>();
             services.AddScoped<IUserAuthService, UserAuthService>();
-
 
             if (iotHubSettings != null)
             {

@@ -9,6 +9,7 @@ import { addNotification } from "../reducers/userInterfaceReducer";
 import { setConfirmDialog } from "../reducers/userInterfaceReducer";
 import { routes } from "../utilities/routes";
 import type { User } from "../models/user";
+import { getDevices, getLocations } from "../reducers/measurementReducer";
 
 export const UserInfoView = () => {
   const user = useSelector(getUserInfo);
@@ -16,6 +17,8 @@ export const UserInfoView = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const devices = useSelector(getDevices);
+  const locations = useSelector(getLocations);
 
   const handleChangePassword = async (
     currentPassword: string,
@@ -80,12 +83,14 @@ export const UserInfoView = () => {
   }
 
   return (
-    <AppContentWrapper isLoading={isLoading} title="User Information">
+    <AppContentWrapper isLoading={isLoading}>
       <UserInfoComponent
         user={user}
         isLoading={isLoading}
         onChangePassword={handleChangePassword}
         onRemove={handleRemoveUser}
+        devices={devices}
+        locations={locations}
       />
     </AppContentWrapper>
   );

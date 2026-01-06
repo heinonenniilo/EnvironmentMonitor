@@ -108,11 +108,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             var user = await _userManager.FindByLoginAsync(loginProvider, providerKey);
             if (user != null)
-            {
+            {                
                 var additionalClaims = await GetCalculatedClaims(user);
                 additionalClaims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
                 additionalClaims.Add(new Claim(ClaimTypes.Upn, upn ?? string.Empty));
-                additionalClaims.Add(new Claim(ClaimTypes.Role, GlobalRoles.Registered.ToString()));
                 await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
             }
@@ -124,11 +123,15 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 {
                     throw new InvalidOperationException($"Failed to create user: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
                 }
+                // Registered role
+                await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
 
                 var addLoginResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(
                     loginProvider,
                     providerKey, providerKey
                     ));
+
+                var userToLogIn = await _userManager.FindByLoginAsync(loginProvider, providerKey);
 
                 if (!addLoginResult.Succeeded)
                 {
@@ -139,7 +142,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider),
                     new Claim (ClaimTypes.Upn, upn ?? string.Empty)
                 };
-                await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
+                await _signInManager.SignInWithClaimsAsync(userToLogIn, model.Persistent, additionalClaims);
             }
         }
 
@@ -199,9 +202,15 @@ namespace EnvironmentMonitor.Infrastructure.Services
             if (result.Succeeded)
             {
                 _logger.LogInformation($"Email confirmed for user: {user.Email}");
+                // Add registed role
+                var addToRegisteredRoleResult = await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
+                if (!addToRegisteredRoleResult.Succeeded)
+                {
+                    _logger.LogWarning($"Failed to add Registered role to user: {user.Email}. Errors: {string.Join(", ", addToRegisteredRoleResult.Errors.Select(e => e.Description))}");
+                    return false;
+                }
                 return true;
             }
-            
             _logger.LogWarning($"Email confirmation failed for user: {user.Email}. Errors: {string.Join(", ", result.Errors.Select(e => e.Description))}");
             return false;
         }
@@ -300,6 +309,234 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
 
             _logger.LogInformation($"User deleted: {userId}");
+        }
+
+        public async Task<List<UserInfoModel>> GetAllUsers()
+        {
+            _logger.LogInformation("Fetching all users");
+            var users = _userManager.Users.ToList();
+            var userInfoList = new List<UserInfoModel>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var claims = await _userManager.GetClaimsAsync(user);
+                var logins = await _userManager.GetLoginsAsync(user);
+
+                userInfoList.Add(new UserInfoModel
+                {
+                    Id = user.Id,
+                    Email = user.Email ?? string.Empty,
+                    UserName = user.UserName,
+                    EmailConfirmed = user.EmailConfirmed,
+                    Roles = roles.ToList(),
+                    Claims = claims.ToList(),
+                    ExternalLogins = logins.Select(l => new Domain.Models.ExternalLoginInfoModel
+                    {
+                        LoginProvider = l.LoginProvider,
+                        ProviderKey = l.ProviderKey,
+                        ProviderDisplayName = l.ProviderDisplayName
+                    }).ToList(),
+                    LockoutEnd = user.LockoutEnd?.UtcDateTime,
+                    LockoutEnabled = user.LockoutEnabled,
+                    AccessFailedCount = user.AccessFailedCount,
+                    Updated = user.Updated,
+                    UpdatedById = user.UpdatedById
+                });
+            }
+
+            _logger.LogInformation($"Fetched {userInfoList.Count} users");
+            return userInfoList;
+        }
+
+        public async Task<UserInfoModel?> GetUser(string userId)
+        {
+            _logger.LogInformation($"Fetching user: {userId}");
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found: {userId}");
+                return null;
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var claims = await _userManager.GetClaimsAsync(user);
+            var logins = await _userManager.GetLoginsAsync(user);
+
+            return new UserInfoModel
+            {
+                Id = user.Id,
+                Email = user.Email ?? string.Empty,
+                UserName = user.UserName,
+                EmailConfirmed = user.EmailConfirmed,
+                Roles = roles.ToList(),
+                Claims = claims.ToList(),
+                ExternalLogins = logins.Select(l => new ExternalLoginInfoModel
+                {
+                    LoginProvider = l.LoginProvider,
+                    ProviderKey = l.ProviderKey,
+                    ProviderDisplayName = l.ProviderDisplayName
+                }).ToList(),
+                LockoutEnd = user.LockoutEnd?.UtcDateTime,
+                LockoutEnabled = user.LockoutEnabled,
+                AccessFailedCount = user.AccessFailedCount,
+                Updated = user.Updated,
+                UpdatedById = user.UpdatedById
+            };
+        }
+
+        public async Task ManageUserClaims(string userId, List<Claim>? claimsToAdd, List<Claim>? claimsToRemove)
+        {
+            _logger.LogInformation($"Managing claims for user: {userId}. Adding: {claimsToAdd?.Count ?? 0}, Removing: {claimsToRemove?.Count ?? 0}");
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found: {userId}");
+                throw new ArgumentException("User not found");
+            }
+
+            var errors = new List<string>();
+
+            var userCurrentClaims = await _userManager.GetClaimsAsync(user);
+
+            // Validate before proceeding
+            var duplicateClaimsToAdd = claimsToAdd?
+                .Where(c => userCurrentClaims.Any(currentClaim => currentClaim.Type.Equals(c.Type) && currentClaim.Value.Equals(c.Value, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (duplicateClaimsToAdd != null && duplicateClaimsToAdd.Any())
+            {
+                throw new ArgumentException($"The following claims already exist for the user and cannot be added again: {string.Join(", ", duplicateClaimsToAdd.Select(c => $"{c.Type}:{c.Value}"))}");
+            }
+
+            var nonExistingClaimsToRemove = claimsToRemove?
+                .Where(c => !userCurrentClaims.Any(currentClaim => currentClaim.Type.Equals(c.Type) && currentClaim.Value.Equals(c.Value, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (nonExistingClaimsToRemove != null && nonExistingClaimsToRemove.Any())
+            {
+                throw new ArgumentException($"The following claims do not exist for the user and cannot be removed: {string.Join(", ", nonExistingClaimsToRemove.Select(c => $"{c.Type}:{c.Value}"))}");
+            }
+
+            if (claimsToAdd?.Any() == true)
+            {
+                var result = await _userManager.AddClaimsAsync(user, claimsToAdd);
+
+                if (!result.Succeeded)
+                {
+                    var error = $"Failed to add claims: {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                    _logger.LogError(error);
+                    errors.Add(error);
+                }
+                else
+                {
+                    var addedClaimsList = claimsToAdd.Select(c => $"{c.Type}:{c.Value}");
+                    _logger.LogInformation($"Successfully added claims [{string.Join(", ", addedClaimsList)}] to user: {userId}");
+                }
+            }
+
+            // Remove claims
+            if (claimsToRemove?.Any() == true)
+            {
+                var result = await _userManager.RemoveClaimsAsync(user, claimsToRemove);
+
+                if (!result.Succeeded)
+                {
+                    var error = $"Failed to remove claims: {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                    _logger.LogError(error);
+                    errors.Add(error);
+                }
+                else
+                {
+                    var removedClaimsList = claimsToRemove.Select(c => $"{c.Type}:{c.Value}");
+                    _logger.LogInformation($"Successfully removed claims [{string.Join(", ", removedClaimsList)}] from user: {userId}");
+                }
+            }
+
+            if (errors.Any())
+            {
+                throw new InvalidOperationException($"Some operations failed: {string.Join("; ", errors)}");
+            }
+
+            _logger.LogInformation($"Successfully managed claims for user: {userId}");
+        }
+
+        public async Task ManageUserRoles(string userId, List<string>? rolesToAdd, List<string>? rolesToRemove)
+        {
+            _logger.LogInformation($"Managing roles for user: {userId}. Adding: {rolesToAdd?.Count ?? 0}, Removing: {rolesToRemove?.Count ?? 0}");
+            var user = await _userManager.FindByIdAsync(userId);
+            
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+
+            var errors = new List<string>();
+
+            var userCurrentRoles = await _userManager.GetRolesAsync(user);
+
+            // Validate before proceeding
+            var duplicateRolesToAdd = rolesToAdd?
+                .Where(r => userCurrentRoles.Any(currentRole => currentRole.Equals(r, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (duplicateRolesToAdd != null && duplicateRolesToAdd.Any())
+            {
+                throw new ArgumentException($"The following roles already exist for the user and cannot be added again: {string.Join(", ", duplicateRolesToAdd)}");
+            }
+
+            var nonExistingRolesToRemove = rolesToRemove?
+                .Where(r => !userCurrentRoles.Any(currentRole => currentRole.Equals(r, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            if (nonExistingRolesToRemove != null && nonExistingRolesToRemove.Any())
+            {
+                throw new ArgumentException($"The following roles do not exist for the user and cannot be removed: {string.Join(", ", nonExistingRolesToRemove)}");
+            }
+
+            // Add roles
+            if (rolesToAdd?.Any() == true)
+            {
+                var result = await _userManager.AddToRolesAsync(user, rolesToAdd);
+                
+                if (!result.Succeeded)
+                {
+                    var error = $"Failed to add roles: {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                    _logger.LogError(error);
+                    errors.Add(error);
+                }
+                else
+                {
+                    _logger.LogInformation($"Successfully added roles [{string.Join(", ", rolesToAdd)}] to user: {userId}");
+                }
+            }
+
+            // Remove roles
+            if (rolesToRemove?.Any() == true)
+            {
+                var result = await _userManager.RemoveFromRolesAsync(user, rolesToRemove);
+                
+                if (!result.Succeeded)
+                {
+                    var error = $"Failed to remove roles: {string.Join(", ", result.Errors.Select(e => e.Description))}";
+                    _logger.LogError(error);
+                    errors.Add(error);
+                }
+                else
+                {
+                    _logger.LogInformation($"Successfully removed roles [{string.Join(", ", rolesToRemove)}] from user: {userId}");
+                }
+            }
+
+            if (errors.Any())
+            {
+                throw new InvalidOperationException($"Some operations failed: {string.Join("; ", errors)}");
+            }
+
+            _logger.LogInformation($"Successfully managed roles for user: {userId}");
         }
 
         /// <summary>

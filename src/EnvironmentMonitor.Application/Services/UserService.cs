@@ -1,4 +1,5 @@
-﻿using EnvironmentMonitor.Application.DTOs;
+﻿using AutoMapper;
+using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
@@ -21,17 +22,20 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IUserAuthService _userAuthService;
         private readonly ApplicationSettings _applicationSettings;
         private readonly IQueueClient _queueClient;
+        private readonly IMapper _mapper;
 
         public UserService(
             ICurrentUser currentUser,
             IUserAuthService userAuthService,
             ApplicationSettings applicationSettings,
-            IQueueClient queueClient)
+            IQueueClient queueClient,
+            IMapper mapper)
         {
             _currentUser = currentUser;
             _userAuthService = userAuthService;
             _applicationSettings = applicationSettings;
             _queueClient = queueClient;
+            _mapper = mapper;
         }
 
         public bool HasAccessToDevice(Guid id, AccessLevels accessLevel) => HasAccessTo(EntityRoles.Device, id, accessLevel);
@@ -174,6 +178,51 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             await _userAuthService.DeleteUser(userId);
+        }
+
+        public async Task<List<UserInfoDto>> GetAllUsers()
+        {
+            if (!IsAdmin)
+            {
+                throw new UnauthorizedAccessException("Only admins can list users");
+            }
+
+            var users = await _userAuthService.GetAllUsers();
+            return _mapper.Map<List<UserInfoDto>>(users);
+        }
+
+        public async Task<UserInfoDto?> GetUser(string userId)
+        {
+            if (!IsAdmin)
+            {
+                throw new UnauthorizedAccessException("Only admins can view user details");
+            }
+
+            var user = await _userAuthService.GetUser(userId);
+            return user == null ? null : _mapper.Map<UserInfoDto>(user);
+        }
+
+        public async Task ManageUserClaims(ManageUserClaimsRequest request)
+        {
+            if (!IsAdmin)
+            {
+                throw new UnauthorizedAccessException("Only admins can manage user claims");
+            }
+
+            var claimsToAdd = request.ClaimsToAdd?.Select(c => new Claim(c.Type, c.Value)).ToList();
+            var claimsToRemove = request.ClaimsToRemove?.Select(c => new Claim(c.Type, c.Value)).ToList();
+
+            await _userAuthService.ManageUserClaims(request.UserId, claimsToAdd, claimsToRemove);
+        }
+
+        public async Task ManageUserRoles(ManageUserRolesRequest request)
+        {
+            if (!IsAdmin)
+            {
+                throw new UnauthorizedAccessException("Only admins can manage user roles");
+            }
+
+            await _userAuthService.ManageUserRoles(request.UserId, request.RolesToAdd, request.RolesToRemove);
         }
     }
 }
