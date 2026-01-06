@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Checkbox, Chip, Typography } from "@mui/material";
+import { Box, Checkbox, Typography } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { Link } from "react-router";
 import { routes } from "../../utilities/routes";
@@ -65,13 +65,7 @@ export const UserTable: React.FC<UserTableProps> = ({
       sortable: false,
       renderCell: (params) => {
         const user = params.row as UserInfoDto;
-        return (
-          <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", py: 0.5 }}>
-            {user.roles.map((role) => (
-              <Chip key={role} label={role} size="small" color="primary" />
-            ))}
-          </Box>
-        );
+        return user.roles.join(", ");
       },
     },
     {
