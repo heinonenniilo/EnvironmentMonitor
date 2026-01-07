@@ -129,7 +129,9 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>Device Name</TableCell>
+                          <TableCell sx={{ fontWeight: "bold" }}>
+                            Device Name
+                          </TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -171,11 +173,13 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>Location Name</TableCell>
+                          <TableCell sx={{ fontWeight: "bold" }}>
+                            Location Name
+                          </TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {locations
+                        {[...locations]
                           .sort((a, b) => stringSort(a.name, b.name))
                           .map((location, index) => (
                             <TableRow key={index}>
