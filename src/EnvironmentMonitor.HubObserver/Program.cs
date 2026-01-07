@@ -46,6 +46,17 @@ var host = new HostBuilder()
 
         var emailSettings = new EmailSettings();
         opt.Configuration.GetSection("EmailSettings").Bind(emailSettings);
+        
+        // Parse semicolon-separated recipient emails from configuration
+        var recipientEmailsString = opt.Configuration.GetValue<string>("EmailSettings:RecipientAddresses");
+        if (!string.IsNullOrEmpty(recipientEmailsString))
+        {
+            emailSettings.RecipientAddresses = recipientEmailsString
+                .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(email => email.Trim())
+                .Where(email => !string.IsNullOrWhiteSpace(email))
+                .ToList();
+        }
 
         var baseUrl = opt.Configuration.GetValue<string>("ApplicationSettings:BaseUrl");
         var applicationSettings = new ApplicationSettings { BaseUrl = baseUrl ?? "" };
