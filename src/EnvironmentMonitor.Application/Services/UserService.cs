@@ -136,6 +136,10 @@ namespace EnvironmentMonitor.Application.Services
                     ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/reset-password"
                     : "/reset-password";
             }
+            else
+            {
+                model.BaseUrl = $"{model.BaseUrl.TrimEnd('/')}/reset-password";
+            }
             await _userAuthService.ForgotPassword(model);
         }
 
