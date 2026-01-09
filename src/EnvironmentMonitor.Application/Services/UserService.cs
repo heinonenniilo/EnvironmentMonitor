@@ -86,8 +86,9 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task RegisterUser(RegisterUserModel model)
         {
-            model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl) 
-                ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/api/authentication/confirm-email" 
+            var baseUrlToUse = !string.IsNullOrEmpty(model.BaseUrl) ? model.BaseUrl : _applicationSettings.BaseUrl;
+            model.BaseUrl = !string.IsNullOrEmpty(baseUrlToUse)
+                ? $"{baseUrlToUse.TrimEnd('/')}/api/authentication/confirm-email"
                 : "/api/authentication/confirm-email";
             await _userAuthService.RegisterUser(model);
         }

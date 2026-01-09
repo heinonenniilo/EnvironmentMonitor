@@ -49,11 +49,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
             await _userService.RegisterUser(new RegisterUserModel() 
             { 
                 Email = request.Email, 
                 Password = request.Password,
-                ConfirmPassword = request.Password
+                ConfirmPassword = request.Password,
+                BaseUrl = baseUrl
             });
             return Ok(new { Message = "User registered successfully. Please check your email to confirm your account." });
         }
@@ -99,10 +101,12 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
+            var baseUrl = $"{Request.Scheme}://{Request.Host}"; 
+
             await _userService.ForgotPassword(new ForgotPasswordModel
             {
                 Email = request.Email,
-                BaseUrl = "", // Will be set by UserService,
+                BaseUrl = baseUrl,
                 Enqueue = true
             });
 
