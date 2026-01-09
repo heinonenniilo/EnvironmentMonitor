@@ -17,13 +17,13 @@ namespace EnvironmentMonitor.Domain
         public static int DeviceLastMessageFetchLimitIndays = 1;
 
         public static string QueuedMessageDefaultKey = "VALUE";
+        public static string QueuedMessageApplicationBaseUrlKey = "{BASE_URL}";
         public static string QueuedMessageTimesStampKey = "{TIMESTAMP}";
         public static string QueuedMessageTimesStampPreviousKey = "{TIMESTAMP_PREVIOUS}";
         public static string QueuedMessageDeviceLink = "{DEVICE_LINK}";
-        public static string QueuedMessageLocation = "{LOCATION}";
+        public static string QueuedMessageLocation = "{LOCATION}";        
         public static string EmailTemplateConfirmationLinkKey = "{ConfirmationLink}";
         public static string EmailTemplatePasswordResetLinkKey = "{ResetLink}";
-
         // Authentication claim types
         public static string ExternalLoginProviderClaim = "ExternalLoginProvider";
     }

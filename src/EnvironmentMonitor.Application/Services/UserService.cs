@@ -114,9 +114,11 @@ namespace EnvironmentMonitor.Application.Services
             if (model.Enqueue)
             {
                 var attributesToAdd = new Dictionary<string, string>()
-                    {
-                        { ApplicationConstants.QueuedMessageDefaultKey, model.Email }
-                    };
+                {
+                        {ApplicationConstants.QueuedMessageDefaultKey, model.Email },
+                        {ApplicationConstants.QueuedMessageApplicationBaseUrlKey, model.BaseUrl ?? "" }
+                };
+
                 var messageToQueue = new DeviceQueueMessage()
                 {
                     Attributes = attributesToAdd,
@@ -128,9 +130,12 @@ namespace EnvironmentMonitor.Application.Services
                 return;
             }
 
-            model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl)
-                ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/reset-password"
-                : "/reset-password";
+            if (string.IsNullOrEmpty(model.BaseUrl))
+            {
+                model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl)
+                    ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/reset-password"
+                    : "/reset-password";
+            }
             await _userAuthService.ForgotPassword(model);
         }
 
