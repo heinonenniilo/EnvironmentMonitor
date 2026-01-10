@@ -12,26 +12,34 @@ export const RegisterView: React.FC = () => {
   const navigate = useNavigate();
   const apiHook = useApiHook();
   const [isLoading, setIsLoading] = useState(false);
+  const [hasRegistered, setHasRegistered] = useState(false);
 
-  const handleRegister = async (email: string, password: string) => {
+  const handleRegister = (email: string, password: string) => {
     setIsLoading(true);
-    const message = await apiHook.userHook.register(email, password);
-
-    if (message) {
-      dispatch(
-        addNotification({
-          title:
-            "Registration successful. Check your email for verification link.",
-          body: "",
-          severity: "success",
-        })
-      );
-
-      setTimeout(() => {
-        navigate(routes.main);
-      }, 2000);
-    }
-    setIsLoading(false);
+    apiHook.userHook
+      .register(email, password)
+      .then((res) => {
+        if (res) {
+          dispatch(
+            addNotification({
+              title:
+                "Registration successful. Check your email for verification link.",
+              body: "",
+              severity: "success",
+            })
+          );
+          setHasRegistered(true);
+          setTimeout(() => {
+            navigate(routes.main);
+          }, 2000);
+        }
+      })
+      .catch((err: any) => {
+        console.error("Error registering:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const handleNavigateToLogin = () => {
@@ -44,6 +52,7 @@ export const RegisterView: React.FC = () => {
         isLoading={isLoading}
         onRegister={handleRegister}
         onNavigateToLogin={handleNavigateToLogin}
+        hasRegistered={hasRegistered}
       />
     </AppContentWrapper>
   );

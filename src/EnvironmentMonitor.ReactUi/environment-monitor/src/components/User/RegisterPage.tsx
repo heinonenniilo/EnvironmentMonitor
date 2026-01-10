@@ -3,12 +3,14 @@ import { TextField, Button, Box, Typography } from "@mui/material";
 
 export interface RegisterPageProps {
   isLoading: boolean;
-  onRegister: (email: string, password: string) => Promise<void>;
+  hasRegistered?: boolean;
+  onRegister: (email: string, password: string) => void;
   onNavigateToLogin: () => void;
 }
 
 const RegisterPage: React.FC<RegisterPageProps> = ({
   isLoading,
+  hasRegistered,
   onRegister,
   onNavigateToLogin,
 }) => {
@@ -16,32 +18,23 @@ const RegisterPage: React.FC<RegisterPageProps> = ({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccessMessage("");
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
-
-    try {
-      await onRegister(email, password);
-      setSuccessMessage("Registration successful!");
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-    } catch (err: any) {
-      console.error("Error registering:", err);
-      setError(err?.message || "Registration failed.");
-    }
+    onRegister(email, password);
   };
 
   const registerEnabled =
-    email.length > 4 && password.length > 4 && confirmPassword.length > 4;
+    email.length > 4 &&
+    password.length > 4 &&
+    confirmPassword.length > 4 &&
+    !hasRegistered;
 
   return (
     <Box
@@ -90,11 +83,6 @@ const RegisterPage: React.FC<RegisterPageProps> = ({
         {error && (
           <Typography color="error" variant="body2" mt={1}>
             {error}
-          </Typography>
-        )}
-        {successMessage && (
-          <Typography color="success.main" variant="body2" mt={1}>
-            {successMessage}
           </Typography>
         )}
         <Button

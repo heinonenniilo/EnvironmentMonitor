@@ -1,3 +1,4 @@
+using AspNet.Security.OAuth.GitHub; // GitHub OAuth
 using EnvironmentMonitor.Application.Extensions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Infrastructure.Data;
@@ -7,18 +8,26 @@ using EnvironmentMonitor.WebApi.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using System;
 using System.Security.Claims;
-using AspNet.Security.OAuth.GitHub; // GitHub OAuth
 
 var builder = WebApplication.CreateBuilder(args);
 var isDevelopment = builder.Environment.IsDevelopment();
 
 var googleClientId = builder.Configuration["Google:ClientId"];
 var googleClientSecret = builder.Configuration["Google:ClientSecret"];
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedProto |
+        ForwardedHeaders.XForwardedHost;
+});
+
 if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret)) {
     builder.Services.AddAuthentication(x =>
     {
@@ -196,6 +205,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.UseMiddleware<ApiKeyMiddleware>();
+app.UseForwardedHeaders();
 
 using (var scope = app.Services.CreateScope())
 {

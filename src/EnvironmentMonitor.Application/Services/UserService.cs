@@ -86,8 +86,9 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task RegisterUser(RegisterUserModel model)
         {
-            model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl) 
-                ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/api/authentication/confirm-email" 
+            var baseUrlToUse = !string.IsNullOrEmpty(model.BaseUrl) ? model.BaseUrl : _applicationSettings.BaseUrl;
+            model.BaseUrl = !string.IsNullOrEmpty(baseUrlToUse)
+                ? $"{baseUrlToUse.TrimEnd('/')}/api/authentication/confirm-email"
                 : "/api/authentication/confirm-email";
             await _userAuthService.RegisterUser(model);
         }
@@ -113,9 +114,11 @@ namespace EnvironmentMonitor.Application.Services
             if (model.Enqueue)
             {
                 var attributesToAdd = new Dictionary<string, string>()
-                    {
-                        { ApplicationConstants.QueuedMessageDefaultKey, model.Email }
-                    };
+                {
+                        {ApplicationConstants.QueuedMessageDefaultKey, model.Email },
+                        {ApplicationConstants.QueuedMessageApplicationBaseUrlKey, model.BaseUrl ?? "" }
+                };
+
                 var messageToQueue = new DeviceQueueMessage()
                 {
                     Attributes = attributesToAdd,
@@ -127,9 +130,16 @@ namespace EnvironmentMonitor.Application.Services
                 return;
             }
 
-            model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl)
-                ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/reset-password"
-                : "/reset-password";
+            if (string.IsNullOrEmpty(model.BaseUrl))
+            {
+                model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl)
+                    ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/reset-password"
+                    : "/reset-password";
+            }
+            else
+            {
+                model.BaseUrl = $"{model.BaseUrl.TrimEnd('/')}/reset-password";
+            }
             await _userAuthService.ForgotPassword(model);
         }
 

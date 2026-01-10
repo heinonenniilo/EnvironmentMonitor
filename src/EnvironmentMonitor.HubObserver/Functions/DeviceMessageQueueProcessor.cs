@@ -131,7 +131,8 @@ namespace EnvironmentMonitor.HubObserver.Functions
                             await _userService.ForgotPassword(new ForgotPasswordModel
                             {
                                 Email = userEmail,
-                                Enqueue = false
+                                Enqueue = false,
+                                BaseUrl = attributes.ContainsKey(ApplicationConstants.QueuedMessageApplicationBaseUrlKey) ? attributes[ApplicationConstants.QueuedMessageApplicationBaseUrlKey] : null
                             });
                             hasExecuted = false; // Messages not stored to DB yet.
                         }
