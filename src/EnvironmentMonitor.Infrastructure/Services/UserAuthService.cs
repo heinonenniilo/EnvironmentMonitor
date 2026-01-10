@@ -246,8 +246,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);           
             var queryParams = new StringBuilder();
-            queryParams.Append($"?email={Uri.EscapeDataString(user.Email!)}");
-            queryParams.Append($"&token={Uri.EscapeDataString(token)}");            
+            queryParams.Append($"?token={Uri.EscapeDataString(token)}");        
             var resetUrl = model.BaseUrl + queryParams.ToString();
 
             var emailTemplate = await _emailRepository.GetEmailTemplate(EmailTemplateTypes.UserPasswordReset);

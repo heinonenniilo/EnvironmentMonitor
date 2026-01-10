@@ -4,7 +4,7 @@ export const routes = {
   login: "/login",
   register: "/register",
   emailConfirmation: "/email-confirmation",
-  resetPassword: "/reset-password",
+  resetPassword: "/set-new-password",
   forgotPassword: "/forgot-password",
   userInfo: "/user-info",
   measurements: "/measurements/device",

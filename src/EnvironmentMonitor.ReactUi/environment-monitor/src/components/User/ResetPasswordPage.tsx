@@ -26,10 +26,10 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
 }) => {
   const [searchParams] = useSearchParams();
 
-  const email = searchParams.get("email") || "";
   const token = searchParams.get("token") || "";
-  const isPasswordResetLink = !!(email && token);
+  const isPasswordResetLink = !!token;
 
+  const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -87,6 +87,19 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
     setError("");
     setSuccessMessage("");
 
+    // Validate email is present
+    if (!email || !email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     // Validate passwords match
     if (newPassword !== confirmPassword) {
       setError("Passwords do not match.");
@@ -99,8 +112,8 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
       return;
     }
 
-    // Validate email and token are present
-    if (!email || !token) {
+    // Validate token is present
+    if (!token) {
       setError(
         "Invalid reset password link. Please request a new password reset."
       );
@@ -116,7 +129,10 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
     }
   };
 
-  const isFormValid = newPassword.length >= 6 && confirmPassword.length >= 6;
+  const isFormValid =
+    email.trim().length > 0 &&
+    newPassword.length >= 6 &&
+    confirmPassword.length >= 6;
 
   return (
     <Box
@@ -140,13 +156,23 @@ const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
           Reset Password
         </Typography>
 
-        {email && (
-          <Alert severity="info" sx={{ marginBottom: 2 }}>
-            Resetting password for: <strong>{email}</strong>
-          </Alert>
-        )}
+        <Typography variant="body2" color="text.secondary" mb={3}>
+          You are here because you requested to reset your password. Enter your
+          email address and the new password.
+        </Typography>
 
         <form onSubmit={handleSubmit}>
+          <TextField
+            label="Email"
+            type="email"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading || !!successMessage}
+            required
+          />
           <TextField
             label="New Password"
             type="password"
