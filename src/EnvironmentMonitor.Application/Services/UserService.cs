@@ -111,6 +111,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task ForgotPassword(ForgotPasswordModel model)
         {
+            var setNewPasswordPath = "set-new-password";
             if (model.Enqueue)
             {
                 var attributesToAdd = new Dictionary<string, string>()
@@ -126,19 +127,19 @@ namespace EnvironmentMonitor.Application.Services
                     MessageTypeId = (int)QueuedMessages.ProcessForgetUserPasswordRequest,
                 };
                 var messageJson = JsonSerializer.Serialize(messageToQueue);
-                var res = await _queueClient.SendMessage(messageJson);
+                await _queueClient.SendMessage(messageJson);
                 return;
             }
 
             if (string.IsNullOrEmpty(model.BaseUrl))
             {
                 model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl)
-                    ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/reset-password"
-                    : "/reset-password";
+                    ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/{setNewPasswordPath}"
+                    : $"/{setNewPasswordPath}";
             }
             else
             {
-                model.BaseUrl = $"{model.BaseUrl.TrimEnd('/')}/reset-password";
+                model.BaseUrl = $"{model.BaseUrl.TrimEnd('/')}/{setNewPasswordPath}";
             }
             await _userAuthService.ForgotPassword(model);
         }
