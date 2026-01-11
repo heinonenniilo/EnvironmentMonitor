@@ -369,10 +369,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
 
             // Clear UpdatedById references for all users that were updated by this user
-            var usersUpdatedByThisUser = await _userManager.Users
+            var usersUpdatedByThisUser = await _applicationDbContext.Users
                 .Where(u => u.UpdatedById == userId)
                 .ToListAsync();
-            
+
             if (usersUpdatedByThisUser.Any())
             {
                 _logger.LogInformation($"Clearing UpdatedById reference for {usersUpdatedByThisUser.Count} users");
@@ -381,6 +381,20 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     affectedUser.UpdatedById = null;
                 }
             }
+
+            var userClaimsUpdatedByThisUser = await _applicationDbContext.UserClaims
+                .Where(c => c.UpdatedById == userId)
+                .ToListAsync();
+
+            if (userClaimsUpdatedByThisUser.Any())
+            {
+                _logger.LogInformation($"Clearing UpdatedById reference for {userClaimsUpdatedByThisUser.Count} user claims");
+                foreach (var affectedClaim in userClaimsUpdatedByThisUser)
+                {
+                    affectedClaim.UpdatedById = null;
+                }
+            }
+
             _logger.LogInformation($"Calling _userManager.DeleteAsync");
             var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded)
