@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Paper, Typography, Alert, Button } from "@mui/material";
-import { CheckCircle } from "@mui/icons-material";
+import { CheckCircle, Google, Microsoft, GitHub } from "@mui/icons-material";
 import moment from "moment";
 import type { AuthInfoCookie } from "../../models/authInfoCookie";
 
@@ -13,6 +13,27 @@ const LoginInfoPage: React.FC<LoginErrorPageProps> = ({
   authInfo,
   onNavigateToMain,
 }) => {
+  const getProviderIcon = (provider?: string) => {
+    if (!provider) {
+      return null;
+    }
+
+    const providerLower = provider.toLowerCase();
+
+    if (providerLower === "google") {
+      return <Google sx={{ mr: 1, verticalAlign: "middle", fontSize: 24 }} />;
+    }
+    if (providerLower === "microsoft") {
+      return (
+        <Microsoft sx={{ mr: 1, verticalAlign: "middle", fontSize: 24 }} />
+      );
+    }
+    if (providerLower === "github") {
+      return <GitHub sx={{ mr: 1, verticalAlign: "middle", fontSize: 24 }} />;
+    }
+    return null;
+  };
+
   if (!authInfo) {
     return (
       <Box
@@ -92,6 +113,7 @@ const LoginInfoPage: React.FC<LoginErrorPageProps> = ({
             color="text.secondary"
             sx={{ marginTop: 2 }}
           >
+            {getProviderIcon(authInfo.loginProvider)}
             Login successful
           </Typography>
           {authInfo.timestamp && (

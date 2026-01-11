@@ -3,4 +3,5 @@ export interface AuthInfoCookie {
   errors: string[];
   errorCode?: string | null;
   timestamp: string;
+  loginProvider?: string;
 }
