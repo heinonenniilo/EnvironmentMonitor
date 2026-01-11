@@ -1,5 +1,6 @@
 ﻿using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Application.Services;
+using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,6 +18,7 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<IDeviceEmailService, DeviceEmailService>();
             services.AddScoped<IDeviceCommandService, DeviceCommandService>();
+            services.AddScoped<IUserCookieService, UserCookieService>();
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             if (deviceSettings != null)

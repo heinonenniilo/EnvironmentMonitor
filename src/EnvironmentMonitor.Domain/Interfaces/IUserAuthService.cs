@@ -12,7 +12,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
     {
         public Task Login(LoginModel model);
         public Task Logout();
-        public Task LoginWithExternalProvider(ExternalLoginModel model);
+        public Task<ExternalLoginResult> LoginWithExternalProvider(ExternalLoginModel model);
         public Task RegisterUser(RegisterUserModel model);
         public Task<bool> ConfirmEmail(string userId, string token);
         public Task ChangePassword(string userId, ChangePasswordModel model);

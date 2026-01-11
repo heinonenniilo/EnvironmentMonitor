@@ -193,12 +193,21 @@ namespace EnvironmentMonitor.WebApi.Controllers
             if (!authenticateResult.Succeeded)
             {
                 _logger.LogWarning($"Not authenticated at GoogleCallback");
-                return Unauthorized(new { Message = "Authentication failed." });
+                return Redirect("/login/error");
             }
-            await _userService.ExternalLogin(new ExternalLoginModel()
+            var result = await _userService.ExternalLogin(new ExternalLoginModel()
             {
                 Persistent = persistent
             });
+            
+            // Check if external login failed and redirect to error page
+            if (!result.Success)
+            {
+                _logger.LogWarning($"External login failed at GoogleCallback with error code: {result.ErrorCode}");
+                return Redirect("/login/error");
+            }
+            
+            // Success - redirect to original return URL
             return Redirect(returnUrl ?? "/");
         }
 
@@ -217,12 +226,21 @@ namespace EnvironmentMonitor.WebApi.Controllers
             if (!authenticateResult.Succeeded)
             {
                 _logger.LogWarning($"Not authenticated at MicrosoftCallback");
-                return Unauthorized(new { Message = "Authentication failed." });
+                return Redirect("/login/error");
             }
-            await _userService.ExternalLogin(new ExternalLoginModel()
+            var result = await _userService.ExternalLogin(new ExternalLoginModel()
             {
                 Persistent = persistent
             });
+            
+            // Check if external login failed and redirect to error page
+            if (!result.Success)
+            {
+                _logger.LogWarning($"External login failed at MicrosoftCallback with error code: {result.ErrorCode}");
+                return Redirect("/login/error");
+            }
+            
+            // Success - redirect to original return URL
             return Redirect(returnUrl ?? "/");
         }
 
@@ -242,12 +260,21 @@ namespace EnvironmentMonitor.WebApi.Controllers
             if (!authenticateResult.Succeeded)
             {
                 _logger.LogWarning($"Not authenticated at GitHubCallback");
-                return Unauthorized(new { Message = "Authentication failed." });
+                return Redirect("/login/error");
             }
-            await _userService.ExternalLogin(new ExternalLoginModel()
+            var result = await _userService.ExternalLogin(new ExternalLoginModel()
             {
                 Persistent = persistent
             });
+            
+            // Check if external login failed and redirect to error page
+            if (!result.Success)
+            {
+                _logger.LogWarning($"External login failed at GitHubCallback with error code: {result.ErrorCode}");
+                return Redirect("/login/error");
+            }
+            
+            // Success - redirect to original return URL
             return Redirect(returnUrl ?? "/");
         }
 
@@ -258,6 +285,20 @@ namespace EnvironmentMonitor.WebApi.Controllers
             await _userService.DeleteOwnUser();
             await _signInManager.SignOutAsync();
             return Ok(new { Message = "User deleted" });
+        }
+
+        [HttpGet("auth-info")]
+        public ActionResult<AuthInfoCookie?> GetAuthInfo()
+        {
+            var authInfo = _userService.GetAuthInfo();
+            return Ok(authInfo);
+        }
+
+        [HttpDelete("auth-info")]
+        public IActionResult ClearAuthInfo()
+        {
+            _userService.ClearAuthInfo();
+            return Ok(new { Message = "Auth info cleared" });
         }
     }
 }

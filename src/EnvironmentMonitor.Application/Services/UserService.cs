@@ -23,19 +23,22 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ApplicationSettings _applicationSettings;
         private readonly IQueueClient _queueClient;
         private readonly IMapper _mapper;
+        private readonly IUserCookieService _userCookieService;
 
         public UserService(
             ICurrentUser currentUser,
             IUserAuthService userAuthService,
             ApplicationSettings applicationSettings,
             IQueueClient queueClient,
-            IMapper mapper)
+            IMapper mapper,
+            IUserCookieService userCookieService)
         {
             _currentUser = currentUser;
             _userAuthService = userAuthService;
             _applicationSettings = applicationSettings;
             _queueClient = queueClient;
             _mapper = mapper;
+            _userCookieService = userCookieService;
         }
 
         public bool HasAccessToDevice(Guid id, AccessLevels accessLevel) => HasAccessTo(EntityRoles.Device, id, accessLevel);
@@ -79,9 +82,22 @@ namespace EnvironmentMonitor.Application.Services
             await _userAuthService.Login(model);
         }
 
-        public async Task ExternalLogin(ExternalLoginModel model)
+        public async Task<ExternalLoginResult> ExternalLogin(ExternalLoginModel model)
         {
-            await _userAuthService.LoginWithExternalProvider(model);
+            var result = await _userAuthService.LoginWithExternalProvider(model);
+            
+            if (!result.Success)
+            {
+                // Write auth failure to cookie that JavaScript can read
+                _userCookieService.WriteAuthFailureCookie(result.Errors, result.ErrorCode);
+            }
+            else
+            {
+                // Write auth success to cookie
+                _userCookieService.WriteAuthSuccessCookie();
+            }
+            
+            return result;
         }
 
         public async Task RegisterUser(RegisterUserModel model)
@@ -234,6 +250,16 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             await _userAuthService.ManageUserRoles(request.UserId, request.RolesToAdd, request.RolesToRemove);
+        }
+
+        public AuthInfoCookie? GetAuthInfo()
+        {
+            return _userCookieService.ReadAuthInfoCookie();
+        }
+
+        public void ClearAuthInfo()
+        {
+            _userCookieService.ClearAuthInfoCookie();
         }
     }
 }

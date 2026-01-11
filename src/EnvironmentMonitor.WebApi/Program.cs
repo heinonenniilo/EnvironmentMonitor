@@ -1,6 +1,7 @@
 using AspNet.Security.OAuth.GitHub; // GitHub OAuth
 using EnvironmentMonitor.Application.Extensions;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
@@ -127,7 +128,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddInfrastructureServices(builder.Configuration);
+// Configure ApplicationSettings with IsProduction flag
+var applicationSettings = new ApplicationSettings();
+builder.Configuration.GetSection("ApplicationSettings").Bind(applicationSettings);
+applicationSettings.IsProduction = builder.Environment.IsProduction();
+
+builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
 builder.Services.AddApplicationServices(builder.Configuration);
 
 builder.Services.AddCors(options =>

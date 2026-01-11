@@ -9,5 +9,6 @@ namespace EnvironmentMonitor.Domain.Models
     public class ApplicationSettings
     {
         public string BaseUrl { get; set; } = "";
+        public bool IsProduction { get; set; } = true;
     }
 }
