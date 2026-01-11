@@ -144,9 +144,8 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> LogOut()
         {
-            var u = User;
-            u.FindFirstValue(ClaimTypes.Email);
             await _signInManager.SignOutAsync();
+            _userService.ClearAuthInfo();
             return Ok(new { Message = "Logged out successfully." });
         }
 

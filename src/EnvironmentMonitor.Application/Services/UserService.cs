@@ -80,6 +80,8 @@ namespace EnvironmentMonitor.Application.Services
         public async Task Login(LoginModel model)
         {
             await _userAuthService.Login(model);
+            // Write auth success cookie with "Local" as the login provider for username/password login
+            _userCookieService.WriteAuthSuccessCookie("Local");
         }
 
         public async Task<ExternalLoginResult> ExternalLogin(ExternalLoginModel model)
@@ -89,12 +91,12 @@ namespace EnvironmentMonitor.Application.Services
             if (!result.Success)
             {
                 // Write auth failure to cookie that JavaScript can read
-                _userCookieService.WriteAuthFailureCookie(result.Errors, result.ErrorCode);
+                _userCookieService.WriteAuthFailureCookie(result.Errors, result.ErrorCode, result.LoginProvider);
             }
             else
             {
-                // Write auth success to cookie
-                _userCookieService.WriteAuthSuccessCookie();
+                // Write auth success to cookie with the external login provider
+                _userCookieService.WriteAuthSuccessCookie(result.LoginProvider);
             }
             
             return result;

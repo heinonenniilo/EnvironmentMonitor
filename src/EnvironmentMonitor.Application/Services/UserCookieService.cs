@@ -19,7 +19,7 @@ namespace EnvironmentMonitor.Application.Services
             _applicationSettings = applicationSettings;
         }
 
-        public void WriteAuthFailureCookie(List<string> errors, string? errorCode = null)
+        public void WriteAuthFailureCookie(List<string> errors, string? errorCode = null, string? loginProvider = null)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null)
@@ -32,13 +32,14 @@ namespace EnvironmentMonitor.Application.Services
                 LoginState = false,
                 Errors = errors,
                 ErrorCode = errorCode,
+                LoginProvider = loginProvider,
                 Timestamp = DateTime.UtcNow
             };
 
             WriteAuthCookie(httpContext, authInfo);
         }
 
-        public void WriteAuthSuccessCookie()
+        public void WriteAuthSuccessCookie(string? loginProvider = null)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             if (httpContext == null)
@@ -51,6 +52,7 @@ namespace EnvironmentMonitor.Application.Services
                 LoginState = true,
                 Errors = new List<string>(),
                 ErrorCode = null,
+                LoginProvider = loginProvider,
                 Timestamp = DateTime.UtcNow
             };
 

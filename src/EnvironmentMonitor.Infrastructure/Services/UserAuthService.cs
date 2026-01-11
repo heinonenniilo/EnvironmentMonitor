@@ -129,7 +129,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 additionalClaims.Add(new Claim(ClaimTypes.Upn, upn ?? string.Empty));
                 await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
-                return new ExternalLoginResult { Success = true };
+                return new ExternalLoginResult { Success = true, LoginProvider = loginProvider };
             }
             else
             {
@@ -142,7 +142,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     {
                         Success = false,
                         Errors = [$"User with email {user.Email} already exists."],
-                        ErrorCode = "USER_ALREADY_EXISTS"
+                        ErrorCode = "USER_ALREADY_EXISTS",
+                        LoginProvider = loginProvider
                     };
                 }
 
@@ -154,7 +155,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     {
                         Success = false,
                         Errors = ["Creating user failed"],
-                        ErrorCode = "USER_CREATION_FAILED"
+                        ErrorCode = "USER_CREATION_FAILED",
+                        LoginProvider = loginProvider
                     };
                 }
                 // Registered role
@@ -166,7 +168,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     {
                         Success = false,
                         Errors = ["User was created but process was not completed successfully."],
-                        ErrorCode = "ADD_ROLE_FAILED"
+                        ErrorCode = "ADD_ROLE_FAILED",
+                        LoginProvider = loginProvider
                     };
                 }
 
@@ -182,7 +185,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     {
                         Success = false,
                         Errors = [$"Failed to link the user with external login provider. (${loginProvider})"],
-                        ErrorCode = "ADD_LOGIN_FAILED"
+                        ErrorCode = "ADD_LOGIN_FAILED",
+                        LoginProvider = loginProvider
                     };
                 }
 
@@ -193,7 +197,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     {
                         Success = false,
                         Errors = new List<string> { "Failed to retrieve user after creation" },
-                        ErrorCode = "USER_RETRIEVAL_FAILED"
+                        ErrorCode = "USER_RETRIEVAL_FAILED",
+                        LoginProvider = loginProvider
                     };
                 }
 
@@ -203,7 +208,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     new Claim (ClaimTypes.Upn, upn ?? string.Empty)
                 };
                 await _signInManager.SignInWithClaimsAsync(userToLogIn, model.Persistent, additionalClaims);
-                return new ExternalLoginResult { Success = true };
+                return new ExternalLoginResult { Success = true, LoginProvider = loginProvider };
             }
         }
 
