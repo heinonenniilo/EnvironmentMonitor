@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import LoginErrorPage from "../components/User/LoginErrorPage";
+import LoginInfoPage from "../components/User/LoginInfoPage";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { routes } from "../utilities/routes";
 import { useApiHook } from "../hooks/apiHook";
@@ -30,7 +30,7 @@ export const LoginErrorView: React.FC = () => {
 
   return (
     <AppContentWrapper isLoading={isLoading}>
-      <LoginErrorPage
+      <LoginInfoPage
         authInfo={authInfo}
         onNavigateToMain={handleNavigateToMain}
       />

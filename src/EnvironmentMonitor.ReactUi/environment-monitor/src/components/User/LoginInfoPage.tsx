@@ -1,5 +1,7 @@
 import React from "react";
 import { Box, Paper, Typography, Alert, Button } from "@mui/material";
+import { CheckCircle } from "@mui/icons-material";
+import moment from "moment";
 import type { AuthInfoCookie } from "../../models/authInfoCookie";
 
 export interface LoginErrorPageProps {
@@ -7,7 +9,7 @@ export interface LoginErrorPageProps {
   onNavigateToMain: () => void;
 }
 
-const LoginErrorPage: React.FC<LoginErrorPageProps> = ({
+const LoginInfoPage: React.FC<LoginErrorPageProps> = ({
   authInfo,
   onNavigateToMain,
 }) => {
@@ -47,6 +49,74 @@ const LoginErrorPage: React.FC<LoginErrorPageProps> = ({
     );
   }
 
+  // Success state - loginState is true
+  if (authInfo.loginState) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "60vh",
+          padding: 3,
+        }}
+      >
+        <Paper
+          elevation={3}
+          sx={{
+            padding: 4,
+            maxWidth: 800,
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: 2,
+            }}
+          >
+            <CheckCircle
+              sx={{
+                fontSize: 80,
+                color: "success.main",
+              }}
+            />
+          </Box>
+          <Typography variant="h5" gutterBottom>
+            Everything OK
+          </Typography>
+          <Typography
+            variant="body1"
+            color="text.secondary"
+            sx={{ marginTop: 2 }}
+          >
+            Login successful
+          </Typography>
+          {authInfo.timestamp && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ marginTop: 1 }}
+            >
+              {moment(authInfo.timestamp).format("DD.MM.YYYY HH:mm:ss")}
+            </Typography>
+          )}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={onNavigateToMain}
+            sx={{ marginTop: 3 }}
+          >
+            Go to Main Page
+          </Button>
+        </Paper>
+      </Box>
+    );
+  }
+
+  // Error state - loginState is false or errors are present
   return (
     <Box
       sx={{
@@ -96,4 +166,4 @@ const LoginErrorPage: React.FC<LoginErrorPageProps> = ({
   );
 };
 
-export default LoginErrorPage;
+export default LoginInfoPage;
