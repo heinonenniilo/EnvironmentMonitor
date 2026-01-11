@@ -134,13 +134,26 @@ namespace EnvironmentMonitor.Infrastructure.Services
             else
             {
                 user = new ApplicationUser { UserName = model.UserName ?? email, Email = email };
-                var createResult = await _userManager.CreateAsync(user);
-                if (!createResult.Succeeded)
+                // Check if user exists. 
+                var existingUser = await _userManager.FindByEmailAsync(email);
+                if (existingUser != null)
                 {
                     return new ExternalLoginResult
                     {
                         Success = false,
-                        Errors = createResult.Errors.Select(e => e.Description).ToList(),
+                        Errors = [$"User with email {user.Email} already exists."],
+                        ErrorCode = "USER_ALREADY_EXISTS"
+                    };
+                }
+
+                var createResult = await _userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                {
+                    _logger.LogError($"Failed to create user {user.Email} from external login. Errors: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+                    return new ExternalLoginResult
+                    {
+                        Success = false,
+                        Errors = ["Creating user failed"],
                         ErrorCode = "USER_CREATION_FAILED"
                     };
                 }
@@ -148,10 +161,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 var addRoleResult = await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
                 if (!addRoleResult.Succeeded)
                 {
+                    _logger.LogError($"Failed to add Registered role to user {user.Email}. Errors: {string.Join(", ", addRoleResult.Errors.Select(e => e.Description))}");
                     return new ExternalLoginResult
                     {
                         Success = false,
-                        Errors = addRoleResult.Errors.Select(e => e.Description).ToList(),
+                        Errors = ["User was created but process was not completed successfully."],
                         ErrorCode = "ADD_ROLE_FAILED"
                     };
                 }
@@ -163,10 +177,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
                 if (!addLoginResult.Succeeded)
                 {
+                    _logger.LogError($"Failed to add external login to user {user.Email}. Errors: {string.Join(", ", addLoginResult.Errors.Select(e => e.Description))}");
                     return new ExternalLoginResult
                     {
                         Success = false,
-                        Errors = addLoginResult.Errors.Select(e => e.Description).ToList(),
+                        Errors = [$"Failed to link the user with external login provider. (${loginProvider})"],
                         ErrorCode = "ADD_LOGIN_FAILED"
                     };
                 }
