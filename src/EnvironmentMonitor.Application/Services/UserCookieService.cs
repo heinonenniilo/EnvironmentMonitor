@@ -97,7 +97,7 @@ namespace EnvironmentMonitor.Application.Services
 
             var cookieOptions = new CookieOptions
             {
-                HttpOnly = true, // HTTP-only for security
+                HttpOnly = true,
                 Secure = true,
                 SameSite = _applicationSettings.IsProduction ? SameSiteMode.Strict : SameSiteMode.None,
                 MaxAge = TimeSpan.FromHours(1),

@@ -1,13 +1,9 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain;
-using EnvironmentMonitor.Domain.Enums;
-using EnvironmentMonitor.Infrastructure.Data.Migrations.Application;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.Domain.Models;
-using EnvironmentMonitor.WebApi.Attributes;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +11,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Internal;
 using LoginModel = EnvironmentMonitor.Domain.Models.LoginModel;
 using ExternalLoginModel = EnvironmentMonitor.Domain.Models.ExternalLoginModel;
 using ForgotPasswordRequest = EnvironmentMonitor.Application.DTOs.ForgotPasswordRequest;
@@ -35,6 +30,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<AuthenticationController> _logger;
         private readonly IUserService _userService;
+
+
+        private const string LoginInfoRoute = "/login/info";
 
         public AuthenticationController(
             ILogger<AuthenticationController> logger,
@@ -193,7 +191,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
             if (!authenticateResult.Succeeded)
             {
                 _logger.LogWarning($"Not authenticated at {provider}-callback");
-                return Redirect("/login/error");
+                return Redirect(LoginInfoRoute);
             }
             var result = await _userService.ExternalLogin(new ExternalLoginModel()
             {
@@ -202,7 +200,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
             if (!result.Success)
             {
                 _logger.LogWarning($"External login failed at {provider}-callback with error code: {result.ErrorCode}");
-                return Redirect("/login/error");
+                return Redirect(LoginInfoRoute);
             }
 
             // Redirect to the original return URL on success
