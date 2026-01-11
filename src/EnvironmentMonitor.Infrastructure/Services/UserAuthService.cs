@@ -29,6 +29,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly IEmailClient _emailClient;
         private readonly IEmailRepository _emailRepository;
         private readonly MeasurementDbContext _measurementDbContext;
+        private readonly ApplicationDbContext _applicationDbContext;
 
         public UserAuthService(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
@@ -36,7 +37,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
             ILogger<UserAuthService> logger,
             IEmailClient emailClient,
             IEmailRepository emailRepository,
-            MeasurementDbContext measurementDbContext)
+            MeasurementDbContext measurementDbContext,
+            ApplicationDbContext applicationDbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -45,6 +47,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _emailClient = emailClient;
             _emailRepository = emailRepository;
             _measurementDbContext = measurementDbContext;
+            _applicationDbContext = applicationDbContext;
         }
 
         public async Task Login(LoginModel model)
@@ -365,6 +368,20 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new InvalidOperationException("User not found");
             }
 
+            // Clear UpdatedById references for all users that were updated by this user
+            var usersUpdatedByThisUser = await _userManager.Users
+                .Where(u => u.UpdatedById == userId)
+                .ToListAsync();
+            
+            if (usersUpdatedByThisUser.Any())
+            {
+                _logger.LogInformation($"Clearing UpdatedById reference for {usersUpdatedByThisUser.Count} users");
+                foreach (var affectedUser in usersUpdatedByThisUser)
+                {
+                    affectedUser.UpdatedById = null;
+                }
+            }
+            _logger.LogInformation($"Calling _userManager.DeleteAsync");
             var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded)
             {
