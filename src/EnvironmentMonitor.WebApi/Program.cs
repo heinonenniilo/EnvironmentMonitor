@@ -74,16 +74,23 @@ if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftC
         {
             if (!string.IsNullOrWhiteSpace(context.AccessToken))
             {
-                var accessToken = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler()
-                    .ReadJwtToken(context.AccessToken);
-
-                var upn = accessToken.Claims.FirstOrDefault(c => c.Type == "upn")?.Value
-                       ?? accessToken.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-
-                if (!string.IsNullOrWhiteSpace(upn))
+                try
                 {
-                    var id = (ClaimsIdentity)context.Principal!.Identity!;
-                    id.AddClaim(new Claim(ClaimTypes.Upn, upn));
+                    var accessToken = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler()
+                        .ReadJwtToken(context.AccessToken);
+
+                    var upn = accessToken.Claims.FirstOrDefault(c => c.Type == "upn")?.Value
+                           ?? accessToken.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+
+                    if (!string.IsNullOrWhiteSpace(upn))
+                    {
+                        var id = (ClaimsIdentity)context.Principal!.Identity!;
+                        id.AddClaim(new Claim(ClaimTypes.Upn, upn));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error parsing access token: {ex.Message}");
                 }
             }
             return Task.CompletedTask;
