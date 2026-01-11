@@ -178,104 +178,60 @@ namespace EnvironmentMonitor.WebApi.Controllers
             });
         }
 
-        [HttpGet("google")]
-        public IActionResult GoogleLogin([FromQuery] bool persistent = false)
+        [HttpGet("{provider}-callback")]
+        public async Task<IActionResult> ExternalCallback(string provider, string returnUrl = "/", bool persistent = false)
         {
-            var redirectUrl = Url.Action(nameof(GoogleCallback), "Authentication", new { returnUrl = "/", persistent });
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(GoogleDefaults.AuthenticationScheme, redirectUrl);
-            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
-        }
-
-        [HttpGet("google-callback")]
-        public async Task<IActionResult> GoogleCallback(string returnUrl = "/", bool persistent = false)
-        {
-            var authenticateResult = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+            // Determine the authentication scheme based on the provider
+            string authenticationScheme = provider.ToLower() switch
+            {
+                "google" => GoogleDefaults.AuthenticationScheme,
+                "microsoft" => MicrosoftAccountDefaults.AuthenticationScheme,
+                "github" => GitHubAuthenticationDefaults.AuthenticationScheme,
+                _ => throw new ArgumentException("Unsupported provider")
+            };
+            var authenticateResult = await HttpContext.AuthenticateAsync(authenticationScheme);
             if (!authenticateResult.Succeeded)
             {
-                _logger.LogWarning($"Not authenticated at GoogleCallback");
+                _logger.LogWarning($"Not authenticated at {provider}-callback");
                 return Redirect("/login/error");
             }
             var result = await _userService.ExternalLogin(new ExternalLoginModel()
             {
                 Persistent = persistent
             });
-            
-            // Check if external login failed and redirect to error page
             if (!result.Success)
             {
-                _logger.LogWarning($"External login failed at GoogleCallback with error code: {result.ErrorCode}");
+                _logger.LogWarning($"External login failed at {provider}-callback with error code: {result.ErrorCode}");
                 return Redirect("/login/error");
             }
-            
-            // Success - redirect to original return URL
+
+            // Redirect to the original return URL on success
             return Redirect(returnUrl ?? "/");
+        }
+
+        [HttpGet("google")]
+        public IActionResult GoogleLogin([FromQuery] bool persistent = false)
+        {
+            var redirectUrl = Url.Action(nameof(ExternalCallback), "Authentication", new { provider = "google", returnUrl = "/", persistent });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(GoogleDefaults.AuthenticationScheme, redirectUrl);
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
         [HttpGet("microsoft")]
         public IActionResult MicrosoftLogin([FromQuery] bool persistent = false)
         {
-            var redirectUrl = Url.Action(nameof(MicrosoftCallback), "Authentication", new { returnUrl = "/", persistent });
+            var redirectUrl = Url.Action(nameof(ExternalCallback), "Authentication", new { provider = "microsoft", returnUrl = "/", persistent });
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(MicrosoftAccountDefaults.AuthenticationScheme, redirectUrl);
             return Challenge(properties, MicrosoftAccountDefaults.AuthenticationScheme);
-        }
-
-        [HttpGet("microsoft-callback")]
-        public async Task<IActionResult> MicrosoftCallback(string returnUrl = "/", bool persistent = false)
-        {
-            var authenticateResult = await HttpContext.AuthenticateAsync(MicrosoftAccountDefaults.AuthenticationScheme);
-            if (!authenticateResult.Succeeded)
-            {
-                _logger.LogWarning($"Not authenticated at MicrosoftCallback");
-                return Redirect("/login/error");
-            }
-            var result = await _userService.ExternalLogin(new ExternalLoginModel()
-            {
-                Persistent = persistent
-            });
-            
-            // Check if external login failed and redirect to error page
-            if (!result.Success)
-            {
-                _logger.LogWarning($"External login failed at MicrosoftCallback with error code: {result.ErrorCode}");
-                return Redirect("/login/error");
-            }
-            
-            // Success - redirect to original return URL
-            return Redirect(returnUrl ?? "/");
         }
 
         // GitHub OAuth endpoints
         [HttpGet("github")]
         public IActionResult GitHubLogin([FromQuery] bool persistent = false)
         {
-            var redirectUrl = Url.Action(nameof(GitHubCallback), "Authentication", new { returnUrl = "/", persistent });
+            var redirectUrl = Url.Action(nameof(ExternalCallback), "Authentication", new { provider = "github", returnUrl = "/", persistent });
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(GitHubAuthenticationDefaults.AuthenticationScheme, redirectUrl);
             return Challenge(properties, GitHubAuthenticationDefaults.AuthenticationScheme);
-        }
-
-        [HttpGet("github-callback")]
-        public async Task<IActionResult> GitHubCallback(string returnUrl = "/", bool persistent = false)
-        {
-            var authenticateResult = await HttpContext.AuthenticateAsync(GitHubAuthenticationDefaults.AuthenticationScheme);
-            if (!authenticateResult.Succeeded)
-            {
-                _logger.LogWarning($"Not authenticated at GitHubCallback");
-                return Redirect("/login/error");
-            }
-            var result = await _userService.ExternalLogin(new ExternalLoginModel()
-            {
-                Persistent = persistent
-            });
-            
-            // Check if external login failed and redirect to error page
-            if (!result.Success)
-            {
-                _logger.LogWarning($"External login failed at GitHubCallback with error code: {result.ErrorCode}");
-                return Redirect("/login/error");
-            }
-            
-            // Success - redirect to original return URL
-            return Redirect(returnUrl ?? "/");
         }
 
         [HttpDelete("")]
