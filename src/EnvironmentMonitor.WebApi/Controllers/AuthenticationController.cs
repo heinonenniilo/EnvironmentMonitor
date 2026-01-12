@@ -30,6 +30,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<AuthenticationController> _logger;
         private readonly IUserService _userService;
+        private readonly GitHubSettings _githubSettings;
 
 
         private const string LoginInfoRoute = "/login/info";
@@ -37,11 +38,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public AuthenticationController(
             ILogger<AuthenticationController> logger,
             SignInManager<ApplicationUser> signInManager,
-            IUserService userService)
+            IUserService userService,
+            GitHubSettings githubSettings)
         {
             _logger = logger;
             _signInManager = signInManager;
             _userService = userService;
+            _githubSettings = githubSettings;
         }
 
         [HttpPost("register")]
@@ -226,6 +229,25 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet("github")]
         public IActionResult GitHubLogin([FromQuery] bool persistent = false)
         {
+            // Check if GitHubHost is configured and if current host is different
+            if (!string.IsNullOrEmpty(_githubSettings.GitHubHost))
+            {
+                var currentHost = $"{Request.Scheme}://{Request.Host}";
+                var configuredHost = _githubSettings.GitHubHost.TrimEnd('/');
+                
+                var currentUri = new Uri(currentHost);
+                var configuredUri = new Uri(configuredHost);
+                
+                // If the current host is different from the configured GitHub host, redirect
+                if (!currentUri.Host.Equals(configuredUri.Host, StringComparison.OrdinalIgnoreCase) ||
+                    currentUri.Port != configuredUri.Port)
+                {
+                    var redirectToGitHubHost = $"{configuredHost}/api/authentication/github?persistent={persistent}";
+                    _logger.LogInformation($"Redirecting GitHub OAuth request from {currentHost} to {redirectToGitHubHost}");
+                    return Redirect(redirectToGitHubHost);
+                }
+            }
+            
             var redirectUrl = Url.Action(nameof(ExternalCallback), "Authentication", new { provider = "github", returnUrl = "/", persistent });
             var properties = _signInManager.ConfigureExternalAuthenticationProperties(GitHubAuthenticationDefaults.AuthenticationScheme, redirectUrl);
             return Challenge(properties, GitHubAuthenticationDefaults.AuthenticationScheme);

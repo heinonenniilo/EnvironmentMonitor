@@ -129,6 +129,11 @@ if (!string.IsNullOrEmpty(githubClientId) && !string.IsNullOrEmpty(githubClientS
         });
 }
 
+// Configure GitHub settings
+var githubSettings = new GitHubSettings();
+builder.Configuration.GetSection("GitHub").Bind(githubSettings);
+builder.Services.AddSingleton(githubSettings);
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
