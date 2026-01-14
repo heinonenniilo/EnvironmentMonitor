@@ -1,6 +1,7 @@
 using AspNet.Security.OAuth.GitHub; // GitHub OAuth
 using EnvironmentMonitor.Application.Extensions;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
@@ -73,16 +74,23 @@ if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftC
         {
             if (!string.IsNullOrWhiteSpace(context.AccessToken))
             {
-                var accessToken = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler()
-                    .ReadJwtToken(context.AccessToken);
-
-                var upn = accessToken.Claims.FirstOrDefault(c => c.Type == "upn")?.Value
-                       ?? accessToken.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-
-                if (!string.IsNullOrWhiteSpace(upn))
+                try
                 {
-                    var id = (ClaimsIdentity)context.Principal!.Identity!;
-                    id.AddClaim(new Claim(ClaimTypes.Upn, upn));
+                    var accessToken = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler()
+                        .ReadJwtToken(context.AccessToken);
+
+                    var upn = accessToken.Claims.FirstOrDefault(c => c.Type == "upn")?.Value
+                           ?? accessToken.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+
+                    if (!string.IsNullOrWhiteSpace(upn))
+                    {
+                        var id = (ClaimsIdentity)context.Principal!.Identity!;
+                        id.AddClaim(new Claim(ClaimTypes.Upn, upn));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error parsing access token: {ex.Message}");
                 }
             }
             return Task.CompletedTask;
@@ -121,13 +129,23 @@ if (!string.IsNullOrEmpty(githubClientId) && !string.IsNullOrEmpty(githubClientS
         });
 }
 
+// Configure GitHub settings
+var githubSettings = new GitHubSettings();
+builder.Configuration.GetSection("GitHub").Bind(githubSettings);
+builder.Services.AddSingleton(githubSettings);
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddInfrastructureServices(builder.Configuration);
+// Configure ApplicationSettings with IsProduction flag
+var applicationSettings = new ApplicationSettings();
+builder.Configuration.GetSection("ApplicationSettings").Bind(applicationSettings);
+applicationSettings.IsProduction = builder.Environment.IsProduction();
+
+builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
 builder.Services.AddApplicationServices(builder.Configuration);
 
 builder.Services.AddCors(options =>

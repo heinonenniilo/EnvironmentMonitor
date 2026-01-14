@@ -18,6 +18,7 @@ import { ThemeProvider } from "@mui/material";
 import { baseTheme } from "./utilities/baseTheme";
 import { PublicMeasurementsView } from "./containers/PublicMeasurementsView";
 import { LoginView } from "./containers/LoginView";
+import { LoginInfoView } from "./containers/LoginInfoView";
 import { RegisterView } from "./containers/RegisterView";
 import { EmailConfirmationView } from "./containers/EmailConfirmationView";
 import { ForgotPasswordView } from "./containers/ForgotPasswordView";
@@ -46,6 +47,7 @@ createRoot(document.getElementById("root")!).render(
                 }
               />
               <Route path={routes.login} element={<LoginView />} />
+              <Route path={routes.loginInfo} element={<LoginInfoView />} />
               <Route path={routes.register} element={<RegisterView />} />
               <Route
                 path={routes.emailConfirmation}

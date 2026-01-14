@@ -13,7 +13,7 @@ namespace EnvironmentMonitor.Application.Interfaces
     public interface IUserService
     {
         public Task Login(LoginModel model);
-        public Task ExternalLogin(ExternalLoginModel model);
+        public Task<ExternalLoginResult> ExternalLogin(ExternalLoginModel model);
         public Task RegisterUser(RegisterUserModel model);
         public Task<bool> ConfirmEmail(string userId, string token);
         public Task ChangePassword(ChangePasswordModel model);
@@ -35,5 +35,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         Task<UserInfoDto?> GetUser(string userId);
         Task ManageUserClaims(ManageUserClaimsRequest request);
         Task ManageUserRoles(ManageUserRolesRequest request);
+        AuthInfoCookie? GetAuthInfo();
+        void ClearAuthInfo();
     }
 }

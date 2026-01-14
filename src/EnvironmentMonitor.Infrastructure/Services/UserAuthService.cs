@@ -29,6 +29,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly IEmailClient _emailClient;
         private readonly IEmailRepository _emailRepository;
         private readonly MeasurementDbContext _measurementDbContext;
+        private readonly ApplicationDbContext _applicationDbContext;
 
         public UserAuthService(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
@@ -36,7 +37,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
             ILogger<UserAuthService> logger,
             IEmailClient emailClient,
             IEmailRepository emailRepository,
-            MeasurementDbContext measurementDbContext)
+            MeasurementDbContext measurementDbContext,
+            ApplicationDbContext applicationDbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -45,6 +47,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _emailClient = emailClient;
             _emailRepository = emailRepository;
             _measurementDbContext = measurementDbContext;
+            _applicationDbContext = applicationDbContext;
         }
 
         public async Task Login(LoginModel model)
@@ -60,7 +63,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 throw new InvalidOperationException("Email not confirmed. Please check your email and confirm your account before logging in.");
             }
-            
+    
             var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: false);
             if (!result.Succeeded)
             {
@@ -75,20 +78,30 @@ namespace EnvironmentMonitor.Infrastructure.Services
             return _signInManager.SignOutAsync();
         }
 
-        public async Task LoginWithExternalProvider(ExternalLoginModel model)
+        public async Task<ExternalLoginResult> LoginWithExternalProvider(ExternalLoginModel model)
         {
             string loginProvider;
             string providerKey;
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
-                throw new InvalidOperationException();
+                return new ExternalLoginResult
+                {
+                    Success = false,
+                    Errors = new List<string> { "Failed to retrieve external login information" },
+                    ErrorCode = "EXTERNAL_LOGIN_INFO_NULL"
+                };
             }
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             var upn = info.Principal.FindFirstValue(ClaimTypes.Upn);
             if (string.IsNullOrEmpty(email))
             {
-                throw new InvalidOperationException("Failed to fetch email");
+                return new ExternalLoginResult
+                {
+                    Success = false,
+                    Errors = new List<string> { "Failed to fetch email from external provider" },
+                    ErrorCode = "EMAIL_NOT_PROVIDED"
+                };
             }
             if (!string.IsNullOrEmpty(model.LoginProvider) && !string.IsNullOrEmpty(model.ProviderKey))
             {
@@ -103,7 +116,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             if (string.IsNullOrEmpty(loginProvider) || string.IsNullOrEmpty(providerKey))
             {
-                throw new InvalidOperationException();
+                return new ExternalLoginResult
+                {
+                    Success = false,
+                    Errors = new List<string> { "Invalid login provider or provider key" },
+                    ErrorCode = "INVALID_PROVIDER_INFO"
+                };
             }
 
             var user = await _userManager.FindByLoginAsync(loginProvider, providerKey);
@@ -112,37 +130,86 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 var additionalClaims = await GetCalculatedClaims(user);
                 additionalClaims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
                 additionalClaims.Add(new Claim(ClaimTypes.Upn, upn ?? string.Empty));
-                await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
+                return new ExternalLoginResult { Success = true, LoginProvider = loginProvider };
             }
             else
             {
                 user = new ApplicationUser { UserName = model.UserName ?? email, Email = email };
+                // Check if user exists. 
+                var existingUser = await _userManager.FindByEmailAsync(email);
+                if (existingUser != null)
+                {
+                    return new ExternalLoginResult
+                    {
+                        Success = false,
+                        Errors = [$"Login with external provider ({loginProvider}) successful but user with email {user.Email} already exists."],
+                        ErrorCode = "USER_ALREADY_EXISTS",
+                        LoginProvider = loginProvider
+                    };
+                }
                 var createResult = await _userManager.CreateAsync(user);
                 if (!createResult.Succeeded)
                 {
-                    throw new InvalidOperationException($"Failed to create user: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+                    _logger.LogError($"Failed to create user {user.Email} from external login. Errors: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+                    return new ExternalLoginResult
+                    {
+                        Success = false,
+                        Errors = ["Creating user failed"],
+                        ErrorCode = "USER_CREATION_FAILED",
+                        LoginProvider = loginProvider
+                    };
                 }
                 // Registered role
-                await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
+                var addRoleResult = await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
+                if (!addRoleResult.Succeeded)
+                {
+                    _logger.LogError($"Failed to add Registered role to user {user.Email}. Errors: {string.Join(", ", addRoleResult.Errors.Select(e => e.Description))}");
+                    return new ExternalLoginResult
+                    {
+                        Success = false,
+                        Errors = ["User was created but process was not completed successfully."],
+                        ErrorCode = "ADD_ROLE_FAILED",
+                        LoginProvider = loginProvider
+                    };
+                }
 
                 var addLoginResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(
                     loginProvider,
                     providerKey, providerKey
                     ));
 
-                var userToLogIn = await _userManager.FindByLoginAsync(loginProvider, providerKey);
-
                 if (!addLoginResult.Succeeded)
                 {
-                    throw new InvalidOperationException("Failed to add login");
+                    _logger.LogError($"Failed to add external login to user {user.Email}. Errors: {string.Join(", ", addLoginResult.Errors.Select(e => e.Description))}");
+                    return new ExternalLoginResult
+                    {
+                        Success = false,
+                        Errors = [$"Failed to link the user with external login provider. ({loginProvider})"],
+                        ErrorCode = "ADD_LOGIN_FAILED",
+                        LoginProvider = loginProvider
+                    };
                 }
+
+                var userToLogIn = await _userManager.FindByLoginAsync(loginProvider, providerKey);
+                if (userToLogIn == null)
+                {
+                    return new ExternalLoginResult
+                    {
+                        Success = false,
+                        Errors = new List<string> { "Failed to retrieve user after creation" },
+                        ErrorCode = "USER_RETRIEVAL_FAILED",
+                        LoginProvider = loginProvider
+                    };
+                }
+
                 var additionalClaims = new List<Claim>
                 {
                     new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider),
                     new Claim (ClaimTypes.Upn, upn ?? string.Empty)
                 };
                 await _signInManager.SignInWithClaimsAsync(userToLogIn, model.Persistent, additionalClaims);
+                return new ExternalLoginResult { Success = true, LoginProvider = loginProvider };
             }
         }
 
@@ -299,6 +366,34 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 throw new InvalidOperationException("User not found");
             }
 
+            // Clear UpdatedById references for all users that were updated by this user
+            var usersUpdatedByThisUser = await _applicationDbContext.Users
+                .Where(u => u.UpdatedById == userId)
+                .ToListAsync();
+
+            if (usersUpdatedByThisUser.Any())
+            {
+                _logger.LogInformation($"Clearing UpdatedById reference for {usersUpdatedByThisUser.Count} users");
+                foreach (var affectedUser in usersUpdatedByThisUser)
+                {
+                    affectedUser.UpdatedById = null;
+                }
+            }
+
+            var userClaimsUpdatedByThisUser = await _applicationDbContext.UserClaims
+                .Where(c => c.UpdatedById == userId)
+                .ToListAsync();
+
+            if (userClaimsUpdatedByThisUser.Any())
+            {
+                _logger.LogInformation($"Clearing UpdatedById reference for {userClaimsUpdatedByThisUser.Count} user claims");
+                foreach (var affectedClaim in userClaimsUpdatedByThisUser)
+                {
+                    affectedClaim.UpdatedById = null;
+                }
+            }
+
+            _logger.LogInformation($"Calling _userManager.DeleteAsync");
             var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded)
             {

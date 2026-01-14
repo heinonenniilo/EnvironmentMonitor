@@ -3,6 +3,7 @@ import moment from "moment";
 import { useDispatch } from "react-redux";
 import { addNotification } from "../reducers/userInterfaceReducer";
 import type { User } from "../models/user";
+import type { AuthInfoCookie } from "../models/authInfoCookie";
 import type { LocationModel } from "../models/location";
 import type { AxiosResponse } from "axios";
 import type { Device } from "../models/device";
@@ -46,6 +47,7 @@ interface ApiHook {
 
 interface userHook {
   getUserInfo: () => Promise<User | undefined>;
+  getAuthInfo: () => Promise<AuthInfoCookie | null>;
   logIn: (
     userId: string,
     password: string,
@@ -211,6 +213,18 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           showError();
           return undefined;
+        }
+      },
+      getAuthInfo: async () => {
+        try {
+          const response = await apiClient.get<
+            any,
+            AxiosResponse<AuthInfoCookie | null>
+          >("/api/authentication/auth-info");
+          return response.data;
+        } catch (ex: any) {
+          console.error(ex);
+          return null;
         }
       },
       logIn: async (userId, password, persistent) => {

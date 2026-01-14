@@ -5,6 +5,7 @@ using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
+using EnvironmentMonitor.Tests.Mocks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,7 @@ namespace EnvironmentMonitor.Tests
                 [
                     new Table("dbo", "MeasurementTypes"),
                     new Table("dbo", "Locations"),
+                    new Table("dbo", "EmailTemplates"),
                     new Table("application", "AspNetRoles")
                 ],
             });
@@ -362,16 +364,6 @@ namespace EnvironmentMonitor.Tests
             public Location Location { get; set; }
             public Location LocationWithNoDefinedAccess { get; set; }
             public List<Sensor> Sensors { get; set; }
-        }
-
-        protected class TestUser : ICurrentUser
-        {
-            public string? Id { get; set; }
-            public List<System.Security.Claims.Claim> Claims { get; set; } = [];
-
-            public string Email => "test_user@tester.com";
-
-            public List<string> Roles => ["Admin", "TEST"];
         }
     }
 }
