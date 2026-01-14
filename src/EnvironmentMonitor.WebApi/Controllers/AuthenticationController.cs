@@ -3,6 +3,7 @@ using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Utils;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
@@ -234,15 +235,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet("github")]
         public IActionResult GitHubLogin([FromQuery] bool persistent = false)
         {
-            // Check if GitHubHost is configured and if current host is different
-            if (!string.IsNullOrEmpty(_githubSettings.GitHubHost))
+            if (UriUtils.IsValidHttpUrl(_githubSettings.GitHubHost))
             {
                 var currentHost = $"{Request.Scheme}://{Request.Host}";
                 var configuredHost = _githubSettings.GitHubHost.TrimEnd('/');
-                
+
                 var currentUri = new Uri(currentHost);
                 var configuredUri = new Uri(configuredHost);
-                
                 // If the current host is different from the configured GitHub host, redirect
                 if (!currentUri.Host.Equals(configuredUri.Host, StringComparison.OrdinalIgnoreCase) ||
                     currentUri.Port != configuredUri.Port)
@@ -251,6 +250,10 @@ namespace EnvironmentMonitor.WebApi.Controllers
                     _logger.LogInformation($"Redirecting GitHub OAuth request from {currentHost} to {redirectToGitHubHost}");
                     return Redirect(redirectToGitHubHost);
                 }
+            }
+            else if (!string.IsNullOrEmpty(_githubSettings.GitHubHost))
+            {
+                _logger.LogWarning($"GitHubHost is configured but is not a valid URL: {_githubSettings.GitHubHost}");
             }
             
             var redirectUrl = Url.Action(nameof(ExternalCallback), "Authentication", new { provider = "github", returnUrl = "/", persistent });
