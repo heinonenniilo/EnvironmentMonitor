@@ -4,12 +4,12 @@ import { CheckCircle, Google, Microsoft, GitHub } from "@mui/icons-material";
 import moment from "moment";
 import type { AuthInfoCookie } from "../../models/authInfoCookie";
 
-export interface LoginErrorPageProps {
+export interface LoginInfoPageProps {
   authInfo: AuthInfoCookie | null;
   onNavigateToMain: () => void;
 }
 
-const LoginInfoPage: React.FC<LoginErrorPageProps> = ({
+const LoginInfoPage: React.FC<LoginInfoPageProps> = ({
   authInfo,
   onNavigateToMain,
 }) => {
