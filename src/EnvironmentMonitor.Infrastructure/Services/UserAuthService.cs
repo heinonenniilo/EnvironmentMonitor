@@ -130,7 +130,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 var additionalClaims = await GetCalculatedClaims(user);
                 additionalClaims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
                 additionalClaims.Add(new Claim(ClaimTypes.Upn, upn ?? string.Empty));
-                await _userManager.AddToRoleAsync(user, GlobalRoles.Registered.ToString());
                 await _signInManager.SignInWithClaimsAsync(user, model.Persistent, additionalClaims);
                 return new ExternalLoginResult { Success = true, LoginProvider = loginProvider };
             }
