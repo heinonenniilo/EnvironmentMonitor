@@ -6,7 +6,7 @@ import { routes } from "../utilities/routes";
 import { useApiHook } from "../hooks/apiHook";
 import type { AuthInfoCookie } from "../models/authInfoCookie";
 
-export const LoginErrorView: React.FC = () => {
+export const LoginInfoView: React.FC = () => {
   const navigate = useNavigate();
   const apiHook = useApiHook();
   const [authInfo, setAuthInfo] = useState<AuthInfoCookie | null>(null);
