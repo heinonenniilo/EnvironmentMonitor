@@ -185,7 +185,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     return new ExternalLoginResult
                     {
                         Success = false,
-                        Errors = [$"Failed to link the user with external login provider. (${loginProvider})"],
+                        Errors = [$"Failed to link the user with external login provider. ({loginProvider})"],
                         ErrorCode = "ADD_LOGIN_FAILED",
                         LoginProvider = loginProvider
                     };
