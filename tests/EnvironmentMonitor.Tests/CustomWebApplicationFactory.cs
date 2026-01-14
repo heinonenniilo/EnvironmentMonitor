@@ -1,8 +1,11 @@
-﻿using EnvironmentMonitor.Infrastructure.Data;
+﻿using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Infrastructure.Data;
+using EnvironmentMonitor.Tests.Mocks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using System;
 using System.Collections.Generic;
@@ -27,6 +30,21 @@ namespace EnvironmentMonitor.Tests
                 configurationBuilder.AddConfiguration(integrationConfig);
             });
 
+            // Override email client with mock
+            builder.ConfigureServices(services =>
+            {
+                // Remove the existing IEmailClient registration
+                var descriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(IEmailClient));
+                
+                if (descriptor != null)
+                {
+                    services.Remove(descriptor);
+                }
+
+                // Add mock email client
+                services.AddSingleton<IEmailClient, MockEmailClient>();
+            });
         }
     }
 }
