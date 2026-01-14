@@ -204,8 +204,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 _logger.LogWarning($"External login failed at {provider}-callback with error code: {result.ErrorCode}");
                 return Redirect(LoginInfoRoute);
             }
+            var returnUrlToSet = returnUrl ?? "/";
 
-            // Redirect to the original return URL on success
+            if (!Url.IsLocalUrl(returnUrlToSet))
+            {
+                _logger.LogWarning($"Non local return URL observed: {returnUrlToSet}");
+                returnUrlToSet = "/";
+            }
             return Redirect(returnUrl ?? "/");
         }
 
