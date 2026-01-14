@@ -144,12 +144,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     return new ExternalLoginResult
                     {
                         Success = false,
-                        Errors = [$"Login with external provider (${loginProvider}) successfull but user with email {user.Email} already exists."],
+                        Errors = [$"Login with external provider ({loginProvider}) successful but user with email {user.Email} already exists."],
                         ErrorCode = "USER_ALREADY_EXISTS",
                         LoginProvider = loginProvider
                     };
                 }
-
                 var createResult = await _userManager.CreateAsync(user);
                 if (!createResult.Succeeded)
                 {
