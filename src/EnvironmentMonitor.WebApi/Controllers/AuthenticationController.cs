@@ -212,7 +212,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 _logger.LogWarning($"Non local return URL observed: {returnUrlToSet}");
                 returnUrlToSet = "/";
             }
-            return Redirect(returnUrl ?? "/");
+            return Redirect(returnUrlToSet);
         }
 
         [HttpGet("google")]
