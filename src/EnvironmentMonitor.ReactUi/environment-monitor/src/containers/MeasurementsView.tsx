@@ -115,11 +115,19 @@ export const MeasurementsView: React.FC = () => {
   const onSearch = (
     from: moment.Moment,
     to: moment.Moment | undefined,
-    sensorIds: string[]
+    sensorIds: string[],
+    measurementTypes?: number[]
   ) => {
     setIsLoading(true);
     measurementApiHook
-      .getMeasurementsBySensor(sensorIds, from, to)
+      .getMeasurementsBySensor(
+        sensorIds,
+        from,
+        to,
+        undefined,
+        undefined,
+        measurementTypes
+      )
       .then((res) => {
         setSelectedSensors(
           sensors.filter((sensor) =>
@@ -142,7 +150,8 @@ export const MeasurementsView: React.FC = () => {
           onSearch={(
             from: moment.Moment,
             to: moment.Moment | undefined,
-            sensorIds: string[]
+            sensorIds: string[],
+            measurementTypes?: number[]
           ) => {
             setTimeFrom(from);
 
@@ -153,7 +162,7 @@ export const MeasurementsView: React.FC = () => {
             }
             setTimeTo(to);
 
-            onSearch(from, to, sensorIds);
+            onSearch(from, to, sensorIds, measurementTypes);
           }}
           onSelectEntity={toggleDeviceSelection}
           toggleSensorSelection={toggleSensorSelection}

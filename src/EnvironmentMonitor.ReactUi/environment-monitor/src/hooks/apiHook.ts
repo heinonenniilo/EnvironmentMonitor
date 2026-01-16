@@ -83,7 +83,8 @@ interface measureHook {
     from: moment.Moment,
     to?: moment.Moment,
     latestOnly?: boolean,
-    deviceIds?: string[]
+    deviceIds?: string[],
+    measurementTypes?: number[]
   ) => Promise<MeasurementsViewModel | undefined>;
   getMeasurementsByLocation: (
     locationIds: string[],
@@ -398,7 +399,8 @@ export const useApiHook = (): ApiHook => {
         from: moment.Moment,
         to?: moment.Moment,
         latestOnly?: boolean,
-        deviceIds?: string[]
+        deviceIds?: string[],
+        measurementTypes?: number[]
       ) => {
         try {
           const res = await apiClient.get<
@@ -411,6 +413,7 @@ export const useApiHook = (): ApiHook => {
               from: from.toISOString(),
               to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,
+              MeasurementTypes: measurementTypes,
             },
           });
           return res.data;

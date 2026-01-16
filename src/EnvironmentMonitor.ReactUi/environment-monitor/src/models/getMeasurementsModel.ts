@@ -6,4 +6,5 @@ export interface GetMeasurementsModel {
   latestOnly?: boolean;
   from?: moment.Moment;
   to?: moment.Moment;
+  measurementTypes?: number[];
 }
