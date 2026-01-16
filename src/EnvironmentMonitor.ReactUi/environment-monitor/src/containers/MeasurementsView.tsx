@@ -98,7 +98,16 @@ export const MeasurementsView: React.FC = () => {
 
         setTimeFrom(fromDate);
         measurementApiHook
-          .getMeasurementsBySensor(sensorIds, fromDate, undefined)
+          .getMeasurementsBySensor(
+            sensorIds,
+            fromDate,
+            undefined,
+            undefined,
+            undefined,
+            selectedMeasurementTypes && selectedMeasurementTypes.length > 0
+              ? selectedMeasurementTypes
+              : undefined
+          )
           .then((res) => {
             setSelectedSensors(
               sensors.filter((sensor) =>
@@ -129,7 +138,9 @@ export const MeasurementsView: React.FC = () => {
         to,
         undefined,
         undefined,
-        measurementTypes
+        measurementTypes && measurementTypes.length > 0
+          ? measurementTypes
+          : undefined
       )
       .then((res) => {
         setSelectedSensors(

@@ -104,7 +104,12 @@ export const LocationMeasurementsView: React.FC = () => {
           .getMeasurementsByLocation(
             [matchingLocation.identifier],
             fromDate,
-            undefined
+            undefined,
+            undefined,
+            undefined,
+            selectedMeasurementTypes && selectedMeasurementTypes.length > 0
+              ? selectedMeasurementTypes
+              : undefined
           )
           .then((res) => {
             if (res) {
@@ -123,11 +128,21 @@ export const LocationMeasurementsView: React.FC = () => {
     from: moment.Moment,
     to: moment.Moment | undefined,
     locationIds: string[],
-    sensorIds?: string[]
+    sensorIds?: string[],
+    measurementTypes?: number[]
   ) => {
     setIsLoading(true);
     measurementApiHook
-      .getMeasurementsByLocation(locationIds, from, to, false, sensorIds)
+      .getMeasurementsByLocation(
+        locationIds,
+        from,
+        to,
+        false,
+        sensorIds,
+        measurementTypes && measurementTypes.length > 0
+          ? measurementTypes
+          : undefined
+      )
       .then((res) => {
         if (res) {
           setMeasurementsModel(res);
@@ -163,7 +178,8 @@ export const LocationMeasurementsView: React.FC = () => {
           onSearch={(
             from: moment.Moment,
             to: moment.Moment | undefined,
-            sensorIds: string[]
+            sensorIds: string[],
+            measurementTypes?: number[]
           ) => {
             setTimeFrom(from);
             setTimeTo(to);
@@ -176,7 +192,8 @@ export const LocationMeasurementsView: React.FC = () => {
               from,
               to,
               selectedLocations.map((l) => l.identifier),
-              sensorIds
+              sensorIds,
+              measurementTypes
             );
           }}
           onSelectEntity={toggleLocationSelection}

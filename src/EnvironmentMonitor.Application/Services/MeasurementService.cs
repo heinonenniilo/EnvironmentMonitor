@@ -218,7 +218,7 @@ namespace EnvironmentMonitor.Application.Services
                 From = model.From,
                 To = model.To,
                 SensorIdentifiers = sensorIdentifiersToFilter,
-                MeasurementTypes = model.MeasurementTypes
+                MeasurementTypes = model.MeasurementTypes,
             });
 
             var modelToReturn = new MeasurementsByLocationModel();
