@@ -8,6 +8,8 @@ import {
   getDeviceAutoScale,
   getDevices,
   getSensors,
+  getSelectedMeasurementTypes,
+  setSelectedMeasurementTypes,
   toggleAutoScale,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
@@ -39,6 +41,7 @@ export const MeasurementsView: React.FC = () => {
   const devices = useSelector(getDevices);
   const sensors = useSelector(getSensors);
   const dashboardTimeRange = useSelector(getDashboardTimeRange);
+  const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
   const autoScaleInUseForDevice = useSelector(
     getDeviceAutoScale(
       selectedDevices.length === 1 ? selectedDevices[0].identifier : ""
@@ -181,6 +184,10 @@ export const MeasurementsView: React.FC = () => {
               : []
           }
           timeFrom={timeFrom}
+          selectedMeasurementTypes={selectedMeasurementTypes}
+          onMeasurementTypesChange={(types) =>
+            dispatch(setSelectedMeasurementTypes(types))
+          }
         />
       }
     >

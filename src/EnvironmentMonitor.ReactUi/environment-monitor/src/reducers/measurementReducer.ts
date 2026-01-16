@@ -5,6 +5,24 @@ import type { Sensor } from "../models/sensor";
 import type { LocationModel } from "../models/location";
 import type { RootState } from "../setup/appStore";
 import type { DeviceInfo } from "../models/deviceInfo";
+import { MeasurementTypes } from "../enums/measurementTypes";
+
+// Get all available measurement types (excluding Undefined and Online)
+const getDefaultMeasurementTypes = (): number[] => {
+  return Object.keys(MeasurementTypes)
+    .filter(
+      (key) =>
+        !isNaN(Number(MeasurementTypes[key as keyof typeof MeasurementTypes]))
+    )
+    .map((key) =>
+      Number(MeasurementTypes[key as keyof typeof MeasurementTypes])
+    )
+    .filter(
+      (value) =>
+        value !== MeasurementTypes.Undefined &&
+        value !== MeasurementTypes.Online
+    );
+};
 
 export interface MeasurementState {
   devices: Device[];
@@ -14,6 +32,7 @@ export interface MeasurementState {
   locations: LocationModel[];
   autoScaleSensorIds: string[];
   timeRange: number;
+  selectedMeasurementTypes: number[];
 }
 
 export interface DashboardAutoScale {
@@ -28,6 +47,7 @@ const initialState: MeasurementState = {
   autoScaleSensorIds: [],
   timeRange: 24,
   locations: [],
+  selectedMeasurementTypes: getDefaultMeasurementTypes(),
 };
 
 export const measurementSlice = createSlice({
@@ -64,6 +84,9 @@ export const measurementSlice = createSlice({
     setLocations: (state, action: PayloadAction<LocationModel[]>) => {
       state.locations = action.payload;
     },
+    setSelectedMeasurementTypes: (state, action: PayloadAction<number[]>) => {
+      state.selectedMeasurementTypes = action.payload;
+    },
   },
 });
 
@@ -74,6 +97,7 @@ export const {
   toggleAutoScale,
   setDashboardTimeRange,
   setLocations,
+  setSelectedMeasurementTypes,
 } = measurementSlice.actions;
 
 export const getDevices = (state: RootState): Device[] =>
@@ -100,6 +124,10 @@ export const getDeviceAutoScale = (deviceIdentifier: string) =>
 
 export const getDashboardTimeRange = (state: RootState): number => {
   return state.measurementInfo.timeRange;
+};
+
+export const getSelectedMeasurementTypes = (state: RootState): number[] => {
+  return state.measurementInfo.selectedMeasurementTypes;
 };
 
 export default measurementSlice.reducer;

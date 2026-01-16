@@ -18,6 +18,7 @@ import {
   getMeasurementUnit,
 } from "../utilities/measurementUtils";
 import { MeasurementTypes } from "../enums/measurementTypes";
+
 export interface MeasurementsLeftViewProps {
   onSearch: (
     from: moment.Moment,
@@ -34,6 +35,8 @@ export interface MeasurementsLeftViewProps {
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
   entityName?: string;
+  selectedMeasurementTypes: number[];
+  onMeasurementTypesChange: (measurementTypes: number[]) => void;
 }
 
 export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
@@ -47,14 +50,13 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   timeFrom,
   timeTo,
   entityName,
+  selectedMeasurementTypes,
+  onMeasurementTypesChange,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
     moment().utc(true).add(-2, "day").startOf("day")
   );
   const [toDate, setToDate] = useState<moment.Moment | undefined>(undefined);
-  const [selectedMeasurementTypes, setSelectedMeasurementTypes] = useState<
-    number[]
-  >([]);
 
   // Get all available measurement types from enum (excluding Undefined and Online)
   const availableMeasurementTypes = Object.keys(MeasurementTypes)
@@ -72,13 +74,13 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
     );
 
   const toggleMeasurementTypeSelection = (type: number) => {
+    let newSelection: number[];
     if (selectedMeasurementTypes.includes(type)) {
-      setSelectedMeasurementTypes(
-        selectedMeasurementTypes.filter((t) => t !== type)
-      );
+      newSelection = selectedMeasurementTypes.filter((t) => t !== type);
     } else {
-      setSelectedMeasurementTypes([...selectedMeasurementTypes, type]);
+      newSelection = [...selectedMeasurementTypes, type];
     }
+    onMeasurementTypesChange(newSelection);
   };
 
   useEffect(() => {

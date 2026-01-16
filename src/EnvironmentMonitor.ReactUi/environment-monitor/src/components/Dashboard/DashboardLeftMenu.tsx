@@ -1,14 +1,16 @@
 import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { MeasurementTypes } from "../../enums/measurementTypes";
 import { getMeasurementTypeDisplayName } from "../../utilities/measurementUtils";
 import { stringSort } from "../../utilities/stringUtils";
 
 export interface DashboardLeftMenuProps {
+  selectedMeasurementTypes: number[];
   onMeasurementTypesChange: (measurementTypes: number[]) => void;
 }
 
 export const DashboardLeftMenu: React.FC<DashboardLeftMenuProps> = ({
+  selectedMeasurementTypes,
   onMeasurementTypesChange,
 }) => {
   // Get all available measurement types from enum (excluding Undefined and Online)
@@ -26,16 +28,6 @@ export const DashboardLeftMenu: React.FC<DashboardLeftMenuProps> = ({
         value !== MeasurementTypes.Online
     );
 
-  const [selectedMeasurementTypes, setSelectedMeasurementTypes] = useState<
-    number[]
-  >(availableMeasurementTypes);
-
-  // Initialize with all measurement types selected on mount
-  useEffect(() => {
-    onMeasurementTypesChange(availableMeasurementTypes);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const toggleMeasurementTypeSelection = (type: number) => {
     let newSelection: number[];
     if (selectedMeasurementTypes.includes(type)) {
@@ -43,7 +35,6 @@ export const DashboardLeftMenu: React.FC<DashboardLeftMenuProps> = ({
     } else {
       newSelection = [...selectedMeasurementTypes, type];
     }
-    setSelectedMeasurementTypes(newSelection);
     onMeasurementTypesChange(newSelection);
   };
 

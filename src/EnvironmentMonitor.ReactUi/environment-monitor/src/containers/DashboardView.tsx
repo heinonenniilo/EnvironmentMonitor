@@ -1,11 +1,13 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   getDashboardTimeRange,
   getDevices,
   getSensors,
+  getSelectedMeasurementTypes,
   setDashboardTimeRange,
+  setSelectedMeasurementTypes,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
@@ -14,35 +16,15 @@ import { type Sensor } from "../models/sensor";
 import { type Device } from "../models/device";
 import { stringSort } from "../utilities/stringUtils";
 import { DashboardLeftMenu } from "../components/Dashboard/DashboardLeftMenu";
-import { MeasurementTypes } from "../enums/measurementTypes";
 
 interface DeviceDashboardModel {
   sensors: Sensor[];
   device: Device;
 }
 
-// Get all available measurement types (excluding Undefined and Online)
-const getAvailableMeasurementTypes = () => {
-  return Object.keys(MeasurementTypes)
-    .filter(
-      (key) =>
-        !isNaN(Number(MeasurementTypes[key as keyof typeof MeasurementTypes]))
-    )
-    .map((key) =>
-      Number(MeasurementTypes[key as keyof typeof MeasurementTypes])
-    )
-    .filter(
-      (value) =>
-        value !== MeasurementTypes.Undefined &&
-        value !== MeasurementTypes.Online
-    );
-};
-
 export const DashboardView: React.FC = () => {
   const dispatch = useDispatch();
-  const [selectedMeasurementTypes, setSelectedMeasurementTypes] = useState<
-    number[]
-  >(getAvailableMeasurementTypes());
+  const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
 
   const sensors = useSelector(getSensors);
   const devices = useSelector(getDevices);
@@ -85,10 +67,6 @@ export const DashboardView: React.FC = () => {
     );
   });
 
-  const handleMeasurementTypesChange = (measurementTypes: number[]) => {
-    setSelectedMeasurementTypes(measurementTypes);
-  };
-
   return (
     <AppContentWrapper
       title="Dashboard - Devices"
@@ -100,7 +78,10 @@ export const DashboardView: React.FC = () => {
       }
       leftMenu={
         <DashboardLeftMenu
-          onMeasurementTypesChange={handleMeasurementTypesChange}
+          selectedMeasurementTypes={selectedMeasurementTypes}
+          onMeasurementTypesChange={(types) =>
+            dispatch(setSelectedMeasurementTypes(types))
+          }
         />
       }
     >

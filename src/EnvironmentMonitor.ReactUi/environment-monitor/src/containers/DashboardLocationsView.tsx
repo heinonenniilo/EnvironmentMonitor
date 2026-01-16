@@ -1,39 +1,21 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useState } from "react";
+import React from "react";
 import {
   getDashboardTimeRange,
   getLocations,
+  getSelectedMeasurementTypes,
   setDashboardTimeRange,
+  setSelectedMeasurementTypes,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 import { DashboardLocationGraph } from "../components/Dashboard/DashboardLocationGraph";
 import { DashboardLeftMenu } from "../components/Dashboard/DashboardLeftMenu";
-import { MeasurementTypes } from "../enums/measurementTypes";
-
-// Get all available measurement types (excluding Undefined and Online)
-const getAvailableMeasurementTypes = () => {
-  return Object.keys(MeasurementTypes)
-    .filter(
-      (key) =>
-        !isNaN(Number(MeasurementTypes[key as keyof typeof MeasurementTypes]))
-    )
-    .map((key) =>
-      Number(MeasurementTypes[key as keyof typeof MeasurementTypes])
-    )
-    .filter(
-      (value) =>
-        value !== MeasurementTypes.Undefined &&
-        value !== MeasurementTypes.Online
-    );
-};
 
 export const DashbordLocationsView: React.FC = () => {
   const dispatch = useDispatch();
-  const [selectedMeasurementTypes, setSelectedMeasurementTypes] = useState<
-    number[]
-  >(getAvailableMeasurementTypes());
+  const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
 
   const locations = useSelector(getLocations);
 
@@ -41,10 +23,6 @@ export const DashbordLocationsView: React.FC = () => {
 
   const handleTimeRangeChange = (selection: number) => {
     dispatch(setDashboardTimeRange(selection));
-  };
-
-  const handleMeasurementTypesChange = (measurementTypes: number[]) => {
-    setSelectedMeasurementTypes(measurementTypes);
   };
 
   const visibleLocations = locations.filter((l) => l.visible);
@@ -59,7 +37,10 @@ export const DashbordLocationsView: React.FC = () => {
       }
       leftMenu={
         <DashboardLeftMenu
-          onMeasurementTypesChange={handleMeasurementTypesChange}
+          selectedMeasurementTypes={selectedMeasurementTypes}
+          onMeasurementTypesChange={(types) =>
+            dispatch(setSelectedMeasurementTypes(types))
+          }
         />
       }
     >
