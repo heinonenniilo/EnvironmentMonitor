@@ -61,6 +61,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => model.LocationIdentifiers.Contains(x.Sensor.Device.Location.Identifier));
             }
 
+            if (model.MeasurementTypes?.Any() == true)
+            {
+                var typeIds = model.MeasurementTypes.Select(t => (int)t).ToList();
+                query = query.Where(x => typeIds.Contains(x.TypeId));
+            }
+
             if (model.To == null || model.To > _dateService.CurrentTime())
             {
                 var dateLimit = _dateService.CurrentTime();

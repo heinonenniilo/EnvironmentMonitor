@@ -20,5 +20,9 @@ namespace EnvironmentMonitor.Domain.Models
         public DateTime From { get; set; } = DateTime.UtcNow.AddDays(-1);
         public DateTime? To { get; set; }
         public bool? LatestOnly { get; set; }
+        /// <summary>
+        /// Filter measurements by specific measurement types.
+        /// </summary>
+        public List<MeasurementTypes>? MeasurementTypes { get; set; }
     }
 }

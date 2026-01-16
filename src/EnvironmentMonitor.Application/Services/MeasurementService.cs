@@ -217,7 +217,8 @@ namespace EnvironmentMonitor.Application.Services
             {
                 From = model.From,
                 To = model.To,
-                SensorIdentifiers = sensorIdentifiersToFilter
+                SensorIdentifiers = sensorIdentifiersToFilter,
+                MeasurementTypes = model.MeasurementTypes
             });
 
             var modelToReturn = new MeasurementsByLocationModel();
@@ -283,6 +284,7 @@ namespace EnvironmentMonitor.Application.Services
                 To = model.To,
                 From = model.From,
                 LatestOnly = model.LatestOnly,
+                MeasurementTypes = model.MeasurementTypes
             });
 
             var info = GetMeasurementInfo(result.ToList(), accessibleSensorIds);
@@ -331,7 +333,8 @@ namespace EnvironmentMonitor.Application.Services
                 From = model.From,
                 To = model.To,
                 SensorsByTypeFilter = sensorFilterDictionary,
-                LatestOnly = model.LatestOnly
+                LatestOnly = model.LatestOnly,
+                MeasurementTypes = model.MeasurementTypes
             });
 
             var info = GetMeasurementInfo(res.ToList(), sensorIds);
