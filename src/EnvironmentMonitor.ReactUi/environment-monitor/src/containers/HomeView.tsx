@@ -122,11 +122,9 @@ export const HomeView: React.FC = () => {
   };
 
   useEffect(() => {
-    if (model === undefined) {
-      loadMeasurements();
-    }
+    loadMeasurements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [devices, model, selectedMeasurementTypes]);
+  }, [devices, selectedMeasurementTypes]);
 
   return (
     <AppContentWrapper
