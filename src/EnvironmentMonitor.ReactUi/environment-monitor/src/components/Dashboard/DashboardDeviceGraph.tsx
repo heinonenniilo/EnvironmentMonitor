@@ -1,16 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { type Device } from "../models/device";
-import { type Sensor } from "../models/sensor";
-import { type MeasurementsViewModel } from "../models/measurementsBySensor";
+import { type Device } from "../../models/device";
+import { type Sensor } from "../../models/sensor";
+import { type MeasurementsViewModel } from "../../models/measurementsBySensor";
 import { useDispatch, useSelector } from "react-redux";
 import { useInView } from "react-intersection-observer";
 import {
   getDeviceAutoScale,
   toggleAutoScale,
-} from "../reducers/measurementReducer";
+} from "../../reducers/measurementReducer";
 import { Box } from "@mui/material";
-import { MultiSensorGraph } from "./MultiSensorGraph";
-import { useApiHook } from "../hooks/apiHook";
+import { MultiSensorGraph } from "../MultiSensorGraph";
+import { useApiHook } from "../../hooks/apiHook";
 import moment from "moment";
 
 export const DashboardDeviceGraph: React.FC<{
@@ -19,7 +19,8 @@ export const DashboardDeviceGraph: React.FC<{
   model: MeasurementsViewModel | undefined;
   timeRange: number;
   autoFetch: boolean;
-}> = ({ device, sensors, model, timeRange, autoFetch }) => {
+  measurementTypes?: number[];
+}> = ({ device, sensors, model, timeRange, autoFetch, measurementTypes }) => {
   const useAutoScale = useSelector(getDeviceAutoScale(device.identifier));
   const measurementApiHook = useApiHook().measureHook;
 
@@ -30,6 +31,9 @@ export const DashboardDeviceGraph: React.FC<{
   const [lastTimeRange, setLastTimeRange] = useState<number | undefined>(
     undefined
   );
+  const [lastMeasurementTypes, setLastMeasurementTypes] = useState<
+    number[] | undefined
+  >(undefined);
 
   const { ref, inView } = useInView({
     triggerOnce: false,
@@ -45,14 +49,21 @@ export const DashboardDeviceGraph: React.FC<{
       return;
     }
 
-    if (inView && timeRange !== lastTimeRange) {
+    const measurementTypesChanged =
+      JSON.stringify(measurementTypes) !== JSON.stringify(lastMeasurementTypes);
+
+    if (inView && (timeRange !== lastTimeRange || measurementTypesChanged)) {
       fetchMeasurements();
-    } else if (!inView && timeRange !== lastTimeRange) {
+    } else if (
+      !inView &&
+      (timeRange !== lastTimeRange || measurementTypesChanged)
+    ) {
       setDeviceModel(undefined);
       setLastTimeRange(undefined);
+      setLastMeasurementTypes(undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange, inView, autoFetch]);
+  }, [timeRange, inView, autoFetch, measurementTypes]);
   const dispatch = useDispatch();
 
   const fetchMeasurements = () => {
@@ -69,10 +80,16 @@ export const DashboardDeviceGraph: React.FC<{
       .getMeasurementsBySensor(
         sensors.map((x) => x.identifier),
         momentStart,
-        undefined
+        undefined,
+        undefined,
+        undefined,
+        measurementTypes && measurementTypes.length > 0
+          ? measurementTypes
+          : undefined
       )
       .then((res) => {
         setLastTimeRange(timeRange);
+        setLastMeasurementTypes(measurementTypes);
         setDeviceModel(res);
       })
       .catch((er) => {

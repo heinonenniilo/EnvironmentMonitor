@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   getDashboardTimeRange,
   getDevices,
@@ -9,18 +9,40 @@ import {
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
-import { DashboardDeviceGraph } from "../components/DashboardDeviceGraph";
+import { DashboardDeviceGraph } from "../components/Dashboard/DashboardDeviceGraph";
 import { type Sensor } from "../models/sensor";
 import { type Device } from "../models/device";
 import { stringSort } from "../utilities/stringUtils";
+import { DashboardLeftMenu } from "../components/Dashboard/DashboardLeftMenu";
+import { MeasurementTypes } from "../enums/measurementTypes";
 
 interface DeviceDashboardModel {
   sensors: Sensor[];
   device: Device;
 }
 
+// Get all available measurement types (excluding Undefined and Online)
+const getAvailableMeasurementTypes = () => {
+  return Object.keys(MeasurementTypes)
+    .filter(
+      (key) =>
+        !isNaN(Number(MeasurementTypes[key as keyof typeof MeasurementTypes]))
+    )
+    .map((key) =>
+      Number(MeasurementTypes[key as keyof typeof MeasurementTypes])
+    )
+    .filter(
+      (value) =>
+        value !== MeasurementTypes.Undefined &&
+        value !== MeasurementTypes.Online
+    );
+};
+
 export const DashboardView: React.FC = () => {
   const dispatch = useDispatch();
+  const [selectedMeasurementTypes, setSelectedMeasurementTypes] = useState<
+    number[]
+  >(getAvailableMeasurementTypes());
 
   const sensors = useSelector(getSensors);
   const devices = useSelector(getDevices);
@@ -54,9 +76,18 @@ export const DashboardView: React.FC = () => {
         key={device.identifier}
         timeRange={timeRange}
         autoFetch
+        measurementTypes={
+          selectedMeasurementTypes.length > 0
+            ? selectedMeasurementTypes
+            : undefined
+        }
       />
     );
   });
+
+  const handleMeasurementTypesChange = (measurementTypes: number[]) => {
+    setSelectedMeasurementTypes(measurementTypes);
+  };
 
   return (
     <AppContentWrapper
@@ -65,6 +96,11 @@ export const DashboardView: React.FC = () => {
         <TimeRangeSelectorComponent
           timeRange={timeRange}
           onSelectTimeRange={handleTimeRangeChange}
+        />
+      }
+      leftMenu={
+        <DashboardLeftMenu
+          onMeasurementTypesChange={handleMeasurementTypesChange}
         />
       }
     >

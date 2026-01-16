@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { type MeasurementsByLocation } from "../models/measurementsBySensor";
+import { type MeasurementsByLocation } from "../../models/measurementsBySensor";
 
 import { Box } from "@mui/material";
-import { MultiSensorGraph } from "./MultiSensorGraph";
-import { useApiHook } from "../hooks/apiHook";
+import { MultiSensorGraph } from "../MultiSensorGraph";
+import { useApiHook } from "../../hooks/apiHook";
 import moment from "moment";
-import { type LocationModel } from "../models/location";
-import { ChartJsColorsPluginMaxDatasets } from "../models/applicationConstants";
+import { type LocationModel } from "../../models/location";
+import { ChartJsColorsPluginMaxDatasets } from "../../models/applicationConstants";
 import { useInView } from "react-intersection-observer";
 
 export const DashboardLocationGraph: React.FC<{
@@ -14,13 +14,17 @@ export const DashboardLocationGraph: React.FC<{
   model: MeasurementsByLocation | undefined;
   timeRange: number;
   autoFetch: boolean;
-}> = ({ location, model, timeRange, autoFetch }) => {
+  measurementTypes?: number[];
+}> = ({ location, model, timeRange, autoFetch, measurementTypes }) => {
   const measurementApiHook = useApiHook().measureHook;
 
   const [isLoading, setIsLoading] = useState(false);
   const [lastTimeRange, setLastTimeRange] = useState<number | undefined>(
     undefined
   );
+  const [lastMeasurementTypes, setLastMeasurementTypes] = useState<
+    number[] | undefined
+  >(undefined);
 
   const [measurementModel, setMeasurementModel] = useState<
     MeasurementsByLocation | undefined
@@ -36,14 +40,21 @@ export const DashboardLocationGraph: React.FC<{
       return;
     }
 
-    if (inView && timeRange !== lastTimeRange) {
+    const measurementTypesChanged =
+      JSON.stringify(measurementTypes) !== JSON.stringify(lastMeasurementTypes);
+
+    if (inView && (timeRange !== lastTimeRange || measurementTypesChanged)) {
       fetchMeasurements();
-    } else if (!inView && timeRange !== lastTimeRange) {
+    } else if (
+      !inView &&
+      (timeRange !== lastTimeRange || measurementTypesChanged)
+    ) {
       setMeasurementModel(undefined); // Clears the "old" measurements
       setLastTimeRange(undefined);
+      setLastMeasurementTypes(undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange, inView, autoFetch]);
+  }, [timeRange, inView, autoFetch, measurementTypes]);
 
   const fetchMeasurements = () => {
     setIsLoading(true);
@@ -52,9 +63,19 @@ export const DashboardLocationGraph: React.FC<{
       .add(-1 * timeRange, "hour")
       .utc(true);
     measurementApiHook
-      .getMeasurementsByLocation([location.identifier], momentStart)
+      .getMeasurementsByLocation(
+        [location.identifier],
+        momentStart,
+        undefined,
+        undefined,
+        undefined,
+        measurementTypes && measurementTypes.length > 0
+          ? measurementTypes
+          : undefined
+      )
       .then((res) => {
         setLastTimeRange(timeRange);
+        setLastMeasurementTypes(measurementTypes);
         setMeasurementModel(res?.measurements[0]);
       })
       .finally(() => {

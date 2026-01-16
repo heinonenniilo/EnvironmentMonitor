@@ -91,7 +91,8 @@ interface measureHook {
     from: moment.Moment,
     to?: moment.Moment,
     latestOnly?: boolean,
-    sensorIds?: string[]
+    sensorIds?: string[],
+    measurementTypes?: number[]
   ) => Promise<MeasurementsByLocationModel | undefined>;
 
   getPublicMeasurements: (
@@ -428,7 +429,8 @@ export const useApiHook = (): ApiHook => {
         from: moment.Moment,
         to?: moment.Moment,
         latestOnly?: boolean,
-        sensorIds?: string[]
+        sensorIds?: string[],
+        measurementTypes?: number[]
       ) => {
         try {
           const res = await apiClient.get<
@@ -441,6 +443,7 @@ export const useApiHook = (): ApiHook => {
               to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,
               sensorIdentifiers: sensorIds,
+              MeasurementTypes: measurementTypes,
             },
           });
           return res.data;
