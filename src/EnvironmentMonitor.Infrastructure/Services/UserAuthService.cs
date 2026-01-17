@@ -5,6 +5,7 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Utils;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -220,6 +221,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
         {
             if (await _userManager.FindByEmailAsync(model.Email) != null)
                 throw new DuplicateEntityException($"User with email '{model.Email}' already exists");
+
+            var baseUrl = model.BaseUrl ?? _applicationSettings.BaseUrl;
+
+            var registerUserPath = "api/authentication/confirm-email";
+
             var user = new ApplicationUser
             {
                 UserName = model.Email,
@@ -236,8 +242,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var queryParams = new StringBuilder();
             queryParams.Append($"?userId={Uri.EscapeDataString(user.Id)}");
             queryParams.Append($"&token={Uri.EscapeDataString(token)}");
+            var confirmationUrl = UriUtils.CombineUrl(baseUrl, registerUserPath) + queryParams.ToString();
 
-            var confirmationUrl = model.BaseUrl + queryParams.ToString();
             var emailTemplate = await _emailRepository.GetEmailTemplate(EmailTemplateTypes.ConfirmUserEmail);
 
             if (string.IsNullOrEmpty(emailTemplate?.Message) || string.IsNullOrEmpty(emailTemplate?.Title))
@@ -254,7 +260,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 ReplaceTokens = new Dictionary<string, string>
                 {
                     { ApplicationConstants.EmailTemplateConfirmationLinkKey, confirmationUrl },
-                    { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, model.BaseUrl ?? _applicationSettings.BaseUrl},
+                    { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, baseUrl},
                 }
             });
             _logger.LogInformation($"Confirmation email sent to {model.Email}");
@@ -309,16 +315,18 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
         public async Task ForgotPassword(ForgotPasswordModel model)
         {
+            var setNewPasswordPath = "set-new-password";
+            var baseUrl = model.BaseUrl ?? _applicationSettings.BaseUrl;
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
             {
                 _logger.LogError($"Forgot password requested for non-existent or unconfirmed email: {model.Email}");
                 throw new InvalidOperationException($"Forgot password requested for non-existent or unconfirmed email: {model.Email}");
             }
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);           
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var queryParams = new StringBuilder();
-            queryParams.Append($"?token={Uri.EscapeDataString(token)}");        
-            var resetUrl = model.BaseUrl + queryParams.ToString();
+            queryParams.Append($"?token={Uri.EscapeDataString(token)}");
+            var resetUrl = UriUtils.CombineUrl(baseUrl, setNewPasswordPath) + queryParams.ToString();
 
             var emailTemplate = await _emailRepository.GetEmailTemplate(EmailTemplateTypes.UserPasswordReset);
             if (string.IsNullOrEmpty(emailTemplate?.Message) || string.IsNullOrEmpty(emailTemplate?.Title))
@@ -334,10 +342,9 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 ReplaceTokens = new Dictionary<string, string>
                 {
                     { ApplicationConstants.EmailTemplatePasswordResetLinkKey, resetUrl },
-                    { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, model.BaseUrl ?? _applicationSettings.BaseUrl},
+                    { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, baseUrl},
                 }
             });
-            
             _logger.LogInformation($"Password reset email sent to {model.Email}");
         }
 
