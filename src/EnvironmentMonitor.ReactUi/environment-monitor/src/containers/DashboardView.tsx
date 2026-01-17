@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   getDashboardTimeRange,
   getDevices,
@@ -16,6 +16,7 @@ import { type Sensor } from "../models/sensor";
 import { type Device } from "../models/device";
 import { stringSort } from "../utilities/stringUtils";
 import { DashboardLeftMenu } from "../components/Dashboard/DashboardLeftMenu";
+import { toggleLeftMenuOpen } from "../reducers/userInterfaceReducer";
 
 interface DeviceDashboardModel {
   sensors: Sensor[];
@@ -42,7 +43,7 @@ export const DashboardView: React.FC = () => {
       .sort((a, b) => stringSort(a.displayName, b.displayName))
       .map((device) => {
         const deviceSensors = sensors.filter(
-          (s) => s.parentIdentifier === device.identifier
+          (s) => s.parentIdentifier === device.identifier,
         );
 
         return { device, sensors: deviceSensors };
@@ -66,6 +67,11 @@ export const DashboardView: React.FC = () => {
       />
     );
   });
+
+  useEffect(() => {
+    dispatch(toggleLeftMenuOpen(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <AppContentWrapper

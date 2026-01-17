@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   getDashboardTimeRange,
   getLocations,
@@ -12,6 +12,7 @@ import { Box } from "@mui/material";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
 import { DashboardLocationGraph } from "../components/Dashboard/DashboardLocationGraph";
 import { DashboardLeftMenu } from "../components/Dashboard/DashboardLeftMenu";
+import { toggleLeftMenuOpen } from "../reducers/userInterfaceReducer";
 
 export const DashbordLocationsView: React.FC = () => {
   const dispatch = useDispatch();
@@ -26,6 +27,12 @@ export const DashbordLocationsView: React.FC = () => {
   };
 
   const visibleLocations = locations.filter((l) => l.visible);
+
+  useEffect(() => {
+    dispatch(toggleLeftMenuOpen(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <AppContentWrapper
       title="Dashboard - Locations"

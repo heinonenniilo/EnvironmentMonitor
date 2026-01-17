@@ -11,7 +11,7 @@ import {
   storeUserInfo,
 } from "../reducers/userReducer";
 import { useApiHook } from "../hooks/apiHook";
-import { useLocation, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getDevices,
@@ -23,7 +23,6 @@ import {
   getConfirmationDialog,
   getNotifications,
   setConfirmDialog,
-  toggleLeftMenuOpen,
 } from "../reducers/userInterfaceReducer";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { NotificationsComponent } from "./NotificationsComponent";
@@ -37,7 +36,6 @@ interface AppProps {
 
 export const App: React.FC<AppProps> = (props) => {
   const navigate = useNavigate();
-  const location = useLocation();
   // const [cookies, setCookie] = useCookies([userInfoCookieName]);
   const apiHook = useApiHook();
   const measurementApiHook = useApiHook().measureHook;
@@ -65,16 +63,6 @@ export const App: React.FC<AppProps> = (props) => {
   const handleNavigate = (route: string) => {
     navigate(route);
   };
-
-  // Close left menu when navigating to dashboard routes
-  useEffect(() => {
-    if (
-      location.pathname === routes.dashboard ||
-      location.pathname === routes.locationDashboard
-    ) {
-      dispath(toggleLeftMenuOpen(false));
-    }
-  }, [location.pathname, dispath]);
 
   useEffect(() => {
     if (apiHook?.userHook && user === undefined && !hasFetched) {
@@ -105,7 +93,7 @@ export const App: React.FC<AppProps> = (props) => {
           (r) =>
             r === RoleNames.Admin ||
             r === RoleNames.User ||
-            r === RoleNames.Viewer
+            r === RoleNames.Viewer,
         )
       ) {
         measurementApiHook.getDevices().then((res) => {
