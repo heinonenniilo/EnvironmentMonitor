@@ -1,4 +1,11 @@
-import { Box, FormControl, InputLabel, MenuItem, Select } from "@mui/material";
+import {
+  Box,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+} from "@mui/material";
 import React from "react";
 import { MeasurementTypes } from "../../enums/measurementTypes";
 import {
@@ -6,6 +13,7 @@ import {
   getMeasurementTypeDisplayName,
 } from "../../utilities/measurementUtils";
 import { stringSort } from "../../utilities/stringUtils";
+import { Clear } from "@mui/icons-material";
 
 export interface DashboardLeftMenuProps {
   selectedMeasurementTypes: number[];
@@ -28,6 +36,10 @@ export const DashboardLeftMenu: React.FC<DashboardLeftMenuProps> = ({
     }
   };
 
+  const handleClear = () => {
+    onMeasurementTypesChange([]);
+  };
+
   const optionsToShow = availableMeasurementTypes.map((type) => ({
     value: type,
     label: getMeasurementTypeDisplayName(type as MeasurementTypes, true),
@@ -39,6 +51,7 @@ export const DashboardLeftMenu: React.FC<DashboardLeftMenuProps> = ({
       flexDirection={"column"}
       width={"100%"}
       justifyContent={"flex-start"}
+      minWidth={250}
     >
       <Box mt={2}>
         <FormControl fullWidth>
@@ -51,6 +64,17 @@ export const DashboardLeftMenu: React.FC<DashboardLeftMenuProps> = ({
             value={selectedMeasurementTypes}
             multiple
             label="Measurement Type"
+            endAdornment={
+              selectedMeasurementTypes.length > 0 ? (
+                <IconButton
+                  size="small"
+                  onClick={handleClear}
+                  sx={{ marginRight: 3 }}
+                >
+                  <Clear fontSize="small" />
+                </IconButton>
+              ) : null
+            }
           >
             {optionsToShow
               .sort((a, b) => stringSort(a.label, b.label))
