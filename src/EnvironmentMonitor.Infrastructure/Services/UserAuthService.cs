@@ -30,6 +30,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly IEmailRepository _emailRepository;
         private readonly MeasurementDbContext _measurementDbContext;
         private readonly ApplicationDbContext _applicationDbContext;
+        private readonly ApplicationSettings _applicationSettings;
 
         public UserAuthService(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
@@ -38,7 +39,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
             IEmailClient emailClient,
             IEmailRepository emailRepository,
             MeasurementDbContext measurementDbContext,
-            ApplicationDbContext applicationDbContext)
+            ApplicationDbContext applicationDbContext,
+            ApplicationSettings applicationSettings)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -48,6 +50,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _emailRepository = emailRepository;
             _measurementDbContext = measurementDbContext;
             _applicationDbContext = applicationDbContext;
+            _applicationSettings = applicationSettings;
         }
 
         public async Task Login(LoginModel model)
@@ -224,16 +227,16 @@ namespace EnvironmentMonitor.Infrastructure.Services
             };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
-                throw new InvalidOperationException("Failed to create user");            
-            _logger.LogInformation($"User with email {model.Email} created.");           
+                throw new InvalidOperationException("Failed to create user");
+            _logger.LogInformation($"User with email {model.Email} created.");
             // Generate email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            
+
             // Build confirmation URL using the full path from model
             var queryParams = new StringBuilder();
             queryParams.Append($"?userId={Uri.EscapeDataString(user.Id)}");
             queryParams.Append($"&token={Uri.EscapeDataString(token)}");
-            
+
             var confirmationUrl = model.BaseUrl + queryParams.ToString();
             var emailTemplate = await _emailRepository.GetEmailTemplate(EmailTemplateTypes.ConfirmUserEmail);
 
@@ -246,13 +249,14 @@ namespace EnvironmentMonitor.Infrastructure.Services
             await _emailClient.SendEmailAsync(new SendEmailOptions
             {
                 ToAddresses = new List<string> { user.Email! },
-                Subject = emailTemplate.Title ,
+                Subject = emailTemplate.Title,
                 HtmlContent = emailTemplate.Message,
                 ReplaceTokens = new Dictionary<string, string>
                 {
                     { ApplicationConstants.EmailTemplateConfirmationLinkKey, confirmationUrl },
+                    { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, model.BaseUrl ?? _applicationSettings.BaseUrl},
                 }
-            });           
+            });
             _logger.LogInformation($"Confirmation email sent to {model.Email}");
         }
 
@@ -330,6 +334,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 ReplaceTokens = new Dictionary<string, string>
                 {
                     { ApplicationConstants.EmailTemplatePasswordResetLinkKey, resetUrl },
+                    { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, model.BaseUrl ?? _applicationSettings.BaseUrl},
                 }
             });
             
