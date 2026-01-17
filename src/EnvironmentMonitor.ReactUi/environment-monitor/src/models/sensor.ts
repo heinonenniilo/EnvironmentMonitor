@@ -6,6 +6,7 @@ export interface Sensor {
   scaleMin?: number;
   scaleMax?: number;
   measurementType?: number;
+  aggregationType?: number;
 }
 
 export interface SensorInfo extends Sensor {

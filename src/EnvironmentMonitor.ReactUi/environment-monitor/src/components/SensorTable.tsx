@@ -13,13 +13,19 @@ import {
 } from "@mui/material";
 import { SensorsDialog } from "./SensorsDialog";
 import { useState } from "react";
+import { getAggregationTypeDisplayName } from "../utilities/measurementUtils";
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
   title?: string;
+  isVirtual?: boolean;
 }
 
-export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
+export const SensorTable: React.FC<SensorTableProps> = ({
+  title,
+  sensors,
+  isVirtual,
+}) => {
   const [selectedSensors, setSelectedSensors] = useState<VirtualSensor[]>([]);
   const [dialogTitle, setDialogTitle] = useState<string>("");
   return (
@@ -47,6 +53,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
               <TableCell>Virtual</TableCell>
               <TableCell>Scale min</TableCell>
               <TableCell>Scale max</TableCell>
+              {isVirtual && <TableCell>Aggregation Type</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -86,6 +93,11 @@ export const SensorTable: React.FC<SensorTableProps> = ({ title, sensors }) => {
                     </TableCell>
                     <TableCell>{r.scaleMin}</TableCell>
                     <TableCell>{r.scaleMax}</TableCell>
+                    {isVirtual && (
+                      <TableCell>
+                        {getAggregationTypeDisplayName(r.aggregationType)}
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })}
