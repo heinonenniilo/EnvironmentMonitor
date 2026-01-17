@@ -62,23 +62,42 @@ export const getDatasetLabel = (
   return `${sensorName} (${unit})`;
 };
 
-export const getMeasurementTypeDisplayName = (type: MeasurementTypes) => {
+export const getMeasurementTypeDisplayName = (
+  type: MeasurementTypes,
+  showUnit?: boolean,
+) => {
+  let displayName: string;
   switch (type) {
     case MeasurementTypes.Temperature:
-      return "Temperature";
+      displayName = "Temperature";
+      break;
     case MeasurementTypes.Humidity:
-      return "Humidity";
+      displayName = "Humidity";
+      break;
     case MeasurementTypes.Light:
-      return "Light";
+      displayName = "Light";
+      break;
     case MeasurementTypes.Motion:
-      return "Motion";
+      displayName = "Motion";
+      break;
     case MeasurementTypes.Online:
-      return "Online Status";
+      displayName = "Online Status";
+      break;
     case MeasurementTypes.Undefined:
-      return "Undefined";
+      displayName = "Undefined";
+      break;
     default:
-      return "Unknown";
+      displayName = "Unknown";
   }
+
+  if (showUnit) {
+    const unit = getMeasurementUnit(type);
+    if (unit !== "" && unit !== "motion") {
+      return `${displayName} (${unit})`;
+    }
+  }
+
+  return displayName;
 };
 
 export const getAvailableMeasurementTypes = (): number[] => {

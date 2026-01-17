@@ -28,6 +28,11 @@ export const DashboardLeftMenu: React.FC<DashboardLeftMenuProps> = ({
     }
   };
 
+  const optionsToShow = availableMeasurementTypes.map((type) => ({
+    value: type,
+    label: getMeasurementTypeDisplayName(type as MeasurementTypes, true),
+  }));
+
   return (
     <Box
       display={"flex"}
@@ -47,22 +52,17 @@ export const DashboardLeftMenu: React.FC<DashboardLeftMenuProps> = ({
             multiple
             label="Measurement Type"
           >
-            {availableMeasurementTypes
-              .sort((a, b) =>
-                stringSort(
-                  getMeasurementTypeDisplayName(a as MeasurementTypes),
-                  getMeasurementTypeDisplayName(b as MeasurementTypes),
-                ),
-              )
-              .map((type) => (
+            {optionsToShow
+              .sort((a, b) => stringSort(a.label, b.label))
+              .map((option) => (
                 <MenuItem
-                  value={type}
-                  key={`measurement-type-${type}`}
+                  value={option.value}
+                  key={`measurement-type-${option.value}`}
                   onClick={() => {
-                    handleToggleMeasurementType(type);
+                    handleToggleMeasurementType(option.value);
                   }}
                 >
-                  {getMeasurementTypeDisplayName(type as MeasurementTypes)}
+                  {option.label}
                 </MenuItem>
               ))}
           </Select>
