@@ -231,7 +231,7 @@ namespace EnvironmentMonitor.Application.Services
                     {
                         continue;
                     }
-                    var measurementsToCheck = res.Where(x => x.SensorId == sensor.SensorId && x.TypeId == sensor.TypeId).ToList();
+                    var measurementsToCheck = res.Where(x => x.SensorId == sensor.SensorId && (sensor.TypeId == null || x.TypeId == sensor.TypeId)).ToList();
                     var measurementsBySensor = _mapper.Map<List<MeasurementBaseDto>>(measurementsToCheck);
                     var infoRow = GetMeasurementInfo(measurementsToCheck, [sensor.Sensor.Identifier]).FirstOrDefault();
                     var bySensorRow = new MeasurementsBySensorDto()
