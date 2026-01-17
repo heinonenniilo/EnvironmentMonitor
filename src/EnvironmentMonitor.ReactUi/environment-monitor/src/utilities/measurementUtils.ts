@@ -5,13 +5,13 @@ import { getFormattedDate } from "./datetimeUtils";
 export const formatMeasurement = (
   measurement: Measurement,
   onlyValue?: boolean,
-  includeSeconds?: boolean
+  includeSeconds?: boolean,
 ) => {
   const formattedValue =
     measurement.typeId === MeasurementTypes.Motion
       ? formatMeasurementValue(measurement)
       : `${formatMeasurementValue(measurement)} ${getMeasurementUnit(
-          measurement.typeId
+          measurement.typeId,
         )}`;
   if (onlyValue) {
     return `${formattedValue}`;
@@ -19,7 +19,7 @@ export const formatMeasurement = (
   const formattedDate = getFormattedDate(
     measurement.timestamp,
     false,
-    includeSeconds
+    includeSeconds,
   );
 
   return `${formattedValue} (${formattedDate})`;
@@ -53,7 +53,7 @@ const formatMeasurementValue = (measurement: Measurement) => {
 
 export const getDatasetLabel = (
   sensorName: string,
-  measurementType?: MeasurementTypes
+  measurementType?: MeasurementTypes,
 ) => {
   const unit = measurementType ? getMeasurementUnit(measurementType) : "";
   if (unit === "") {
@@ -79,4 +79,20 @@ export const getMeasurementTypeDisplayName = (type: MeasurementTypes) => {
     default:
       return "Unknown";
   }
+};
+
+export const getAvailableMeasurementTypes = (): number[] => {
+  return Object.keys(MeasurementTypes)
+    .filter(
+      (key) =>
+        !isNaN(Number(MeasurementTypes[key as keyof typeof MeasurementTypes])),
+    )
+    .map((key) =>
+      Number(MeasurementTypes[key as keyof typeof MeasurementTypes]),
+    )
+    .filter(
+      (value) =>
+        value !== MeasurementTypes.Undefined &&
+        value !== MeasurementTypes.Online,
+    );
 };

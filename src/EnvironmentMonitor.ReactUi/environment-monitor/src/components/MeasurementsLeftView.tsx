@@ -14,6 +14,7 @@ import { stringSort } from "../utilities/stringUtils";
 import { getEntityTitle } from "../utilities/entityUtils";
 import { type Entity } from "../models/entity";
 import {
+  getAvailableMeasurementTypes,
   getMeasurementTypeDisplayName,
   getMeasurementUnit,
 } from "../utilities/measurementUtils";
@@ -24,7 +25,7 @@ export interface MeasurementsLeftViewProps {
     from: moment.Moment,
     to: moment.Moment | undefined,
     sensorIds: string[],
-    measurementTypes?: number[]
+    measurementTypes?: number[],
   ) => void;
   onSelectEntity: (deviceId: string) => void;
   toggleSensorSelection: (sensorId: string) => void;
@@ -54,33 +55,20 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   onMeasurementTypesChange,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
-    moment().utc(true).add(-2, "day").startOf("day")
+    moment().utc(true).add(-2, "day").startOf("day"),
   );
   const [toDate, setToDate] = useState<moment.Moment | undefined>(undefined);
 
-  // Get all available measurement types from enum (excluding Undefined and Online)
-  const availableMeasurementTypes = Object.keys(MeasurementTypes)
-    .filter(
-      (key) =>
-        !isNaN(Number(MeasurementTypes[key as keyof typeof MeasurementTypes]))
-    )
-    .map((key) =>
-      Number(MeasurementTypes[key as keyof typeof MeasurementTypes])
-    )
-    .filter(
-      (value) =>
-        value !== MeasurementTypes.Undefined &&
-        value !== MeasurementTypes.Online
-    );
+  const availableMeasurementTypes = getAvailableMeasurementTypes();
 
-  const toggleMeasurementTypeSelection = (type: number) => {
-    let newSelection: number[];
+  const handleToggleMeasurementType = (type: number) => {
     if (selectedMeasurementTypes.includes(type)) {
-      newSelection = selectedMeasurementTypes.filter((t) => t !== type);
+      onMeasurementTypesChange(
+        selectedMeasurementTypes.filter((t) => t !== type),
+      );
     } else {
-      newSelection = [...selectedMeasurementTypes, type];
+      onMeasurementTypesChange([...selectedMeasurementTypes, type]);
     }
-    onMeasurementTypesChange(newSelection);
   };
 
   useEffect(() => {
@@ -100,7 +88,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
         : undefined;
     if (selectedEntities && selectedEntities.length > 1) {
       const matchingEntity = entities.find(
-        (d) => d.identifier === sensor.parentIdentifier
+        (d) => d.identifier === sensor.parentIdentifier,
       );
 
       const letToReturn = `${
@@ -232,15 +220,15 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
               .sort((a, b) =>
                 stringSort(
                   getMeasurementTypeDisplayName(a as MeasurementTypes),
-                  getMeasurementTypeDisplayName(b as MeasurementTypes)
-                )
+                  getMeasurementTypeDisplayName(b as MeasurementTypes),
+                ),
               )
               .map((type) => (
                 <MenuItem
                   value={type}
                   key={`measurement-type-${type}`}
                   onClick={() => {
-                    toggleMeasurementTypeSelection(type);
+                    handleToggleMeasurementType(type);
                   }}
                 >
                   {getMeasurementTypeDisplayName(type as MeasurementTypes)}
@@ -261,7 +249,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                 selectedSensors,
                 selectedMeasurementTypes.length > 0
                   ? selectedMeasurementTypes
-                  : undefined
+                  : undefined,
               );
             }
           }}
