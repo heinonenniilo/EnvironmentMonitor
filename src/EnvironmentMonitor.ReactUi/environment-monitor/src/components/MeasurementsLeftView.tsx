@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -19,6 +20,7 @@ import {
   getMeasurementUnit,
 } from "../utilities/measurementUtils";
 import { MeasurementTypes } from "../enums/measurementTypes";
+import { Clear } from "@mui/icons-material";
 
 export interface MeasurementsLeftViewProps {
   onSearch: (
@@ -69,6 +71,10 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
     } else {
       onMeasurementTypesChange([...selectedMeasurementTypes, type]);
     }
+  };
+
+  const handleClearMeasurementTypes = () => {
+    onMeasurementTypesChange([]);
   };
 
   useEffect(() => {
@@ -215,6 +221,17 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
             value={selectedMeasurementTypes}
             multiple
             label="Measurement Type"
+            endAdornment={
+              selectedMeasurementTypes.length > 0 ? (
+                <IconButton
+                  size="small"
+                  onClick={handleClearMeasurementTypes}
+                  sx={{ marginRight: 3 }}
+                >
+                  <Clear fontSize="small" />
+                </IconButton>
+              ) : null
+            }
           >
             {availableMeasurementTypes
               .sort((a, b) =>
