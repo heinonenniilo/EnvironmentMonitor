@@ -220,10 +220,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
         public async Task RegisterUser(RegisterUserModel model)
         {
             if (await _userManager.FindByEmailAsync(model.Email) != null)
+            {
                 throw new DuplicateEntityException($"User with email '{model.Email}' already exists");
-
-            var baseUrl = model.BaseUrl ?? _applicationSettings.BaseUrl;
-
+            }
+            var baseUrl = string.IsNullOrEmpty(model.BaseUrl) ? _applicationSettings.BaseUrl : model.BaseUrl;
             var registerUserPath = "api/authentication/confirm-email";
 
             var user = new ApplicationUser
@@ -237,7 +237,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _logger.LogInformation($"User with email {model.Email} created.");
             // Generate email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-
             // Build confirmation URL using the full path from model
             var queryParams = new StringBuilder();
             queryParams.Append($"?userId={Uri.EscapeDataString(user.Id)}");
@@ -316,7 +315,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         public async Task ForgotPassword(ForgotPasswordModel model)
         {
             var setNewPasswordPath = "set-new-password";
-            var baseUrl = model.BaseUrl ?? _applicationSettings.BaseUrl;
+            var baseUrl = string.IsNullOrEmpty(model.BaseUrl) ? _applicationSettings.BaseUrl : model.BaseUrl;
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
             {
