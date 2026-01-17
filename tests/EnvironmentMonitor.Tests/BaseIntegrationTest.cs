@@ -214,37 +214,39 @@ namespace EnvironmentMonitor.Tests
             int sensorId,
             int deviceId,
             string locationSensorName,
-            int typeId,
-            List<(double value, DateTime timestamp)> measurements)
+            int? typeId,
+            List<(double value, DateTime timestamp, int typeId)> measurements,
+            bool skipAddingSensor = false
+            )
         {
             using (var scope = _factory.Services.CreateScope())
             {
                 var measurementDbContext = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
-
                 // Re-query entities in this scope to get tracked instances
                 var location = await measurementDbContext.Locations.FindAsync(locationId);
                 var sensor = await measurementDbContext.Sensors.FindAsync(sensorId);
                 var device = await measurementDbContext.Devices.FindAsync(deviceId);
-
                 // Add LocationSensor
-                var locationSensor = new LocationSensor
+                if (!skipAddingSensor)
                 {
-                    Location = location,
-                    Sensor = sensor,
-                    Device = device,
-                    Name = locationSensorName,
-                    TypeId = typeId
-                };
-                measurementDbContext.LocationSensors.Add(locationSensor);
-                await measurementDbContext.SaveChangesAsync();
-
+                    var locationSensor = new LocationSensor
+                    {
+                        Location = location,
+                        Sensor = sensor,
+                        Device = device,
+                        Name = locationSensorName,
+                        TypeId = typeId
+                    };
+                    measurementDbContext.LocationSensors.Add(locationSensor);
+                    await measurementDbContext.SaveChangesAsync();
+                }
                 // Add measurements
-                foreach (var (value, timestamp) in measurements)
+                foreach (var (value, timestamp, type) in measurements)
                 {
                     measurementDbContext.Measurements.Add(new Measurement
                     {
                         SensorId = sensorId,
-                        TypeId = typeId,
+                        TypeId = type,
                         Value = value,
                         Timestamp = timestamp,
                         TimestampUtc = timestamp.ToUniversalTime(),
@@ -252,7 +254,6 @@ namespace EnvironmentMonitor.Tests
                         CreatedAtUtc = DateTime.UtcNow
                     });
                 }
-
                 await measurementDbContext.SaveChangesAsync();
             }
         }

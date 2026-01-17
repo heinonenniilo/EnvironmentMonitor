@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Infrastructure.Data;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -30,10 +31,10 @@ namespace EnvironmentMonitor.Tests
                 model.DeviceInLocation.Id,
                 "Location1-Sensor1",
                 1,
-                new List<(double, DateTime)>
+                new List<(double, DateTime, int)>
                 {
-                    (22.5, DateTime.Now.AddHours(-2)),
-                    (23.0, DateTime.Now.AddHours(-1))
+                    (22.5, DateTime.Now.AddHours(-2), 1),
+                    (23.0, DateTime.Now.AddHours(-1), 1)
                 }
             );
 
@@ -44,10 +45,10 @@ namespace EnvironmentMonitor.Tests
                 model.DeviceInLocationWithNoAccess.Id,
                 "Location2-Sensor1",
                 1,
-                new List<(double, DateTime)>
+                new List<(double, DateTime, int)>
                 {
-                    (18.5, DateTime.Now.AddHours(-2)),
-                    (19.0, DateTime.Now.AddHours(-1))
+                    (18.5, DateTime.Now.AddHours(-2), 1),
+                    (19.0, DateTime.Now.AddHours(-1), 1)
                 }
             );
             
@@ -109,11 +110,11 @@ namespace EnvironmentMonitor.Tests
                 model.DeviceInLocation.Id,
                 "Location1-Temperature-01",
                 1,
-                new List<(double, DateTime)>
+                new List<(double, DateTime, int)>
                 {
-                    (22.5, DateTime.Now.AddHours(-2)),
-                    (23.0, DateTime.Now.AddHours(-1)),
-                    (23.5, DateTime.Now.AddMinutes(-30))
+                    (22.5, DateTime.Now.AddHours(-2), 1),
+                    (23.0, DateTime.Now.AddHours(-1), 1),
+                    (23.5, DateTime.Now.AddMinutes(-30), 1)
                 }
             );
 
@@ -123,11 +124,11 @@ namespace EnvironmentMonitor.Tests
                 model.DeviceInLocation.Id,
                 "Location1-Temperature-02",
                 1,
-                new List<(double, DateTime)>
+                new List<(double, DateTime, int)>
                 {
-                    (65.0, DateTime.Now.AddHours(-2)),
-                    (67.0, DateTime.Now.AddHours(-1)),
-                    (68.5, DateTime.Now.AddMinutes(-30))
+                    (65.0, DateTime.Now.AddHours(-2), 1),
+                    (67.0, DateTime.Now.AddHours(-1), 1),
+                    (68.5, DateTime.Now.AddMinutes(-30), 1)
                 }
             );
 
@@ -476,6 +477,197 @@ namespace EnvironmentMonitor.Tests
                 // Verify Device 2 sensors are NOT in results
                 var device2SensorMeasurements = result.Measurements.FirstOrDefault(m => m.SensorIdentifier == device2Sensor1.Identifier);
                 Assert.That(device2SensorMeasurements, Is.Null, "Device 2 sensors should NOT be in results");
+            });
+        }
+
+        [Test]
+        public async Task GetMeasurementsBySensor_WithMeasurementTypesFilter_ReturnsOnlyFilteredTypes()
+        {
+            // Arrange
+            var model = await PrepareDatabase();
+            var sensor1 = model.DeviceInLocation.Sensors.First(s => s.Name == "Temperature-Sensor-01");
+
+            // Add measurements with different TypeIds
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var measurementDbContext = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
+
+                var measurements = new List<Measurement>
+                {
+                    // Temperature measurements (TypeId 1)
+                    new Measurement
+                    {
+                        SensorId = sensor1.Id,
+                        TypeId = (int)MeasurementTypes.Temperature,
+                        Value = 22.5,
+                        Timestamp = DateTime.Now.AddHours(-2),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-2),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    },
+                    new Measurement
+                    {
+                        SensorId = sensor1.Id,
+                        TypeId = (int)MeasurementTypes.Temperature,
+                        Value = 23.0,
+                        Timestamp = DateTime.Now.AddHours(-1),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-1),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    },
+                    // Humidity measurements (TypeId 2)
+                    new Measurement
+                    {
+                        SensorId = sensor1.Id,
+                        TypeId = (int)MeasurementTypes.Humidity,
+                        Value = 65.0,
+                        Timestamp = DateTime.Now.AddHours(-2),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-2),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    },
+                    new Measurement
+                    {
+                        SensorId = sensor1.Id,
+                        TypeId = (int)MeasurementTypes.Humidity,
+                        Value = 67.5,
+                        Timestamp = DateTime.Now.AddHours(-1),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-1),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    },
+                    // Light measurements (TypeId 3)
+                    new Measurement
+                    {
+                        SensorId = sensor1.Id,
+                        TypeId = (int)MeasurementTypes.Light,
+                        Value = 1500.0,
+                        Timestamp = DateTime.Now.AddHours(-2),
+                        TimestampUtc = DateTime.UtcNow.AddHours(-2),
+                        CreatedAt = DateTime.Now,
+                        CreatedAtUtc = DateTime.UtcNow
+                    }
+                };
+
+                measurementDbContext.Measurements.AddRange(measurements);
+                await measurementDbContext.SaveChangesAsync();
+            }
+
+            await LoginAsync(AdminUserName, AdminPassword);
+
+            // Query with MeasurementTypes filter for Temperature only
+            var queryParams = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("SensorIdentifiers", sensor1.Identifier.ToString()),
+                new KeyValuePair<string, string>("MeasurementTypes", ((int)MeasurementTypes.Temperature).ToString()),
+                new KeyValuePair<string, string>("From", DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd"))
+            };
+
+            var apiPath = "/api/measurements/bysensor";
+            var clientPath = QueryHelpers.AddQueryString(apiPath, queryParams);
+
+            // Act
+            var response = await _client.GetAsync(clientPath);
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<MeasurementsBySensorModel>(content);
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(result, Is.Not.Null);
+                Assert.That(result.Measurements, Is.Not.Null);
+                Assert.That(result.Measurements.Count, Is.EqualTo(1), "Should return one sensor");
+
+                var sensorMeasurements = result.Measurements.First();
+                Assert.That(sensorMeasurements.SensorIdentifier, Is.EqualTo(sensor1.Identifier));
+                
+                // Should only have Temperature measurements (TypeId 1)
+                Assert.That(sensorMeasurements.Measurements.Count, Is.EqualTo(2), "Should have 2 Temperature measurements");
+                Assert.That(sensorMeasurements.Measurements.All(m => m.TypeId == (int)MeasurementTypes.Temperature), 
+                    Is.True, "All measurements should be Temperature type");
+                
+                // Verify the correct temperature values are returned
+                var values = sensorMeasurements.Measurements.Select(m => m.SensorValue).OrderBy(v => v).ToList();
+                Assert.That(values[0], Is.EqualTo(22.5));
+                Assert.That(values[1], Is.EqualTo(23.0));
+            });
+        }
+
+        [Test]
+        public async Task GetMeasurementsByLocation_WithMeasurementTypesFilter_ReturnsOnlyFilteredTypes()
+        {
+            // Arrange
+            var model = await PrepareDatabase();
+            var sensor1 = model.DeviceInLocation.Sensors.First(s => s.Name == "Temperature-Sensor-01");
+
+            // Add LocationSensors for both Temperature and Humidity types
+            await AddLocationSensorsAndMeasurements(
+                model.Location.Id,
+                sensor1.Id,
+                model.DeviceInLocation.Id,
+                "Location1-SEN",
+                null,
+                [
+                    (22.5, DateTime.Now.AddHours(-2), (int)MeasurementTypes.Temperature),
+                    (23.0, DateTime.Now.AddHours(-1), (int)MeasurementTypes.Temperature)
+                ]
+            );
+
+            await AddLocationSensorsAndMeasurements(
+                model.Location.Id,
+                sensor1.Id,
+                model.DeviceInLocation.Id,
+                "Location1-SEN",
+                null,
+                [
+                    (65.0, DateTime.Now.AddHours(-2), (int)MeasurementTypes.Humidity),
+                    (67.5, DateTime.Now.AddHours(-1), (int)MeasurementTypes.Humidity)
+                ],
+                true
+            );
+
+            await LoginAsync(AdminUserName, AdminPassword);
+
+            // Query with MeasurementTypes filter for Temperature only
+            var queryParams = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("LocationIdentifiers", model.Location.Identifier.ToString()),
+                new KeyValuePair<string, string>("MeasurementTypes", ((int)MeasurementTypes.Temperature).ToString()),
+                new KeyValuePair<string, string>("From", DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd"))
+            };
+
+            var apiPath = "/api/measurements/bylocation";
+            var clientPath = QueryHelpers.AddQueryString(apiPath, queryParams);
+
+            // Act
+            var response = await _client.GetAsync(clientPath);
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonConvert.DeserializeObject<MeasurementsByLocationModel>(content);
+
+            // Assert
+            Assert.Multiple(() =>
+            {
+                Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+                Assert.That(result, Is.Not.Null);
+                Assert.That(result.Measurements, Is.Not.Null);
+                Assert.That(result.Measurements.Count, Is.EqualTo(1), "Should return one location");
+
+                var locationMeasurements = result.Measurements.First();
+                Assert.That(locationMeasurements.Identifier, Is.EqualTo(model.Location.Identifier));
+                
+                // Should only have Temperature measurements (TypeId 1), not Humidity (TypeId 2)
+                Assert.That(locationMeasurements.Measurements.Count, Is.EqualTo(1), "Should have measurements from only one sensor type");
+                
+                var sensorMeasurements = locationMeasurements.Measurements.First();
+                Assert.That(sensorMeasurements.Measurements.Count, Is.EqualTo(2), "Should have 2 Temperature measurements");
+                Assert.That(sensorMeasurements.Measurements.All(m => m.TypeId == (int)MeasurementTypes.Temperature), 
+                    Is.True, "All measurements should be Temperature type");
+                
+                // Verify the correct temperature values are returned
+                var values = sensorMeasurements.Measurements.Select(m => m.SensorValue).OrderBy(v => v).ToList();
+                Assert.That(values[0], Is.EqualTo(22.5));
+                Assert.That(values[1], Is.EqualTo(23.0));
             });
         }
     }
