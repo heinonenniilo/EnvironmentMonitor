@@ -8,6 +8,8 @@ import {
   getDeviceAutoScale,
   getDevices,
   getSensors,
+  getSelectedMeasurementTypes,
+  setSelectedMeasurementTypes,
   toggleAutoScale,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
@@ -39,6 +41,7 @@ export const MeasurementsView: React.FC = () => {
   const devices = useSelector(getDevices);
   const sensors = useSelector(getSensors);
   const dashboardTimeRange = useSelector(getDashboardTimeRange);
+  const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
   const autoScaleInUseForDevice = useSelector(
     getDeviceAutoScale(
       selectedDevices.length === 1 ? selectedDevices[0].identifier : ""
@@ -95,7 +98,16 @@ export const MeasurementsView: React.FC = () => {
 
         setTimeFrom(fromDate);
         measurementApiHook
-          .getMeasurementsBySensor(sensorIds, fromDate, undefined)
+          .getMeasurementsBySensor(
+            sensorIds,
+            fromDate,
+            undefined,
+            undefined,
+            undefined,
+            selectedMeasurementTypes && selectedMeasurementTypes.length > 0
+              ? selectedMeasurementTypes
+              : undefined
+          )
           .then((res) => {
             setSelectedSensors(
               sensors.filter((sensor) =>
@@ -115,11 +127,21 @@ export const MeasurementsView: React.FC = () => {
   const onSearch = (
     from: moment.Moment,
     to: moment.Moment | undefined,
-    sensorIds: string[]
+    sensorIds: string[],
+    measurementTypes?: number[]
   ) => {
     setIsLoading(true);
     measurementApiHook
-      .getMeasurementsBySensor(sensorIds, from, to)
+      .getMeasurementsBySensor(
+        sensorIds,
+        from,
+        to,
+        undefined,
+        undefined,
+        measurementTypes && measurementTypes.length > 0
+          ? measurementTypes
+          : undefined
+      )
       .then((res) => {
         setSelectedSensors(
           sensors.filter((sensor) =>
@@ -142,7 +164,8 @@ export const MeasurementsView: React.FC = () => {
           onSearch={(
             from: moment.Moment,
             to: moment.Moment | undefined,
-            sensorIds: string[]
+            sensorIds: string[],
+            measurementTypes?: number[]
           ) => {
             setTimeFrom(from);
 
@@ -153,7 +176,7 @@ export const MeasurementsView: React.FC = () => {
             }
             setTimeTo(to);
 
-            onSearch(from, to, sensorIds);
+            onSearch(from, to, sensorIds, measurementTypes);
           }}
           onSelectEntity={toggleDeviceSelection}
           toggleSensorSelection={toggleSensorSelection}
@@ -172,6 +195,10 @@ export const MeasurementsView: React.FC = () => {
               : []
           }
           timeFrom={timeFrom}
+          selectedMeasurementTypes={selectedMeasurementTypes}
+          onMeasurementTypesChange={(types) =>
+            dispatch(setSelectedMeasurementTypes(types))
+          }
         />
       }
     >

@@ -1,4 +1,4 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
@@ -6,6 +6,8 @@ import { MeasurementsLeftView } from "../components/MeasurementsLeftView";
 import {
   getDashboardTimeRange,
   getLocations,
+  getSelectedMeasurementTypes,
+  setSelectedMeasurementTypes,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
 import { type LocationModel } from "../models/location";
@@ -18,6 +20,7 @@ import { getGraphTitle } from "../utilities/graphUtils";
 
 export const LocationMeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
+  const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const { locationId } = useParams<{ locationId?: string }>();
@@ -37,6 +40,7 @@ export const LocationMeasurementsView: React.FC = () => {
   const locations = useSelector(getLocations);
   const sensors = locations.flatMap((l) => l.locationSensors);
   const dashboardTimeRange = useSelector(getDashboardTimeRange);
+  const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
 
   const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
 
@@ -100,7 +104,12 @@ export const LocationMeasurementsView: React.FC = () => {
           .getMeasurementsByLocation(
             [matchingLocation.identifier],
             fromDate,
-            undefined
+            undefined,
+            undefined,
+            undefined,
+            selectedMeasurementTypes && selectedMeasurementTypes.length > 0
+              ? selectedMeasurementTypes
+              : undefined
           )
           .then((res) => {
             if (res) {
@@ -119,11 +128,21 @@ export const LocationMeasurementsView: React.FC = () => {
     from: moment.Moment,
     to: moment.Moment | undefined,
     locationIds: string[],
-    sensorIds?: string[]
+    sensorIds?: string[],
+    measurementTypes?: number[]
   ) => {
     setIsLoading(true);
     measurementApiHook
-      .getMeasurementsByLocation(locationIds, from, to, false, sensorIds)
+      .getMeasurementsByLocation(
+        locationIds,
+        from,
+        to,
+        false,
+        sensorIds,
+        measurementTypes && measurementTypes.length > 0
+          ? measurementTypes
+          : undefined
+      )
       .then((res) => {
         if (res) {
           setMeasurementsModel(res);
@@ -159,7 +178,8 @@ export const LocationMeasurementsView: React.FC = () => {
           onSearch={(
             from: moment.Moment,
             to: moment.Moment | undefined,
-            sensorIds: string[]
+            sensorIds: string[],
+            measurementTypes?: number[]
           ) => {
             setTimeFrom(from);
             setTimeTo(to);
@@ -172,7 +192,8 @@ export const LocationMeasurementsView: React.FC = () => {
               from,
               to,
               selectedLocations.map((l) => l.identifier),
-              sensorIds
+              sensorIds,
+              measurementTypes
             );
           }}
           onSelectEntity={toggleLocationSelection}
@@ -183,6 +204,10 @@ export const LocationMeasurementsView: React.FC = () => {
           sensors={getAvailableSensors()}
           timeFrom={timeFrom}
           entityName="Location"
+          selectedMeasurementTypes={selectedMeasurementTypes}
+          onMeasurementTypesChange={(types) =>
+            dispatch(setSelectedMeasurementTypes(types))
+          }
         />
       }
     >

@@ -63,6 +63,7 @@ export const App: React.FC<AppProps> = (props) => {
   const handleNavigate = (route: string) => {
     navigate(route);
   };
+
   useEffect(() => {
     if (apiHook?.userHook && user === undefined && !hasFetched) {
       setIsLoading(true);
@@ -92,7 +93,7 @@ export const App: React.FC<AppProps> = (props) => {
           (r) =>
             r === RoleNames.Admin ||
             r === RoleNames.User ||
-            r === RoleNames.Viewer
+            r === RoleNames.Viewer,
         )
       ) {
         measurementApiHook.getDevices().then((res) => {

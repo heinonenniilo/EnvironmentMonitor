@@ -1,7 +1,12 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
-import { getDevices, getSensors } from "../reducers/measurementReducer";
+import {
+  getDevices,
+  getSelectedMeasurementTypes,
+  getSensors,
+  setSelectedMeasurementTypes,
+} from "../reducers/measurementReducer";
 import { useApiHook } from "../hooks/apiHook";
 import moment from "moment";
 import {
@@ -14,10 +19,15 @@ import { getUserInfo } from "../reducers/userReducer";
 import type { MeasurementsViewModel } from "../models/measurementsBySensor";
 import type { Device } from "../models/device";
 import { dateTimeSort } from "../utilities/datetimeUtils";
+import { DashboardLeftMenu } from "../components/Dashboard/DashboardLeftMenu";
+import { Box, IconButton, Tooltip } from "@mui/material";
+import { Refresh } from "@mui/icons-material";
 
 export const HomeView: React.FC = () => {
+  const dispatch = useDispatch();
   const sensors = useSelector(getSensors);
   const devices = useSelector(getDevices);
+  const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
   const [model, setModel] = useState<MeasurementsViewModel | undefined>(
     undefined
   );
@@ -83,8 +93,8 @@ export const HomeView: React.FC = () => {
     return `Hello, ${userInfo?.email}`;
   };
 
-  useEffect(() => {
-    if (devices.length > 0 && model === undefined && hook) {
+  const loadMeasurements = () => {
+    if (devices.length > 0 && hook) {
       setIsLoading(true);
       hook
         .getMeasurementsBySensor(
@@ -92,7 +102,10 @@ export const HomeView: React.FC = () => {
           moment(),
           undefined,
           true,
-          devices.map((d) => d.identifier)
+          devices.map((d) => d.identifier),
+          selectedMeasurementTypes && selectedMeasurementTypes.length > 0
+            ? selectedMeasurementTypes
+            : undefined
         )
         .then((res) => {
           setModel(res);
@@ -106,11 +119,35 @@ export const HomeView: React.FC = () => {
           setIsLoading(false);
         });
     }
+  };
+
+  useEffect(() => {
+    loadMeasurements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [devices, model]);
+  }, [devices, selectedMeasurementTypes]);
 
   return (
-    <AppContentWrapper title={getTitle()} isLoading={isLoading}>
+    <AppContentWrapper
+      title={getTitle()}
+      isLoading={isLoading}
+      titleComponent={
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Tooltip title="Refresh">
+            <IconButton onClick={loadMeasurements} size="medium">
+              <Refresh />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      }
+      leftMenu={
+        <DashboardLeftMenu
+          selectedMeasurementTypes={selectedMeasurementTypes}
+          onMeasurementTypesChange={(types) =>
+            dispatch(setSelectedMeasurementTypes(types))
+          }
+        />
+      }
+    >
       <p>Latest measurements</p>
       <MeasurementsInfoTable
         infoRows={getInfoRows()}

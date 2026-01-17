@@ -5,6 +5,7 @@ import type { Sensor } from "../models/sensor";
 import type { LocationModel } from "../models/location";
 import type { RootState } from "../setup/appStore";
 import type { DeviceInfo } from "../models/deviceInfo";
+import { getAvailableMeasurementTypes } from "../utilities/measurementUtils";
 
 export interface MeasurementState {
   devices: Device[];
@@ -14,6 +15,7 @@ export interface MeasurementState {
   locations: LocationModel[];
   autoScaleSensorIds: string[];
   timeRange: number;
+  selectedMeasurementTypes: number[];
 }
 
 export interface DashboardAutoScale {
@@ -28,6 +30,7 @@ const initialState: MeasurementState = {
   autoScaleSensorIds: [],
   timeRange: 24,
   locations: [],
+  selectedMeasurementTypes: getAvailableMeasurementTypes(),
 };
 
 export const measurementSlice = createSlice({
@@ -47,14 +50,14 @@ export const measurementSlice = createSlice({
       if (action.payload.state) {
         if (
           !state.autoScaleSensorIds.some(
-            (s) => s === action.payload.deviceIdentifier
+            (s) => s === action.payload.deviceIdentifier,
           )
         ) {
           state.autoScaleSensorIds.push(action.payload.deviceIdentifier);
         }
       } else {
         state.autoScaleSensorIds = state.autoScaleSensorIds.filter(
-          (s) => s !== action.payload.deviceIdentifier
+          (s) => s !== action.payload.deviceIdentifier,
         );
       }
     },
@@ -63,6 +66,9 @@ export const measurementSlice = createSlice({
     },
     setLocations: (state, action: PayloadAction<LocationModel[]>) => {
       state.locations = action.payload;
+    },
+    setSelectedMeasurementTypes: (state, action: PayloadAction<number[]>) => {
+      state.selectedMeasurementTypes = action.payload;
     },
   },
 });
@@ -74,6 +80,7 @@ export const {
   toggleAutoScale,
   setDashboardTimeRange,
   setLocations,
+  setSelectedMeasurementTypes,
 } = measurementSlice.actions;
 
 export const getDevices = (state: RootState): Device[] =>
@@ -95,11 +102,15 @@ export const getLocations = (state: RootState): LocationModel[] =>
 export const getDeviceAutoScale = (deviceIdentifier: string) =>
   createSelector(
     [(state: RootState) => state.measurementInfo.autoScaleSensorIds],
-    (autoScaleSensorIds) => autoScaleSensorIds.includes(deviceIdentifier)
+    (autoScaleSensorIds) => autoScaleSensorIds.includes(deviceIdentifier),
   );
 
 export const getDashboardTimeRange = (state: RootState): number => {
   return state.measurementInfo.timeRange;
+};
+
+export const getSelectedMeasurementTypes = (state: RootState): number[] => {
+  return state.measurementInfo.selectedMeasurementTypes;
 };
 
 export default measurementSlice.reducer;

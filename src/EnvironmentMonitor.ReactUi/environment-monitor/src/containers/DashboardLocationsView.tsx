@@ -1,17 +1,22 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   getDashboardTimeRange,
   getLocations,
+  getSelectedMeasurementTypes,
   setDashboardTimeRange,
+  setSelectedMeasurementTypes,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
-import { DashboardLocationGraph } from "../components/DashboardLocationGraph";
+import { DashboardLocationGraph } from "../components/Dashboard/DashboardLocationGraph";
+import { DashboardLeftMenu } from "../components/Dashboard/DashboardLeftMenu";
+import { toggleLeftMenuOpen } from "../reducers/userInterfaceReducer";
 
 export const DashbordLocationsView: React.FC = () => {
   const dispatch = useDispatch();
+  const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
 
   const locations = useSelector(getLocations);
 
@@ -22,6 +27,12 @@ export const DashbordLocationsView: React.FC = () => {
   };
 
   const visibleLocations = locations.filter((l) => l.visible);
+
+  useEffect(() => {
+    dispatch(toggleLeftMenuOpen(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <AppContentWrapper
       title="Dashboard - Locations"
@@ -29,6 +40,14 @@ export const DashbordLocationsView: React.FC = () => {
         <TimeRangeSelectorComponent
           timeRange={timeRange}
           onSelectTimeRange={handleTimeRangeChange}
+        />
+      }
+      leftMenu={
+        <DashboardLeftMenu
+          selectedMeasurementTypes={selectedMeasurementTypes}
+          onMeasurementTypesChange={(types) =>
+            dispatch(setSelectedMeasurementTypes(types))
+          }
         />
       }
     >
@@ -57,6 +76,11 @@ export const DashbordLocationsView: React.FC = () => {
               model={undefined}
               key={m.identifier}
               autoFetch
+              measurementTypes={
+                selectedMeasurementTypes.length > 0
+                  ? selectedMeasurementTypes
+                  : undefined
+              }
             />
           );
         })}

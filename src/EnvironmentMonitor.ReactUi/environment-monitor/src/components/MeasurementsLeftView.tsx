@@ -2,6 +2,7 @@ import {
   Box,
   Button,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -13,12 +14,20 @@ import { type Sensor } from "../models/sensor";
 import { stringSort } from "../utilities/stringUtils";
 import { getEntityTitle } from "../utilities/entityUtils";
 import { type Entity } from "../models/entity";
-import { getMeasurementUnit } from "../utilities/measurementUtils";
+import {
+  getAvailableMeasurementTypes,
+  getMeasurementTypeDisplayName,
+  getMeasurementUnit,
+} from "../utilities/measurementUtils";
+import { MeasurementTypes } from "../enums/measurementTypes";
+import { Clear } from "@mui/icons-material";
+
 export interface MeasurementsLeftViewProps {
   onSearch: (
     from: moment.Moment,
     to: moment.Moment | undefined,
-    sensorIds: string[]
+    sensorIds: string[],
+    measurementTypes?: number[],
   ) => void;
   onSelectEntity: (deviceId: string) => void;
   toggleSensorSelection: (sensorId: string) => void;
@@ -29,6 +38,8 @@ export interface MeasurementsLeftViewProps {
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
   entityName?: string;
+  selectedMeasurementTypes: number[];
+  onMeasurementTypesChange: (measurementTypes: number[]) => void;
 }
 
 export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
@@ -42,11 +53,29 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   timeFrom,
   timeTo,
   entityName,
+  selectedMeasurementTypes,
+  onMeasurementTypesChange,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
-    moment().utc(true).add(-2, "day").startOf("day")
+    moment().utc(true).add(-2, "day").startOf("day"),
   );
   const [toDate, setToDate] = useState<moment.Moment | undefined>(undefined);
+
+  const availableMeasurementTypes = getAvailableMeasurementTypes();
+
+  const handleToggleMeasurementType = (type: number) => {
+    if (selectedMeasurementTypes.includes(type)) {
+      onMeasurementTypesChange(
+        selectedMeasurementTypes.filter((t) => t !== type),
+      );
+    } else {
+      onMeasurementTypesChange([...selectedMeasurementTypes, type]);
+    }
+  };
+
+  const handleClearMeasurementTypes = () => {
+    onMeasurementTypesChange([]);
+  };
 
   useEffect(() => {
     if (timeFrom) {
@@ -65,7 +94,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
         : undefined;
     if (selectedEntities && selectedEntities.length > 1) {
       const matchingEntity = entities.find(
-        (d) => d.identifier === sensor.parentIdentifier
+        (d) => d.identifier === sensor.parentIdentifier,
       );
 
       const letToReturn = `${
@@ -182,11 +211,63 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
       </Box>
 
       <Box mt={2}>
+        <FormControl fullWidth>
+          <InputLabel id="measurement-type-select-label">
+            Measurement Type
+          </InputLabel>
+          <Select
+            labelId="measurement-type-select-label"
+            id="measurement-type-select"
+            value={selectedMeasurementTypes}
+            multiple
+            label="Measurement Type"
+            endAdornment={
+              selectedMeasurementTypes.length > 0 ? (
+                <IconButton
+                  size="small"
+                  onClick={handleClearMeasurementTypes}
+                  sx={{ marginRight: 3 }}
+                >
+                  <Clear fontSize="small" />
+                </IconButton>
+              ) : null
+            }
+          >
+            {availableMeasurementTypes
+              .sort((a, b) =>
+                stringSort(
+                  getMeasurementTypeDisplayName(a as MeasurementTypes),
+                  getMeasurementTypeDisplayName(b as MeasurementTypes),
+                ),
+              )
+              .map((type) => (
+                <MenuItem
+                  value={type}
+                  key={`measurement-type-${type}`}
+                  onClick={() => {
+                    handleToggleMeasurementType(type);
+                  }}
+                >
+                  {getMeasurementTypeDisplayName(type as MeasurementTypes)}
+                </MenuItem>
+              ))}
+          </Select>
+        </FormControl>
+      </Box>
+
+      <Box mt={2}>
         <Button
           variant="outlined"
           onClick={() => {
             if (selectedSensors.length > 0) {
-              onSearch(fromDate, toDate, selectedSensors);
+              onSearch(
+                fromDate,
+                toDate,
+                selectedSensors,
+                selectedMeasurementTypes.length > 0
+                  ? selectedMeasurementTypes
+                  : undefined,
+              );
             }
           }}
         >
