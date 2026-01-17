@@ -193,6 +193,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
             foreach (var virtualSensorId in virtualSensorIds)
             {
+
+                var matchingSensor = await _context.Sensors.FirstOrDefaultAsync(x => x.Id == virtualSensorId);
                 var existingMeasurement = await _context.Measurements.FirstOrDefaultAsync(x =>
                     x.SensorId == virtualSensorId &&
                     x.TypeId == measurement.TypeId &&
@@ -215,10 +217,21 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     continue;
                 }
 
-                if (existingMeasurement.Value > measurement.Value)
+                if (matchingSensor?.AggregationType != null && (AggregationTypes)matchingSensor.AggregationType == AggregationTypes.Max)
                 {
-                    _logger.LogInformation($"Found existing measurement ({existingMeasurement.Id}) for batch ({batchStart - batchEnd} and virtual sensor id {virtualSensorId}. Value {existingMeasurement.Value} to be replaced with value {measurement.Value}");
-                    existingMeasurement.Value = measurement.Value;
+                    if (measurement.Value > existingMeasurement.Value)
+                    {
+                        _logger.LogInformation($"Found existing measurement ({existingMeasurement.Id}) for batch ({batchStart - batchEnd} and virtual sensor id {virtualSensorId}. Value {existingMeasurement.Value} to be replaced with value {measurement.Value}");
+                        existingMeasurement.Value = measurement.Value;
+                    }
+                }
+                else
+                {
+                    if (measurement.Value < existingMeasurement.Value)
+                    {
+                        _logger.LogInformation($"Found existing measurement ({existingMeasurement.Id}) for batch ({batchStart - batchEnd} and virtual sensor id {virtualSensorId}. Value {existingMeasurement.Value} to be replaced with value {measurement.Value}");
+                        existingMeasurement.Value = measurement.Value;
+                    }
                 }
             } 
 
