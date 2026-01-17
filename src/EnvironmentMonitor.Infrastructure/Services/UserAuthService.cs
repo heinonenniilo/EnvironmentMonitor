@@ -5,6 +5,7 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Utils;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
@@ -30,6 +31,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly IEmailRepository _emailRepository;
         private readonly MeasurementDbContext _measurementDbContext;
         private readonly ApplicationDbContext _applicationDbContext;
+        private readonly ApplicationSettings _applicationSettings;
 
         public UserAuthService(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
@@ -38,7 +40,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
             IEmailClient emailClient,
             IEmailRepository emailRepository,
             MeasurementDbContext measurementDbContext,
-            ApplicationDbContext applicationDbContext)
+            ApplicationDbContext applicationDbContext,
+            ApplicationSettings applicationSettings)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -48,6 +51,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _emailRepository = emailRepository;
             _measurementDbContext = measurementDbContext;
             _applicationDbContext = applicationDbContext;
+            _applicationSettings = applicationSettings;
         }
 
         public async Task Login(LoginModel model)
@@ -216,7 +220,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
         public async Task RegisterUser(RegisterUserModel model)
         {
             if (await _userManager.FindByEmailAsync(model.Email) != null)
+            {
                 throw new DuplicateEntityException($"User with email '{model.Email}' already exists");
+            }
+            var baseUrl = string.IsNullOrEmpty(model.BaseUrl) ? _applicationSettings.BaseUrl : model.BaseUrl;
+            var registerUserPath = "api/authentication/confirm-email";
+
             var user = new ApplicationUser
             {
                 UserName = model.Email,
@@ -224,17 +233,16 @@ namespace EnvironmentMonitor.Infrastructure.Services
             };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
-                throw new InvalidOperationException("Failed to create user");            
-            _logger.LogInformation($"User with email {model.Email} created.");           
+                throw new InvalidOperationException("Failed to create user");
+            _logger.LogInformation($"User with email {model.Email} created.");
             // Generate email confirmation token
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            
             // Build confirmation URL using the full path from model
             var queryParams = new StringBuilder();
             queryParams.Append($"?userId={Uri.EscapeDataString(user.Id)}");
             queryParams.Append($"&token={Uri.EscapeDataString(token)}");
-            
-            var confirmationUrl = model.BaseUrl + queryParams.ToString();
+            var confirmationUrl = UriUtils.CombineUrl(baseUrl, registerUserPath) + queryParams.ToString();
+
             var emailTemplate = await _emailRepository.GetEmailTemplate(EmailTemplateTypes.ConfirmUserEmail);
 
             if (string.IsNullOrEmpty(emailTemplate?.Message) || string.IsNullOrEmpty(emailTemplate?.Title))
@@ -246,13 +254,14 @@ namespace EnvironmentMonitor.Infrastructure.Services
             await _emailClient.SendEmailAsync(new SendEmailOptions
             {
                 ToAddresses = new List<string> { user.Email! },
-                Subject = emailTemplate.Title ,
+                Subject = emailTemplate.Title,
                 HtmlContent = emailTemplate.Message,
                 ReplaceTokens = new Dictionary<string, string>
                 {
                     { ApplicationConstants.EmailTemplateConfirmationLinkKey, confirmationUrl },
+                    { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, baseUrl},
                 }
-            });           
+            });
             _logger.LogInformation($"Confirmation email sent to {model.Email}");
         }
 
@@ -305,16 +314,18 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
         public async Task ForgotPassword(ForgotPasswordModel model)
         {
+            var setNewPasswordPath = "set-new-password";
+            var baseUrl = string.IsNullOrEmpty(model.BaseUrl) ? _applicationSettings.BaseUrl : model.BaseUrl;
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !await _userManager.IsEmailConfirmedAsync(user))
             {
                 _logger.LogError($"Forgot password requested for non-existent or unconfirmed email: {model.Email}");
                 throw new InvalidOperationException($"Forgot password requested for non-existent or unconfirmed email: {model.Email}");
             }
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);           
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var queryParams = new StringBuilder();
-            queryParams.Append($"?token={Uri.EscapeDataString(token)}");        
-            var resetUrl = model.BaseUrl + queryParams.ToString();
+            queryParams.Append($"?token={Uri.EscapeDataString(token)}");
+            var resetUrl = UriUtils.CombineUrl(baseUrl, setNewPasswordPath) + queryParams.ToString();
 
             var emailTemplate = await _emailRepository.GetEmailTemplate(EmailTemplateTypes.UserPasswordReset);
             if (string.IsNullOrEmpty(emailTemplate?.Message) || string.IsNullOrEmpty(emailTemplate?.Title))
@@ -330,9 +341,9 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 ReplaceTokens = new Dictionary<string, string>
                 {
                     { ApplicationConstants.EmailTemplatePasswordResetLinkKey, resetUrl },
+                    { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, baseUrl},
                 }
             });
-            
             _logger.LogInformation($"Password reset email sent to {model.Email}");
         }
 

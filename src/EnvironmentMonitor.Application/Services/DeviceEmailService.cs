@@ -9,6 +9,7 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using Microsoft.Extensions.Logging;
+using System.Reflection;
 using System.Text.Json;
 
 namespace EnvironmentMonitor.Application.Services
@@ -144,7 +145,8 @@ namespace EnvironmentMonitor.Application.Services
                 { "{DeviceName}", $"{device.Name}"},
                 { "{DeviceIdentifier}", device.DeviceIdentifier },
                 { "{DisplayName}", $"{device.Location.Name} -  {device.Name}"},
-                { ApplicationConstants.QueuedMessageDeviceLink, BuildDeviceUrl(device.Identifier) }
+                { ApplicationConstants.QueuedMessageDeviceLink, BuildDeviceUrl(device.Identifier) },
+                { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, _applicationSettings.BaseUrl}
             };
 
             if (replaceTokens != null)

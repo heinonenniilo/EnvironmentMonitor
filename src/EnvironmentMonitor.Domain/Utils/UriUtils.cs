@@ -51,5 +51,48 @@ namespace EnvironmentMonitor.Domain.Utils
 
             return Uri.TryCreate(url, UriKind.Absolute, out uri);
         }
+
+        /// <summary>
+        /// Combines multiple URL parts into a single URL, properly handling slashes.
+        /// </summary>
+        /// <param name="baseUrl">The base URL (e.g., "https://example.com" or "https://example.com/").</param>
+        /// <param name="parts">Additional URL parts to append (e.g., "api", "users", "123").</param>
+        /// <returns>The combined URL string.</returns>
+        /// <exception cref="ArgumentException">Thrown when baseUrl is null, empty, or not a valid absolute URL.</exception>
+        public static string CombineUrl(string baseUrl, params string[] parts)
+        {
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                throw new ArgumentException("Base URL cannot be null or empty.", nameof(baseUrl));
+            }
+
+            if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var baseUri))
+            {
+                throw new ArgumentException("Base URL must be a valid absolute URL.", nameof(baseUrl));
+            }
+
+            if (parts == null || parts.Length == 0)
+            {
+                return baseUrl.TrimEnd('/');
+            }
+
+            var result = baseUrl.TrimEnd('/');
+
+            foreach (var part in parts)
+            {
+                if (string.IsNullOrWhiteSpace(part))
+                {
+                    continue;
+                }
+
+                var trimmedPart = part.Trim().Trim('/');
+                if (!string.IsNullOrEmpty(trimmedPart))
+                {
+                    result = $"{result}/{trimmedPart}";
+                }
+            }
+
+            return result;
+        }
     }
 }

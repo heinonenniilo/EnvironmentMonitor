@@ -42,9 +42,13 @@ jobs:
       - name: Build with dotnet
         run: dotnet build --configuration Release
 
-      - name: Test with the dotnet CLI
+      - name: Run Integration Tests
         run: |
           dotnet test tests/EnvironmentMonitor.Tests/EnvironmentMonitor.Tests.csproj
+
+      - name: Run Unit Tests
+        run: |
+          dotnet test tests/EnvironmentMonitor.UnitTests/EnvironmentMonitor.UnitTests.csproj
 
       - name: Install dependencies for React UI
         run: |

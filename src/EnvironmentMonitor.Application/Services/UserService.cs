@@ -104,10 +104,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task RegisterUser(RegisterUserModel model)
         {
-            var baseUrlToUse = !string.IsNullOrEmpty(model.BaseUrl) ? model.BaseUrl : _applicationSettings.BaseUrl;
-            model.BaseUrl = !string.IsNullOrEmpty(baseUrlToUse)
-                ? $"{baseUrlToUse.TrimEnd('/')}/api/authentication/confirm-email"
-                : "/api/authentication/confirm-email";
+            model.BaseUrl = !string.IsNullOrEmpty(model.BaseUrl) ? model.BaseUrl : _applicationSettings.BaseUrl;
             await _userAuthService.RegisterUser(model);
         }
 
@@ -129,7 +126,6 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task ForgotPassword(ForgotPasswordModel model)
         {
-            var setNewPasswordPath = "set-new-password";
             if (model.Enqueue)
             {
                 var attributesToAdd = new Dictionary<string, string>()
@@ -148,17 +144,7 @@ namespace EnvironmentMonitor.Application.Services
                 await _queueClient.SendMessage(messageJson);
                 return;
             }
-
-            if (string.IsNullOrEmpty(model.BaseUrl))
-            {
-                model.BaseUrl = !string.IsNullOrEmpty(_applicationSettings.BaseUrl)
-                    ? $"{_applicationSettings.BaseUrl.TrimEnd('/')}/{setNewPasswordPath}"
-                    : $"/{setNewPasswordPath}";
-            }
-            else
-            {
-                model.BaseUrl = $"{model.BaseUrl.TrimEnd('/')}/{setNewPasswordPath}";
-            }
+            model.BaseUrl = string.IsNullOrEmpty(model.BaseUrl) ? _applicationSettings.BaseUrl : model.BaseUrl;
             await _userAuthService.ForgotPassword(model);
         }
 
