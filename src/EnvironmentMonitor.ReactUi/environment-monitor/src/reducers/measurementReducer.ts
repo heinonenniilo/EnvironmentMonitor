@@ -5,24 +5,7 @@ import type { Sensor } from "../models/sensor";
 import type { LocationModel } from "../models/location";
 import type { RootState } from "../setup/appStore";
 import type { DeviceInfo } from "../models/deviceInfo";
-import { MeasurementTypes } from "../enums/measurementTypes";
-
-// Get all available measurement types (excluding Undefined and Online)
-const getDefaultMeasurementTypes = (): number[] => {
-  return Object.keys(MeasurementTypes)
-    .filter(
-      (key) =>
-        !isNaN(Number(MeasurementTypes[key as keyof typeof MeasurementTypes]))
-    )
-    .map((key) =>
-      Number(MeasurementTypes[key as keyof typeof MeasurementTypes])
-    )
-    .filter(
-      (value) =>
-        value !== MeasurementTypes.Undefined &&
-        value !== MeasurementTypes.Online
-    );
-};
+import { getAvailableMeasurementTypes } from "../utilities/measurementUtils";
 
 export interface MeasurementState {
   devices: Device[];
@@ -47,7 +30,7 @@ const initialState: MeasurementState = {
   autoScaleSensorIds: [],
   timeRange: 24,
   locations: [],
-  selectedMeasurementTypes: getDefaultMeasurementTypes(),
+  selectedMeasurementTypes: getAvailableMeasurementTypes(),
 };
 
 export const measurementSlice = createSlice({
@@ -67,14 +50,14 @@ export const measurementSlice = createSlice({
       if (action.payload.state) {
         if (
           !state.autoScaleSensorIds.some(
-            (s) => s === action.payload.deviceIdentifier
+            (s) => s === action.payload.deviceIdentifier,
           )
         ) {
           state.autoScaleSensorIds.push(action.payload.deviceIdentifier);
         }
       } else {
         state.autoScaleSensorIds = state.autoScaleSensorIds.filter(
-          (s) => s !== action.payload.deviceIdentifier
+          (s) => s !== action.payload.deviceIdentifier,
         );
       }
     },
@@ -119,7 +102,7 @@ export const getLocations = (state: RootState): LocationModel[] =>
 export const getDeviceAutoScale = (deviceIdentifier: string) =>
   createSelector(
     [(state: RootState) => state.measurementInfo.autoScaleSensorIds],
-    (autoScaleSensorIds) => autoScaleSensorIds.includes(deviceIdentifier)
+    (autoScaleSensorIds) => autoScaleSensorIds.includes(deviceIdentifier),
   );
 
 export const getDashboardTimeRange = (state: RootState): number => {
