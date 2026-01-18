@@ -136,14 +136,16 @@ namespace EnvironmentMonitor.Application.Services
                 },
                 SensorIds = [sensorIdInternal]
             });
-
+           
             if (sensors.Count() > 1)
             {
                 _logger.LogError("More than one sensor found");
                 return null;
             }
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = [deviceId] })).FirstOrDefault();
             var sensor = sensors.FirstOrDefault();
-            if (sensor == null || !_userService.HasAccessToSensor(sensor.Identifier, accessLevel))
+            if (sensor == null || (!_userService.HasAccessToSensor(sensor.Identifier, accessLevel) && !_userService.HasAccessToDevice(device.Identifier, accessLevel)))
             {
                 if (sensor == null)
                 {
