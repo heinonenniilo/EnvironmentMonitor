@@ -30,6 +30,11 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         ForwardedHeaders.XForwardedHost;
 });
 
+// Configure API Key settings
+var apiKeySettings = new ApiKeySettings();
+builder.Configuration.GetSection("ApiKeySettings").Bind(apiKeySettings);
+builder.Services.AddSingleton(apiKeySettings);
+
 // Add API Key authentication scheme
 builder.Services.AddAuthentication()
     .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(

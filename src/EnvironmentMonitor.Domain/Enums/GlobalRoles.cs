@@ -18,6 +18,8 @@ namespace EnvironmentMonitor.Domain.Enums
         [Description("Registered")]
         Registered = 3,
         [Description("Can add measurements to any device")]
-        MeasurementWriter = 4
+        MeasurementWriter = 4,
+        [Description("Api Key User")]
+        ApiKeyUser = 5
     }
 }

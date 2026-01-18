@@ -55,7 +55,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpPost]
-        [Authorize(AuthenticationSchemes = ApiKeyAuthenticationOptions.DefaultScheme, Roles = "Admin, MeasurementWriter")]
+        [Authorize(AuthenticationSchemes = ApiKeyAuthenticationOptions.DefaultScheme, Roles = "Admin,ApiKeyUser")]
         public async Task AddMeasurements([FromBody] SaveMeasurementsDto measurements)
         {
             // TODO could move this preprocessing to a service
