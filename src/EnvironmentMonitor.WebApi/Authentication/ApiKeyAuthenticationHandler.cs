@@ -52,12 +52,14 @@ namespace EnvironmentMonitor.WebApi.Authentication
                 return Task.FromResult(AuthenticateResult.Fail("Invalid API Key"));
             }
 
+            // TODO add claims per api key?
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, "env-mon-api-key"),
-                new Claim(ClaimTypes.Name, "API Key User"),
-                new Claim(ClaimTypes.Email, "env-mon"),
-                new Claim(ClaimTypes.Role, GlobalRoles.Admin.ToString())
+                new(ClaimTypes.NameIdentifier, "env-mon-api-key"),
+                new(ClaimTypes.Name, "API Key User"),
+                new(ClaimTypes.Email, "env-mon"),
+                new(ClaimTypes.Role, GlobalRoles.User.ToString()),
+                new(ClaimTypes.Role, GlobalRoles.MeasurementWriter.ToString())
             };
 
             var identity = new ClaimsIdentity(claims, Scheme.Name);
