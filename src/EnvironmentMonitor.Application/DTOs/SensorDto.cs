@@ -19,6 +19,8 @@ namespace EnvironmentMonitor.Application.DTOs
         public double? ScaleMax { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? MeasurementType { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public int? AggregationType { get; set; }
 
         public virtual void Mapping(Profile profile)
         {

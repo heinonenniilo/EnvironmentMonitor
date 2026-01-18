@@ -1,4 +1,5 @@
 import { MeasurementTypes } from "../enums/measurementTypes";
+import { AggregationTypes } from "../enums/aggregationTypes";
 import type { Measurement } from "../models/measurement";
 import { getFormattedDate } from "./datetimeUtils";
 
@@ -114,4 +115,21 @@ export const getAvailableMeasurementTypes = (): number[] => {
         value !== MeasurementTypes.Undefined &&
         value !== MeasurementTypes.Online,
     );
+};
+
+export const getAggregationTypeDisplayName = (
+  type: AggregationTypes | number | null | undefined,
+): string => {
+  if (type === null || type === undefined) {
+    return "-";
+  }
+
+  switch (type) {
+    case AggregationTypes.Min:
+      return "Min";
+    case AggregationTypes.Max:
+      return "Max";
+    default:
+      return "-";
+  }
 };

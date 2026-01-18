@@ -42,7 +42,7 @@ const timeRangeDefaultDays = 7;
 
 export const DeviceView: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | undefined>(
-    undefined
+    undefined,
   );
   const [deviceEvents, setDeviceEvents] = useState<DeviceEvent[]>([]);
   const [queuedCommands, setQueuedCommands] = useState<
@@ -57,17 +57,17 @@ export const DeviceView: React.FC = () => {
   const [isLoadingDeviceStatus, setIsLoadingDeviceStatus] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const [model, setModel] = useState<MeasurementsViewModel | undefined>(
-    undefined
+    undefined,
   );
 
   const [statusTimeRange, setStatusTimeRange] = useState(
-    timeRangeDefaultDays * 24
+    timeRangeDefaultDays * 24,
   );
 
   const [defaultImageVer, setDefaultImageVer] = useState(0);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<DeviceContact | null>(
-    null
+    null,
   );
 
   const dispatch = useDispatch();
@@ -92,7 +92,7 @@ export const DeviceView: React.FC = () => {
       .getMeasurementsBySensor(
         selectedDevice.sensors.map((x) => x.identifier),
         momentStart,
-        undefined
+        undefined,
       )
       .then((res) => {
         setModel(res);
@@ -117,7 +117,7 @@ export const DeviceView: React.FC = () => {
       .getMeasurementsBySensor(
         selectedDevice.sensors.map((x) => x.identifier),
         momentStart,
-        undefined
+        undefined,
       )
       .then((res) => {
         setModel(res);
@@ -144,7 +144,7 @@ export const DeviceView: React.FC = () => {
       .getDeviceStatus(
         [selectedDevice.device.identifier],
         momentStart,
-        undefined
+        undefined,
       )
       .then((res) => {
         setDeviceStatusModel(res);
@@ -211,7 +211,7 @@ export const DeviceView: React.FC = () => {
             } else if (result.status === "rejected") {
               console.error(
                 `Error in ${result.reason.type}:`,
-                result.reason.error
+                result.reason.error,
               );
             }
           });
@@ -241,7 +241,7 @@ export const DeviceView: React.FC = () => {
 
   const getQueuedCommands = (
     deviceIdentifier: string,
-    setLoading?: boolean
+    setLoading?: boolean,
   ) => {
     if (setLoading) {
       setIsLoading(true);
@@ -275,7 +275,7 @@ export const DeviceView: React.FC = () => {
               title: "Queued command deleted",
               body: "",
               severity: "success",
-            })
+            }),
           );
           // Refresh the queued commands list
           getQueuedCommands(selectedDevice.device.identifier);
@@ -288,7 +288,7 @@ export const DeviceView: React.FC = () => {
             title: "Failed to delete queued command",
             body: "",
             severity: "error",
-          })
+          }),
         );
       })
       .finally(() => {
@@ -299,7 +299,7 @@ export const DeviceView: React.FC = () => {
   const updateQueuedCommandSchedule = (
     messageId: string,
     deviceIdentifier: string,
-    newScheduledTime: moment.Moment
+    newScheduledTime: moment.Moment,
   ) => {
     setIsLoading(true);
     deviceHook
@@ -311,7 +311,7 @@ export const DeviceView: React.FC = () => {
               title: "Queued command updated",
               body: "The scheduled time has been updated successfully.",
               severity: "success",
-            })
+            }),
           );
           // Refresh the queued commands list
           getQueuedCommands(deviceIdentifier);
@@ -324,7 +324,7 @@ export const DeviceView: React.FC = () => {
             title: "Failed to update queued command",
             body: "",
             severity: "error",
-          })
+          }),
         );
       })
       .finally(() => {
@@ -345,7 +345,7 @@ export const DeviceView: React.FC = () => {
             title: "Command copied",
             body: "The executed command has been copied as a new queued command.",
             severity: "success",
-          })
+          }),
         );
         // Refresh the queued commands list (setLoading=true so it manages isLoading state)
         getQueuedCommands(deviceIdentifier, true);
@@ -357,7 +357,7 @@ export const DeviceView: React.FC = () => {
             title: "Failed to copy command",
             body: "",
             severity: "error",
-          })
+          }),
         );
         setIsLoading(false);
       });
@@ -374,7 +374,7 @@ export const DeviceView: React.FC = () => {
             title: `Visibility status updated for ${res.device.name}`,
             body: "_",
             severity: "success",
-          })
+          }),
         );
         // Update devices
         measurementApiHook
@@ -399,7 +399,7 @@ export const DeviceView: React.FC = () => {
   const setMotionControlState = (
     state: number,
     message?: string,
-    executeAt?: moment.Moment
+    executeAt?: moment.Moment,
   ) => {
     if (!selectedDevice) {
       return;
@@ -424,7 +424,7 @@ export const DeviceView: React.FC = () => {
               body: "",
               id: 0,
               severity: "success",
-            })
+            }),
           );
         }
       })
@@ -436,7 +436,7 @@ export const DeviceView: React.FC = () => {
             title: "Failed to send message",
             body: "",
             severity: "error",
-          })
+          }),
         );
       })
       .finally(() => {
@@ -447,7 +447,7 @@ export const DeviceView: React.FC = () => {
   const setMotionControlDelay = (
     delayMs: number,
     message?: string,
-    executeAt?: moment.Moment
+    executeAt?: moment.Moment,
   ) => {
     if (!selectedDevice) {
       return;
@@ -457,7 +457,7 @@ export const DeviceView: React.FC = () => {
       .setMotionControlDelay(
         selectedDevice.device.identifier,
         delayMs,
-        executeAt
+        executeAt,
       )
       .then((res) => {
         if (res && res.length > 0) {
@@ -475,7 +475,7 @@ export const DeviceView: React.FC = () => {
               title: message ?? "Message sent to device",
               body: "",
               severity: "success",
-            })
+            }),
           );
         }
       })
@@ -486,7 +486,7 @@ export const DeviceView: React.FC = () => {
             title: "Sending message failed",
             body: "",
             severity: "error",
-          })
+          }),
         );
       })
       .finally(() => {
@@ -508,7 +508,7 @@ export const DeviceView: React.FC = () => {
             title: message ?? "Message sent to device",
             body: "",
             severity: "success",
-          })
+          }),
         );
       })
       .catch((er) => {
@@ -518,7 +518,7 @@ export const DeviceView: React.FC = () => {
             title: "Failed to send the message",
             body: "",
             severity: "error",
-          })
+          }),
         );
         setIsLoading(false);
       });
@@ -528,7 +528,7 @@ export const DeviceView: React.FC = () => {
     file: File,
     isDeviceImage: boolean,
     name?: string,
-    isSecret?: boolean
+    isSecret?: boolean,
   ) => {
     if (selectedDevice === undefined) {
       return;
@@ -541,7 +541,7 @@ export const DeviceView: React.FC = () => {
         file,
         isDeviceImage,
         name,
-        isSecret
+        isSecret,
       )
       .then((res) => {
         setSelectedDevice(res);
@@ -553,7 +553,7 @@ export const DeviceView: React.FC = () => {
             title: isDeviceImage ? "Image uploaded" : "Attachment uploaded",
             body: "",
             severity: "success",
-          })
+          }),
         );
       })
       .catch((ex) => {
@@ -579,7 +579,7 @@ export const DeviceView: React.FC = () => {
             title: "Attachment deleted",
             body: "Success",
             severity: "success",
-          })
+          }),
         );
       })
       .catch((er) => {
@@ -606,7 +606,7 @@ export const DeviceView: React.FC = () => {
             title: "Default image set",
             body: "Success",
             severity: "success",
-          })
+          }),
         );
       })
       .catch((ex) => {
@@ -630,7 +630,7 @@ export const DeviceView: React.FC = () => {
   const handleSaveContact = (
     email: string,
     deviceIdentifier: string,
-    identifier?: string
+    identifier?: string,
   ) => {
     setIsLoading(true);
 
@@ -653,7 +653,7 @@ export const DeviceView: React.FC = () => {
               : "Contact added successfully",
             body: "",
             severity: "success",
-          })
+          }),
         );
         // Refresh device info to get updated contacts
         return deviceHook.getDeviceInfo(deviceIdentifier);
@@ -688,7 +688,7 @@ export const DeviceView: React.FC = () => {
             title: "Contact deleted successfully",
             body: "",
             severity: "success",
-          })
+          }),
         );
         // Refresh device info to get updated contacts
         return deviceHook.getDeviceInfo(selectedDevice.device.identifier);
@@ -730,7 +730,7 @@ export const DeviceView: React.FC = () => {
                   body: `Visible status will be ${!device.device.visible} for ${
                     device.device.name
                   }`,
-                })
+                }),
               );
             }}
             devices={selectedDevice ? [selectedDevice] : []}
@@ -752,7 +752,7 @@ export const DeviceView: React.FC = () => {
                   },
                   title: "Set default image",
                   body: `Current image will be set as default image for ${selectedDevice?.device.name}`,
-                })
+                }),
               );
             }}
             onDeleteImage={(identifier: string) => {
@@ -763,7 +763,7 @@ export const DeviceView: React.FC = () => {
                   },
                   title: "Delete image",
                   body: `The selected image of ${selectedDevice?.device.name} will be removed.`,
-                })
+                }),
               );
             }}
             onUploadImage={(file) => {
@@ -774,13 +774,16 @@ export const DeviceView: React.FC = () => {
                   },
                   title: "Upload new image?",
                   body: `Upload "${file.name}"?`,
-                })
+                }),
               );
             }}
           />
         )}
         <Collapsible title="Sensors" isOpen={true}>
-          <SensorTable sensors={selectedDevice?.sensors ?? []} />
+          <SensorTable
+            sensors={selectedDevice?.sensors ?? []}
+            isVirtual={selectedDevice?.isVirtual}
+          />
         </Collapsible>
         {selectedDevice && !selectedDevice.isVirtual && (
           <Collapsible title="Attributes" isOpen={false}>
@@ -816,7 +819,7 @@ export const DeviceView: React.FC = () => {
                     },
                     title: "Delete contact",
                     body: `Are you sure you want to delete ${contact.email}?`,
-                  })
+                  }),
                 );
               }}
             />
@@ -836,7 +839,7 @@ export const DeviceView: React.FC = () => {
                 },
                 title: "Delete attachment",
                 body: `Attachment will be removed`,
-              })
+              }),
             );
           }}
           onUploadAttachment={(file, customName, isSecret) => {
@@ -922,19 +925,19 @@ export const DeviceView: React.FC = () => {
                   setConfirmDialog({
                     onConfirm: () => {
                       reboot(
-                        `Boot command sent to ${selectedDevice?.device.name}`
+                        `Boot command sent to ${selectedDevice?.device.name}`,
                       );
                     },
                     title: `Reboot device?`,
                     body: `${selectedDevice?.device.name} will be rebooted`,
-                  })
+                  }),
                 );
               }}
               onSetOutStatic={(mode: boolean, executeAt?: moment.Moment) => {
                 setMotionControlState(
                   mode ? 1 : 0,
                   `Outputs set to ${mode} for ${selectedDevice?.device.name}`,
-                  executeAt
+                  executeAt,
                 );
               }}
               onSetOutOnMotionControl={(executeAt?: moment.Moment) => {
@@ -942,12 +945,12 @@ export const DeviceView: React.FC = () => {
               }}
               onSetMotionControlDelay={(
                 delay: number,
-                executeAt?: moment.Moment
+                executeAt?: moment.Moment,
               ) => {
                 setMotionControlDelay(
                   delay * 1000,
                   `Motioncontrol delay set to ${delay} s`,
-                  executeAt
+                  executeAt,
                 );
               }}
             />
@@ -983,7 +986,7 @@ export const DeviceView: React.FC = () => {
                     },
                     title: "Delete queued command",
                     body: "Are you sure you want to delete this queued command?",
-                  })
+                  }),
                 );
               }}
               onCopy={(messageId: string, deviceIdentifier: string) => {
@@ -994,7 +997,7 @@ export const DeviceView: React.FC = () => {
                     },
                     title: "Copy queued command",
                     body: "Are you sure you want to copy this executed command as a new queued command?",
-                  })
+                  }),
                 );
               }}
             />
