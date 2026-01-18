@@ -30,20 +30,28 @@ namespace EnvironmentMonitor.Tests
                 configurationBuilder.AddConfiguration(integrationConfig);
             });
 
-            // Override email client with mock
+            // Override services with mocks
             builder.ConfigureServices(services =>
             {
                 // Remove the existing IEmailClient registration
-                var descriptor = services.SingleOrDefault(
+                var emailDescriptor = services.SingleOrDefault(
                     d => d.ServiceType == typeof(IEmailClient));
                 
-                if (descriptor != null)
+                if (emailDescriptor != null)
                 {
-                    services.Remove(descriptor);
+                    services.Remove(emailDescriptor);
                 }
 
                 // Add mock email client
                 services.AddSingleton<IEmailClient, MockEmailClient>();
+                var queueDescriptor = services.SingleOrDefault(
+                    d => d.ServiceType == typeof(IQueueClient));
+               
+                if (queueDescriptor != null)
+                {
+                    services.Remove(queueDescriptor);
+                }
+                services.AddSingleton<IQueueClient, MockQueueClient>();
             });
         }
     }
