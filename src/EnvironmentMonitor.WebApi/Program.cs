@@ -1,4 +1,4 @@
-using AspNet.Security.OAuth.GitHub; // GitHub OAuth
+using AspNet.Security.OAuth.GitHub;
 using EnvironmentMonitor.Application.Extensions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
@@ -6,6 +6,7 @@ using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.WebApi.Services;
+using EnvironmentMonitor.WebApi.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
@@ -29,6 +30,12 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         ForwardedHeaders.XForwardedHost;
 });
 
+// Add API Key authentication scheme
+builder.Services.AddAuthentication()
+    .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+        ApiKeyAuthenticationOptions.DefaultScheme, 
+        options => { });
+
 if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret)) {
     builder.Services.AddAuthentication(x =>
     {
@@ -48,7 +55,7 @@ if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientS
 
 var microsoftClientId = builder.Configuration["Microsoft:ClientId"];
 var microsoftClientSecret = builder.Configuration["Microsoft:ClientSecret"];
-var microsoftTenantId = builder.Configuration["Microsoft:TenantId"]; // Add optional tenant ID
+var microsoftTenantId = builder.Configuration["Microsoft:TenantId"];
 if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftClientSecret)) {
     builder.Services.AddAuthentication().AddMicrosoftAccount(options =>
     {
@@ -222,7 +229,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.UseMiddleware<ApiKeyMiddleware>();
 app.UseForwardedHeaders();
 
 using (var scope = app.Services.CreateScope())

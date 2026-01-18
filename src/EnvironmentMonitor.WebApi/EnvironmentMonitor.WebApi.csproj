@@ -21,4 +21,8 @@
     <ProjectReference Include="..\EnvironmentMonitor.Infrastructure\EnvironmentMonitor.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Attributes\" />
+  </ItemGroup>
+
 </Project>

@@ -2,6 +2,7 @@
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Identity;
+using EnvironmentMonitor.WebApi.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
@@ -50,6 +51,21 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public async Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensor([FromQuery] GetMeasurementsModel model)
         {
             return await _measurementService.GetMeasurementsByPublicSensor(model);
+        }
+
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = ApiKeyAuthenticationOptions.DefaultScheme, Roles = "Admin")]
+        public async Task AddMeasurements([FromBody] SaveMeasurementsDto measurements)
+        {
+            // TODO could move this preprocessing to a service
+            var enqueuedTime = DateTime.UtcNow;
+            measurements.EnqueuedUtc = enqueuedTime;
+            foreach (var measurement in measurements.Measurements)
+            {
+                measurement.TimestampUtc = enqueuedTime;
+            }
+
+            await _measurementService.AddMeasurements(measurements);
         }
     }
 }

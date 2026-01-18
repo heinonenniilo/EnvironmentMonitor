@@ -4,7 +4,6 @@ using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Infrastructure.Data.Migrations.Application;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.Domain.Models;
-using EnvironmentMonitor.WebApi.Attributes;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
