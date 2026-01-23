@@ -25,12 +25,48 @@ namespace EnvironmentMonitor.Tests
             await LogoutAsync();
         }
 
+        private async Task<(string SecretId, string SecretValue)> CreateApiKeyAsync(List<Guid> deviceIds, List<Guid>? locationIds = null, string? description = null)
+        {
+            // Login as admin to create API key
+            await LoginAsync(AdminUserName, AdminPassword);
+
+            // Create API key with access to the specified devices/locations
+            var createApiKeyRequest = new
+            {
+                DeviceIds = deviceIds,
+                LocationIds = locationIds ?? new List<Guid>(),
+                Description = description ?? "Test API Key"
+            };
+
+            var createKeyJson = JsonConvert.SerializeObject(createApiKeyRequest);
+            var createKeyContent = new StringContent(createKeyJson, Encoding.UTF8, "application/json");
+            var createKeyResponse = await _client.PostAsync("/api/apikeys", createKeyContent);
+            
+            Assert.That(createKeyResponse.IsSuccessStatusCode, Is.True, 
+                $"Failed to create API key. Status: {createKeyResponse.StatusCode}, Response: {await createKeyResponse.Content.ReadAsStringAsync()}");
+            
+            var createKeyResponseJson = await createKeyResponse.Content.ReadAsStringAsync();
+            var apiKeyResponse = JsonConvert.DeserializeObject<dynamic>(createKeyResponseJson);
+            
+            string secretValue = apiKeyResponse.apiKey;
+            string secretId = apiKeyResponse.id;
+
+            // Logout after creating the API key
+            await LogoutAsync();
+
+            return (secretId, secretValue);
+        }
+
         [Test]
         public async Task AddMeasurements_WithValidApiKey_ReturnsSuccess()
         {
             // Arrange
             var model = await PrepareDatabase();
             var device = model.DeviceInLocation;
+            var (secretId, secretValue) = await CreateApiKeyAsync(
+                deviceIds: new List<Guid> { device.Identifier },
+                description: "Test API Key for Device Access"
+            );
 
             var measurementDto = new SaveMeasurementsDto
             {
@@ -54,12 +90,59 @@ namespace EnvironmentMonitor.Tests
             // Add API Key header
             _client.DefaultRequestHeaders.Clear();
             _client.DefaultRequestHeaders.Add("X-API-KEY", _apiKey);
+            _client.DefaultRequestHeaders.Add("X-SECRET-ID", secretId);
+            _client.DefaultRequestHeaders.Add("X-SECRET-VALUE", secretValue);
 
             // Act
             var response = await _client.PostAsync("/api/measurements", content);
 
             // Assert
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+        }
+
+        [Test]
+        public async Task AddMeasurements_NonAccessibleDevice_Returnsfalse()
+        {
+            // Arrange
+            var model = await PrepareDatabase();
+            var apiKeyDevice = model.DeviceInLocation;
+            var measurementDevic = model.DeviceInLocationWithNoAccess;
+
+            var (secretId, secretValue) = await CreateApiKeyAsync(
+                deviceIds: new List<Guid> { apiKeyDevice.Identifier },
+                description: "Test API Key for Device Access"
+            );
+
+            var measurementDto = new SaveMeasurementsDto
+            {
+                DeviceId = measurementDevic.DeviceIdentifier,
+                Measurements = new List<AddMeasurementDto>
+                {
+                    new AddMeasurementDto
+                    {
+                        SensorId = apiKeyDevice.Sensors.First().SensorId,
+                        SensorValue = 23.5,
+                        TypeId = 1,
+                        TimestampUtc = DateTime.UtcNow
+                    }
+                },
+                FirstMessage = false
+            };
+
+            var json = JsonConvert.SerializeObject(measurementDto);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            // Add API Key header
+            _client.DefaultRequestHeaders.Clear();
+            _client.DefaultRequestHeaders.Add("X-API-KEY", _apiKey);
+            _client.DefaultRequestHeaders.Add("X-SECRET-ID", secretId);
+            _client.DefaultRequestHeaders.Add("X-SECRET-VALUE", secretValue);
+
+            // Act
+            var response = await _client.PostAsync("/api/measurements", content);
+
+            // Assert
+            Assert.That(response.IsSuccessStatusCode, Is.False);
         }
 
         [Test]
@@ -144,9 +227,15 @@ namespace EnvironmentMonitor.Tests
             var sensor1 = device.Sensors.First(s => s.Name == "Temperature-Sensor-01");
             var sensor2 = device.Sensors.First(s => s.Name == "Temperature-Sensor-02");
 
+            var (secretId, secretValue) = await CreateApiKeyAsync(
+                deviceIds: new List<Guid> { device.Identifier },
+                description: "Test API Key for Device Access"
+            );
+
+            // Prepare measurement request
             var measurementDto = new SaveMeasurementsDto
             {
-                DeviceId = device.DeviceIdentifier ,
+                DeviceId = device.DeviceIdentifier,
                 Measurements = new List<AddMeasurementDto>
                 {
                     new AddMeasurementDto
@@ -171,13 +260,16 @@ namespace EnvironmentMonitor.Tests
             var content = new StringContent(json, Encoding.UTF8, "application/json");
             
             _client.DefaultRequestHeaders.Clear();
-            _client.DefaultRequestHeaders.Add("X-API-KEY", _apiKey);
+            _client.DefaultRequestHeaders.Add("X-API-KEY", _apiKey); 
+            _client.DefaultRequestHeaders.Add("X-SECRET-ID", secretId); 
+            _client.DefaultRequestHeaders.Add("X-SECRET-VALUE", secretValue); 
 
             // Act
             var response = await _client.PostAsync("/api/measurements", content);
 
             // Assert
-            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK), 
+                $"Expected OK but got {response.StatusCode}. Response: {await response.Content.ReadAsStringAsync()}");
         }
 
         [Test]
@@ -186,6 +278,10 @@ namespace EnvironmentMonitor.Tests
             // Arrange
             var model = await PrepareDatabase();
             var device = model.DeviceInLocation;
+            var (secretId, secretValue) = await CreateApiKeyAsync(
+                deviceIds: new List<Guid> { device.Identifier },
+                description: "Test API Key for Device Access"
+            );
 
             var measurementDto = new SaveMeasurementsDto
             {
@@ -213,6 +309,8 @@ namespace EnvironmentMonitor.Tests
             
             _client.DefaultRequestHeaders.Clear();
             _client.DefaultRequestHeaders.Add("X-API-KEY", _apiKey);
+            _client.DefaultRequestHeaders.Add("X-SECRET-ID", secretId); // Secret ID from database
+            _client.DefaultRequestHeaders.Add("X-SECRET-VALUE", secretValue); // Plain secret value
 
             // Act
             var response = await _client.PostAsync("/api/measurements", content);
