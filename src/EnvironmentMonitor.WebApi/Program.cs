@@ -30,12 +30,31 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         ForwardedHeaders.XForwardedHost;
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevelopmentCorsPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // Specify React dev server origin
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); // Required for cookies/credentials
+    });
+});
+
+// Configure ApplicationSettings with IsProduction flag
+var applicationSettings = new ApplicationSettings();
+builder.Configuration.GetSection("ApplicationSettings").Bind(applicationSettings);
+applicationSettings.IsProduction = builder.Environment.IsProduction();
+
 // Configure API Key settings
 var apiKeySettings = new ApiKeySettings();
 builder.Configuration.GetSection("ApiKeySettings").Bind(apiKeySettings);
 builder.Services.AddSingleton(apiKeySettings);
 
-// Add API Key authentication scheme
+builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
+builder.Services.AddApplicationServices(builder.Configuration);
+
+// Add API Key authentication scheme (after services are registered)
 builder.Services.AddAuthentication()
     .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
         ApiKeyAuthenticationOptions.DefaultScheme, 
@@ -151,25 +170,6 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-// Configure ApplicationSettings with IsProduction flag
-var applicationSettings = new ApplicationSettings();
-builder.Configuration.GetSection("ApplicationSettings").Bind(applicationSettings);
-applicationSettings.IsProduction = builder.Environment.IsProduction();
-
-builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
-builder.Services.AddApplicationServices(builder.Configuration);
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("DevelopmentCorsPolicy", policy =>
-    {
-        policy.WithOrigins("http://localhost:3000") // Specify React dev server origin
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials(); // Required for cookies/credentials
-    });
-});
 
 builder.Services.ConfigureApplicationCookie(conf =>
 {

@@ -4,6 +4,12 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.WebApi.Authentication
 {
@@ -12,78 +18,117 @@ namespace EnvironmentMonitor.WebApi.Authentication
         public const string DefaultScheme = "ApiKey";
         public string Scheme => DefaultScheme;
         public string ApiKeyHeaderName { get; set; } = "X-API-KEY";
+        public string SecretIdHeaderName { get; set; } = "X-SECRET-ID";
+        public string SecretValueHeaderName { get; set; } = "X-SECRET-VALUE";
     }
 
     public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
     {
-        private readonly IConfiguration _configuration;
+        private readonly IApiKeyService _apiKeyService;
         private readonly ApiKeySettings _apiKeySettings;
 
         public ApiKeyAuthenticationHandler(
             IOptionsMonitor<ApiKeyAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            IConfiguration configuration,
+            IApiKeyService apiKeyService,
             ApiKeySettings apiKeySettings)
             : base(options, logger, encoder)
         {
-            _configuration = configuration;
+            _apiKeyService = apiKeyService;
             _apiKeySettings = apiKeySettings;
         }
 
-        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
+            // Step 1: Validate API key from configuration
             if (!Request.Headers.TryGetValue(Options.ApiKeyHeaderName, out var apiKeyHeaderValues))
             {
-                return Task.FromResult(AuthenticateResult.NoResult());
+                return AuthenticateResult.NoResult();
             }
 
             var providedApiKey = apiKeyHeaderValues.FirstOrDefault();
             if (string.IsNullOrWhiteSpace(providedApiKey))
             {
-                return Task.FromResult(AuthenticateResult.NoResult());
+                return AuthenticateResult.NoResult();
             }
 
             if (_apiKeySettings.ApiKeys == null || _apiKeySettings.ApiKeys.Count == 0)
             {
-                Logger.LogWarning("API Keys are not configured in appsettings");
-                return Task.FromResult(AuthenticateResult.Fail("API Keys are not configured"));
+                Logger.LogWarning("No API keys configured in appsettings");
+                return AuthenticateResult.Fail("API key authentication not configured");
             }
 
-            var matchingKey = _apiKeySettings.ApiKeys.FirstOrDefault(k => 
-                string.Equals(k.Key, providedApiKey, StringComparison.Ordinal));
+            // Check if the provided API key matches any of the configured keys
+            var matchingApiKey = _apiKeySettings.ApiKeys.FirstOrDefault(k =>
+                string.Equals(k, providedApiKey, System.StringComparison.Ordinal));
 
-            if (matchingKey == null)
+            if (matchingApiKey == null)
             {
-                return Task.FromResult(AuthenticateResult.Fail("Invalid API Key"));
+                Logger.LogWarning("Invalid API key provided");
+                return AuthenticateResult.Fail("Invalid API Key");
             }
 
+            // Step 2: Validate secret ID and secret value
+            if (!Request.Headers.TryGetValue(Options.SecretIdHeaderName, out var secretIdHeaderValues))
+            {
+                Logger.LogWarning("Secret ID header missing");
+                return AuthenticateResult.Fail("Secret ID required");
+            }
+
+            if (!Request.Headers.TryGetValue(Options.SecretValueHeaderName, out var secretValueHeaderValues))
+            {
+                Logger.LogWarning("Secret value header missing");
+                return AuthenticateResult.Fail("Secret value required");
+            }
+
+            var providedSecretId = secretIdHeaderValues.FirstOrDefault();
+            var providedSecretValue = secretValueHeaderValues.FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(providedSecretId) || string.IsNullOrWhiteSpace(providedSecretValue))
+            {
+                Logger.LogWarning("Secret ID or secret value is empty");
+                return AuthenticateResult.Fail("Invalid secret credentials");
+            }
+
+            // Step 3: Look up the secret in the database by ID (required field)
+            var secret = await _apiKeyService.GetApiKey(providedSecretId);
+
+            if (secret == null)
+            {
+                Logger.LogWarning($"Secret with ID '{providedSecretId}' not found");
+                return AuthenticateResult.Fail("Invalid secret ID");
+            }
+
+            // Step 4: Verify the secret value matches the hash
+            var isValid = await _apiKeyService.VerifyApiKey(providedSecretId, providedSecretValue);
+            
+            if (!isValid)
+            {
+                Logger.LogWarning($"Secret value verification failed for secret ID '{providedSecretId}'");
+                return AuthenticateResult.Fail("Invalid secret value");
+            }
+
+            // Step 5: Build claims from the validated secret
             var claims = new List<Claim>
             {
-                new(ClaimTypes.NameIdentifier, "env-mon-api-key"),
-                new(ClaimTypes.Name, "API Key User"),
-                new(ClaimTypes.Email, "env-mon"),
+                new(ClaimTypes.NameIdentifier, $"api-secret-{secret.Id}"),
+                new(ClaimTypes.Name, $"API Secret User ({secret.Description ?? secret.Id})"),
+                new(ClaimTypes.Email, "api-secret"),
                 new(ClaimTypes.Role, GlobalRoles.User.ToString()),
                 new(ClaimTypes.Role, GlobalRoles.ApiKeyUser.ToString())
             };
 
-            if (!string.IsNullOrWhiteSpace(matchingKey.Devices))
+            // Add claims from the secret
+            foreach (var secretClaim in secret.Claims)
             {
-                var devices = matchingKey.Devices.Split(';', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(d => d.Trim())
-                    .Where(d => !string.IsNullOrWhiteSpace(d))
-                    .ToList();
-
-                if (devices.Any(d => d.Equals("ALL", StringComparison.OrdinalIgnoreCase)))
+                if (secretClaim.Type == EntityRoles.Device.ToString())
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, GlobalRoles.MeasurementWriter.ToString()));
+                    claims.Add(new Claim(EntityRoles.DeviceWriter.ToString(), secretClaim.Value));
                 }
-                else
+                else if (secretClaim.Type == EntityRoles.Location.ToString())
                 {
-                    foreach (var device in devices)
-                    {
-                        claims.Add(new Claim(EntityRoles.DeviceWriter.ToString(), device));
-                    }
+                    claims.Add(new Claim(EntityRoles.Location.ToString(), secretClaim.Value));
                 }
             }
 
@@ -91,7 +136,8 @@ namespace EnvironmentMonitor.WebApi.Authentication
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
-            return Task.FromResult(AuthenticateResult.Success(ticket));
+            Logger.LogInformation($"Successfully authenticated with secret ID '{secret.Id}'");
+            return AuthenticateResult.Success(ticket);
         }
     }
 }

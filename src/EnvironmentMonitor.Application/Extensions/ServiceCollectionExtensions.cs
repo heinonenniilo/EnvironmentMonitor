@@ -19,6 +19,7 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<IDeviceEmailService, DeviceEmailService>();
             services.AddScoped<IDeviceCommandService, DeviceCommandService>();
             services.AddScoped<IUserCookieService, UserCookieService>();
+            services.AddScoped<IApiKeyManagementService, ApiKeyManagementService>();
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             if (deviceSettings != null)

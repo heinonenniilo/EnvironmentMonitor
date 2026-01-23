@@ -1,4 +1,5 @@
-﻿using EnvironmentMonitor.Domain.Interfaces;
+﻿using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -24,6 +25,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
             _currentUser = currentUser;
             _dateService = dateService;
         }
+
+        public DbSet<ApiSecret> ApiSecrets { get; set; }
+        public DbSet<SecretClaim> SecretClaims { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
