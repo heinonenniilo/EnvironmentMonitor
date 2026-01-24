@@ -77,6 +77,7 @@ namespace EnvironmentMonitor.Application.Services
                     MessageCount = measurement.MessageCount,
                     Identifier = measurement.Identifier,
                     LoopCount = measurement.LoopCount,
+                    SourceId = measurement.Source != null ? (int)measurement.Source : null,
                 };
             }
             var isDuplicate = false;
@@ -126,7 +127,7 @@ namespace EnvironmentMonitor.Application.Services
                     CreatedAt = createdAt,
                     CreatedAtUtc = _dateService.LocalToUtc(createdAt),
                     TimestampUtc = row.TimestampUtc,
-                    TypeId = row.TypeId
+                    TypeId = row.TypeId                   
                 };
                 measurementsToAdd.Add(measurementToAdd);
                 if (sensorInDb.VirtualSensorRowValues.Count != 0)

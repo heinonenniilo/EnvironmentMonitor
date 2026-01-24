@@ -77,7 +77,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Attachments");
+                    b.ToTable("Attachments", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Device", b =>
@@ -135,7 +135,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Name", "LocationId")
                         .IsUnique();
 
-                    b.ToTable("Devices");
+                    b.ToTable("Devices", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceAttachment", b =>
@@ -180,7 +180,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Guid")
                         .IsUnique();
 
-                    b.ToTable("DeviceAttachments");
+                    b.ToTable("DeviceAttachments", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceAttribute", b =>
@@ -228,7 +228,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasIndex("TimeStamp", "DeviceId");
 
-                    b.ToTable("DeviceAttributes");
+                    b.ToTable("DeviceAttributes", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceAttributeType", b =>
@@ -256,7 +256,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("DeviceAttributeTypes");
+                    b.ToTable("DeviceAttributeTypes", (string)null);
 
                     b.HasData(
                         new
@@ -316,7 +316,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("DeviceId", "Email")
                         .IsUnique();
 
-                    b.ToTable("DeviceContacts");
+                    b.ToTable("DeviceContacts", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceEvent", b =>
@@ -351,7 +351,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasIndex("TimeStamp", "DeviceId");
 
-                    b.ToTable("DeviceEvents");
+                    b.ToTable("DeviceEvents", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceEventType", b =>
@@ -374,7 +374,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("DeviceEventTypes");
+                    b.ToTable("DeviceEventTypes", (string)null);
 
                     b.HasData(
                         new
@@ -470,7 +470,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasFilter("[Identifier] IS NOT NULL AND [IsDuplicate] = 0");
 
-                    b.ToTable("DeviceMessages");
+                    b.ToTable("DeviceMessages", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceQueuedCommand", b =>
@@ -545,7 +545,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasIndex("DeviceId", "ScheduledUtc");
 
-                    b.ToTable("DeviceQueuedCommands");
+                    b.ToTable("DeviceQueuedCommands", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceQueuedCommandType", b =>
@@ -568,7 +568,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("DeviceQueuedCommandTypes");
+                    b.ToTable("DeviceQueuedCommandTypes", (string)null);
 
                     b.HasData(
                         new
@@ -638,7 +638,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasIndex("TimeStamp", "DeviceId", "Status");
 
-                    b.ToTable("DeviceStatusChanges");
+                    b.ToTable("DeviceStatusChanges", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceType", b =>
@@ -661,7 +661,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("DeviceTypes");
+                    b.ToTable("DeviceTypes", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.EmailTemplate", b =>
@@ -706,7 +706,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("EmailTemplates");
+                    b.ToTable("EmailTemplates", (string)null);
 
                     b.HasData(
                         new
@@ -774,7 +774,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Locations");
+                    b.ToTable("Locations", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.LocationSensor", b =>
@@ -804,7 +804,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasIndex("SensorId", "DeviceId");
 
-                    b.ToTable("LocationSensors");
+                    b.ToTable("LocationSensors", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Measurement", b =>
@@ -857,7 +857,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     SqlServerIndexBuilderExtensions.IncludeProperties(b.HasIndex("SensorId", "Timestamp"), new[] { "Value", "TypeId", "TimestampUtc" });
 
-                    b.ToTable("Measurements");
+                    b.ToTable("Measurements", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.MeasurementType", b =>
@@ -880,7 +880,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("MeasurementTypes");
+                    b.ToTable("MeasurementTypes", (string)null);
 
                     b.HasData(
                         new
@@ -955,7 +955,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
                     b.HasIndex("TypeId");
 
-                    b.ToTable("PublicSensors");
+                    b.ToTable("PublicSensors", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Sensor", b =>
@@ -1007,7 +1007,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("DeviceId", "SensorId")
                         .IsUnique();
 
-                    b.ToTable("Sensors");
+                    b.ToTable("Sensors", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.SensorType", b =>
@@ -1030,7 +1030,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("SensorTypes");
+                    b.ToTable("SensorTypes", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.VirtualSensorRow", b =>
@@ -1064,7 +1064,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.HasIndex("VirtualSensorId", "ValueSensorId")
                         .IsUnique();
 
-                    b.ToTable("VirtualSensorRows");
+                    b.ToTable("VirtualSensorRows", (string)null);
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.Device", b =>
