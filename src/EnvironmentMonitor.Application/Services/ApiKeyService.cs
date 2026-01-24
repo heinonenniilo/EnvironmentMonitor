@@ -127,6 +127,15 @@ namespace EnvironmentMonitor.Application.Services
             return secret;
         }
 
+        public async Task<ApiKeyDto> UpdateApiKey(string id, UpdateApiKeyRequest request)
+        {
+            EnsureAdmin();
+
+            var updatedSecret = await _apiKeyRepository.UpdateApiKey(id, request.Enabled, request.Description);
+
+            return _mapper.Map<ApiKeyDto>(updatedSecret);
+        }
+
         private void EnsureAdmin()
         {
             if (!_userService.IsAdmin)

@@ -107,5 +107,28 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 return StatusCode(500, new { Message = "Failed to delete API key" });
             }
         }
+
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<ApiKeyDto>> UpdateApiKey(string id, [FromBody] UpdateApiKeyRequest request)
+        {
+            try
+            {
+                var updatedApiKey = await _apiKeyManagementService.UpdateApiKey(id, request);
+                return Ok(updatedApiKey);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { Message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating API key");
+                return StatusCode(500, new { Message = "Failed to update API key" });
+            }
+        }
     }
 }

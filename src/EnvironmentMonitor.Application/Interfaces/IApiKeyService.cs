@@ -14,5 +14,6 @@ namespace EnvironmentMonitor.Application.Interfaces
         Task<ApiKeyDto?> GetApiKey(string id);
         Task DeleteApiKey(string id);
         Task<ApiSecret?> VerifyApiKey(string secretId, string providedApiKey);
+        Task<ApiKeyDto> UpdateApiKey(string id, UpdateApiKeyRequest request);
     }
 }

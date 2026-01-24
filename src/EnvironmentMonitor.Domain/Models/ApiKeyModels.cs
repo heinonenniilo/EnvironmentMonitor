@@ -24,4 +24,10 @@ namespace EnvironmentMonitor.Domain.Models
         public required ApiSecret ApiSecret { get; set; }
         public required string PlainKey { get; set; }
     }
+
+    public class UpdateApiKeyRequest
+    {
+        public bool? Enabled { get; set; }
+        public string? Description { get; set; }
+    }
 }

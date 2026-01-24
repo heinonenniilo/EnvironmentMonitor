@@ -11,5 +11,6 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<List<ApiSecret>> GetAllApiKeys();
         Task<ApiSecret?> GetApiKey(string id);
         Task DeleteApiKey(string id, bool saveChanges = true);
+        Task<ApiSecret> UpdateApiKey(string id, bool? enabled, string? description, bool saveChanges = true);
     }
 }

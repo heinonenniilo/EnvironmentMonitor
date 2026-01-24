@@ -13,6 +13,8 @@ namespace EnvironmentMonitor.Application.DTOs
         public DateTime Created { get; set; }
         public List<ApiKeyClaimDto> Claims { get; set; } = new();
 
+        public bool Enabled { get; set; }
+
         public void Mapping(Profile profile)
         {
             profile.CreateMap<ApiSecret, ApiKeyDto>();

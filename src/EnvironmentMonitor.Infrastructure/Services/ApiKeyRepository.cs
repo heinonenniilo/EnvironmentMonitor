@@ -72,5 +72,36 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             _logger.LogInformation($"Deleted API key with ID: {id}");
         }
+
+        public async Task<ApiSecret> UpdateApiKey(string id, bool? enabled, string? description, bool saveChanges = true)
+        {
+            var secret = await _context.ApiSecrets
+                .Include(s => s.Claims)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (secret == null)
+            {
+                throw new InvalidOperationException($"API key with ID {id} not found");
+            }
+
+            if (enabled.HasValue)
+            {
+                secret.Enabled = enabled.Value;
+            }
+
+            if (description != null)
+            {
+                secret.Description = description;
+            }
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            _logger.LogInformation($"Updated API key with ID: {id}");
+
+            return secret;
+        }
     }
 }
