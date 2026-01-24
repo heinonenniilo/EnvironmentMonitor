@@ -11,6 +11,7 @@ import { getFormattedDate } from "../utilities/datetimeUtils";
 import { defaultStart } from "../containers/DeviceMessagesView";
 import type { DeviceInfo } from "../models/deviceInfo";
 import { Link } from "react-router";
+import { getMeasurementSourceDisplayName } from "../enums/measurementSourceTypes";
 
 interface Props {
   model: GetDeviceMessagesModel | undefined;
@@ -29,7 +30,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
 }) => {
   const hook = useApiHook().deviceHook;
   const [getModel, setGetModel] = useState<GetDeviceMessagesModel | undefined>(
-    undefined
+    undefined,
   );
   const [isLoading, setIsLoading] = useState(false);
 
@@ -95,10 +96,10 @@ export const DeviceMessagesTable: React.FC<Props> = ({
 
   const getDeviceLabel = (deviceIdentifier: string) => {
     const matchingDevice = deviceInfos.find(
-      (d) => d.device.identifier === deviceIdentifier
+      (d) => d.device.identifier === deviceIdentifier,
     );
     const matchingLocation = locations.find(
-      (l) => l.identifier === matchingDevice?.device.locationIdentifier
+      (l) => l.identifier === matchingDevice?.device.locationIdentifier,
     );
     return matchingDevice
       ? `${matchingLocation ? `${matchingLocation.name} - ` : ""}${
@@ -170,6 +171,17 @@ export const DeviceMessagesTable: React.FC<Props> = ({
       renderCell: (params) => (
         <Checkbox checked={Boolean(params.value)} disabled />
       ),
+    },
+    {
+      field: "sourceId",
+      headerName: "Source",
+      flex: 1,
+      sortable: false,
+      minWidth: 120,
+      valueGetter: (_value, row) => {
+        const deviceMessageRow = row as DeviceMessage;
+        return getMeasurementSourceDisplayName(deviceMessageRow.sourceId);
+      },
     },
   ];
 
