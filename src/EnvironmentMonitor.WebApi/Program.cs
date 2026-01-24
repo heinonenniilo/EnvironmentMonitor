@@ -1,4 +1,4 @@
-using AspNet.Security.OAuth.GitHub; // GitHub OAuth
+using AspNet.Security.OAuth.GitHub;
 using EnvironmentMonitor.Application.Extensions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
@@ -6,6 +6,7 @@ using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.WebApi.Services;
+using EnvironmentMonitor.WebApi.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
@@ -29,6 +30,35 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
         ForwardedHeaders.XForwardedHost;
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevelopmentCorsPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000") // Specify React dev server origin
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials(); // Required for cookies/credentials
+    });
+});
+
+// Configure ApplicationSettings with IsProduction flag
+var applicationSettings = new ApplicationSettings();
+builder.Configuration.GetSection("ApplicationSettings").Bind(applicationSettings);
+applicationSettings.IsProduction = builder.Environment.IsProduction();
+
+// Configure API Key settings
+var apiKeySettings = new ApiKeySettings();
+builder.Configuration.GetSection("ApiKeySettings").Bind(apiKeySettings);
+builder.Services.AddSingleton(apiKeySettings);
+
+builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
+builder.Services.AddApplicationServices(builder.Configuration);
+// Add API Key authentication scheme 
+builder.Services.AddAuthentication()
+    .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
+        ApiKeyAuthenticationOptions.DefaultScheme, 
+        options => { });
+
 if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientSecret)) {
     builder.Services.AddAuthentication(x =>
     {
@@ -48,7 +78,7 @@ if (!string.IsNullOrEmpty(googleClientId) && !string.IsNullOrEmpty(googleClientS
 
 var microsoftClientId = builder.Configuration["Microsoft:ClientId"];
 var microsoftClientSecret = builder.Configuration["Microsoft:ClientSecret"];
-var microsoftTenantId = builder.Configuration["Microsoft:TenantId"]; // Add optional tenant ID
+var microsoftTenantId = builder.Configuration["Microsoft:TenantId"];
 if (!string.IsNullOrEmpty(microsoftClientId) && !string.IsNullOrEmpty(microsoftClientSecret)) {
     builder.Services.AddAuthentication().AddMicrosoftAccount(options =>
     {
@@ -140,25 +170,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure ApplicationSettings with IsProduction flag
-var applicationSettings = new ApplicationSettings();
-builder.Configuration.GetSection("ApplicationSettings").Bind(applicationSettings);
-applicationSettings.IsProduction = builder.Environment.IsProduction();
-
-builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
-builder.Services.AddApplicationServices(builder.Configuration);
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("DevelopmentCorsPolicy", policy =>
-    {
-        policy.WithOrigins("http://localhost:3000") // Specify React dev server origin
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials(); // Required for cookies/credentials
-    });
-});
-
 builder.Services.ConfigureApplicationCookie(conf =>
 {
     if (builder.Environment.IsDevelopment())
@@ -222,7 +233,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.UseMiddleware<ApiKeyMiddleware>();
 app.UseForwardedHeaders();
 
 using (var scope = app.Services.CreateScope())

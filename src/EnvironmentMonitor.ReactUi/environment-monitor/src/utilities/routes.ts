@@ -20,4 +20,5 @@ export const routes = {
   deviceEmails: "/device-emails",
   users: "/users",
   userView: "/users/:userId",
+  apiKeys: "/api-keys",
 };

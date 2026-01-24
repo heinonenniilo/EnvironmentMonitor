@@ -109,6 +109,19 @@ namespace EnvironmentMonitor.Tests
             return loginResponse.IsSuccessStatusCode;
         }
 
+        protected async Task<bool> LogoutAsync()
+        {
+            try
+            {
+                var logoutResponse = await _client.PostAsync("/api/Authentication/logout", null);
+                return logoutResponse.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         protected async Task<(bool success, string userId)> RegisterUserAsync(string email, string password)
         {
             var registerData = new

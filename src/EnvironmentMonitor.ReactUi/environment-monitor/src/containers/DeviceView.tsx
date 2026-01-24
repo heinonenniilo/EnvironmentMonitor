@@ -14,7 +14,7 @@ import {
 } from "../reducers/userInterfaceReducer";
 import { DeviceEventTable } from "../components/DeviceEventTable";
 import { type DeviceEvent } from "../models/deviceEvent";
-import { Box, IconButton } from "@mui/material";
+import { Box, IconButton, Typography, Button } from "@mui/material";
 import { DeviceImage } from "../components/DeviceImage";
 import { Collapsible } from "../components/CollabsibleComponent";
 import { DeviceQueuedCommandsTable } from "../components/DeviceQueuedCommands/DeviceQueuedCommandsTable";
@@ -30,8 +30,9 @@ import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorCompo
 import { DeviceAttachments } from "../components/DeviceAttachments";
 import { DeviceContacts } from "../components/DeviceContacts";
 import { DeviceContactDialog } from "../components/DeviceContactDialog";
-import { Refresh, Add } from "@mui/icons-material";
+import { Refresh, Add, VpnKey } from "@mui/icons-material";
 import { type DeviceContact } from "../models/deviceContact";
+import { ApiKeyDialog } from "../components/ApiKeyDialog";
 
 interface PromiseInfo {
   type: string;
@@ -69,6 +70,13 @@ export const DeviceView: React.FC = () => {
   const [selectedContact, setSelectedContact] = useState<DeviceContact | null>(
     null,
   );
+  const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
+  const [generatedApiKey, setGeneratedApiKey] = useState<{
+    apiKey: string;
+    id: string;
+    description?: string;
+    created: string;
+  } | null>(null);
 
   const dispatch = useDispatch();
 
@@ -76,6 +84,7 @@ export const DeviceView: React.FC = () => {
   const deviceHook = useApiHook().deviceHook;
   const measurementApiHook = useApiHook().measureHook;
   const deviceContactsHook = useApiHook().deviceContactsHook;
+  const apiKeysHook = useApiHook().apiKeysHook;
 
   const loadMeasurements = () => {
     if (!selectedDevice) {
@@ -704,6 +713,49 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const handleGenerateApiKey = (description: string) => {
+    if (!selectedDevice) {
+      return;
+    }
+
+    setIsLoading(true);
+    apiKeysHook
+      .createApiKey({
+        deviceIds: [selectedDevice.device.identifier],
+        locationIds: [],
+        description: description,
+      })
+      .then((response) => {
+        setGeneratedApiKey(response);
+        dispatch(
+          addNotification({
+            title: "API Key generated successfully",
+            body: "Make sure to save the API key secret now. You won't be able to see it again.",
+            severity: "success",
+          }),
+        );
+      })
+      .catch((error) => {
+        console.error("Failed to generate API key:", error);
+        dispatch(
+          addNotification({
+            title: "Failed to generate API key",
+            body: "",
+            severity: "error",
+          }),
+        );
+        setApiKeyDialogOpen(false);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const handleCloseApiKeyDialog = () => {
+    setApiKeyDialogOpen(false);
+    setGeneratedApiKey(null);
+  };
+
   return (
     <AppContentWrapper
       title={getEntityTitle(selectedDevice?.device)}
@@ -823,6 +875,25 @@ export const DeviceView: React.FC = () => {
                 );
               }}
             />
+          </Collapsible>
+        )}
+
+        {selectedDevice && !selectedDevice.isVirtual && (
+          <Collapsible title="API Key" isOpen={false}>
+            <Box sx={{ p: 2 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Generate an API key for this device to authenticate API
+                requests.
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<VpnKey />}
+                onClick={() => setApiKeyDialogOpen(true)}
+                sx={{ mt: 2 }}
+              >
+                Generate API Key
+              </Button>
+            </Box>
           </Collapsible>
         )}
 
@@ -1015,6 +1086,13 @@ export const DeviceView: React.FC = () => {
         deviceIdentifier={selectedDevice?.device.identifier ?? ""}
         onClose={handleCloseContactDialog}
         onSave={handleSaveContact}
+      />
+      <ApiKeyDialog
+        open={apiKeyDialogOpen}
+        onClose={handleCloseApiKeyDialog}
+        onGenerate={handleGenerateApiKey}
+        generatedKey={generatedApiKey}
+        isLoading={isLoading}
       />
     </AppContentWrapper>
   );

@@ -29,6 +29,7 @@ import { DeviceEmailsView } from "./containers/DeviceEmailsView";
 import { UserInfoView } from "./containers/UserInfoView";
 import { UsersView } from "./containers/UsersView";
 import { UserView } from "./containers/UserView";
+import { ApiKeysView } from "./containers/ApiKeysView";
 
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
@@ -172,10 +173,18 @@ createRoot(document.getElementById("root")!).render(
                   </AuthorizedComponent>
                 }
               />
+              <Route
+                path={routes.apiKeys}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.Admin}>
+                    <ApiKeysView />
+                  </AuthorizedComponent>
+                }
+              />
             </Routes>
           </App>
         </ThemeProvider>
       </BrowserRouter>
     </React.StrictMode>
-  </Provider>
+  </Provider>,
 );

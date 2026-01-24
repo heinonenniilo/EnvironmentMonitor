@@ -43,7 +43,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   const theme = useTheme();
   const drawUserInMenu = useMediaQuery(theme.breakpoints.up("sm"));
   const [manageAchor, setManageAnchor] = React.useState<null | HTMLElement>(
-    null
+    null,
   );
   const open = Boolean(anchorEl);
   const manageOpen = Boolean(manageAchor);
@@ -78,7 +78,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
   const handleClick = (
     route: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _event: React.MouseEvent<HTMLLIElement, MouseEvent>
+    _event: React.MouseEvent<HTMLLIElement, MouseEvent>,
   ) => {
     setAnchorEl(null);
     onNavigate(route);
@@ -231,6 +231,14 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
               }}
             >
               Users
+            </MenuItem>
+            <MenuItem
+              onClick={(event) => {
+                setManageAnchor(null);
+                handleClick(routes.apiKeys, event);
+              }}
+            >
+              API Keys
             </MenuItem>
           </Menu>
           <AuthorizedComponent requiredRole={RoleNames.Admin}>

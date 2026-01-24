@@ -10,6 +10,7 @@ namespace EnvironmentMonitor.Domain.Enums
     {
         Device = 0,
         Sensor = 1,
-        Location = 2
+        Location = 2,
+        DeviceWriter = 3
     }
 }

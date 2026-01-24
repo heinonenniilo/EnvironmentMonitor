@@ -34,6 +34,7 @@ import type { CopyQueuedCommand } from "../models/copyQueuedCommand";
 import type { UserInfoDto } from "../models/userInfoDto";
 import type { ManageUserRolesRequest } from "../models/manageUserRolesRequest";
 import type { ManageUserClaimsRequest } from "../models/manageUserClaimsRequest";
+import type { ApiKeyDto, UpdateApiKeyRequest } from "../models/apiKey";
 
 interface ApiHook {
   userHook: userHook;
@@ -43,6 +44,7 @@ interface ApiHook {
   deviceContactsHook: deviceContactsHook;
   deviceEmailsHook: deviceEmailsHook;
   userManagementHook: userManagementHook;
+  apiKeysHook: apiKeysHook;
 }
 
 interface userHook {
@@ -51,19 +53,19 @@ interface userHook {
   logIn: (
     userId: string,
     password: string,
-    persistent: boolean
+    persistent: boolean,
   ) => Promise<boolean>;
   logOut: () => Promise<boolean>;
   register: (email: string, password: string) => Promise<string | undefined>;
   resetPassword: (
     email: string,
     token: string,
-    newPassword: string
+    newPassword: string,
   ) => Promise<string | undefined>;
   forgotPassword: (email: string) => Promise<string | undefined>;
   changePassword: (
     currentPassword: string,
-    newPassword: string
+    newPassword: string,
   ) => Promise<string | undefined>;
   deleteOwnUser: () => Promise<string | undefined>;
 }
@@ -76,7 +78,7 @@ interface measureHook {
   getDevices: () => Promise<Device[] | undefined>;
   getSensors: (deviceId: string[]) => Promise<Sensor[]>;
   getMeasurements: (
-    model: GetMeasurementsModel
+    model: GetMeasurementsModel,
   ) => Promise<MeasurementsModel | undefined>;
   getMeasurementsBySensor: (
     sensorIds: string[],
@@ -84,7 +86,7 @@ interface measureHook {
     to?: moment.Moment,
     latestOnly?: boolean,
     deviceIds?: string[],
-    measurementTypes?: number[]
+    measurementTypes?: number[],
   ) => Promise<MeasurementsViewModel | undefined>;
   getMeasurementsByLocation: (
     locationIds: string[],
@@ -92,14 +94,27 @@ interface measureHook {
     to?: moment.Moment,
     latestOnly?: boolean,
     sensorIds?: string[],
-    measurementTypes?: number[]
+    measurementTypes?: number[],
   ) => Promise<MeasurementsByLocationModel | undefined>;
 
   getPublicMeasurements: (
     from: moment.Moment,
     to?: moment.Moment,
-    latestOnly?: boolean
+    latestOnly?: boolean,
   ) => Promise<MeasurementsViewModel | undefined>;
+}
+
+interface CreateApiKeyRequest {
+  deviceIds: string[];
+  locationIds: string[];
+  description?: string;
+}
+
+interface CreateApiKeyResponse {
+  apiKey: string;
+  id: string;
+  description?: string;
+  created: string;
 }
 
 interface deviceHook {
@@ -109,12 +124,12 @@ interface deviceHook {
   setMotionControlState: (
     identifier: string,
     state: number,
-    executeAt?: moment.Moment
+    executeAt?: moment.Moment,
   ) => Promise<DeviceAttribute[]>;
   setMotionControlDelay: (
     identifier: string,
     delayMs: number,
-    executeAt?: moment.Moment
+    executeAt?: moment.Moment,
   ) => Promise<DeviceAttribute[]>;
   getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
   uploadAttachment: (
@@ -122,39 +137,39 @@ interface deviceHook {
     file: File,
     isDeviceImage: boolean,
     fileName?: string,
-    isSecret?: boolean
+    isSecret?: boolean,
   ) => Promise<DeviceInfo | undefined>;
   deleteAttachment: (
     deviceIdentifier: string,
-    attachmentIdentifier: string
+    attachmentIdentifier: string,
   ) => Promise<DeviceInfo | undefined>;
   setDefaultImage: (
     deviceIdentifier: string,
-    attachmentIdentifier: string
+    attachmentIdentifier: string,
   ) => Promise<DeviceInfo | undefined>;
   getDeviceStatus: (
     deviceIdentifiers: string[],
     from: moment.Moment,
-    to?: moment.Moment
+    to?: moment.Moment,
   ) => Promise<DeviceStatusModel>;
   updateDevice: (device: Device) => Promise<DeviceInfo>;
   getDeviceMessage: (
-    model: GetDeviceMessagesModel
+    model: GetDeviceMessagesModel,
   ) => Promise<PaginatedResult<DeviceMessage>>;
   getQueuedCommands: (
-    model: GetQueuedCommandsModel
+    model: GetQueuedCommandsModel,
   ) => Promise<DeviceQueuedCommandDto[]>;
   deleteQueuedCommand: (
     deviceIdentifier: string,
-    messageId: string
+    messageId: string,
   ) => Promise<boolean>;
   updateQueuedCommand: (
     deviceIdentifier: string,
     messageId: string,
-    newScheduledTime: moment.Moment
+    newScheduledTime: moment.Moment,
   ) => Promise<boolean>;
   copyExecutedQueuedCommand: (
-    model: CopyQueuedCommand
+    model: CopyQueuedCommand,
   ) => Promise<DeviceQueuedCommandDto>;
 }
 
@@ -167,7 +182,7 @@ interface deviceContactsHook {
 interface deviceEmailsHook {
   getAllEmailTemplates: () => Promise<DeviceEmailTemplateDto[]>;
   updateEmailTemplate: (
-    model: UpdateDeviceEmailTemplateDto
+    model: UpdateDeviceEmailTemplateDto,
   ) => Promise<DeviceEmailTemplateDto>;
 }
 
@@ -177,6 +192,17 @@ interface userManagementHook {
   deleteUser: (userId: string) => Promise<boolean>;
   manageUserRoles: (request: ManageUserRolesRequest) => Promise<boolean>;
   manageUserClaims: (request: ManageUserClaimsRequest) => Promise<boolean>;
+}
+
+interface apiKeysHook {
+  getAllApiKeys: () => Promise<ApiKeyDto[]>;
+  getApiKey: (id: string) => Promise<ApiKeyDto | undefined>;
+  createApiKey: (request: CreateApiKeyRequest) => Promise<CreateApiKeyResponse>;
+  deleteApiKey: (id: string) => Promise<boolean>;
+  updateApiKey: (
+    id: string,
+    request: UpdateApiKeyRequest,
+  ) => Promise<ApiKeyDto>;
 }
 
 const apiClient = axios.create({
@@ -196,7 +222,7 @@ export const useApiHook = (): ApiHook => {
         title: title ?? "Error occured",
         body: body ?? "",
         severity: "error",
-      })
+      }),
     );
   };
   return {
@@ -237,7 +263,7 @@ export const useApiHook = (): ApiHook => {
               userName: userId,
               password: password,
               persistent: persistent,
-            }
+            },
           );
           return response.data;
         } catch (ex: any) {
@@ -249,7 +275,7 @@ export const useApiHook = (): ApiHook => {
       logOut: async () => {
         try {
           await apiClient.post<any, AxiosResponse<User>>(
-            "/api/authentication/logout"
+            "/api/authentication/logout",
           );
           return true;
         } catch (ex: any) {
@@ -350,7 +376,7 @@ export const useApiHook = (): ApiHook => {
       getDevices: async () => {
         try {
           const res = await apiClient.get<any, AxiosResponse<Device[]>>(
-            "/api/devices"
+            "/api/devices",
           );
           return res.data;
         } catch (ex: any) {
@@ -367,7 +393,7 @@ export const useApiHook = (): ApiHook => {
               params: {
                 deviceIds: deviceIds,
               },
-            }
+            },
           );
           return res.data;
         } catch (ex: any) {
@@ -401,7 +427,7 @@ export const useApiHook = (): ApiHook => {
         to?: moment.Moment,
         latestOnly?: boolean,
         deviceIds?: string[],
-        measurementTypes?: number[]
+        measurementTypes?: number[],
       ) => {
         try {
           const res = await apiClient.get<
@@ -430,7 +456,7 @@ export const useApiHook = (): ApiHook => {
         to?: moment.Moment,
         latestOnly?: boolean,
         sensorIds?: string[],
-        measurementTypes?: number[]
+        measurementTypes?: number[],
       ) => {
         try {
           const res = await apiClient.get<
@@ -456,7 +482,7 @@ export const useApiHook = (): ApiHook => {
       getPublicMeasurements: async (
         from: moment.Moment,
         to?: moment.Moment,
-        latestOnly?: boolean
+        latestOnly?: boolean,
       ) => {
         try {
           const res = await apiClient.get<
@@ -512,7 +538,7 @@ export const useApiHook = (): ApiHook => {
       getDeviceInfos: async () => {
         try {
           const res = await apiClient.get<any, AxiosResponse<DeviceInfo[]>>(
-            "/api/devices/info"
+            "/api/devices/info",
           );
           return res.data;
         } catch (ex: any) {
@@ -523,14 +549,14 @@ export const useApiHook = (): ApiHook => {
       },
       getDeviceInfo: async (identifier: string) => {
         const res = await apiClient.get<any, AxiosResponse<DeviceInfo>>(
-          `/api/devices/${identifier}/info`
+          `/api/devices/${identifier}/info`,
         );
         return res.data;
       },
       setMotionControlState: async (
         identifier: string,
         state: number,
-        executeAt?: moment.Moment
+        executeAt?: moment.Moment,
       ) => {
         try {
           const res = await apiClient.post<
@@ -553,7 +579,7 @@ export const useApiHook = (): ApiHook => {
       setMotionControlDelay: async (
         identifier: string,
         delayMs: number,
-        executeAt?: moment.Moment
+        executeAt?: moment.Moment,
       ) => {
         try {
           const res = await apiClient.post<
@@ -576,7 +602,7 @@ export const useApiHook = (): ApiHook => {
       getDeviceEvents: async (identifier: string) => {
         try {
           const res = await apiClient.get<any, AxiosResponse<DeviceEvent[]>>(
-            `/api/devices/${identifier}/events`
+            `/api/devices/${identifier}/events`,
           );
           return res.data;
         } catch (ex) {
@@ -590,7 +616,7 @@ export const useApiHook = (): ApiHook => {
         file: File,
         isDeviceImage: boolean,
         fileName?: string,
-        isSecret?: boolean
+        isSecret?: boolean,
       ) => {
         const formData = new FormData();
         formData.append("file", file);
@@ -603,7 +629,7 @@ export const useApiHook = (): ApiHook => {
         try {
           const res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
             `/api/devices/attachment/`,
-            formData
+            formData,
           );
           return res.data;
         } catch (ex) {
@@ -613,11 +639,11 @@ export const useApiHook = (): ApiHook => {
       },
       deleteAttachment: async (
         deviceIdentifier: string,
-        attachmentIdentifier: string
+        attachmentIdentifier: string,
       ) => {
         try {
           const res = await apiClient.delete<any, AxiosResponse<DeviceInfo>>(
-            `/api/devices/${deviceIdentifier}/attachment/${attachmentIdentifier}`
+            `/api/devices/${deviceIdentifier}/attachment/${attachmentIdentifier}`,
           );
           return res.data;
         } catch (ex) {
@@ -627,7 +653,7 @@ export const useApiHook = (): ApiHook => {
       },
       setDefaultImage: async (
         deviceIdentifier: string,
-        attachmentIdentifier: string
+        attachmentIdentifier: string,
       ) => {
         try {
           const res = await apiClient.post<any, AxiosResponse<DeviceInfo>>(
@@ -635,7 +661,7 @@ export const useApiHook = (): ApiHook => {
             {
               attachmentGuid: attachmentIdentifier,
               deviceIdentifier: deviceIdentifier,
-            }
+            },
           );
           return res.data;
         } catch (ex) {
@@ -646,7 +672,7 @@ export const useApiHook = (): ApiHook => {
       getDeviceStatus: async (
         deviceIdentifiers: string[],
         from: moment.Moment,
-        to?: moment.Moment
+        to?: moment.Moment,
       ) => {
         try {
           const res = await apiClient.get<
@@ -701,11 +727,11 @@ export const useApiHook = (): ApiHook => {
       },
       deleteQueuedCommand: async (
         deviceIdentifier: string,
-        messageId: string
+        messageId: string,
       ) => {
         try {
           const res = await apiClient.delete<any, AxiosResponse<boolean>>(
-            `/api/devices/${deviceIdentifier}/queued-commands/${messageId}`
+            `/api/devices/${deviceIdentifier}/queued-commands/${messageId}`,
           );
           return res.status === 200;
         } catch (ex) {
@@ -717,7 +743,7 @@ export const useApiHook = (): ApiHook => {
       updateQueuedCommand: async (
         deviceIdentifier: string,
         messageId: string,
-        newScheduledTime: moment.Moment
+        newScheduledTime: moment.Moment,
       ) => {
         try {
           const res = await apiClient.put<any, AxiosResponse<boolean>>(
@@ -726,7 +752,7 @@ export const useApiHook = (): ApiHook => {
               deviceIdentifier: deviceIdentifier,
               messageId: messageId,
               newScheduledTime: newScheduledTime.format("YYYY-MM-DDTHH:mm:ss"),
-            }
+            },
           );
           return res.status === 200;
         } catch (ex) {
@@ -760,7 +786,7 @@ export const useApiHook = (): ApiHook => {
       getLocations: async () => {
         try {
           const res = await apiClient.get<any, AxiosResponse<LocationModel[]>>(
-            `/api/locations/`
+            `/api/locations/`,
           );
           return res.data;
         } catch (ex) {
@@ -775,7 +801,7 @@ export const useApiHook = (): ApiHook => {
         try {
           const res = await apiClient.post<any, AxiosResponse<DeviceContact>>(
             `/api/devicecontacts`,
-            model
+            model,
           );
           return res.data;
         } catch (ex) {
@@ -788,7 +814,7 @@ export const useApiHook = (): ApiHook => {
         try {
           const res = await apiClient.put<any, AxiosResponse<DeviceContact>>(
             `/api/devicecontacts`,
-            model
+            model,
           );
           return res.data;
         } catch (ex) {
@@ -839,7 +865,7 @@ export const useApiHook = (): ApiHook => {
       getAllUsers: async () => {
         try {
           const res = await apiClient.get<any, AxiosResponse<UserInfoDto[]>>(
-            `/api/usermanagement`
+            `/api/usermanagement`,
           );
           return res.data;
         } catch (ex) {
@@ -851,7 +877,7 @@ export const useApiHook = (): ApiHook => {
       getUser: async (userId: string) => {
         try {
           const res = await apiClient.get<any, AxiosResponse<UserInfoDto>>(
-            `/api/usermanagement/${userId}`
+            `/api/usermanagement/${userId}`,
           );
           return res.data;
         } catch (ex: any) {
@@ -892,6 +918,74 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           showError("Failed to manage user claims");
           return false;
+        }
+      },
+    },
+    apiKeysHook: {
+      getAllApiKeys: async () => {
+        try {
+          const res = await apiClient.get<any, AxiosResponse<ApiKeyDto[]>>(
+            `/api/ApiKeys`,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to get API keys");
+          throw ex;
+        }
+      },
+      getApiKey: async (id: string) => {
+        try {
+          const res = await apiClient.get<any, AxiosResponse<ApiKeyDto>>(
+            `/api/ApiKeys/${id}`,
+          );
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          if (ex?.response?.status === 404) {
+            showError("API key not found");
+          } else {
+            showError("Failed to get API key");
+          }
+          return undefined;
+        }
+      },
+      createApiKey: async (
+        request: CreateApiKeyRequest,
+      ): Promise<CreateApiKeyResponse> => {
+        try {
+          const res = await apiClient.post<
+            any,
+            AxiosResponse<CreateApiKeyResponse>
+          >(`/api/ApiKeys`, request);
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to create API key");
+          throw ex;
+        }
+      },
+      deleteApiKey: async (id: string) => {
+        try {
+          await apiClient.delete(`/api/ApiKeys/${id}`);
+          return true;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to delete API key");
+          return false;
+        }
+      },
+      updateApiKey: async (id: string, request: UpdateApiKeyRequest) => {
+        try {
+          const res = await apiClient.patch<any, AxiosResponse<ApiKeyDto>>(
+            `/api/ApiKeys/${id}`,
+            request,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to update API key");
+          throw ex;
         }
       },
     },

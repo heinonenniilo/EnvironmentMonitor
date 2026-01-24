@@ -54,6 +54,20 @@ namespace EnvironmentMonitor.Application.Services
             {
                 return true;
             }
+
+            if (entity == EntityRoles.Device)
+            {
+                if (HasGlobalRole(GlobalRoles.MeasurementWriter))
+                {
+                    return true;
+                }
+                var hasDeviceWriterRole = _currentUser.Claims.Any(x => x.Type == EntityRoles.DeviceWriter.ToString() && Guid.TryParse(x.Value, out var res) && res == id);
+                if (hasDeviceWriterRole)
+                {
+                    return true;
+                }
+            }
+
             var hasRole = HasGlobalRole(GlobalRoles.Viewer) || _currentUser.Claims.Any(x => x.Type == entity.ToString() && Guid.TryParse(x.Value, out var res) && res == id);
             switch (accessLevel)
             {
