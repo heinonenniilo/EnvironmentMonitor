@@ -78,7 +78,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
 
                 objectToInsert.EnqueuedUtc = message.EnqueuedTime.UtcDateTime;
                 objectToInsert.SequenceNumber = message.SequenceNumber;
-
+                objectToInsert.Source = MeasurementSourceTypes.IotHub;
                 try
                 {
                     await _measurementService.AddMeasurements(objectToInsert);

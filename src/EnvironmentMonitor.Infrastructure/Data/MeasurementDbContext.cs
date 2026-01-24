@@ -44,6 +44,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<DeviceQueuedCommandType> DeviceQueuedCommandTypes { get; set; }
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
         public DbSet<DeviceContact> DeviceContacts { get; set; }
+        public DbSet<MeasurementSource> MeasurementSources { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

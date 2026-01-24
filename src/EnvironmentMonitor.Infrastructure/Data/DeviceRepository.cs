@@ -391,6 +391,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 IsDuplicate = x.IsDuplicate,
                 Created = x.Created,
                 CreatedUtc = x.CreatedUtc,
+                SourceId = x.SourceId
             });
 
             var res = await _paginationService.PaginateAsync(extendedQuery, new PaginationParams()

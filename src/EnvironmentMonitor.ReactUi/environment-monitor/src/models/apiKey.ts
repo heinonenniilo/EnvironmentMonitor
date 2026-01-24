@@ -2,6 +2,7 @@ export interface ApiKeyDto {
   id: string;
   description?: string;
   created: string;
+  updated?: string;
   enabled: boolean;
   claims: ApiKeyClaimDto[];
 }

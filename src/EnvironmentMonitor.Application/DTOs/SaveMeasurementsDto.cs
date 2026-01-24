@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EnvironmentMonitor.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,5 +22,6 @@ namespace EnvironmentMonitor.Application.DTOs
         public string? Identifier { get; set; }
         public long? LoopCount { get; set; }
         public int? MessageCount { get; set; }
+        public MeasurementSourceTypes? Source { get; set; }
     }
 }
