@@ -94,7 +94,7 @@ namespace EnvironmentMonitor.WebApi.Authentication
             // Step 3: Look up the secret in the database by ID (required field)
             var secret = await _apiKeyService.GetApiKey(providedSecretId);
 
-            if (secret == null)
+            if (secret == null || !secret.Enabled)
             {
                 Logger.LogWarning($"Secret with ID '{providedSecretId}' not found");
                 return AuthenticateResult.Fail("Invalid secret ID");
