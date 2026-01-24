@@ -15,6 +15,7 @@ import {
   TableRow,
   Paper,
   Divider,
+  Chip,
 } from "@mui/material";
 import type { ApiKeyDto } from "../../models/apiKey";
 import type { LocationModel } from "../../models/location";
@@ -82,6 +83,17 @@ export const ApiKeyDetailsDialog: React.FC<ApiKeyDetailsDialogProps> = ({
             <Typography variant="body1">
               {moment(apiKey.created).format("YYYY-MM-DD HH:mm:ss")}
             </Typography>
+          </Box>
+
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+              Status
+            </Typography>
+            <Chip
+              label={apiKey.enabled ? "Enabled" : "Disabled"}
+              color={apiKey.enabled ? "success" : "default"}
+              size="small"
+            />
           </Box>
 
           <Divider sx={{ my: 3 }} />

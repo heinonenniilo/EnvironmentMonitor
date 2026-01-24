@@ -34,7 +34,7 @@ import type { CopyQueuedCommand } from "../models/copyQueuedCommand";
 import type { UserInfoDto } from "../models/userInfoDto";
 import type { ManageUserRolesRequest } from "../models/manageUserRolesRequest";
 import type { ManageUserClaimsRequest } from "../models/manageUserClaimsRequest";
-import type { ApiKeyDto } from "../models/apiKey";
+import type { ApiKeyDto, UpdateApiKeyRequest } from "../models/apiKey";
 
 interface ApiHook {
   userHook: userHook;
@@ -199,6 +199,10 @@ interface apiKeysHook {
   getApiKey: (id: string) => Promise<ApiKeyDto | undefined>;
   createApiKey: (request: CreateApiKeyRequest) => Promise<CreateApiKeyResponse>;
   deleteApiKey: (id: string) => Promise<boolean>;
+  updateApiKey: (
+    id: string,
+    request: UpdateApiKeyRequest,
+  ) => Promise<ApiKeyDto>;
 }
 
 const apiClient = axios.create({
@@ -969,6 +973,19 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           showError("Failed to delete API key");
           return false;
+        }
+      },
+      updateApiKey: async (id: string, request: UpdateApiKeyRequest) => {
+        try {
+          const res = await apiClient.patch<any, AxiosResponse<ApiKeyDto>>(
+            `/api/ApiKeys/${id}`,
+            request,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to update API key");
+          throw ex;
         }
       },
     },

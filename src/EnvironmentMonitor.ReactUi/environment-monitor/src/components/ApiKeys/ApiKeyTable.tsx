@@ -3,9 +3,8 @@ import {
   DataGrid,
   type GridColDef,
   type GridRenderCellParams,
-  type GridRowParams,
 } from "@mui/x-data-grid";
-import { IconButton, Chip, Box, Tooltip } from "@mui/material";
+import { IconButton, Box, Tooltip, Switch } from "@mui/material";
 import { Delete, Info } from "@mui/icons-material";
 import type { ApiKeyDto } from "../../models/apiKey";
 import moment from "moment";
@@ -14,6 +13,7 @@ interface ApiKeyTableProps {
   apiKeys: ApiKeyDto[];
   onViewDetails: (apiKey: ApiKeyDto) => void;
   onDelete: (apiKey: ApiKeyDto) => void;
+  onToggleEnabled: (apiKey: ApiKeyDto) => void;
   isLoading?: boolean;
 }
 
@@ -21,20 +21,9 @@ export const ApiKeyTable: React.FC<ApiKeyTableProps> = ({
   apiKeys,
   onViewDetails,
   onDelete,
+  onToggleEnabled,
   isLoading,
 }) => {
-  const getDeviceIds = (apiKey: ApiKeyDto): string[] => {
-    return apiKey.claims
-      .filter((claim) => claim.type === "DeviceId")
-      .map((claim) => claim.value);
-  };
-
-  const getLocationIds = (apiKey: ApiKeyDto): string[] => {
-    return apiKey.claims
-      .filter((claim) => claim.type === "LocationId")
-      .map((claim) => claim.value);
-  };
-
   const columns: GridColDef[] = [
     {
       field: "id",
@@ -58,32 +47,21 @@ export const ApiKeyTable: React.FC<ApiKeyTableProps> = ({
       },
     },
     {
-      field: "devices",
-      headerName: "Devices",
-      flex: 0.6,
+      field: "enabled",
+      headerName: "Enabled",
+      flex: 0.4,
       minWidth: 100,
-      renderCell: (params: GridRenderCellParams<ApiKeyDto>) => {
-        const deviceIds = getDeviceIds(params.row);
-        return deviceIds.length > 0 ? (
-          <Chip label={deviceIds.length} size="small" color="primary" />
-        ) : (
-          <span>-</span>
-        );
-      },
-    },
-    {
-      field: "locations",
-      headerName: "Locations",
-      flex: 0.6,
-      minWidth: 100,
-      renderCell: (params: GridRenderCellParams<ApiKeyDto>) => {
-        const locationIds = getLocationIds(params.row);
-        return locationIds.length > 0 ? (
-          <Chip label={locationIds.length} size="small" color="secondary" />
-        ) : (
-          <span>-</span>
-        );
-      },
+      renderCell: (params: GridRenderCellParams<ApiKeyDto>) => (
+        <Switch
+          checked={params.row.enabled}
+          onChange={(e) => {
+            e.stopPropagation();
+            onToggleEnabled(params.row);
+          }}
+          color="primary"
+          size="small"
+        />
+      ),
     },
     {
       field: "actions",
@@ -92,7 +70,9 @@ export const ApiKeyTable: React.FC<ApiKeyTableProps> = ({
       minWidth: 120,
       sortable: false,
       renderCell: (params: GridRenderCellParams<ApiKeyDto>) => (
-        <Box sx={{ display: "flex", gap: 1 }}>
+        <Box
+          sx={{ display: "flex", gap: 1, alignItems: "center", height: "100%" }}
+        >
           <Tooltip title="View Details">
             <IconButton
               size="small"
@@ -134,14 +114,6 @@ export const ApiKeyTable: React.FC<ApiKeyTableProps> = ({
           },
           sorting: {
             sortModel: [{ field: "created", sort: "desc" }],
-          },
-        }}
-        onRowClick={(params: GridRowParams<ApiKeyDto>) => {
-          onViewDetails(params.row);
-        }}
-        sx={{
-          "& .MuiDataGrid-row": {
-            cursor: "pointer",
           },
         }}
       />

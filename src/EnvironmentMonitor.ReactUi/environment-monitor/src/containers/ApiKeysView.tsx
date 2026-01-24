@@ -114,6 +114,35 @@ export const ApiKeysView: React.FC = () => {
       });
   };
 
+  const handleToggleEnabled = (apiKey: ApiKeyDto) => {
+    setIsLoading(true);
+    apiKeysHook
+      .updateApiKey(apiKey.id, { enabled: !apiKey.enabled })
+      .then(() => {
+        dispatch(
+          addNotification({
+            title: `API key ${!apiKey.enabled ? "enabled" : "disabled"} successfully`,
+            body: "",
+            severity: "success",
+          }),
+        );
+        loadApiKeys();
+      })
+      .catch((error) => {
+        console.error("Failed to update API key status:", error);
+        dispatch(
+          addNotification({
+            title: "Failed to update API key status",
+            body: "An error occurred while updating the API key status",
+            severity: "error",
+          }),
+        );
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   const handleCreateApiKey = (
     description: string,
     deviceIds: string[],
@@ -181,6 +210,7 @@ export const ApiKeysView: React.FC = () => {
           apiKeys={apiKeys}
           onViewDetails={handleViewDetails}
           onDelete={handleDelete}
+          onToggleEnabled={handleToggleEnabled}
           isLoading={isLoading}
         />
       </Box>
