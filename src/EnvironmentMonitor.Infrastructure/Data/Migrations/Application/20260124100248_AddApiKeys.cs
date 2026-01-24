@@ -16,7 +16,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations.Application
                 schema: "application",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
                     Hash = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     Enabled = table.Column<bool>(type: "bit", nullable: false),
@@ -39,7 +39,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations.Application
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Value = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
                     Type = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    ApiSecretId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false)
+                    ApiSecretId = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false)
                 },
                 constraints: table =>
                 {

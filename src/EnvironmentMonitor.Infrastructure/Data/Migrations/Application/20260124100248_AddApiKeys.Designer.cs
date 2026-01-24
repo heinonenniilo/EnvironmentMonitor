@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations.Application
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260123231146_AddApiKeys")]
+    [Migration("20260124100248_AddApiKeys")]
     partial class AddApiKeys
     {
         /// <inheritdoc />
@@ -29,8 +29,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations.Application
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.ApiSecret", b =>
                 {
                     b.Property<string>("Id")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
@@ -73,8 +73,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations.Application
 
                     b.Property<string>("ApiSecretId")
                         .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<string>("Type")
                         .IsRequired()
