@@ -85,6 +85,21 @@ export const ApiKeyDetailsDialog: React.FC<ApiKeyDetailsDialogProps> = ({
             </Typography>
           </Box>
 
+          {apiKey.updated && (
+            <Box sx={{ mb: 3 }}>
+              <Typography
+                variant="subtitle2"
+                color="text.secondary"
+                gutterBottom
+              >
+                Updated
+              </Typography>
+              <Typography variant="body1">
+                {moment(apiKey.updated).format("YYYY-MM-DD HH:mm:ss")}
+              </Typography>
+            </Box>
+          )}
+
           <Box sx={{ mb: 3 }}>
             <Typography variant="subtitle2" color="text.secondary" gutterBottom>
               Status
