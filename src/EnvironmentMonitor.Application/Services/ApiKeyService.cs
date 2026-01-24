@@ -108,6 +108,25 @@ namespace EnvironmentMonitor.Application.Services
             await _apiKeyRepository.DeleteApiKey(id);
         }
 
+        public async Task<ApiSecret?> VerifyApiKey(string secretId, string providedApiKey)
+        {
+            var secret = await _apiKeyRepository.GetApiKey(secretId);
+
+            if (secret == null || !secret.Enabled)
+            {
+                return null;
+            }
+
+            var isValid = _apiKeyHashService.VerifyApiKeyHash(providedApiKey, secret.Hash);
+            
+            if (!isValid)
+            {
+                return null;
+            }
+
+            return secret;
+        }
+
         private void EnsureAdmin()
         {
             if (!_userService.IsAdmin)

@@ -1,4 +1,5 @@
 using EnvironmentMonitor.Application.DTOs;
+using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Models;
 using System;
 using System.Collections.Generic;
@@ -12,5 +13,6 @@ namespace EnvironmentMonitor.Application.Interfaces
         Task<List<ApiKeyDto>> GetAllApiKeys();
         Task<ApiKeyDto?> GetApiKey(string id);
         Task DeleteApiKey(string id);
+        Task<ApiSecret?> VerifyApiKey(string secretId, string providedApiKey);
     }
 }

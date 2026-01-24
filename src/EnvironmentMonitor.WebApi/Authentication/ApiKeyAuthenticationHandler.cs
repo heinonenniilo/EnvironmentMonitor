@@ -4,12 +4,11 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models;
-using EnvironmentMonitor.Domain.Interfaces;
-using EnvironmentMonitor.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Threading.Tasks;
+using EnvironmentMonitor.Application.Interfaces;
+using System.Collections.Generic;
 
 namespace EnvironmentMonitor.WebApi.Authentication
 {
@@ -24,21 +23,18 @@ namespace EnvironmentMonitor.WebApi.Authentication
 
     public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
     {
-        private readonly IApiKeyRepository _apiKeyRepository;
-        private readonly IApiKeyHashService _apiKeyHashService;
+        private readonly IApiKeyService _apiKeyService;
         private readonly ApiKeySettings _apiKeySettings;
 
         public ApiKeyAuthenticationHandler(
             IOptionsMonitor<ApiKeyAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            IApiKeyRepository apiKeyRepository,
-            IApiKeyHashService apiKeyHashService,
+            IApiKeyService apiKeyService,
             ApiKeySettings apiKeySettings)
             : base(options, logger, encoder)
         {
-            _apiKeyRepository = apiKeyRepository;
-            _apiKeyHashService = apiKeyHashService;
+            _apiKeyService = apiKeyService;
             _apiKeySettings = apiKeySettings;
         }
 
@@ -61,17 +57,14 @@ namespace EnvironmentMonitor.WebApi.Authentication
                 Logger.LogWarning("No API keys configured in appsettings");
                 return AuthenticateResult.Fail("API key authentication not configured");
             }
-
             // Check if the provided API key matches any of the configured keys
             var matchingApiKey = _apiKeySettings.ApiKeys.FirstOrDefault(k =>
                 string.Equals(k, providedApiKey, System.StringComparison.Ordinal));
-
             if (matchingApiKey == null)
             {
                 Logger.LogWarning("Invalid API key provided");
                 return AuthenticateResult.Fail("Invalid API Key");
             }
-
             // Step 2: Validate secret ID and secret value
             if (!Request.Headers.TryGetValue(Options.SecretIdHeaderName, out var secretIdHeaderValues))
             {
@@ -93,35 +86,21 @@ namespace EnvironmentMonitor.WebApi.Authentication
                 Logger.LogWarning("Secret ID or secret value is empty");
                 return AuthenticateResult.Fail("Invalid secret credentials");
             }
-
-            // Step 3: Look up the secret in the database by ID (required field)
-            var secret = await _apiKeyRepository.GetApiKey(providedSecretId);
-
-            if (secret == null || !secret.Enabled)
-            {
-                Logger.LogWarning($"Secret with ID '{providedSecretId}' not found");
-                return AuthenticateResult.Fail("Invalid secret ID");
-            }
-
-            // Step 4: Verify the secret value matches the hash
-            var isValid = _apiKeyHashService.VerifyApiKeyHash(providedSecretValue, secret.Hash);
-            
-            if (!isValid)
+            // Step 3: Verify the secret and get it with claims if valid
+            var secret = await _apiKeyService.VerifyApiKey(providedSecretId, providedSecretValue);           
+            if (secret == null)
             {
                 Logger.LogWarning($"Secret value verification failed for secret ID '{providedSecretId}'");
                 return AuthenticateResult.Fail("Invalid secret value");
             }
-
-            // Step 5: Build claims from the validated secret
+            // Step 4: Build claims from the validated secret
             var claims = new List<Claim>
             {
                 new(ClaimTypes.NameIdentifier, $"api-secret-{secret.Id}"),
                 new(ClaimTypes.Name, $"API Secret User ({secret.Description ?? secret.Id})"),
                 new(ClaimTypes.Email, "api-secret"),
-                new(ClaimTypes.Role, GlobalRoles.User.ToString()),
                 new(ClaimTypes.Role, GlobalRoles.ApiKeyUser.ToString())
             };
-
             // Add claims from the secret
             foreach (var secretClaim in secret.Claims)
             {
@@ -134,7 +113,6 @@ namespace EnvironmentMonitor.WebApi.Authentication
                     claims.Add(new Claim(EntityRoles.Location.ToString(), secretClaim.Value));
                 }
             }
-
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
