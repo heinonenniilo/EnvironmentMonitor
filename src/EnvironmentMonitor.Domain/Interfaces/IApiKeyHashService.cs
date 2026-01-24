@@ -1,3 +1,5 @@
+using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Models;
 using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Interfaces
@@ -7,5 +9,6 @@ namespace EnvironmentMonitor.Domain.Interfaces
         string GenerateApiKey();
         byte[] HashApiKey(string apiKey);
         bool VerifyApiKeyHash(string apiKey, byte[] storedHash);
+        CreateApiSecretResult CreateApiSecret(string? description = null);
     }
 }

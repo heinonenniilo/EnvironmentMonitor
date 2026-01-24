@@ -17,20 +17,17 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IApiKeyRepository _apiKeyRepository;
         private readonly IApiKeyHashService _apiKeyHashService;
         private readonly IUserService _userService;
-        private readonly IDateService _dateService;
         private readonly IMapper _mapper;
 
         public ApiKeyService(
             IApiKeyRepository apiKeyRepository,
             IApiKeyHashService apiKeyHashService,
             IUserService userService,
-            IDateService dateService,
             IMapper mapper)
         {
             _apiKeyRepository = apiKeyRepository;
             _apiKeyHashService = apiKeyHashService;
             _userService = userService;
-            _dateService = dateService;
             _mapper = mapper;
         }
 
@@ -38,19 +35,7 @@ namespace EnvironmentMonitor.Application.Services
         {
             EnsureAdmin();
 
-            var plainApiKey = _apiKeyHashService.GenerateApiKey();
-            var hash = _apiKeyHashService.HashApiKey(plainApiKey);
-            var now = _dateService.CurrentTime();
-            var utcNow = _dateService.LocalToUtc(now);
-
-            var apiSecret = new ApiSecret
-            {
-                Id = Guid.NewGuid().ToString(),
-                Hash = hash,
-                Created = now,
-                CreatedUtc = utcNow,
-                Description = request.Description
-            };
+            var result = _apiKeyHashService.CreateApiSecret(request.Description);
 
             var claims = new List<SecretClaim>();
 
@@ -62,7 +47,7 @@ namespace EnvironmentMonitor.Application.Services
                     {
                         Type = EntityRoles.Device.ToString(),
                         Value = deviceId.ToString(),
-                        ApiSecretId = apiSecret.Id
+                        ApiSecretId = result.ApiSecret.Id
                     });
                 }
             }
@@ -75,18 +60,18 @@ namespace EnvironmentMonitor.Application.Services
                     {
                         Type = EntityRoles.Location.ToString(),
                         Value = locationId.ToString(),
-                        ApiSecretId = apiSecret.Id
+                        ApiSecretId = result.ApiSecret.Id
                     });
                 }
             }
 
-            apiSecret.Claims = claims;
+            result.ApiSecret.Claims = claims;
             
-            var createdSecret = await _apiKeyRepository.AddApiKey(apiSecret);
+            var createdSecret = await _apiKeyRepository.AddApiKey(result.ApiSecret);
 
             return new CreateApiKeyResponse
             {
-                ApiKey = plainApiKey,
+                ApiKey = result.PlainKey,
                 Id = createdSecret.Id,
                 Description = createdSecret.Description,
                 Created = createdSecret.Created

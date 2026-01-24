@@ -12,7 +12,7 @@ namespace EnvironmentMonitor.Infrastructure.Identity.Configurations
             
             builder.Property(x => x.Id)
                 .IsRequired()
-                .HasMaxLength(450);
+                .HasMaxLength(40);
 
             builder.Property(x => x.Hash)
                 .IsRequired();

@@ -1,3 +1,4 @@
+using EnvironmentMonitor.Domain.Entities;
 using System;
 using System.Collections.Generic;
 
@@ -16,5 +17,11 @@ namespace EnvironmentMonitor.Domain.Models
         public string Id { get; set; } = string.Empty;
         public string? Description { get; set; }
         public DateTime Created { get; set; }
+    }
+
+    public class CreateApiSecretResult
+    {
+        public required ApiSecret ApiSecret { get; set; }
+        public required string PlainKey { get; set; }
     }
 }

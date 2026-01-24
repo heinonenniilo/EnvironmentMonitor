@@ -20,7 +20,7 @@ namespace EnvironmentMonitor.Infrastructure.Identity.Configurations
 
             builder.Property(x => x.ApiSecretId)
                 .IsRequired()
-                .HasMaxLength(450);
+                .HasMaxLength(40);
 
             builder.HasIndex(x => new { x.ApiSecretId, x.Type, x.Value });
         }

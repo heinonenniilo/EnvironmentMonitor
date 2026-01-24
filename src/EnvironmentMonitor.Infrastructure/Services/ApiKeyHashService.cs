@@ -1,4 +1,6 @@
+using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Security.Cryptography;
@@ -8,14 +10,16 @@ namespace EnvironmentMonitor.Infrastructure.Services
     public class ApiKeyHashService : IApiKeyHashService
     {
         private readonly ILogger<ApiKeyHashService> _logger;
+        private readonly IDateService _dateService;
 
         private const int SaltSize = 16;
         private const int HashSize = 32;
         private const int Iterations = 100000;
 
-        public ApiKeyHashService(ILogger<ApiKeyHashService> logger)
+        public ApiKeyHashService(ILogger<ApiKeyHashService> logger, IDateService dateService)
         {
             _logger = logger;
+            _dateService = dateService;
         }
 
         public string GenerateApiKey()
@@ -62,6 +66,30 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
 
             return true;
+        }
+
+        public CreateApiSecretResult CreateApiSecret(string? description = null)
+        {
+            var plainApiKey = GenerateApiKey();
+            var hash = HashApiKey(plainApiKey);
+            var now = _dateService.CurrentTime();
+            var utcNow = _dateService.LocalToUtc(now);
+
+            var apiSecret = new ApiSecret
+            {
+                Id = Ulid.NewUlid().ToString(),
+                Hash = hash,
+                Created = now,
+                CreatedUtc = utcNow,
+                Description = description,
+                Enabled = true
+            };
+
+            return new CreateApiSecretResult
+            {
+                ApiSecret = apiSecret,
+                PlainKey = plainApiKey
+            };
         }
     }
 }
