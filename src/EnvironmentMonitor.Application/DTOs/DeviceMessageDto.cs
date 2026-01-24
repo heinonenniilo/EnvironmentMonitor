@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EnvironmentMonitor.Application.Mappings;
 using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models.ReturnModel;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public long? LoopCount { get; set; }
         public long? MessageCount { get; set; }
         public bool IsDuplicate { get; set; }
+        public int? SourceId { get; set; }
 
         public void Mapping(Profile profile)
         {
