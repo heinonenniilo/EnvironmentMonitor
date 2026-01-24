@@ -14,13 +14,16 @@ namespace EnvironmentMonitor.Infrastructure.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<ApiKeyRepository> _logger;
+        private readonly IDateService _dateService;
 
         public ApiKeyRepository(
             ApplicationDbContext context,
-            ILogger<ApiKeyRepository> logger)
+            ILogger<ApiKeyRepository> logger,
+            IDateService dateService)
         {
             _context = context;
             _logger = logger;
+            _dateService = dateService;
         }
 
         public async Task<ApiSecret> AddApiKey(ApiSecret apiSecret, bool saveChanges = true)
@@ -79,6 +82,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 .Include(s => s.Claims)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
+            var changesMade = false;
+
             if (secret == null)
             {
                 throw new InvalidOperationException($"API key with ID {id} not found");
@@ -87,11 +92,20 @@ namespace EnvironmentMonitor.Infrastructure.Services
             if (enabled.HasValue)
             {
                 secret.Enabled = enabled.Value;
+                changesMade = true;
             }
 
             if (description != null)
             {
                 secret.Description = description;
+                changesMade = true;
+            }
+
+            if (changesMade)
+            {
+                var currentTime = _dateService.CurrentTime();
+                secret.Updated = currentTime;
+                secret.UpdatedUtc = _dateService.LocalToUtc(currentTime);
             }
 
             if (saveChanges)
