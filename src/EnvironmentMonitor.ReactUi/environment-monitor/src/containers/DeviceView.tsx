@@ -84,6 +84,7 @@ export const DeviceView: React.FC = () => {
   const deviceHook = useApiHook().deviceHook;
   const measurementApiHook = useApiHook().measureHook;
   const deviceContactsHook = useApiHook().deviceContactsHook;
+  const apiKeysHook = useApiHook().apiKeysHook;
 
   const loadMeasurements = () => {
     if (!selectedDevice) {
@@ -718,8 +719,12 @@ export const DeviceView: React.FC = () => {
     }
 
     setIsLoading(true);
-    deviceHook
-      .createDeviceApiKey(selectedDevice.device.identifier, description)
+    apiKeysHook
+      .createApiKey({
+        deviceIds: [selectedDevice.device.identifier],
+        locationIds: [],
+        description: description,
+      })
       .then((response) => {
         setGeneratedApiKey(response);
         dispatch(

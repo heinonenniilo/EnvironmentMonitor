@@ -34,6 +34,7 @@ import type { CopyQueuedCommand } from "../models/copyQueuedCommand";
 import type { UserInfoDto } from "../models/userInfoDto";
 import type { ManageUserRolesRequest } from "../models/manageUserRolesRequest";
 import type { ManageUserClaimsRequest } from "../models/manageUserClaimsRequest";
+import type { ApiKeyDto } from "../models/apiKey";
 
 interface ApiHook {
   userHook: userHook;
@@ -43,6 +44,7 @@ interface ApiHook {
   deviceContactsHook: deviceContactsHook;
   deviceEmailsHook: deviceEmailsHook;
   userManagementHook: userManagementHook;
+  apiKeysHook: apiKeysHook;
 }
 
 interface userHook {
@@ -169,10 +171,6 @@ interface deviceHook {
   copyExecutedQueuedCommand: (
     model: CopyQueuedCommand,
   ) => Promise<DeviceQueuedCommandDto>;
-  createDeviceApiKey: (
-    deviceId: string,
-    description: string,
-  ) => Promise<CreateApiKeyResponse>;
 }
 
 interface deviceContactsHook {
@@ -194,6 +192,13 @@ interface userManagementHook {
   deleteUser: (userId: string) => Promise<boolean>;
   manageUserRoles: (request: ManageUserRolesRequest) => Promise<boolean>;
   manageUserClaims: (request: ManageUserClaimsRequest) => Promise<boolean>;
+}
+
+interface apiKeysHook {
+  getAllApiKeys: () => Promise<ApiKeyDto[]>;
+  getApiKey: (id: string) => Promise<ApiKeyDto | undefined>;
+  createApiKey: (request: CreateApiKeyRequest) => Promise<CreateApiKeyResponse>;
+  deleteApiKey: (id: string) => Promise<boolean>;
 }
 
 const apiClient = axios.create({
@@ -772,27 +777,6 @@ export const useApiHook = (): ApiHook => {
           throw ex;
         }
       },
-      createDeviceApiKey: async (
-        deviceId: string,
-        description: string,
-      ): Promise<CreateApiKeyResponse> => {
-        try {
-          const payload: CreateApiKeyRequest = {
-            deviceIds: [deviceId],
-            locationIds: [],
-            description: description,
-          };
-          const res = await apiClient.post<
-            any,
-            AxiosResponse<CreateApiKeyResponse>
-          >(`/api/ApiKeys`, payload);
-          return res.data;
-        } catch (ex) {
-          console.error(ex);
-          showError("Failed to create API key");
-          throw ex;
-        }
-      },
     },
     locationHook: {
       getLocations: async () => {
@@ -929,6 +913,61 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError("Failed to manage user claims");
+          return false;
+        }
+      },
+    },
+    apiKeysHook: {
+      getAllApiKeys: async () => {
+        try {
+          const res = await apiClient.get<any, AxiosResponse<ApiKeyDto[]>>(
+            `/api/ApiKeys`,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to get API keys");
+          throw ex;
+        }
+      },
+      getApiKey: async (id: string) => {
+        try {
+          const res = await apiClient.get<any, AxiosResponse<ApiKeyDto>>(
+            `/api/ApiKeys/${id}`,
+          );
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          if (ex?.response?.status === 404) {
+            showError("API key not found");
+          } else {
+            showError("Failed to get API key");
+          }
+          return undefined;
+        }
+      },
+      createApiKey: async (
+        request: CreateApiKeyRequest,
+      ): Promise<CreateApiKeyResponse> => {
+        try {
+          const res = await apiClient.post<
+            any,
+            AxiosResponse<CreateApiKeyResponse>
+          >(`/api/ApiKeys`, request);
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to create API key");
+          throw ex;
+        }
+      },
+      deleteApiKey: async (id: string) => {
+        try {
+          await apiClient.delete(`/api/ApiKeys/${id}`);
+          return true;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to delete API key");
           return false;
         }
       },
