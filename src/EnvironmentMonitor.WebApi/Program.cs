@@ -53,8 +53,7 @@ builder.Services.AddSingleton(apiKeySettings);
 
 builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
 builder.Services.AddApplicationServices(builder.Configuration);
-
-// Add API Key authentication scheme (after services are registered)
+// Add API Key authentication scheme 
 builder.Services.AddAuthentication()
     .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
         ApiKeyAuthenticationOptions.DefaultScheme, 
