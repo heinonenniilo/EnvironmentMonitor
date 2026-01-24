@@ -7,10 +7,9 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IApiKeyRepository
     {
-        Task<(ApiSecret Secret, string PlainKey)> CreateApiKey(List<Guid> deviceIds, List<Guid> locationIds, string? description);
+        Task<ApiSecret> AddApiKey(ApiSecret apiSecret, bool saveChanges = true);
         Task<List<ApiSecret>> GetAllApiKeys();
         Task<ApiSecret?> GetApiKey(string id);
-        Task DeleteApiKey(string id);
-        Task<bool> VerifyApiKey(string secretId, string providedApiKey);
+        Task DeleteApiKey(string id, bool saveChanges = true);
     }
 }

@@ -24,18 +24,21 @@ namespace EnvironmentMonitor.WebApi.Authentication
 
     public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
     {
-        private readonly IApiKeyRepository _apiKeyService;
+        private readonly IApiKeyRepository _apiKeyRepository;
+        private readonly IApiKeyHashService _apiKeyHashService;
         private readonly ApiKeySettings _apiKeySettings;
 
         public ApiKeyAuthenticationHandler(
             IOptionsMonitor<ApiKeyAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            IApiKeyRepository apiKeyService,
+            IApiKeyRepository apiKeyRepository,
+            IApiKeyHashService apiKeyHashService,
             ApiKeySettings apiKeySettings)
             : base(options, logger, encoder)
         {
-            _apiKeyService = apiKeyService;
+            _apiKeyRepository = apiKeyRepository;
+            _apiKeyHashService = apiKeyHashService;
             _apiKeySettings = apiKeySettings;
         }
 
@@ -92,7 +95,7 @@ namespace EnvironmentMonitor.WebApi.Authentication
             }
 
             // Step 3: Look up the secret in the database by ID (required field)
-            var secret = await _apiKeyService.GetApiKey(providedSecretId);
+            var secret = await _apiKeyRepository.GetApiKey(providedSecretId);
 
             if (secret == null || !secret.Enabled)
             {
@@ -101,7 +104,7 @@ namespace EnvironmentMonitor.WebApi.Authentication
             }
 
             // Step 4: Verify the secret value matches the hash
-            var isValid = await _apiKeyService.VerifyApiKey(providedSecretId, providedSecretValue);
+            var isValid = _apiKeyHashService.VerifyApiKeyHash(providedSecretValue, secret.Hash);
             
             if (!isValid)
             {

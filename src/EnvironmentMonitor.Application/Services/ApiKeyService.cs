@@ -3,6 +3,7 @@ using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Entities;
 using AutoMapper;
 using System;
 using System.Collections.Generic;
@@ -13,14 +14,23 @@ namespace EnvironmentMonitor.Application.Services
 {
     public class ApiKeyService : IApiKeyService
     {
-        private readonly IApiKeyRepository _apiKeyService;
+        private readonly IApiKeyRepository _apiKeyRepository;
+        private readonly IApiKeyHashService _apiKeyHashService;
         private readonly IUserService _userService;
+        private readonly IDateService _dateService;
         private readonly IMapper _mapper;
 
-        public ApiKeyService(IApiKeyRepository apiKeyService, IUserService userService, IMapper mapper)
+        public ApiKeyService(
+            IApiKeyRepository apiKeyRepository,
+            IApiKeyHashService apiKeyHashService,
+            IUserService userService,
+            IDateService dateService,
+            IMapper mapper)
         {
-            _apiKeyService = apiKeyService;
+            _apiKeyRepository = apiKeyRepository;
+            _apiKeyHashService = apiKeyHashService;
             _userService = userService;
+            _dateService = dateService;
             _mapper = mapper;
         }
 
@@ -28,17 +38,58 @@ namespace EnvironmentMonitor.Application.Services
         {
             EnsureAdmin();
 
-            var (secret, plainKey) = await _apiKeyService.CreateApiKey(
-                request.DeviceIds,
-                request.LocationIds,
-                request.Description);
+            var plainApiKey = _apiKeyHashService.GenerateApiKey();
+            var hash = _apiKeyHashService.HashApiKey(plainApiKey);
+            var now = _dateService.CurrentTime();
+            var utcNow = _dateService.LocalToUtc(now);
+
+            var apiSecret = new ApiSecret
+            {
+                Id = Guid.NewGuid().ToString(),
+                Hash = hash,
+                Created = now,
+                CreatedUtc = utcNow,
+                Description = request.Description
+            };
+
+            var claims = new List<SecretClaim>();
+
+            if (request.DeviceIds?.Any() == true)
+            {
+                foreach (var deviceId in request.DeviceIds)
+                {
+                    claims.Add(new SecretClaim
+                    {
+                        Type = EntityRoles.Device.ToString(),
+                        Value = deviceId.ToString(),
+                        ApiSecretId = apiSecret.Id
+                    });
+                }
+            }
+
+            if (request.LocationIds?.Any() == true)
+            {
+                foreach (var locationId in request.LocationIds)
+                {
+                    claims.Add(new SecretClaim
+                    {
+                        Type = EntityRoles.Location.ToString(),
+                        Value = locationId.ToString(),
+                        ApiSecretId = apiSecret.Id
+                    });
+                }
+            }
+
+            apiSecret.Claims = claims;
+            
+            var createdSecret = await _apiKeyRepository.AddApiKey(apiSecret);
 
             return new CreateApiKeyResponse
             {
-                ApiKey = plainKey,
-                Id = secret.Id,
-                Description = secret.Description,
-                Created = secret.Created
+                ApiKey = plainApiKey,
+                Id = createdSecret.Id,
+                Description = createdSecret.Description,
+                Created = createdSecret.Created
             };
         }
 
@@ -46,7 +97,7 @@ namespace EnvironmentMonitor.Application.Services
         {
             EnsureAdmin();
 
-            var secrets = await _apiKeyService.GetAllApiKeys();
+            var secrets = await _apiKeyRepository.GetAllApiKeys();
 
             return _mapper.Map<List<ApiKeyDto>>(secrets);
         }
@@ -55,7 +106,7 @@ namespace EnvironmentMonitor.Application.Services
         {
             EnsureAdmin();
 
-            var secret = await _apiKeyService.GetApiKey(id);
+            var secret = await _apiKeyRepository.GetApiKey(id);
             
             if (secret == null)
             {
@@ -69,7 +120,7 @@ namespace EnvironmentMonitor.Application.Services
         {
             EnsureAdmin();
 
-            await _apiKeyService.DeleteApiKey(id);
+            await _apiKeyRepository.DeleteApiKey(id);
         }
 
         private void EnsureAdmin()
