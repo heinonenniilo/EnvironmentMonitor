@@ -12,20 +12,20 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Infrastructure.Services
 {
-    public class ApiKeyService : IApiKeyService
+    public class ApiKeyRepository : IApiKeyRepository
     {
         private readonly ApplicationDbContext _context;
         private readonly IDateService _dateService;
-        private readonly ILogger<ApiKeyService> _logger;
+        private readonly ILogger<ApiKeyRepository> _logger;
 
         private const int SaltSize = 16;
         private const int HashSize = 32;
         private const int Iterations = 100000;
 
-        public ApiKeyService(
+        public ApiKeyRepository(
             ApplicationDbContext context,
             IDateService dateService,
-            ILogger<ApiKeyService> logger)
+            ILogger<ApiKeyRepository> logger)
         {
             _context = context;
             _dateService = dateService;

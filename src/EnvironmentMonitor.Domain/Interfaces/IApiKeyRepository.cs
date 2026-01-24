@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Interfaces
 {
-    public interface IApiKeyService
+    public interface IApiKeyRepository
     {
         Task<(ApiSecret Secret, string PlainKey)> CreateApiKey(List<Guid> deviceIds, List<Guid> locationIds, string? description);
         Task<List<ApiSecret>> GetAllApiKeys();

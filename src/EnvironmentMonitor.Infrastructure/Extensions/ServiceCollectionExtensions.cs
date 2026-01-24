@@ -81,7 +81,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<IDeviceRepository, DeviceRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<IEmailRepository, EmailRepository>();
-            services.AddScoped<IApiKeyService, ApiKeyService>();
+            services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
             // Identity stuff
             services.AddIdentity<ApplicationUser, ApplicationUserRole>(options =>
             {

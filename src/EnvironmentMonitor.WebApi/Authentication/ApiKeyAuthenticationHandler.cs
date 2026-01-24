@@ -24,14 +24,14 @@ namespace EnvironmentMonitor.WebApi.Authentication
 
     public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
     {
-        private readonly IApiKeyService _apiKeyService;
+        private readonly IApiKeyRepository _apiKeyService;
         private readonly ApiKeySettings _apiKeySettings;
 
         public ApiKeyAuthenticationHandler(
             IOptionsMonitor<ApiKeyAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            IApiKeyService apiKeyService,
+            IApiKeyRepository apiKeyService,
             ApiKeySettings apiKeySettings)
             : base(options, logger, encoder)
         {

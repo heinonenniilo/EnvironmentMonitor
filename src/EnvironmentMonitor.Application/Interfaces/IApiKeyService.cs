@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.Interfaces
 {
-    public interface IApiKeyManagementService
+    public interface IApiKeyService
     {
         Task<CreateApiKeyResponse> CreateApiKey(CreateApiKeyRequest request);
         Task<List<ApiKeyDto>> GetAllApiKeys();

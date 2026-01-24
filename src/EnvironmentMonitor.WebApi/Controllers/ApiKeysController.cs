@@ -15,10 +15,10 @@ namespace EnvironmentMonitor.WebApi.Controllers
     [Authorize(Roles = "Admin")]
     public class ApiKeysController : ControllerBase
     {
-        private readonly IApiKeyManagementService _apiKeyManagementService;
+        private readonly IApiKeyService _apiKeyManagementService;
         private readonly ILogger<ApiKeysController> _logger;
 
-        public ApiKeysController(IApiKeyManagementService apiKeyManagementService, ILogger<ApiKeysController> logger)
+        public ApiKeysController(IApiKeyService apiKeyManagementService, ILogger<ApiKeysController> logger)
         {
             _apiKeyManagementService = apiKeyManagementService;
             _logger = logger;

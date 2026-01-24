@@ -11,13 +11,13 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.Services
 {
-    public class ApiKeyManagementService : IApiKeyManagementService
+    public class ApiKeyService : IApiKeyService
     {
-        private readonly IApiKeyService _apiKeyService;
+        private readonly IApiKeyRepository _apiKeyService;
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
 
-        public ApiKeyManagementService(IApiKeyService apiKeyService, IUserService userService, IMapper mapper)
+        public ApiKeyService(IApiKeyRepository apiKeyService, IUserService userService, IMapper mapper)
         {
             _apiKeyService = apiKeyService;
             _userService = userService;
