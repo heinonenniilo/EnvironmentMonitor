@@ -476,6 +476,33 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation($"Successfully acknowledged queued command with MessageId: {messageId} for device: {device.Device.Id}. ExecutedAt: {date}");
         }
 
+        public async Task<Dictionary<int, string>> GetDeviceAttributes(string deviceIdentifier)
+        {
+            _logger.LogInformation($"Fetching device attributes for device: {deviceIdentifier}");
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                DeviceIdentifiers = [deviceIdentifier],
+                OnlyVisible = false,
+                GetAttributes = true
+            })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
+            if (!_userService.HasAccessToDevice(device.Identifier, AccessLevels.Read))
+            {
+                _logger.LogWarning($"No access to device: {deviceIdentifier}");
+                throw new UnauthorizedAccessException();
+            }
+
+            var attributes = device.DeviceAttributes;
+            
+            var result = new Dictionary<int, string>();
+            foreach (var attribute in attributes)
+            {
+                result[attribute.TypeId] = attribute.Value ?? string.Empty;
+            }
+
+            _logger.LogInformation($"Found {result.Count} attributes for device: {deviceIdentifier}");
+            return result;
+        }
+
         private void ValidateTriggeringTime(DateTime target)
         {
             var compareDate = _dateService.CurrentTime();

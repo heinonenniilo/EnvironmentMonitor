@@ -27,6 +27,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         Task Reboot(Guid identifier);
         Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status, DateTime? triggeringTime = null);
         Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs, DateTime? triggeringTime = null);
-        Task SendAttributesToDevice(Guid identifier, string? message = null);
+        Task SendAttributesToDevice(Guid identifier, string? message = null);       
+        Task<Dictionary<int, string>> GetDeviceAttributes(string deviceIdentifier);
     }
 }
