@@ -13,7 +13,7 @@ namespace EnvironmentMonitor.Application.DTOs
     {
         public bool Visible { get; set; }
         public bool HasMotionSensor { get; set; }
-        public Guid LocationIdentifier { get; set; }
+        public Guid LocationIdentifier { get; set; }       
 
         public void Mapping(Profile profile)
         {

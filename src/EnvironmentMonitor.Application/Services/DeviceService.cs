@@ -444,6 +444,7 @@ namespace EnvironmentMonitor.Application.Services
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [model.Device.Identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{model.Device.Identifier}' not found.");
             var updateModel = _mapper.Map<Device>(model.Device);
             updateModel.Id = device.Id;
+            updateModel.CommunicationChannelId = model.CommunicationChannelId;
             var info = await _deviceRepository.AddOrUpdate(updateModel, true);
             return _mapper.Map<DeviceInfoDto>(info);
         }

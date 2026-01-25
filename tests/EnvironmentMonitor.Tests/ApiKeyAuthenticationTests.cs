@@ -1,4 +1,8 @@
 using EnvironmentMonitor.Application.DTOs;
+using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Infrastructure.Data;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -479,6 +483,100 @@ namespace EnvironmentMonitor.Tests
             // The service logs a warning but returns OK (based on HubObserver pattern)
             // This matches the existing behavior where invalid data is logged but doesn't fail the request
             Assert.That(response.IsSuccessStatusCode, Is.EqualTo(false));
+        }
+
+        [Test]
+        public async Task GetDeviceAttributes_WithApiKey_ReturnsSuccess()
+        {
+            // Arrange
+            var model = await PrepareDatabase();
+            var device = model.DeviceInLocation;
+
+            // Add device attributes using the database context
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var measurementDbContext = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
+                var dateService = scope.ServiceProvider.GetRequiredService<IDateService>();
+                
+                var currentTime = dateService.CurrentTime();
+                var currentTimeUtc = dateService.LocalToUtc(currentTime);
+                
+                // Add MotionControlStatus attribute (TypeId = 0, value = 1 for AlwaysOn)
+                measurementDbContext.DeviceAttributes.Add(new DeviceAttribute
+                {
+                    DeviceId = device.Id,
+                    TypeId = (int)DeviceAttributeTypes.MotionControlStatus,
+                    Value = "1",
+                    TimeStamp = currentTime,
+                    TimeStampUtc = currentTimeUtc,
+                    Created = currentTime,
+                    CreatedUtc = currentTimeUtc
+                });
+                
+                // Add OnDelay attribute (TypeId = 1, value = 5000ms)
+                measurementDbContext.DeviceAttributes.Add(new DeviceAttribute
+                {
+                    DeviceId = device.Id,
+                    TypeId = (int)DeviceAttributeTypes.OnDelay,
+                    Value = "5000",
+                    TimeStamp = currentTime,
+                    TimeStampUtc = currentTimeUtc,
+                    Created = currentTime,
+                    CreatedUtc = currentTimeUtc
+                });
+                
+                await measurementDbContext.SaveChangesAsync();
+            }
+
+            // Create API key with access to the device
+            var (secretId, secretValue) = await CreateApiKeyAsync(
+                deviceIds: new List<Guid> { device.Identifier },
+                description: "Test API Key for Device Attributes Access"
+            );
+
+            _client.DefaultRequestHeaders.Clear();
+            _client.DefaultRequestHeaders.Add("X-API-KEY", _apiKey);
+            _client.DefaultRequestHeaders.Add("X-SECRET-ID", secretId);
+            _client.DefaultRequestHeaders.Add("X-SECRET-VALUE", secretValue);
+
+            // Act
+            var response = await _client.GetAsync($"/api/devicecommands/{device.DeviceIdentifier}/attributes");
+
+            // Assert
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK),
+                $"Expected OK but got {response.StatusCode}. Response: {await response.Content.ReadAsStringAsync()}");
+            
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var attributes = JsonConvert.DeserializeObject<Dictionary<int, string>>(responseContent);
+            
+            Assert.That(attributes, Is.Not.Null, "Attributes dictionary should not be null");
+            Assert.That(attributes.Count, Is.EqualTo(2), "Should have 2 attributes");
+            Assert.That(attributes.ContainsKey((int)DeviceAttributeTypes.MotionControlStatus), Is.True, 
+                "Should contain MotionControlStatus attribute");
+            Assert.That(attributes[(int)DeviceAttributeTypes.MotionControlStatus], Is.EqualTo("1"), 
+                "MotionControlStatus should be '1'");
+            Assert.That(attributes.ContainsKey((int)DeviceAttributeTypes.OnDelay), Is.True, 
+                "Should contain OnDelay attribute");
+            Assert.That(attributes[(int)DeviceAttributeTypes.OnDelay], Is.EqualTo("5000"), 
+                "OnDelay should be '5000'");
+        }
+
+        [Test]
+        public async Task GetDeviceAttributes_WithCookieAuth_ReturnsForbidden()
+        {
+            // Arrange
+            var model = await PrepareDatabase();
+            var device = model.DeviceInLocation;
+
+            // Login with cookie auth
+            await LoginAsync(AdminUserName, AdminPassword);
+
+            // Act
+            var response = await _client.GetAsync($"/api/devicecommands/{device.DeviceIdentifier}/attributes");
+
+            // Assert - Cookie auth should NOT work for this endpoint, only API Key auth is allowed
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Unauthorized),
+                $"Expected Unauthorized but got {response.StatusCode}. Response: {await response.Content.ReadAsStringAsync()}");
         }
     }
 }
