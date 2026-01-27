@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using EnvironmentMonitor.Domain.Enums;
 
 namespace EnvironmentMonitor.Infrastructure.Data.Configurations
 {
@@ -29,6 +30,8 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
             builder.Property(x => x.Identifier).HasDefaultValueSql("NEWID()");
             builder.Property(x => x.Identifier).IsRequired();
             builder.HasIndex(x => x.Identifier).IsUnique();
+
+            builder.Property(x => x.CommunicationChannelId).HasDefaultValue((int)CommunicationChannels.IotHub );
 
             builder.HasMany(d => d.Sensors)
                 .WithOne(s => s.Device)

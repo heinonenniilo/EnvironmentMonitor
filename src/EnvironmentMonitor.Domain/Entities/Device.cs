@@ -28,5 +28,7 @@ namespace EnvironmentMonitor.Domain.Entities
         public IList<DeviceQueuedCommand> QueuedCommands { get; set; } = [];
         public IList<DeviceContact> Contacts { get; set; } = [];
         public bool IsVirtual { get; set; }
+        public int? CommunicationChannelId { get; set; }
+        public CommunicationChannel? CommunicationChannel { get; set; }
     }
 }

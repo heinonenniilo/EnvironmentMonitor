@@ -45,6 +45,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
         public DbSet<DeviceContact> DeviceContacts { get; set; }
         public DbSet<MeasurementSource> MeasurementSources { get; set; }
+        public DbSet<CommunicationChannel> CommunicationChannels { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
