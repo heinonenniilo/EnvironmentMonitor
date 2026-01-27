@@ -140,9 +140,12 @@ namespace EnvironmentMonitor.Application.Services
                 return _mapper.Map<List<DeviceAttributeDto>>(attributes);
             }
 
-            var message = $"MOTIONCONTROLSTATUS:{(int)status}";
-            _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
-            await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            if (device.CommunicationChannelId == (int)CommunicationChannels.IotHub)
+            {
+                var message = $"MOTIONCONTROLSTATUS:{(int)status}";
+                _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
+                await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            }
             await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.MotionControlStatus, ((int)status).ToString(), false);
             await _deviceRepository.AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control status set to: {(int)status} ({status.ToString()})", true, null);
 
@@ -195,9 +198,13 @@ namespace EnvironmentMonitor.Application.Services
                 return _mapper.Map<List<DeviceAttributeDto>>(attributes);
             }
 
-            var message = $"MOTIONCONTROLDELAY: {delayMs}";
-            _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
-            await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            if (device.CommunicationChannelId == (int)CommunicationChannels.IotHub)
+            {
+                var message = $"MOTIONCONTROLDELAY: {delayMs}";
+                _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
+                await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            }
+
             await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.OnDelay, delayMs.ToString(), false);
             await _deviceRepository.AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control delay set to: {(int)delayMs} ms", true, null);
 
