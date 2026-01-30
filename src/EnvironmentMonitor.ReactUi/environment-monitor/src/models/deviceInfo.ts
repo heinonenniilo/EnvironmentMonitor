@@ -17,4 +17,5 @@ export interface DeviceInfo {
   isVirtual: boolean;
   attributes: DeviceAttribute[];
   contacts: DeviceContact[];
+  communicationChannelId?: number;
 }

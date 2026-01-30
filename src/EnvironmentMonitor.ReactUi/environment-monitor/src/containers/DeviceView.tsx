@@ -375,12 +375,53 @@ export const DeviceView: React.FC = () => {
   const updateVisible = (device: DeviceInfo) => {
     setIsLoading(true);
     deviceHook
-      .updateDevice({ ...device.device, visible: !device.device.visible })
+      .updateDevice({
+        device: { ...device.device, visible: !device.device.visible },
+      })
       .then((res) => {
         setSelectedDevice(res);
         dispatch(
           addNotification({
             title: `Visibility status updated for ${res.device.name}`,
+            body: "_",
+            severity: "success",
+          }),
+        );
+        // Update devices
+        measurementApiHook
+          .getDevices()
+          .then((res) => {
+            if (res) {
+              dispatch(setDevices(res));
+            }
+          })
+          .catch((ex) => {
+            console.error(ex);
+          });
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const updateCommunicationChannel = (
+    device: DeviceInfo,
+    channelId: number,
+  ) => {
+    setIsLoading(true);
+    deviceHook
+      .updateDevice({
+        device: device.device,
+        communicationChannelId: channelId,
+      })
+      .then((res) => {
+        setSelectedDevice(res);
+        dispatch(
+          addNotification({
+            title: `Communication channel updated for ${res.device.name}`,
             body: "_",
             severity: "success",
           }),
@@ -782,6 +823,17 @@ export const DeviceView: React.FC = () => {
                   body: `Visible status will be ${!device.device.visible} for ${
                     device.device.name
                   }`,
+                }),
+              );
+            }}
+            onCommunicationChannelChange={(device, channelId) => {
+              dispatch(
+                setConfirmDialog({
+                  onConfirm: () => {
+                    updateCommunicationChannel(device, channelId);
+                  },
+                  title: "Update communication channel",
+                  body: `Communication channel will be updated for ${device.device.name}`,
                 }),
               );
             }}

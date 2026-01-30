@@ -1,5 +1,13 @@
 import { type DeviceInfo } from "../models/deviceInfo";
-import { Box, Checkbox, IconButton, Tooltip, Typography } from "@mui/material";
+import {
+  Box,
+  Checkbox,
+  IconButton,
+  Tooltip,
+  Typography,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { routes } from "../utilities/routes";
 import { Link } from "react-router";
 import { getFormattedDate } from "../utilities/datetimeUtils";
@@ -12,11 +20,19 @@ import {
   getEntityTitle,
 } from "../utilities/entityUtils";
 import type { DeviceMessagesLocationState } from "../containers/DeviceMessagesView";
+import {
+  CommunicationChannels,
+  getCommunicationChannelDisplayName,
+} from "../enums/communicationChannels";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
   onReboot?: (device: DeviceInfo) => void;
   onClickVisible?: (device: DeviceInfo) => void;
+  onCommunicationChannelChange?: (
+    device: DeviceInfo,
+    channelId: number,
+  ) => void;
   title?: string;
   disableSort?: boolean;
   showDeviceImageAsTooltip?: boolean;
@@ -36,6 +52,7 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   showDeviceImageAsTooltip,
   renderLink,
   onClickVisible,
+  onCommunicationChannelChange,
   renderLinkToDeviceMessages,
   showDeviceIdentifier,
 }) => {
@@ -291,6 +308,50 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           contentToRender
         );
       },
+    },
+    {
+      field: "communicationChannelId",
+      headerName: "Communication Channel",
+      flex: 1,
+      sortable: false,
+      minWidth: 170,
+      valueGetter: (_value, row) => {
+        const device = row as DeviceInfo;
+        return device.communicationChannelId !== undefined
+          ? getCommunicationChannelDisplayName(
+              device.communicationChannelId as CommunicationChannels,
+            )
+          : "";
+      },
+      renderCell: onCommunicationChannelChange
+        ? (params) => {
+            const device = params.row as DeviceInfo;
+            return (
+              <Select
+                value={device.communicationChannelId ?? 0}
+                onChange={(e) => {
+                  onCommunicationChannelChange(
+                    device,
+                    e.target.value as number,
+                  );
+                }}
+                size="small"
+                fullWidth
+              >
+                <MenuItem value={CommunicationChannels.IotHub}>
+                  {getCommunicationChannelDisplayName(
+                    CommunicationChannels.IotHub,
+                  )}
+                </MenuItem>
+                <MenuItem value={CommunicationChannels.RestApi}>
+                  {getCommunicationChannelDisplayName(
+                    CommunicationChannels.RestApi,
+                  )}
+                </MenuItem>
+              </Select>
+            );
+          }
+        : undefined,
     },
   ];
 

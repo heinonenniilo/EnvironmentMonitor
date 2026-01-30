@@ -140,9 +140,12 @@ namespace EnvironmentMonitor.Application.Services
                 return _mapper.Map<List<DeviceAttributeDto>>(attributes);
             }
 
-            var message = $"MOTIONCONTROLSTATUS:{(int)status}";
-            _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
-            await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            if (device.CommunicationChannelId == (int)CommunicationChannels.IotHub)
+            {
+                var message = $"MOTIONCONTROLSTATUS:{(int)status}";
+                _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
+                await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            }
             await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.MotionControlStatus, ((int)status).ToString(), false);
             await _deviceRepository.AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control status set to: {(int)status} ({status.ToString()})", true, null);
 
@@ -195,9 +198,13 @@ namespace EnvironmentMonitor.Application.Services
                 return _mapper.Map<List<DeviceAttributeDto>>(attributes);
             }
 
-            var message = $"MOTIONCONTROLDELAY: {delayMs}";
-            _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
-            await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            if (device.CommunicationChannelId == (int)CommunicationChannels.IotHub)
+            {
+                var message = $"MOTIONCONTROLDELAY: {delayMs}";
+                _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
+                await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+            }
+
             await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.OnDelay, delayMs.ToString(), false);
             await _deviceRepository.AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control delay set to: {(int)delayMs} ms", true, null);
 
@@ -212,12 +219,7 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
 
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault();
-
-            if (device == null)
-            {
-                throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
-            }
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{identifier}' not found.");
 
             var attributes = await _deviceRepository.GetDeviceAttributes(device.Id);
             _logger.LogInformation($"Sending {attributes.Count} attributes to device: {device.Id} ({identifier})");
@@ -474,6 +476,34 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.SetQueuedCommand(device.Device.Id, command, true);
 
             _logger.LogInformation($"Successfully acknowledged queued command with MessageId: {messageId} for device: {device.Device.Id}. ExecutedAt: {date}");
+        }
+
+        public async Task<Dictionary<int, string>> GetDeviceAttributes(string deviceIdentifier)
+        {
+            _logger.LogInformation($"Fetching device attributes for device: {deviceIdentifier}");
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                DeviceIdentifiers = [deviceIdentifier],
+                OnlyVisible = false,
+                GetAttributes = true
+            })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
+
+            if (!_userService.HasAccessToDevice(device.Identifier, AccessLevels.Write))
+            {
+                _logger.LogWarning($"No access to device: {deviceIdentifier}");
+                throw new UnauthorizedAccessException();
+            }
+
+            var attributes = device.DeviceAttributes;
+            
+            var result = new Dictionary<int, string>();
+            foreach (var attribute in attributes)
+            {
+                result[attribute.TypeId] = attribute.Value ?? string.Empty;
+            }
+
+            _logger.LogInformation($"Found {result.Count} attributes for device: {deviceIdentifier}");
+            return result;
         }
 
         private void ValidateTriggeringTime(DateTime target)

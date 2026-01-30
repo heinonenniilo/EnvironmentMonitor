@@ -35,6 +35,7 @@ import type { UserInfoDto } from "../models/userInfoDto";
 import type { ManageUserRolesRequest } from "../models/manageUserRolesRequest";
 import type { ManageUserClaimsRequest } from "../models/manageUserClaimsRequest";
 import type { ApiKeyDto, UpdateApiKeyRequest } from "../models/apiKey";
+import type { UpdateDeviceDto } from "../models/updateDeviceDto";
 
 interface ApiHook {
   userHook: userHook;
@@ -152,7 +153,7 @@ interface deviceHook {
     from: moment.Moment,
     to?: moment.Moment,
   ) => Promise<DeviceStatusModel>;
-  updateDevice: (device: Device) => Promise<DeviceInfo>;
+  updateDevice: (model: UpdateDeviceDto) => Promise<DeviceInfo>;
   getDeviceMessage: (
     model: GetDeviceMessagesModel,
   ) => Promise<PaginatedResult<DeviceMessage>>;
@@ -505,11 +506,9 @@ export const useApiHook = (): ApiHook => {
       },
     },
     deviceHook: {
-      updateDevice: async (device: Device) => {
+      updateDevice: async (model: UpdateDeviceDto) => {
         try {
-          const res = await apiClient.put("/api/devices/update", {
-            device: device,
-          });
+          const res = await apiClient.put("/api/devices/update", model);
 
           return res.data;
         } catch (ex: any) {

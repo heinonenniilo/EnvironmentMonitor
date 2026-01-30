@@ -322,9 +322,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 deviceToUpdate = new Device() { Name = device.Name, DeviceIdentifier = device.DeviceIdentifier };
             }
+
             deviceToUpdate.Name = string.IsNullOrEmpty(device.Name) ? deviceToUpdate.Name : device.Name;
             deviceToUpdate.DeviceIdentifier = string.IsNullOrEmpty(device.DeviceIdentifier) ? deviceToUpdate.DeviceIdentifier : device.DeviceIdentifier;
             deviceToUpdate.Visible = device.Visible;
+            deviceToUpdate.CommunicationChannelId = device.CommunicationChannelId;
 
             if (deviceInDb == null)
             {

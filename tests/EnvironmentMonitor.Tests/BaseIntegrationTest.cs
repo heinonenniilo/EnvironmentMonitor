@@ -67,6 +67,8 @@ namespace EnvironmentMonitor.Tests
                     new Table("dbo", "MeasurementTypes"),
                     new Table("dbo", "Locations"),
                     new Table("dbo", "EmailTemplates"),
+                    new Table("dbo", "CommunicationChannels"),
+                    new Table("dbo", "DeviceAttributeTypes"),
                     new Table("application", "AspNetRoles")
                 ],
             });
