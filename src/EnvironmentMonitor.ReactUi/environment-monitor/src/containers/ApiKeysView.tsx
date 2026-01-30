@@ -6,6 +6,7 @@ import { Add, Refresh } from "@mui/icons-material";
 import { ApiKeyTable } from "../components/ApiKeys/ApiKeyTable";
 import { ApiKeyDetailsDialog } from "../components/ApiKeys/ApiKeyDetailsDialog";
 import { CreateApiKeyDialog } from "../components/ApiKeys/CreateApiKeyDialog";
+import { EditDescriptionDialog } from "../components/ApiKeys/EditDescriptionDialog";
 import { ApiKeyDialog } from "../components/ApiKeyDialog";
 import type { ApiKeyDto } from "../models/apiKey";
 import type { DeviceInfo } from "../models/deviceInfo";
@@ -22,6 +23,8 @@ export const ApiKeysView: React.FC = () => {
   const [selectedApiKey, setSelectedApiKey] = useState<ApiKeyDto | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDescriptionDialogOpen, setEditDescriptionDialogOpen] =
+    useState(false);
   const [generatedKeyDialogOpen, setGeneratedKeyDialogOpen] = useState(false);
   const [generatedApiKey, setGeneratedApiKey] = useState<{
     apiKey: string;
@@ -76,6 +79,11 @@ export const ApiKeysView: React.FC = () => {
   const handleViewDetails = (apiKey: ApiKeyDto) => {
     setSelectedApiKey(apiKey);
     setDetailsDialogOpen(true);
+  };
+
+  const handleEditDescription = (apiKey: ApiKeyDto) => {
+    setSelectedApiKey(apiKey);
+    setEditDescriptionDialogOpen(true);
   };
 
   const handleDelete = (apiKey: ApiKeyDto) => {
@@ -134,6 +142,40 @@ export const ApiKeysView: React.FC = () => {
           addNotification({
             title: "Failed to update API key status",
             body: "An error occurred while updating the API key status",
+            severity: "error",
+          }),
+        );
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const handleUpdateDescription = (
+    apiKey: ApiKeyDto,
+    newDescription: string,
+  ) => {
+    setIsLoading(true);
+    apiKeysHook
+      .updateApiKey(apiKey.id, { description: newDescription })
+      .then(() => {
+        dispatch(
+          addNotification({
+            title: "API key description updated successfully",
+            body: "",
+            severity: "success",
+          }),
+        );
+        setEditDescriptionDialogOpen(false);
+        setSelectedApiKey(null);
+        loadApiKeys();
+      })
+      .catch((error) => {
+        console.error("Failed to update API key description:", error);
+        dispatch(
+          addNotification({
+            title: "Failed to update API key description",
+            body: "An error occurred while updating the API key description",
             severity: "error",
           }),
         );
@@ -211,6 +253,7 @@ export const ApiKeysView: React.FC = () => {
           onViewDetails={handleViewDetails}
           onDelete={handleDelete}
           onToggleEnabled={handleToggleEnabled}
+          onEditDescription={handleEditDescription}
           isLoading={isLoading}
         />
       </Box>
@@ -221,6 +264,17 @@ export const ApiKeysView: React.FC = () => {
         onClose={() => setDetailsDialogOpen(false)}
         locations={locations}
         devices={devices.map((d) => d.device)}
+      />
+
+      <EditDescriptionDialog
+        open={editDescriptionDialogOpen}
+        apiKey={selectedApiKey}
+        onClose={() => {
+          setEditDescriptionDialogOpen(false);
+          setSelectedApiKey(null);
+        }}
+        onSave={handleUpdateDescription}
+        isLoading={isLoading}
       />
 
       <CreateApiKeyDialog
