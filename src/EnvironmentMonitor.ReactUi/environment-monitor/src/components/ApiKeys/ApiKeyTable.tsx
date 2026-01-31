@@ -5,7 +5,7 @@ import {
   type GridRenderCellParams,
 } from "@mui/x-data-grid";
 import { IconButton, Box, Tooltip, Switch } from "@mui/material";
-import { Delete, Info } from "@mui/icons-material";
+import { Delete, Info, Edit } from "@mui/icons-material";
 import type { ApiKeyDto } from "../../models/apiKey";
 import moment from "moment";
 
@@ -14,6 +14,7 @@ interface ApiKeyTableProps {
   onViewDetails: (apiKey: ApiKeyDto) => void;
   onDelete: (apiKey: ApiKeyDto) => void;
   onToggleEnabled: (apiKey: ApiKeyDto) => void;
+  onEditDescription: (apiKey: ApiKeyDto) => void;
   isLoading?: boolean;
 }
 
@@ -22,6 +23,7 @@ export const ApiKeyTable: React.FC<ApiKeyTableProps> = ({
   onViewDetails,
   onDelete,
   onToggleEnabled,
+  onEditDescription,
   isLoading,
 }) => {
   const columns: GridColDef[] = [
@@ -66,8 +68,8 @@ export const ApiKeyTable: React.FC<ApiKeyTableProps> = ({
     {
       field: "actions",
       headerName: "Actions",
-      flex: 0.5,
-      minWidth: 120,
+      flex: 0.6,
+      minWidth: 150,
       sortable: false,
       renderCell: (params: GridRenderCellParams<ApiKeyDto>) => (
         <Box
@@ -82,6 +84,17 @@ export const ApiKeyTable: React.FC<ApiKeyTableProps> = ({
               }}
             >
               <Info />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Edit Description">
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditDescription(params.row);
+              }}
+            >
+              <Edit />
             </IconButton>
           </Tooltip>
           <Tooltip title="Delete">
