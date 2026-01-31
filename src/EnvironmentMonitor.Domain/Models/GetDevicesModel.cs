@@ -14,6 +14,7 @@ namespace EnvironmentMonitor.Domain.Models
         public List<string>? DeviceIdentifiers { get; set; }
         public List<Guid>? Identifiers { get; set; }
         public List<Guid>? LocationIdentifiers { get; set; }
+        public List<int>? CommunicationChannelIds { get; set; }
         public bool OnlyVisible { get; set; }
         public bool GetAttachments { get; set; }
         public bool GetLocation { get; set; }

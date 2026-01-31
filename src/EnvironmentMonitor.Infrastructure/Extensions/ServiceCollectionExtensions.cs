@@ -165,6 +165,9 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddSingleton<IQueueClient, Services.QueueClient>();
 
             services.AddHttpClient("MailGun");
+            
+            // Register FMI Weather Client
+            services.AddHttpClient<IFmiWeatherClient, FmiWeatherClient>();
 
             switch (emailSettingsToUse.ClientType)
             {

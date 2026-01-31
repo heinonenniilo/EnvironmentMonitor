@@ -452,6 +452,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => model.LocationIdentifiers.Contains(x.Location.Identifier));
             }
+            
+            if (model.CommunicationChannelIds != null)
+            {
+                query = query.Where(x => x.CommunicationChannelId != null && model.CommunicationChannelIds.Contains(x.CommunicationChannelId.Value));
+            }
+            
             return query;
         }
 
