@@ -8,6 +8,7 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.ReturnModel;
+using EnvironmentMonitor.Domain.Utils;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -127,7 +128,7 @@ namespace EnvironmentMonitor.Application.Services
                     CreatedAt = createdAt,
                     CreatedAtUtc = _dateService.LocalToUtc(createdAt),
                     TimestampUtc = row.TimestampUtc,
-                    TypeId = row.TypeId                   
+                    TypeId = row.TypeId
                 };
                 measurementsToAdd.Add(measurementToAdd);
                 if (sensorInDb.VirtualSensorRowValues.Count != 0)
@@ -143,20 +144,16 @@ namespace EnvironmentMonitor.Application.Services
                 await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
             }
 
-            // Skip status checks for virtual devices
-            if (!device.IsVirtual)
+            if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < device.GetOfflineThresholdInMinutes())
             {
-                if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
+                await _deviceService.SetStatus(new SetDeviceStatusModel()
                 {
-                    await _deviceService.SetStatus(new SetDeviceStatusModel()
-                    {
-                        Idenfifier = device.Identifier,
-                        Status = true,
-                        TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
-                        Message = "Device is online",
-                        DeviceMessage = deviceMessage
-                    }, false);
-                }
+                    Idenfifier = device.Identifier,
+                    Status = true,
+                    TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
+                    Message = "Device is online",
+                    DeviceMessage = deviceMessage
+                }, false);
             }
             await _measurementRepository.AddMeasurements(measurementsToAdd, true, deviceMessage);
             _logger.LogInformation("Measurementsadded");

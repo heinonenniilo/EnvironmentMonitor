@@ -8,6 +8,7 @@ using EnvironmentMonitor.Domain.Models.AddModels;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.Pagination;
 using EnvironmentMonitor.Domain.Models.ReturnModel;
+using EnvironmentMonitor.Domain.Utils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
@@ -232,8 +233,9 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
             else
             {
-                statusToSet = latestActivityTimestamp != null && ((model.TimeStamp ?? _dateService.CurrentTime()) - latestActivityTimestamp.Value).TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes;
+                statusToSet = latestActivityTimestamp != null && ((model.TimeStamp ?? _dateService.CurrentTime()) - latestActivityTimestamp.Value).TotalMinutes < device.GetOfflineThresholdInMinutes() ;
             }
+
             var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
             if (latestStatus == null || (latestStatus.Status != statusToSet && timeStamp > latestStatus.TimeStamp))
             {
