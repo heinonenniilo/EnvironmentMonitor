@@ -463,6 +463,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => x.CommunicationChannelId != null && model.CommunicationChannelIds.Contains(x.CommunicationChannelId.Value));
             }
+
+            if (model.IsVirtual != null)
+            {
+                query = query.Where(x => x.IsVirtual == model.IsVirtual);
+            }
             
             return query;
         }

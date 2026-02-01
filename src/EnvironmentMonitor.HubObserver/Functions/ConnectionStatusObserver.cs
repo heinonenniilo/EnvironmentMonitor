@@ -20,7 +20,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
         public async Task Run([TimerTrigger("%ConnectionStatusSchedule%")] TimerInfo timerInfo,
             FunctionContext context)
         {
-            var devices = await _deviceService.GetDeviceInfos(false, null, false);
+            var devices = await _deviceService.GetDeviceInfos(false, null, false, isVirtual: false);
             foreach (var device in devices)
             {
                 _logger.LogInformation($"Checking connection status for device: {device.Device.Name} ({device.Device.Identifier})");

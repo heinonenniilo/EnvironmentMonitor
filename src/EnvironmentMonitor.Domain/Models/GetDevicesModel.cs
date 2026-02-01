@@ -21,6 +21,7 @@ namespace EnvironmentMonitor.Domain.Models
         public bool GetAttributes { get; set; }
         public bool GetContacts { get; set; }
         public bool GetSensors { get; set; }
+        public bool? IsVirtual { get; set; }
     }
 
     public class GetSensorsModel
