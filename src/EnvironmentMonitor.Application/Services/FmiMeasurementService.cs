@@ -230,7 +230,6 @@ namespace EnvironmentMonitor.Application.Services
             return totalMeasurementsAdded;
         }
 
-
         public async Task PerformSync()
         {
             if (!_userService.IsAdmin)
