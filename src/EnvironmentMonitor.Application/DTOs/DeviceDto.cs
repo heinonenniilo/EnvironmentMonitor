@@ -13,13 +13,15 @@ namespace EnvironmentMonitor.Application.DTOs
     {
         public bool Visible { get; set; }
         public bool HasMotionSensor { get; set; }
-        public Guid LocationIdentifier { get; set; }       
+        public Guid LocationIdentifier { get; set; }
+        public bool AutoScaleByDefault { get; set; }
 
         public void Mapping(Profile profile)
         {
             profile.CreateMap<Device, DeviceDto>()
                 .ForMember(x => x.DisplayName, opt => opt.MapFrom(x => x.Location != null ? $"{x.Location.Name} - {x.Name}" : x.Name))
                 .ForMember(x => x.LocationIdentifier, opt => opt.MapFrom(x => x.Location != null ? x.Location.Identifier : Guid.Empty))
+                .ForMember(x => x.AutoScaleByDefault, opt => opt.MapFrom(x => x.IsVirtual))
                 .ReverseMap();
         }
     }
