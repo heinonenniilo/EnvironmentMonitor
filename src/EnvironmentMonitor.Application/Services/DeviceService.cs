@@ -416,6 +416,10 @@ namespace EnvironmentMonitor.Application.Services
                 else
                 {
                     _logger.LogWarning($"Device emails are disabled. Not sending email for device {device.Name} ({device.Id}). Type: {currentStatus?.Status}");
+                    if (saveChanges)
+                    {
+                        await _deviceRepository.SaveChanges();
+                    }
                 }
             }
         }
