@@ -1,4 +1,4 @@
-import type { MeasurementSourceTypes } from "../enums/measurementSourceTypes";
+import type { CommunicationChannels } from "../enums/communicationChannels";
 
 export interface DeviceMessage {
   deviceIdentifier: string;
@@ -8,7 +8,7 @@ export interface DeviceMessage {
   uptime: number;
   messageCount: number;
   firstMessage: boolean;
-  sourceId: MeasurementSourceTypes;
+  sourceId: CommunicationChannels;
   //
   uniqueRowId?: string; // Calculated
 }

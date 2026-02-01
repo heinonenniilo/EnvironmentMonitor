@@ -11,7 +11,7 @@ import { getFormattedDate } from "../utilities/datetimeUtils";
 import { defaultStart } from "../containers/DeviceMessagesView";
 import type { DeviceInfo } from "../models/deviceInfo";
 import { Link } from "react-router";
-import { getMeasurementSourceDisplayName } from "../enums/measurementSourceTypes";
+import { getCommunicationChannelDisplayName } from "../enums/communicationChannels";
 
 interface Props {
   model: GetDeviceMessagesModel | undefined;
@@ -180,7 +180,7 @@ export const DeviceMessagesTable: React.FC<Props> = ({
       minWidth: 120,
       valueGetter: (_value, row) => {
         const deviceMessageRow = row as DeviceMessage;
-        return getMeasurementSourceDisplayName(deviceMessageRow.sourceId);
+        return getCommunicationChannelDisplayName(deviceMessageRow.sourceId);
       },
     },
   ];
