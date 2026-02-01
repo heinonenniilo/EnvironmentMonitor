@@ -4,6 +4,7 @@ using EnvironmentMonitor.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    partial class MeasurementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260131205547_AddIlmatieteenlaitosAsCommunicationChannel")]
+    partial class AddIlmatieteenlaitosAsCommunicationChannel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -941,12 +944,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                             Id = 1,
                             Description = "Rest interface",
                             Name = "Rest"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Description = "Ilmatieteenlaitos Open Data",
-                            Name = "Ilmatieteenlaitos"
                         });
                 });
 
