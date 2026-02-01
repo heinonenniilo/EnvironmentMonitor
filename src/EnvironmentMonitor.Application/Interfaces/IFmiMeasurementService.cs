@@ -1,4 +1,5 @@
 using EnvironmentMonitor.Application.DTOs;
+using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Models;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace EnvironmentMonitor.Application.Interfaces
 
     public class FetchFmiMeasurementsRequest
     {
-        public List<string> Places { get; set; } = new();
+        public List<Sensor> Sensors { get; set; } = new();
         public DateTime StartTimeUtc { get; set; }
         public DateTime EndTimeUtc { get; set; }
     }

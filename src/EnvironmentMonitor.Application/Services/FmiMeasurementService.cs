@@ -1,4 +1,5 @@
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
@@ -6,6 +7,8 @@ using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -19,12 +22,14 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDateService _dateService;
         private readonly ILogger<FmiMeasurementService> _logger;
         private readonly IReadOnlyDictionary<string, MeasurementType> _typeMap;
+        private readonly IUserService _userService;
 
         public FmiMeasurementService(
             IFmiWeatherClient weatherClient,
             IMeasurementRepository measurementRepository,
             IDeviceRepository deviceRepository,
             IDateService dateService,
+            IUserService userService,
             ILogger<FmiMeasurementService> logger)
         {
             _weatherClient = weatherClient;
@@ -32,119 +37,186 @@ namespace EnvironmentMonitor.Application.Services
             _deviceRepository = deviceRepository;
             _dateService = dateService;
             _logger = logger;
-
+            _userService = userService;           
             // Define measurement types and map FMI parameter codes to them
             var types = new List<MeasurementType>
             {
                 new MeasurementType { Id = (int)MeasurementTypes.Temperature, Name = "Temperature", Unit = "C" },
                 new MeasurementType { Id = (int)MeasurementTypes.Humidity, Name = "Humidity", Unit = "%" }
-            };
-            
+            };            
             // Map FMI parameter codes (t2m for temperature, rh for humidity) to types
             _typeMap = types.ToDictionary(
                 t => t.Name switch
                 {
-                    "Temperature" => "t2m",
-                    "Humidity" => "rh",
+                    "Temperature" => IlmatieteenlaitosConstants.TemperatureTypeKey,
+                    "Humidity" => IlmatieteenlaitosConstants.HumidityTypeKey,
                     _ => t.Name.ToLowerInvariant()
                 }, t => t);
         }
 
         public async Task<int> FetchAndStoreMeasurementsAsync(FetchFmiMeasurementsRequest request)
         {
-            _logger.LogInformation($"Starting FMI measurement fetch for {request.Places.Count} places from {request.StartTimeUtc} to {request.EndTimeUtc}");
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            _logger.LogInformation($"Starting FMI measurement fetch for {request.Sensors.Count} sensors");
             
             var totalMeasurementsAdded = 0;
+            // Group sensors by place name
+            var sensorsByPlace = request.Sensors
+                .GroupBy(s => s.Name)
+                .ToDictionary(g => g.Key, g => g.ToList());
 
-            foreach (var place in request.Places)
+            var places = sensorsByPlace.Keys.ToList();
+
+            if (!places.Any())
             {
-                try
+                _logger.LogWarning("No places to fetch measurements for");
+                return 0;
+            }
+            // Last 6 days
+            var endTimeUtc = DateTime.UtcNow;
+            var startTimeUtc = endTimeUtc.AddDays(-6);
+            _logger.LogInformation($"Fetching measurements for {places.Count} unique places from FMI (last 3 days): {string.Join(", ", places)}");
+            // Get latest timestamp for each sensor before making API call
+            var sensorLatestTimestamps = new Dictionary<int, DateTime?>();
+            foreach (var sensor in request.Sensors)
+            {
+                var sensorLatest = await GetLatestMeasurementTimestampForSensor(sensor.Id);
+                sensorLatestTimestamps[sensor.Id] = sensorLatest;
+                
+                if (sensorLatest.HasValue)
                 {
-                    _logger.LogInformation($"Fetching measurements for place: {place}");
-                    
-                    // Find or create device/sensor for this place
-                    var sensor = await GetOrCreateSensorForPlace(place);
-                    
-                    if (sensor == null)
+                    _logger.LogDebug($"Latest measurement for sensor {sensor.Name} (ID: {sensor.Id}) is at {sensorLatest.Value:u}");
+                }
+            }
+            Dictionary<string, Dictionary<string, List<(DateTime Time, double Value)>>> allMeasurementsByPlace;
+            _logger.LogInformation($"Making single API call to FMI for all {places.Count} places");
+
+            allMeasurementsByPlace = await _weatherClient.GetSeriesAsync(
+                places,
+                startTimeUtc,
+                endTimeUtc,
+                new[] { IlmatieteenlaitosConstants.TemperatureTypeKey, IlmatieteenlaitosConstants.HumidityTypeKey });
+
+            _logger.LogInformation($"Received data from FMI for {allMeasurementsByPlace.Count} places");
+
+            // Now loop through sensors and find matching measurements in the result set
+            var measurements = new List<Measurement>();
+            var skippedCount = 0;
+            var invalidValueCount = 0;
+
+            foreach (var sensor in request.Sensors)
+            {
+                var place = sensor.Name;
+
+                // Try exact match first
+                if (!allMeasurementsByPlace.TryGetValue(place, out var series))
+                {
+                    // Try to find a place that contains the sensor name (case-insensitive)
+                    var matchingPlace = allMeasurementsByPlace.Keys
+                        .FirstOrDefault(p => p.Contains(place, StringComparison.OrdinalIgnoreCase));
+
+                    if (matchingPlace != null)
                     {
-                        _logger.LogWarning($"Could not find or create sensor for place: {place}");
+                        series = allMeasurementsByPlace[matchingPlace];
+                        _logger.LogInformation($"Matched sensor '{place}' (ID: {sensor.Id}) to FMI place: '{matchingPlace}'");
+                    }
+                    else
+                    {
+                        // Try reverse - sensor name contains the place name
+                        matchingPlace = allMeasurementsByPlace.Keys
+                            .FirstOrDefault(p => place.Contains(p, StringComparison.OrdinalIgnoreCase));
+
+                        if (matchingPlace != null)
+                        {
+                            series = allMeasurementsByPlace[matchingPlace];
+                            _logger.LogInformation($"Matched sensor '{place}' (ID: {sensor.Id}) to FMI place: '{matchingPlace}'");
+                        }
+                        else
+                        {
+                            _logger.LogWarning($"No matching data available for place: {place} (Sensor ID: {sensor.Id}). Available places: {string.Join(", ", allMeasurementsByPlace.Keys)}");
+                            continue;
+                        }
+                    }
+                }
+
+                var latestTimestamp = sensorLatestTimestamps[sensor.Id];
+                var dateNow = _dateService.CurrentTime();
+                DeviceMessage? deviceMessage = null;
+                if (latestTimestamp == null || series.Values.Any(value => value.Any(d => d.Time > latestTimestamp)))
+                {
+                    deviceMessage = new DeviceMessage()
+                    {
+                        TimeStamp = dateNow,
+                        TimeStampUtc = _dateService.LocalToUtc(dateNow),
+                        DeviceId = sensor.DeviceId,
+                        Created = _dateService.CurrentTime(),
+                        SourceId = (int)MeasurementSourceTypes.Ilmatieteenlaitos,
+                    };
+                    await _measurementRepository.AddDeviceMessage(deviceMessage, false);
+                }             
+
+                foreach (var seriesEntry in series)
+                {
+                    if (!_typeMap.TryGetValue(seriesEntry.Key, out var type))
+                    {
                         continue;
                     }
 
-                    // Get the latest measurement timestamp for this sensor
-                    var latestTimestamp = await GetLatestMeasurementTimestampForSensor(sensor.Id);
-                    
-                    if (latestTimestamp.HasValue)
+                    foreach (var dataPoint in seriesEntry.Value)
                     {
-                        _logger.LogInformation($"Latest measurement for sensor {sensor.Name} (ID: {sensor.Id}) is at {latestTimestamp.Value:u}");
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"No existing measurements found for sensor {sensor.Name} (ID: {sensor.Id})");
-                    }
-
-                    // Request both temperature and relative humidity for this place
-                    var series = await _weatherClient.GetSeriesAsync(
-                        place,
-                        request.StartTimeUtc,
-                        request.EndTimeUtc,
-                        new[] { "t2m", "rh" });
-
-                    var measurements = new List<Measurement>();
-                    var skippedCount = 0;
-
-                    foreach (var seriesEntry in series)
-                    {
-                        if (!_typeMap.TryGetValue(seriesEntry.Key, out var type))
+                        // Only add measurements that are newer than the latest in DB for THIS sensor
+                        if (latestTimestamp.HasValue && dataPoint.Time <= latestTimestamp.Value)
                         {
-                            _logger.LogDebug($"Skipping unknown parameter type: {seriesEntry.Key}");
+                            skippedCount++;
                             continue;
                         }
 
-                        foreach (var dataPoint in seriesEntry.Value)
+                        // Validate the value - skip NaN, Infinity, and other invalid values
+                        if (!IsValidMeasurementValue(dataPoint.Value))
                         {
-                            // Only add measurements that are newer than the latest in DB
-                            if (latestTimestamp.HasValue && dataPoint.Time <= latestTimestamp.Value)
-                            {
-                                skippedCount++;
-                                continue;
-                            }
-
-                            measurements.Add(new Measurement
-                            {
-                                SensorId = sensor.Id,
-                                Sensor = sensor,
-                                TypeId = type.Id,
-                                Type = type,
-                                Value = dataPoint.Value,
-                                TimestampUtc = dataPoint.Time,
-                                Timestamp = _dateService.UtcToLocal(dataPoint.Time),
-                                CreatedAtUtc = DateTime.UtcNow,
-                                CreatedAt = _dateService.CurrentTime()
-                            });
+                            _logger.LogWarning($"Skipping invalid value {dataPoint.Value} for sensor {sensor.Name} (ID: {sensor.Id}) at {dataPoint.Time:u}");
+                            invalidValueCount++;
+                            continue;
                         }
-                    }
 
-                    if (skippedCount > 0)
-                    {
-                        _logger.LogInformation($"Skipped {skippedCount} measurements that already exist in database for place: {place}");
-                    }
-
-                    if (measurements.Any())
-                    {
-                        _logger.LogInformation($"Adding {measurements.Count} new measurements for place: {place}");
-                        await _measurementRepository.AddMeasurements(measurements, true);
-                        totalMeasurementsAdded += measurements.Count;
-                    }
-                    else
-                    {
-                        _logger.LogWarning($"No new measurements to add for place: {place}");
+                        measurements.Add(new Measurement
+                        {
+                            SensorId = sensor.Id,
+                            TypeId = type.Id,
+                            Value = dataPoint.Value,
+                            TimestampUtc = dataPoint.Time,
+                            Timestamp = _dateService.UtcToLocal(dataPoint.Time),
+                            CreatedAtUtc = DateTime.UtcNow,
+                            CreatedAt = _dateService.CurrentTime(),
+                            DeviceMessage = deviceMessage,
+                        });
                     }
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"Error fetching measurements for place: {place}");
-                }
+            }
+
+            if (skippedCount > 0)
+            {
+                _logger.LogInformation($"Skipped {skippedCount} measurements (older than latest per sensor)");
+            }
+
+            if (invalidValueCount > 0)
+            {
+                _logger.LogWarning($"Skipped {invalidValueCount} measurements due to invalid values (NaN or Infinity)");
+            }
+
+            if (measurements.Any())
+            {
+                _logger.LogInformation($"Adding {measurements.Count} new measurements to database");
+                await _measurementRepository.AddMeasurements(measurements, true);
+                totalMeasurementsAdded = measurements.Count;
+            }
+            else
+            {
+                _logger.LogInformation($"No new measurements to add");
             }
 
             _logger.LogInformation($"FMI measurement fetch completed. Total measurements added: {totalMeasurementsAdded}");
@@ -154,6 +226,11 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task PerformSync()
         {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
             _logger.LogInformation("Starting FMI sync for Ilmatieteenlaitos devices");
             
             try
@@ -171,8 +248,9 @@ namespace EnvironmentMonitor.Application.Services
                 }
 
                 _logger.LogInformation($"Found {devices.Count} Ilmatieteenlaitos devices to sync");
+
                 // Get all sensors for these devices
-                var sensors = await _deviceRepository.GetSensors(new GetSensorsModel
+                var sensorsExtended = await _deviceRepository.GetSensors(new GetSensorsModel
                 {
                     DevicesModel = new GetDevicesModel
                     {
@@ -180,25 +258,35 @@ namespace EnvironmentMonitor.Application.Services
                     }
                 });
 
-                if (!sensors.Any())
+                if (!sensorsExtended.Any())
                 {
                     _logger.LogInformation("No sensors found for Ilmatieteenlaitos devices");
                     return;
                 }
 
-                _logger.LogInformation($"Found {sensors.Count} sensors for Ilmatieteenlaitos devices");
-                // Extract unique place names from sensor names
-                var places = sensors.Select(s => s.Name).Distinct().ToList();
-                // Calculate time range - fetch last 4 days of data
-                var endTimeUtc = _dateService.CurrentTime();
-                var startTimeUtc = _dateService.CurrentTime().AddDays(-4);
-                // Fetch and store measurements
+                _logger.LogInformation($"Found {sensorsExtended.Count} sensors for Ilmatieteenlaitos devices");
+
+                // Convert SensorExtended to Sensor entities
+                var sensors = sensorsExtended.Select(s => new Sensor
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Identifier = s.Identifier,
+                    DeviceId = s.DeviceId,
+                    SensorId = s.SensorId,
+                    TypeId = s.TypeId,
+                    ScaleMin = s.ScaleMin,
+                    ScaleMax = s.ScaleMax
+                }).ToList();
+
+                // Fetch and store measurements (always fetches last 3 days from FMI)
                 var request = new FetchFmiMeasurementsRequest
                 {
-                    Places = places,
-                    StartTimeUtc = startTimeUtc,
-                    EndTimeUtc = endTimeUtc
+                    Sensors = sensors,
+                    StartTimeUtc = DateTime.UtcNow.AddDays(-3), // Not used, but kept for interface compatibility
+                    EndTimeUtc = DateTime.UtcNow // Not used, but kept for interface compatibility
                 };
+
                 var totalMeasurements = await FetchAndStoreMeasurementsAsync(request);
 
                 _logger.LogInformation($"FMI sync completed successfully. Total measurements added: {totalMeasurements}");
@@ -208,27 +296,6 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogError(ex, "Error during FMI sync");
                 throw;
             }
-        }
-
-        private async Task<Sensor?> GetOrCreateSensorForPlace(string place)
-        {
-            // Try to find existing sensor with name matching the place
-            var sensors = await _measurementRepository.Get(
-                filter: m => m.Sensor.Name == place,
-                includeProperties: "Sensor"
-            );
-
-            var sensor = sensors.Select(m => m.Sensor).FirstOrDefault();
-            
-            if (sensor != null)
-            {
-                _logger.LogDebug($"Found existing sensor for place: {place}");
-                return sensor;
-            }
-
-            _logger.LogInformation($"No existing sensor found for place: {place}. Sensor creation not implemented in this version.");
-            
-            return null;
         }
 
         private async Task<DateTime?> GetLatestMeasurementTimestampForSensor(int sensorId)
@@ -248,6 +315,24 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogWarning(ex, $"Error getting latest measurement timestamp for sensor {sensorId}, will fetch all measurements");
                 return null;
             }
+        }
+
+        private static bool IsValidMeasurementValue(double value)
+        {
+            // Check for NaN, positive/negative infinity
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                return false;
+            }
+
+            // Optionally check for extreme values that might cause issues
+            // SQL Server float range is approximately ±1.79E+308
+            if (Math.Abs(value) > 1.0E+308)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

@@ -7,6 +7,8 @@ namespace EnvironmentMonitor.Domain.Enums
         [Description("IoT Hub")]
         IotHub = 0,
         [Description("Rest interface")]
-        Rest = 1
+        Rest = 1,
+        [Description("Ilmatieteenlaitos Open Data")]
+        Ilmatieteenlaitos = 2
     }
 }

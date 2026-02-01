@@ -236,8 +236,8 @@ export const DeviceMessagesTable: React.FC<Props> = ({
           }));
         }}
         getRowId={(row) =>
-          (row as DeviceMessage).uniqueRowId ??
-          (row as DeviceMessage).identifier
+          (row as DeviceMessage).identifier ??
+          `${(row as DeviceMessage).identifier}_${(row as DeviceMessage).timeStamp}`
         }
         getRowClassName={(params) =>
           !(params.row as DeviceMessage).isDuplicate && onRowClick
