@@ -27,7 +27,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
 
             try
             {
-                await _fmiMeasurementService.PerformSync();
+                await _fmiMeasurementService.SyncData();
                 _logger.LogInformation($"FMI measurement sync completed successfully at: {DateTime.UtcNow}");
             }
             catch (Exception ex)

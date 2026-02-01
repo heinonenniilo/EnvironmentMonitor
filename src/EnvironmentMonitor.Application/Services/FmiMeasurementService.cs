@@ -57,7 +57,7 @@ namespace EnvironmentMonitor.Application.Services
                 }, t => t);
         }
 
-        public async Task<int> FetchAndStoreMeasurementsAsync(FetchFmiMeasurementsRequest request)
+        public async Task<int> FetchAndStoreMeasurements(FetchFmiMeasurementsRequest request)
         {
             if (!_userService.IsAdmin)
             {
@@ -73,7 +73,7 @@ namespace EnvironmentMonitor.Application.Services
             if (device == null || device.CommunicationChannelId != (int)CommunicationChannels.IlmatieteenLaitos)
             {
                 _logger.LogWarning($"Device {request.Device.Id} is not an Ilmatieteenlaitos device or has no sensors");
-                return 0;
+                throw new ArgumentException("Invalid device for FMI measurement fetch");
             }
 
             var sensors = device.Sensors;
@@ -93,10 +93,12 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogWarning("No places to fetch measurements for");
                 return 0;
             }
+
             var endTimeUtc = request.EndTimeUtc;
             var startTimeUtc = request.StartTimeUtc;
             _logger.LogInformation($"Fetching measurements for {places.Count} unique places from FMI (last 3 days): {string.Join(", ", places)}");
             // Get latest timestamp for each sensor before making API call
+
             var sensorLatestTimestamps = new Dictionary<int, DateTime?>();
             foreach (var sensor in sensors)
             {
@@ -230,7 +232,7 @@ namespace EnvironmentMonitor.Application.Services
             return totalMeasurementsAdded;
         }
 
-        public async Task PerformSync()
+        public async Task SyncData()
         {
             if (!_userService.IsAdmin)
             {
@@ -255,10 +257,10 @@ namespace EnvironmentMonitor.Application.Services
                 var request = new FetchFmiMeasurementsRequest
                 {
                     Device = device,
-                    StartTimeUtc = DateTime.UtcNow.AddDays(-6),
+                    StartTimeUtc = DateTime.UtcNow.AddDays(-6), // TODO make configurable
                     EndTimeUtc = DateTime.UtcNow
                 };
-                var totalMeasurements = await FetchAndStoreMeasurementsAsync(request);
+                var totalMeasurements = await FetchAndStoreMeasurements(request);
                 _logger.LogInformation($"FMI sync completed successfully for '{device.Name}'. Total measurements added: {totalMeasurements}");
             }
         }

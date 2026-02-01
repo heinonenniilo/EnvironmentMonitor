@@ -30,7 +30,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var placesList = places.ToList();
             if (!placesList.Any())
                 throw new ArgumentException("At least one place must be provided.", nameof(places));
-
             var paramList = string.Join(",", parameters);
             var query = new List<KeyValuePair<string, string>>
             {
@@ -41,8 +40,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 new KeyValuePair<string,string>("parameters", paramList),
                 new KeyValuePair<string,string>("starttime", startTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture)),
                 new KeyValuePair<string,string>("endtime", endTimeUtc.ToString("yyyy-MM-ddTHH:mm:ssZ", CultureInfo.InvariantCulture))
-            };
-            
+            };            
             // Add multiple place parameters
             foreach (var place in placesList)
             {

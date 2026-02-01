@@ -9,8 +9,16 @@ namespace EnvironmentMonitor.Application.Interfaces
 {
     public interface IFmiMeasurementService
     {
-        Task<int> FetchAndStoreMeasurementsAsync(FetchFmiMeasurementsRequest request);
-        Task PerformSync();
+        /// <summary>
+        /// Fetch and store measurements from FMI.
+        /// </summary>
+        /// <returns></returns>
+        Task<int> FetchAndStoreMeasurements(FetchFmiMeasurementsRequest request);
+        /// <summary>
+        /// Fetch FMI data for marked device based on CommunicationChannelId. Calls FetchAndStoreMeasurements for each device.
+        /// </summary>
+        /// <returns></returns>
+        Task SyncData();
     }
 
     public class FetchFmiMeasurementsRequest
