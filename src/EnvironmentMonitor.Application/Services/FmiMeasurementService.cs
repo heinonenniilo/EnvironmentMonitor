@@ -214,7 +214,7 @@ namespace EnvironmentMonitor.Application.Services
                     TimeStampUtc = _dateService.LocalToUtc(dateNow),
                     DeviceId = request.Device.Id,
                     Created = _dateService.CurrentTime(),
-                    SourceId = (int)MeasurementSourceTypes.Ilmatieteenlaitos,
+                    SourceId = (int)CommunicationChannels.IlmatieteenLaitos,
                     Identifier = _identifierGenerator.GenerateId()
                 };
                 await _measurementRepository.AddDeviceMessage(deviceMessage, false);

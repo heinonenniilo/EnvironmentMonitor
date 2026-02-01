@@ -1,4 +1,4 @@
-﻿using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +44,6 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<DeviceQueuedCommandType> DeviceQueuedCommandTypes { get; set; }
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
         public DbSet<DeviceContact> DeviceContacts { get; set; }
-        public DbSet<MeasurementSource> MeasurementSources { get; set; }
         public DbSet<CommunicationChannel> CommunicationChannels { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -53,5 +52,4 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 type.Namespace == "EnvironmentMonitor.Infrastructure.Data.Configurations");
             base.OnModelCreating(modelBuilder);
         }
-    }
-}
+    }}

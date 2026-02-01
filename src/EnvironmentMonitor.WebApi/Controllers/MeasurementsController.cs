@@ -65,7 +65,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
             {
                 measurement.TimestampUtc = enqueuedTime;
             }
-            measurements.Source = MeasurementSourceTypes.Rest;
+            measurements.Source = CommunicationChannels.RestApi;
             await _measurementService.AddMeasurements(measurements);
         }
     }
