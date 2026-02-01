@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 
 namespace EnvironmentMonitor.Infrastructure.Services
 {
@@ -20,7 +21,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _http = httpClient;
         }
 
-        public async Task<Dictionary<string, Dictionary<string, List<(DateTime Time, double Value)>>>> GetSeriesAsync(
+        public async Task<Dictionary<string, Dictionary<string, List<FmiDataPoint>>>> GetSeriesAsync(
             IEnumerable<string> places,
             DateTime startTimeUtc,
             DateTime endTimeUtc,
@@ -57,7 +58,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             return ParseSeriesByPlace(xml, placesList);
         }
 
-        private static Dictionary<string, Dictionary<string, List<(DateTime Time, double Value)>>> ParseSeriesByPlace(string xml, List<string> places)
+        private static Dictionary<string, Dictionary<string, List<FmiDataPoint>>> ParseSeriesByPlace(string xml, List<string> places)
         {
             var doc = XDocument.Parse(xml);
             XNamespace wml2 = "http://www.opengis.net/waterml/2.0";
@@ -66,7 +67,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             XNamespace swe = "http://www.opengis.net/swe/2.0";
             XNamespace target = "http://xml.fmi.fi/namespace/om/atmosphericfeatures/1.1";
             
-            var result = new Dictionary<string, Dictionary<string, List<(DateTime, double)>>>();
+            var result = new Dictionary<string, Dictionary<string, List<FmiDataPoint>>>();
 
             foreach (var ts in doc.Descendants(wml2 + "MeasurementTimeseries"))
             {
@@ -109,10 +110,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 // Initialize dictionary for this place if needed
                 if (!result.ContainsKey(placeName))
                 {
-                    result[placeName] = new Dictionary<string, List<(DateTime, double)>>();
+                    result[placeName] = new Dictionary<string, List<FmiDataPoint>>();
                 }
 
-                var list = new List<(DateTime, double)>();
+                var list = new List<FmiDataPoint>();
                 foreach (var tvp in ts.Descendants(wml2 + "MeasurementTVP"))
                 {
                     var timeElem = tvp.Element(wml2 + "time");
@@ -127,7 +128,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
                         continue;
                     if (!double.TryParse(valueElem.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
                         continue;
-                    list.Add((time, value));
+                    
+                    list.Add(new FmiDataPoint
+                    {
+                        Time = time,
+                        Value = value
+                    });
                 }
                 
                 result[placeName][paramName] = list;

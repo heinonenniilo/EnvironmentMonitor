@@ -101,19 +101,14 @@ namespace EnvironmentMonitor.Application.Services
             foreach (var sensor in sensors)
             {
                 var sensorLatest = await GetLatestMeasurementTimestampForSensor(sensor.Id);
-                sensorLatestTimestamps[sensor.Id] = sensorLatest;
-                
-                if (sensorLatest.HasValue)
-                {
-                    _logger.LogDebug($"Latest measurement for sensor {sensor.Name} (ID: {sensor.Id}) is at {sensorLatest.Value:u}");
-                }
+                sensorLatestTimestamps[sensor.Id] = sensorLatest;               
             }
-            Dictionary<string, Dictionary<string, List<(DateTime Time, double Value)>>> allMeasurementsByPlace;
-            _logger.LogInformation($"Making single API call to FMI for all {places.Count} places");
 
-            allMeasurementsByPlace = await _weatherClient.GetSeriesAsync(
+            var apiCallStartUtc = sensorLatestTimestamps.Values.Any(x => !x.HasValue) ? null : sensorLatestTimestamps.Values.Min();
+
+            var allMeasurementsByPlace = await _weatherClient.GetSeriesAsync(
                 places,
-                startTimeUtc,
+                apiCallStartUtc != null ? apiCallStartUtc.Value: startTimeUtc,
                 endTimeUtc,
                 new[] { IlmatieteenlaitosConstants.TemperatureTypeKey, IlmatieteenlaitosConstants.HumidityTypeKey });
 
