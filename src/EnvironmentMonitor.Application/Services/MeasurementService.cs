@@ -142,16 +142,21 @@ namespace EnvironmentMonitor.Application.Services
             {
                 await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
             }
-            if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
+
+            // Skip status checks for virtual devices
+            if (!device.IsVirtual)
             {
-                await _deviceService.SetStatus(new SetDeviceStatusModel()
+                if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
                 {
-                    Idenfifier = device.Identifier,
-                    Status = true,
-                    TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
-                    Message = "Device is online",
-                    DeviceMessage = deviceMessage
-                }, false);
+                    await _deviceService.SetStatus(new SetDeviceStatusModel()
+                    {
+                        Idenfifier = device.Identifier,
+                        Status = true,
+                        TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
+                        Message = "Device is online",
+                        DeviceMessage = deviceMessage
+                    }, false);
+                }
             }
             await _measurementRepository.AddMeasurements(measurementsToAdd, true, deviceMessage);
             _logger.LogInformation("Measurementsadded");
