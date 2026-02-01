@@ -83,6 +83,8 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<IEmailRepository, EmailRepository>();
             services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
             services.AddSingleton<IApiKeyHashService, ApiKeyHashService>();
+            services.AddSingleton<IIdentifierGenerator, IdentifierGenerator>();
+
             // Identity stuff
             services.AddIdentity<ApplicationUser, ApplicationUserRole>(options =>
             {

@@ -15,7 +15,7 @@ namespace EnvironmentMonitor.Application.Interfaces
 
     public class FetchFmiMeasurementsRequest
     {
-        public List<Sensor> Sensors { get; set; } = new();
+        public Device Device { get; set; }
         public DateTime StartTimeUtc { get; set; }
         public DateTime EndTimeUtc { get; set; }
     }

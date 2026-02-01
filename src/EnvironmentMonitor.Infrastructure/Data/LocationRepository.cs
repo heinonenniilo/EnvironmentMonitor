@@ -43,7 +43,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => x.Visible == model.Visible.Value);
             }
 
-            query = query.Where(x => x.Id > 0);
+            // query = query.Where(x => x.Id > 0);
             return await query.ToListAsync();
         }
 

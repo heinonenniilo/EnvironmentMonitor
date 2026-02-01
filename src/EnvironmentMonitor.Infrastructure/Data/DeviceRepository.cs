@@ -409,6 +409,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
         private IQueryable<Device> GetFilteredDeviceQuery(GetDevicesModel model)
         {
             IQueryable<Device> query = _context.Devices;
+
+            if (model.GetSensors)
+            {
+                query = query.Include(x => x.Sensors);
+            }
+
             if (model.GetAttachments)
             {
                 query = query.Include(x => x.Attachments).ThenInclude(a => a.Attachment);

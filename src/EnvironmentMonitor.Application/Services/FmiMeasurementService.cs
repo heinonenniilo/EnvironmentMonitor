@@ -23,6 +23,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILogger<FmiMeasurementService> _logger;
         private readonly IReadOnlyDictionary<string, MeasurementType> _typeMap;
         private readonly IUserService _userService;
+        private readonly IIdentifierGenerator _identifierGenerator;
 
         public FmiMeasurementService(
             IFmiWeatherClient weatherClient,
@@ -30,6 +31,7 @@ namespace EnvironmentMonitor.Application.Services
             IDeviceRepository deviceRepository,
             IDateService dateService,
             IUserService userService,
+            IIdentifierGenerator identifierGenerator,
             ILogger<FmiMeasurementService> logger)
         {
             _weatherClient = weatherClient;
@@ -37,7 +39,8 @@ namespace EnvironmentMonitor.Application.Services
             _deviceRepository = deviceRepository;
             _dateService = dateService;
             _logger = logger;
-            _userService = userService;           
+            _userService = userService;       
+            _identifierGenerator = identifierGenerator;
             // Define measurement types and map FMI parameter codes to them
             var types = new List<MeasurementType>
             {
@@ -61,11 +64,25 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
 
-            _logger.LogInformation($"Starting FMI measurement fetch for {request.Sensors.Count} sensors");
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel
+            {
+                Ids = [request.Device.Id],
+                GetSensors = true
+            })).FirstOrDefault();
+
+            if (device == null || device.CommunicationChannelId != (int)CommunicationChannels.IlmatieteenLaitos)
+            {
+                _logger.LogWarning($"Device {request.Device.Id} is not an Ilmatieteenlaitos device or has no sensors");
+                return 0;
+            }
+
+            var sensors = device.Sensors;
+
+            _logger.LogInformation($"Starting FMI measurement fetch for {sensors.Count} sensors");
             
             var totalMeasurementsAdded = 0;
             // Group sensors by place name
-            var sensorsByPlace = request.Sensors
+            var sensorsByPlace = sensors
                 .GroupBy(s => s.Name)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
@@ -76,13 +93,12 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogWarning("No places to fetch measurements for");
                 return 0;
             }
-            // Last 6 days
-            var endTimeUtc = DateTime.UtcNow;
-            var startTimeUtc = endTimeUtc.AddDays(-6);
+            var endTimeUtc = request.EndTimeUtc;
+            var startTimeUtc = request.StartTimeUtc;
             _logger.LogInformation($"Fetching measurements for {places.Count} unique places from FMI (last 3 days): {string.Join(", ", places)}");
             // Get latest timestamp for each sensor before making API call
             var sensorLatestTimestamps = new Dictionary<int, DateTime?>();
-            foreach (var sensor in request.Sensors)
+            foreach (var sensor in sensors)
             {
                 var sensorLatest = await GetLatestMeasurementTimestampForSensor(sensor.Id);
                 sensorLatestTimestamps[sensor.Id] = sensorLatest;
@@ -108,7 +124,7 @@ namespace EnvironmentMonitor.Application.Services
             var skippedCount = 0;
             var invalidValueCount = 0;
 
-            foreach (var sensor in request.Sensors)
+            foreach (var sensor in sensors)
             {
                 var place = sensor.Name;
 
@@ -142,23 +158,8 @@ namespace EnvironmentMonitor.Application.Services
                         }
                     }
                 }
-
                 var latestTimestamp = sensorLatestTimestamps[sensor.Id];
-                var dateNow = _dateService.CurrentTime();
-                DeviceMessage? deviceMessage = null;
-                if (latestTimestamp == null || series.Values.Any(value => value.Any(d => d.Time > latestTimestamp)))
-                {
-                    deviceMessage = new DeviceMessage()
-                    {
-                        TimeStamp = dateNow,
-                        TimeStampUtc = _dateService.LocalToUtc(dateNow),
-                        DeviceId = sensor.DeviceId,
-                        Created = _dateService.CurrentTime(),
-                        SourceId = (int)MeasurementSourceTypes.Ilmatieteenlaitos,
-                    };
-                    await _measurementRepository.AddDeviceMessage(deviceMessage, false);
-                }             
-
+            
                 foreach (var seriesEntry in series)
                 {
                     if (!_typeMap.TryGetValue(seriesEntry.Key, out var type))
@@ -174,7 +175,6 @@ namespace EnvironmentMonitor.Application.Services
                             skippedCount++;
                             continue;
                         }
-
                         // Validate the value - skip NaN, Infinity, and other invalid values
                         if (!IsValidMeasurementValue(dataPoint.Value))
                         {
@@ -182,7 +182,6 @@ namespace EnvironmentMonitor.Application.Services
                             invalidValueCount++;
                             continue;
                         }
-
                         measurements.Add(new Measurement
                         {
                             SensorId = sensor.Id,
@@ -191,8 +190,7 @@ namespace EnvironmentMonitor.Application.Services
                             TimestampUtc = dataPoint.Time,
                             Timestamp = _dateService.UtcToLocal(dataPoint.Time),
                             CreatedAtUtc = DateTime.UtcNow,
-                            CreatedAt = _dateService.CurrentTime(),
-                            DeviceMessage = deviceMessage,
+                            CreatedAt = _dateService.CurrentTime()
                         });
                     }
                 }
@@ -208,10 +206,24 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogWarning($"Skipped {invalidValueCount} measurements due to invalid values (NaN or Infinity)");
             }
 
-            if (measurements.Any())
+            if (measurements.Count != 0)
             {
+                // Add device message
+                var dateNow = _dateService.CurrentTime();
+                DeviceMessage? deviceMessage = null;
+                deviceMessage = new DeviceMessage()
+                {
+                    TimeStamp = dateNow,
+                    TimeStampUtc = _dateService.LocalToUtc(dateNow),
+                    DeviceId = request.Device.Id,
+                    Created = _dateService.CurrentTime(),
+                    SourceId = (int)MeasurementSourceTypes.Ilmatieteenlaitos,
+                    Identifier = _identifierGenerator.GenerateId()
+                };
+                await _measurementRepository.AddDeviceMessage(deviceMessage, false);
+
                 _logger.LogInformation($"Adding {measurements.Count} new measurements to database");
-                await _measurementRepository.AddMeasurements(measurements, true);
+                await _measurementRepository.AddMeasurements(measurements, true, deviceMessage);
                 totalMeasurementsAdded = measurements.Count;
             }
             else
@@ -232,69 +244,28 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             _logger.LogInformation("Starting FMI sync for Ilmatieteenlaitos devices");
-            
-            try
+            var devices = await _deviceRepository.GetDevices(new GetDevicesModel
             {
-                // Fetch all devices with CommunicationChannelId = Ilmatieteenlaitos
-                var devices = await _deviceRepository.GetDevices(new GetDevicesModel
-                {
-                    CommunicationChannelIds = new List<int> { (int)CommunicationChannels.IlmatieteenLaitos }
-                });
+                CommunicationChannelIds = new List<int> { (int)CommunicationChannels.IlmatieteenLaitos }
+            });
 
-                if (!devices.Any())
-                {
-                    _logger.LogInformation("No Ilmatieteenlaitos devices found to sync");
-                    return;
-                }
+            if (!devices.Any())
+            {
+                _logger.LogInformation("No Ilmatieteenlaitos devices found to sync");
+                return;
+            }
 
-                _logger.LogInformation($"Found {devices.Count} Ilmatieteenlaitos devices to sync");
-
-                // Get all sensors for these devices
-                var sensorsExtended = await _deviceRepository.GetSensors(new GetSensorsModel
-                {
-                    DevicesModel = new GetDevicesModel
-                    {
-                        Ids = devices.Select(d => d.Id).ToList()
-                    }
-                });
-
-                if (!sensorsExtended.Any())
-                {
-                    _logger.LogInformation("No sensors found for Ilmatieteenlaitos devices");
-                    return;
-                }
-
-                _logger.LogInformation($"Found {sensorsExtended.Count} sensors for Ilmatieteenlaitos devices");
-
-                // Convert SensorExtended to Sensor entities
-                var sensors = sensorsExtended.Select(s => new Sensor
-                {
-                    Id = s.Id,
-                    Name = s.Name,
-                    Identifier = s.Identifier,
-                    DeviceId = s.DeviceId,
-                    SensorId = s.SensorId,
-                    TypeId = s.TypeId,
-                    ScaleMin = s.ScaleMin,
-                    ScaleMax = s.ScaleMax
-                }).ToList();
-
-                // Fetch and store measurements (always fetches last 3 days from FMI)
+            foreach (var device in devices)
+            {
+                _logger.LogInformation($"Found Ilmatieteenlaitos device: ID={device.Id}, Identifier={device.Identifier}");
                 var request = new FetchFmiMeasurementsRequest
                 {
-                    Sensors = sensors,
-                    StartTimeUtc = DateTime.UtcNow.AddDays(-3), // Not used, but kept for interface compatibility
-                    EndTimeUtc = DateTime.UtcNow // Not used, but kept for interface compatibility
+                    Device = device,
+                    StartTimeUtc = DateTime.UtcNow.AddDays(-6),
+                    EndTimeUtc = DateTime.UtcNow
                 };
-
                 var totalMeasurements = await FetchAndStoreMeasurementsAsync(request);
-
-                _logger.LogInformation($"FMI sync completed successfully. Total measurements added: {totalMeasurements}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during FMI sync");
-                throw;
+                _logger.LogInformation($"FMI sync completed successfully for '{device.Name}'. Total measurements added: {totalMeasurements}");
             }
         }
 
