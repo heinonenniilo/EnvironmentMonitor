@@ -4,6 +4,7 @@ using EnvironmentMonitor.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(MeasurementDbContext))]
-    partial class MeasurementDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260201101440_AddIlmatieteenlaitosAsMeasurementSource")]
+    partial class AddIlmatieteenlaitosAsMeasurementSource
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -911,6 +914,45 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.ToTable("Measurements");
                 });
 
+            modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.MeasurementSource", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MeasurementSources");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 0,
+                            Description = "IoT Hub",
+                            Name = "IotHub"
+                        },
+                        new
+                        {
+                            Id = 1,
+                            Description = "Rest interface",
+                            Name = "Rest"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Ilmatieteenlaitos Open Data",
+                            Name = "Ilmatieteenlaitos"
+                        });
+                });
+
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.MeasurementType", b =>
                 {
                     b.Property<int>("Id")
@@ -1218,13 +1260,13 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("EnvironmentMonitor.Domain.Entities.CommunicationChannel", "CommunicationChannel")
+                    b.HasOne("EnvironmentMonitor.Domain.Entities.MeasurementSource", "MeasurementSource")
                         .WithMany("DeviceMessages")
                         .HasForeignKey("SourceId");
 
-                    b.Navigation("CommunicationChannel");
-
                     b.Navigation("Device");
+
+                    b.Navigation("MeasurementSource");
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.DeviceQueuedCommand", b =>
@@ -1393,8 +1435,6 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.CommunicationChannel", b =>
                 {
-                    b.Navigation("DeviceMessages");
-
                     b.Navigation("Devices");
                 });
 
@@ -1451,6 +1491,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                     b.Navigation("Devices");
 
                     b.Navigation("LocationSensors");
+                });
+
+            modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.MeasurementSource", b =>
+                {
+                    b.Navigation("DeviceMessages");
                 });
 
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.MeasurementType", b =>

@@ -32,6 +32,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Configurations
                 Description = GetEnumDescription(v)
             }).ToArray();
 
+            builder.HasMany(x => x.DeviceMessages)
+                .WithOne(dm => dm.CommunicationChannel)
+                .HasForeignKey(dm => dm.SourceId)
+                .IsRequired(false);
+
             builder.HasData(values);
         }
 

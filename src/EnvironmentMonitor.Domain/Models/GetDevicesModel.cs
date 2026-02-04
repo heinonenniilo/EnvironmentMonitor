@@ -14,11 +14,14 @@ namespace EnvironmentMonitor.Domain.Models
         public List<string>? DeviceIdentifiers { get; set; }
         public List<Guid>? Identifiers { get; set; }
         public List<Guid>? LocationIdentifiers { get; set; }
+        public List<int>? CommunicationChannelIds { get; set; }
         public bool OnlyVisible { get; set; }
         public bool GetAttachments { get; set; }
         public bool GetLocation { get; set; }
         public bool GetAttributes { get; set; }
         public bool GetContacts { get; set; }
+        public bool GetSensors { get; set; }
+        public bool? IsVirtual { get; set; }
     }
 
     public class GetSensorsModel

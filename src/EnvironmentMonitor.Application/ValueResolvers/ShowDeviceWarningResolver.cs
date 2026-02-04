@@ -3,6 +3,7 @@ using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace EnvironmentMonitor.Application.ValueResolvers
 
         public bool Resolve(DeviceInfo source, DeviceInfoDto destination, bool destMember, ResolutionContext context)
         {
-            return source.LastMessage == null || _dateService.CurrentTime().AddMinutes(-1 * ApplicationConstants.DeviceWarningLimitInMinutes) > source.LastMessage;
+            return source.LastMessage == null || _dateService.CurrentTime().AddMinutes(-1 * source.Device.GetOfflineThresholdInMinutes()) > source.LastMessage;
         }
     }
 }

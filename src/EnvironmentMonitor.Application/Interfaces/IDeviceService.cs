@@ -18,7 +18,8 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<DeviceDto> GetDevice(Guid identifier, AccessLevels accessLevel);
 
         public Task<List<DeviceDto>> GetDevices(bool onlyVisible, bool getLocation);
-        public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false, bool getContacts = false);
+        public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false, bool getContacts = false, 
+            bool? isVirtual = null);
         public Task<List<SensorDto>> GetSensors(List<Guid> identifiers);
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
         public Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
@@ -36,7 +37,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task SetStatus(SetDeviceStatusModel model, bool saveChanges);
 
         public Task<DeviceInfoDto> UpdateDevice(UpdateDeviceDto model);
-        
+
         public Task<DeviceContactDto> AddDeviceContact(AddOrUpdateDeviceContactDto model);
         public Task<DeviceContactDto> UpdateDeviceContact(AddOrUpdateDeviceContactDto model);
         public Task DeleteDeviceContact(AddOrUpdateDeviceContactDto model);

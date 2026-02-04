@@ -8,6 +8,7 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.ReturnModel;
+using EnvironmentMonitor.Domain.Utils;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
@@ -127,7 +128,7 @@ namespace EnvironmentMonitor.Application.Services
                     CreatedAt = createdAt,
                     CreatedAtUtc = _dateService.LocalToUtc(createdAt),
                     TimestampUtc = row.TimestampUtc,
-                    TypeId = row.TypeId                   
+                    TypeId = row.TypeId
                 };
                 measurementsToAdd.Add(measurementToAdd);
                 if (sensorInDb.VirtualSensorRowValues.Count != 0)
@@ -142,7 +143,8 @@ namespace EnvironmentMonitor.Application.Services
             {
                 await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
             }
-            if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < ApplicationConstants.DeviceWarningLimitInMinutes)
+
+            if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < device.GetOfflineThresholdInMinutes())
             {
                 await _deviceService.SetStatus(new SetDeviceStatusModel()
                 {

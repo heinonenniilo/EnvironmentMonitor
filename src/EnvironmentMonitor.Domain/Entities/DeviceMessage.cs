@@ -22,8 +22,7 @@ namespace EnvironmentMonitor.Domain.Entities
         public long? LoopCount { get; set; }
         public long? MessageCount { get; set; }
         public bool IsDuplicate { get; set; }
-        // Optional reference to a measurement source
         public int? SourceId { get; set; }
-        public MeasurementSource? MeasurementSource { get; set; }
+        public CommunicationChannel? CommunicationChannel { get; set; }
     }
 }

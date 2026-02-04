@@ -5,4 +5,5 @@ export interface Device extends Entity {
   hasMotionSensor: boolean;
   locationIdentifier?: string;
   displayName?: string;
+  autoScaleByDefault: boolean;
 }

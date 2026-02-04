@@ -177,7 +177,8 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
 
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false, bool getContacts = false)
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false, 
+            bool getContacts = false, bool? isVirtual = null)
         {
             _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
             var infos = new List<DeviceInfo>();
@@ -190,7 +191,8 @@ namespace EnvironmentMonitor.Application.Services
                     GetAttachments = getAttachments,
                     GetLocation = getLocation,
                     GetAttributes = getAttributes,
-                    GetContacts = getContacts
+                    GetContacts = getContacts,
+                    IsVirtual = isVirtual
                 }))
                 .Where(d => _userService.HasAccessToDevice(d.Device.Identifier, AccessLevels.Read)).ToList();
             }
@@ -202,7 +204,8 @@ namespace EnvironmentMonitor.Application.Services
                     OnlyVisible = onlyVisible,
                     GetAttachments = getAttachments,
                     GetLocation = getLocation,
-                    GetAttributes = getAttributes
+                    GetAttributes = getAttributes,
+                    IsVirtual = isVirtual, 
                 });
             }
             var listToReturn = _mapper.Map<List<DeviceInfoDto>>(infos);
@@ -413,6 +416,10 @@ namespace EnvironmentMonitor.Application.Services
                 else
                 {
                     _logger.LogWarning($"Device emails are disabled. Not sending email for device {device.Name} ({device.Id}). Type: {currentStatus?.Status}");
+                    if (saveChanges)
+                    {
+                        await _deviceRepository.SaveChanges();
+                    }
                 }
             }
         }

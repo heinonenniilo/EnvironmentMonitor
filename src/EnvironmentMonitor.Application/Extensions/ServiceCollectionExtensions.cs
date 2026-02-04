@@ -20,6 +20,7 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<IDeviceCommandService, DeviceCommandService>();
             services.AddScoped<IUserCookieService, UserCookieService>();
             services.AddScoped<IApiKeyService, ApiKeyService>();
+            services.AddScoped<IFmiMeasurementService, FmiMeasurementService>();
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             if (deviceSettings != null)

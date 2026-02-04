@@ -41,6 +41,16 @@ export const measurementSlice = createSlice({
       state.sensors = action.payload;
     },
     setDevices: (state, action: PayloadAction<Device[]>) => {
+      const devicesToAutoScale = action.payload
+        .filter((d) => d.autoScaleByDefault)
+        .map((d) => d.identifier);
+
+      devicesToAutoScale.forEach((deviceIdentifier) => {
+        if (!state.autoScaleSensorIds.includes(deviceIdentifier)) {
+          state.autoScaleSensorIds.push(deviceIdentifier);
+        }
+      });
+
       state.devices = action.payload;
     },
     setDeviceInfos: (state, action: PayloadAction<DeviceInfo[]>) => {
