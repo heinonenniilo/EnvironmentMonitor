@@ -33,6 +33,9 @@ import { DeviceContactDialog } from "../components/DeviceContactDialog";
 import { Refresh, Add, VpnKey } from "@mui/icons-material";
 import { type DeviceContact } from "../models/deviceContact";
 import { ApiKeyDialog } from "../components/ApiKeyDialog";
+import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
+import type { SensorInfo } from "../models/sensor";
+import { SensorDialog } from "../components/SensorDialog";
 
 interface PromiseInfo {
   type: string;
@@ -77,6 +80,8 @@ export const DeviceView: React.FC = () => {
     description?: string;
     created: string;
   } | null>(null);
+  const [sensorDialogOpen, setSensorDialogOpen] = useState(false);
+  const [selectedSensor, setSelectedSensor] = useState<SensorInfo | null>(null);
 
   const dispatch = useDispatch();
 
@@ -85,6 +90,7 @@ export const DeviceView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const deviceContactsHook = useApiHook().deviceContactsHook;
   const apiKeysHook = useApiHook().apiKeysHook;
+  const sensorHook = useApiHook().sensorHook;
 
   const loadMeasurements = () => {
     if (!selectedDevice) {
@@ -754,6 +760,92 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const handleUpdateSensor = (model: AddOrUpdateSensor) => {
+    setIsLoading(true);
+    sensorHook
+      .updateSensor(model)
+      .then(() => {
+        dispatch(
+          addNotification({
+            title: "Sensor updated successfully",
+            body: "",
+            severity: "success",
+          }),
+        );
+        return deviceHook.getDeviceInfo(model.deviceIdentifier);
+      })
+      .then((res) => {
+        setSelectedDevice(res);
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const handleAddSensor = (model: AddOrUpdateSensor) => {
+    setIsLoading(true);
+    sensorHook
+      .addSensor(model)
+      .then(() => {
+        dispatch(
+          addNotification({
+            title: "Sensor added successfully",
+            body: "",
+            severity: "success",
+          }),
+        );
+        return deviceHook.getDeviceInfo(model.deviceIdentifier);
+      })
+      .then((res) => {
+        setSelectedDevice(res);
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const handleDeleteSensor = (
+    deviceIdentifier: string,
+    sensorIdentifier: string,
+  ) => {
+    dispatch(
+      setConfirmDialog({
+        onConfirm: () => {
+          setIsLoading(true);
+          sensorHook
+            .deleteSensor(deviceIdentifier, sensorIdentifier)
+            .then(() => {
+              dispatch(
+                addNotification({
+                  title: "Sensor deleted successfully",
+                  body: "",
+                  severity: "success",
+                }),
+              );
+              return deviceHook.getDeviceInfo(deviceIdentifier);
+            })
+            .then((res) => {
+              setSelectedDevice(res);
+            })
+            .catch((er) => {
+              console.error(er);
+            })
+            .finally(() => {
+              setIsLoading(false);
+            });
+        },
+        title: "Delete sensor?",
+        body: "Are you sure you want to delete this sensor?",
+      }),
+    );
+  };
+
   const handleGenerateApiKey = (description: string) => {
     if (!selectedDevice) {
       return;
@@ -883,10 +975,25 @@ export const DeviceView: React.FC = () => {
             }}
           />
         )}
-        <Collapsible title="Sensors" isOpen={true}>
+        <Collapsible
+          title="Sensors"
+          isOpen={true}
+          customComponent={
+            <IconButton
+              onClick={() => setSensorDialogOpen(true)}
+              sx={{ ml: 1, cursor: "pointer" }}
+              size="small"
+              title="Add new sensor"
+            >
+              <Add />
+            </IconButton>
+          }
+        >
           <SensorTable
             sensors={selectedDevice?.sensors ?? []}
             isVirtual={selectedDevice?.isVirtual}
+            deviceIdentifier={selectedDevice?.device.identifier}
+            onDelete={handleDeleteSensor}
           />
         </Collapsible>
         {selectedDevice && !selectedDevice.isVirtual && (
@@ -1145,6 +1252,21 @@ export const DeviceView: React.FC = () => {
         onGenerate={handleGenerateApiKey}
         generatedKey={generatedApiKey}
         isLoading={isLoading}
+      />
+      <SensorDialog
+        open={sensorDialogOpen}
+        deviceIdentifier={selectedDevice?.device.identifier ?? ""}
+        nextSensorId={
+          selectedDevice?.sensors && selectedDevice.sensors.length > 0
+            ? Math.max(...selectedDevice.sensors.map((s) => s.sensorId)) + 1
+            : 1
+        }
+        sensor={selectedSensor}
+        onClose={() => {
+          setSensorDialogOpen(false);
+          setSelectedSensor(null);
+        }}
+        onSave={selectedSensor ? handleUpdateSensor : handleAddSensor}
       />
     </AppContentWrapper>
   );

@@ -36,6 +36,8 @@ import type { ManageUserRolesRequest } from "../models/manageUserRolesRequest";
 import type { ManageUserClaimsRequest } from "../models/manageUserClaimsRequest";
 import type { ApiKeyDto, UpdateApiKeyRequest } from "../models/apiKey";
 import type { UpdateDeviceDto } from "../models/updateDeviceDto";
+import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
+import type { SensorInfo } from "../models/sensor";
 
 interface ApiHook {
   userHook: userHook;
@@ -46,6 +48,7 @@ interface ApiHook {
   deviceEmailsHook: deviceEmailsHook;
   userManagementHook: userManagementHook;
   apiKeysHook: apiKeysHook;
+  sensorHook: sensorHook;
 }
 
 interface userHook {
@@ -204,6 +207,16 @@ interface apiKeysHook {
     id: string,
     request: UpdateApiKeyRequest,
   ) => Promise<ApiKeyDto>;
+}
+
+interface sensorHook {
+  getSensors: (deviceIdentifier: string) => Promise<SensorInfo[]>;
+  addSensor: (model: AddOrUpdateSensor) => Promise<SensorInfo>;
+  updateSensor: (model: AddOrUpdateSensor) => Promise<SensorInfo>;
+  deleteSensor: (
+    deviceIdentifier: string,
+    sensorIdentifier: string,
+  ) => Promise<void>;
 }
 
 const apiClient = axios.create({
@@ -984,6 +997,60 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError("Failed to update API key");
+          throw ex;
+        }
+      },
+    },
+    sensorHook: {
+      getSensors: async (deviceIdentifier: string) => {
+        try {
+          const res = await apiClient.get<any, AxiosResponse<SensorInfo[]>>(
+            `/api/sensors/${deviceIdentifier}`,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to get sensors");
+          throw ex;
+        }
+      },
+      addSensor: async (model: AddOrUpdateSensor) => {
+        try {
+          const res = await apiClient.post<any, AxiosResponse<SensorInfo>>(
+            `/api/sensors`,
+            model,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to add sensor");
+          throw ex;
+        }
+      },
+      updateSensor: async (model: AddOrUpdateSensor) => {
+        try {
+          const res = await apiClient.put<any, AxiosResponse<SensorInfo>>(
+            `/api/sensors`,
+            model,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to update sensor");
+          throw ex;
+        }
+      },
+      deleteSensor: async (
+        deviceIdentifier: string,
+        sensorIdentifier: string,
+      ) => {
+        try {
+          await apiClient.delete(
+            `/api/sensors/${deviceIdentifier}/${sensorIdentifier}`,
+          );
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to delete sensor");
           throw ex;
         }
       },

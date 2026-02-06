@@ -2,6 +2,7 @@ import { type SensorInfo, type VirtualSensor } from "../models/sensor";
 import {
   Box,
   Checkbox,
+  IconButton,
   Paper,
   Table,
   TableBody,
@@ -14,20 +15,29 @@ import {
 import { SensorsDialog } from "./SensorsDialog";
 import { useState } from "react";
 import { getAggregationTypeDisplayName } from "../utilities/measurementUtils";
+import { Delete } from "@mui/icons-material";
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
   title?: string;
   isVirtual?: boolean;
+  deviceIdentifier?: string;
+  onEdit?: (sensor: SensorInfo) => void;
+  onDelete?: (deviceIdentifier: string, sensorIdentifier: string) => void;
 }
 
 export const SensorTable: React.FC<SensorTableProps> = ({
   title,
   sensors,
   isVirtual,
+  deviceIdentifier,
+  onDelete,
 }) => {
   const [selectedSensors, setSelectedSensors] = useState<VirtualSensor[]>([]);
   const [dialogTitle, setDialogTitle] = useState<string>("");
+
+  const editable = !!onDelete;
+
   return (
     <Box marginTop={1}>
       {title && (
@@ -54,6 +64,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
               <TableCell>Scale min</TableCell>
               <TableCell>Scale max</TableCell>
               {isVirtual && <TableCell>Aggregation Type</TableCell>}
+              {editable && <TableCell align="right">Actions</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -96,6 +107,25 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                     {isVirtual && (
                       <TableCell>
                         {getAggregationTypeDisplayName(r.aggregationType)}
+                      </TableCell>
+                    )}
+                    {editable && (
+                      <TableCell align="right">
+                        <Box display="flex" justifyContent="flex-end" gap={0.5}>
+                          {onDelete && deviceIdentifier && (
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(deviceIdentifier, r.identifier);
+                              }}
+                              title="Delete sensor"
+                              color="error"
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          )}
+                        </Box>
                       </TableCell>
                     )}
                   </TableRow>
