@@ -13,7 +13,7 @@ export const getCommunicationChannelDisplayName = (
     case CommunicationChannels.RestApi:
       return "Rest API";
     case CommunicationChannels.Ilmatieteenlaitos:
-      return "Ilmatieteen laitos API";
+      return "Ilmatieteenlaitos API";
     default:
       return "Unknown";
   }

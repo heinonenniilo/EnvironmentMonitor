@@ -338,16 +338,15 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
                 size="small"
                 fullWidth
               >
-                <MenuItem value={CommunicationChannels.IotHub}>
-                  {getCommunicationChannelDisplayName(
-                    CommunicationChannels.IotHub,
-                  )}
-                </MenuItem>
-                <MenuItem value={CommunicationChannels.RestApi}>
-                  {getCommunicationChannelDisplayName(
-                    CommunicationChannels.RestApi,
-                  )}
-                </MenuItem>
+                {Object.values(CommunicationChannels)
+                  .filter((v) => typeof v === "number")
+                  .map((value) => (
+                    <MenuItem key={value} value={value}>
+                      {getCommunicationChannelDisplayName(
+                        value as CommunicationChannels,
+                      )}
+                    </MenuItem>
+                  ))}
               </Select>
             );
           }
