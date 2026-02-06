@@ -15,6 +15,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public int SensorId { get; set; }
         public List<VirtualSensorRowDto> Sensors { get; set; } = [];
         public bool IsVirtual { get; set; }
+        public bool Active { get; set; }
 
         public override void Mapping(Profile profile)
         {

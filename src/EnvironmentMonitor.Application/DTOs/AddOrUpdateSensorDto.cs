@@ -10,5 +10,6 @@ namespace EnvironmentMonitor.Application.DTOs
         public required string Name { get; set; }
         public double? ScaleMin { get; set; }
         public double? ScaleMax { get; set; }
+        public bool Active { get; set; } = true;
     }
 }

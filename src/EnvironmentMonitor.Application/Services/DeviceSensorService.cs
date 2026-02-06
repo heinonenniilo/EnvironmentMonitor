@@ -70,6 +70,7 @@ namespace EnvironmentMonitor.Application.Services
                 Name = model.Name,
                 ScaleMin = model.ScaleMin,
                 ScaleMax = model.ScaleMax,
+                Active = model.Active,
             };
 
             var addedSensor = await _sensorRepository.AddSensor(sensor, true);
@@ -107,6 +108,7 @@ namespace EnvironmentMonitor.Application.Services
             existingSensor.Name = model.Name;
             existingSensor.ScaleMin = model.ScaleMin;
             existingSensor.ScaleMax = model.ScaleMax;
+            existingSensor.Active = model.Active;
 
             var updatedSensor = await _sensorRepository.UpdateSensor(existingSensor, true);
 

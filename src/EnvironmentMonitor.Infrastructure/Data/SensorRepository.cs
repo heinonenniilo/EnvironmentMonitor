@@ -79,6 +79,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             existingSensor.Name = sensor.Name;
             existingSensor.ScaleMin = sensor.ScaleMin;
             existingSensor.ScaleMax = sensor.ScaleMax;
+            existingSensor.Active = sensor.Active;
 
             if (saveChanges)
             {
