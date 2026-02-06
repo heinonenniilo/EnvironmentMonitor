@@ -348,6 +348,11 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
                     CommunicationChannels.RestApi,
                   )}
                 </MenuItem>
+                <MenuItem value={CommunicationChannels.Ilmatieteenlaitos}>
+                  {getCommunicationChannelDisplayName(
+                    CommunicationChannels.Ilmatieteenlaitos,
+                  )}
+                </MenuItem>
               </Select>
             );
           }
