@@ -26,12 +26,14 @@ namespace EnvironmentMonitor.WebApi.Controllers
     {
 
         private readonly IDeviceService _deviceService;
+        private readonly IDeviceSensorService _deviceSensorService;
         private readonly IDeviceCommandService _deviceCommandService;
         private readonly FileUploadSettings _fileUploadSettings;
 
-        public DevicesController(IDeviceService deviceService, IDeviceCommandService queuedCommandService, FileUploadSettings fileUploadSettings)
+        public DevicesController(IDeviceService deviceService, IDeviceSensorService deviceSensorService, IDeviceCommandService queuedCommandService, FileUploadSettings fileUploadSettings)
         {
             _deviceService = deviceService;
+            _deviceSensorService = deviceSensorService;
             _deviceCommandService = queuedCommandService;
             _fileUploadSettings = fileUploadSettings;
         }
@@ -138,7 +140,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public async Task<List<DeviceEventDto>> GetDeviceEvents([FromRoute] Guid identifier) => await _deviceService.GetDeviceEvents(identifier);
 
         [HttpGet("sensors")]
-        public async Task<List<SensorDto>> GetSensors([FromQuery] List<Guid> deviceIds) => await _deviceService.GetSensors(deviceIds);
+        public async Task<List<SensorDto>> GetSensors([FromQuery] List<Guid> deviceIds) => await _deviceSensorService.GetSensors(deviceIds);
 
         [HttpGet("status")]
         public async Task<DeviceStatusModel> GetDeviceStatus([FromQuery] GetDeviceStatusModel model) => await _deviceService.GetDeviceStatus(model);

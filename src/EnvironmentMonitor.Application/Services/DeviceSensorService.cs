@@ -180,5 +180,28 @@ namespace EnvironmentMonitor.Application.Services
 
             _logger.LogInformation($"Successfully deleted sensor: {sensorIdentifier}");
         }
+
+        public async Task<List<SensorDto>> GetSensors(List<Guid> deviceIdentifiers)
+        {
+            if (deviceIdentifiers == null || deviceIdentifiers.Count == 0)
+            {
+                throw new ArgumentException("Identifiers list cannot be null or empty.");
+            }
+
+            if (!_userService.HasAccessToDevices(deviceIdentifiers, AccessLevels.Read))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var sensors = await _deviceRepository.GetSensors(new GetSensorsModel()
+            {
+                DevicesModel = new GetDevicesModel()
+                {
+                    Identifiers = deviceIdentifiers
+                }
+            });
+
+            return _mapper.Map<List<SensorDto>>(sensors);
+        }
     }
 }

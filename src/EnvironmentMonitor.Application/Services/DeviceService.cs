@@ -61,43 +61,6 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceDto>>(devices);
         }
 
-        public async Task<List<SensorDto>> GetSensors(List<Guid> identifiers)
-        {
-            var sensors = await _deviceRepository.GetSensors(new GetSensorsModel()
-            {
-                DevicesModel = new GetDevicesModel()
-                {
-                    Identifiers = identifiers
-                }
-            });
-            sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Identifier, AccessLevels.Read)).ToList();
-            return _mapper.Map<List<SensorDto>>(sensors);
-        }
-
-        public async Task<List<SensorDto>> GetSensors(List<int> deviceIds)
-        {
-            var sensors = new List<SensorDto>();
-            var devices = await _deviceRepository.GetDevices(new GetDevicesModel()
-            {
-                Ids = deviceIds
-            });
-
-            if (devices.Count == 0 || devices.Any(d => !_userService.HasAccessToDevice(d.Identifier, AccessLevels.Read)))
-            {
-                _logger.LogWarning($"Unauthorized access to devices: {string.Join(", ", devices.Select(x => x.Id))}");
-                throw new UnauthorizedAccessException();
-            }
-
-            var res = await _deviceRepository.GetSensors(new GetSensorsModel()
-            {
-                DevicesModel = new GetDevicesModel()
-                {
-                    Ids = devices.Select(x => x.Id).ToList()
-                }
-            });
-            return _mapper.Map<List<SensorDto>>(res.ToList());
-        }
-
         public async Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel)
         {
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { DeviceIdentifiers = [deviceIdentifier] })).FirstOrDefault();
