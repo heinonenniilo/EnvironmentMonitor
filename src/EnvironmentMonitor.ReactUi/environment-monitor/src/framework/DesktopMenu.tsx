@@ -175,8 +175,19 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               {locations.length > 0 ? <ArrowDropDownIcon /> : null}
             </MenuItem>
           </AuthorizedComponent>
-          <AuthorizedComponent requiredRole={RoleNames.User}>
-            {locations.length > 0 ? (
+          <AuthorizedComponent
+            roleLogic="OR"
+            requiredRoles={[
+              RoleNames.Registered,
+              RoleNames.User,
+              RoleNames.Admin,
+              RoleNames.Viewer,
+              RoleNames.Location,
+            ]}
+          >
+            {user?.roles?.some(
+              (r) => r === RoleNames.User || r === RoleNames.Admin,
+            ) ? (
               <Menu
                 anchorEl={measurementsAnchorEl}
                 open={measurementsMenuOpen}
@@ -198,28 +209,44 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
                 >
                   Devices
                 </MenuItem>
+                {locations.length > 0 ? (
+                  <MenuItem
+                    onClick={() => {
+                      handleMeasurementsMenuClose();
+                      onNavigate(routes.locationMeasurements);
+                    }}
+                  >
+                    Locations
+                  </MenuItem>
+                ) : null}
                 <MenuItem
                   onClick={() => {
                     handleMeasurementsMenuClose();
-                    onNavigate(routes.locationMeasurements);
+                    onNavigate(routes.publicMeasurements);
                   }}
                 >
-                  Locations
+                  Public
                 </MenuItem>
               </Menu>
             ) : null}
             <MenuItem
               onClick={
-                locations.length > 0
+                user?.roles?.some(
+                  (r) => r === RoleNames.User || r === RoleNames.Admin,
+                )
                   ? handleMeasurementsClick
                   : () => {
-                      onNavigate(routes.measurements);
+                      onNavigate(routes.publicMeasurements);
                     }
               }
               sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
             >
               Measurements
-              {locations.length > 0 ? <ArrowDropDownIcon /> : null}
+              {user?.roles?.some(
+                (r) => r === RoleNames.User || r === RoleNames.Admin,
+              ) ? (
+                <ArrowDropDownIcon />
+              ) : null}
             </MenuItem>
           </AuthorizedComponent>
           <AuthorizedComponent requiredRole={RoleNames.Admin}>

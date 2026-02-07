@@ -150,21 +150,38 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
               </Menu>
             ) : null}
           </AuthorizedComponent>
-          <AuthorizedComponent requiredRole={RoleNames.User}>
+          <AuthorizedComponent
+            roleLogic="OR"
+            requiredRoles={[
+              RoleNames.Registered,
+              RoleNames.User,
+              RoleNames.Admin,
+              RoleNames.Viewer,
+              RoleNames.Location,
+            ]}
+          >
             <MenuItem
               onClick={
-                locations.length > 0
+                user?.roles?.some(
+                  (r) => r === RoleNames.User || r === RoleNames.Admin,
+                )
                   ? handleMeasurementsOpen
                   : (e) => {
-                      handleClick(routes.measurements, e);
+                      handleClick(routes.publicMeasurements, e);
                     }
               }
               selected={false}
             >
               Measurements
-              {locations.length > 0 ? <ArrowRight sx={{ mr: 1 }} /> : null}
+              {user?.roles?.some(
+                (r) => r === RoleNames.User || r === RoleNames.Admin,
+              ) ? (
+                <ArrowRight sx={{ mr: 1 }} />
+              ) : null}
             </MenuItem>
-            {locations.length > 0 ? (
+            {user?.roles?.some(
+              (r) => r === RoleNames.User || r === RoleNames.Admin,
+            ) ? (
               <Menu
                 anchorEl={measurementsAnchorEl}
                 open={isMeasurementsMenuOpen}
@@ -180,13 +197,23 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                 >
                   Devices
                 </MenuItem>
+                {locations.length > 0 ? (
+                  <MenuItem
+                    onClick={(event) => {
+                      handleMeasurementsClose();
+                      handleClick(routes.locationMeasurements, event);
+                    }}
+                  >
+                    Locations
+                  </MenuItem>
+                ) : null}
                 <MenuItem
                   onClick={(event) => {
                     handleMeasurementsClose();
-                    handleClick(routes.locationMeasurements, event);
+                    handleClick(routes.publicMeasurements, event);
                   }}
                 >
-                  Locations
+                  Public
                 </MenuItem>
               </Menu>
             ) : null}

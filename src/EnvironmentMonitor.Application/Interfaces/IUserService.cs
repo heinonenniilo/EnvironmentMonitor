@@ -37,5 +37,6 @@ namespace EnvironmentMonitor.Application.Interfaces
         Task ManageUserRoles(ManageUserRolesRequest request);
         AuthInfoCookie? GetAuthInfo();
         void ClearAuthInfo();
+        List<string> Roles { get; }
     }
 }
