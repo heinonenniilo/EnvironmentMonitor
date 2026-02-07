@@ -382,6 +382,12 @@ namespace EnvironmentMonitor.Application.Services
             return returnModel;
         }
 
+        public async Task<List<SensorDto>> GetPublicSensors()
+        {
+            var publicSensors = await _measurementRepository.GetPublicSensors();
+            return _mapper.Map<List<SensorDto>>(publicSensors);
+        }
+
         private List<MeasurementsInfoDto> GetMeasurementInfo(ICollection<MeasurementExtended> measurements, List<Guid> sensorIds)
         {
             var returnList = new List<MeasurementsInfoDto>();
