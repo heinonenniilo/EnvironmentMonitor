@@ -64,8 +64,10 @@ namespace EnvironmentMonitor.Application.Services
                 return null;
             }
 
+
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = [deviceId] })).FirstOrDefault();
             var sensor = sensors.FirstOrDefault();
+
             if (sensor == null || (!_userService.HasAccessToSensor(sensor.Identifier, accessLevel) && !_userService.HasAccessToDevice(device.Identifier, accessLevel)))
             {
                 if (sensor == null)
@@ -163,16 +165,16 @@ namespace EnvironmentMonitor.Application.Services
                 throw new UnauthorizedAccessException();
             }
 
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [deviceIdentifier], OnlyVisible = false })).FirstOrDefault()
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() 
+            { 
+                Identifiers = [deviceIdentifier], 
+                GetSensors = true, 
+                OnlyVisible = false 
+            })).FirstOrDefault()
                 ?? throw new EntityNotFoundException($"Device with identifier: '{deviceIdentifier}' not found.");
 
-            var sensor = await _sensorRepository.GetSensor(sensorIdentifier)
+            var sensor = device.Sensors.FirstOrDefault(s => s.Identifier == sensorIdentifier)
                 ?? throw new EntityNotFoundException($"Sensor with identifier: {sensorIdentifier} not found.");
-
-            if (sensor.DeviceId != device.Id)
-            {
-                throw new InvalidOperationException("Sensor does not belong to the specified device.");
-            }
 
             _logger.LogInformation($"Deleting sensor: {sensorIdentifier} from device: {deviceIdentifier}");
 
