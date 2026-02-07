@@ -28,7 +28,6 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILocationRepository _locationRepository;
         private readonly IDeviceRepository _deviceRepository;
         
-
         public MeasurementService(
             IMeasurementRepository measurement,
             ILogger<MeasurementService> logger,
@@ -315,11 +314,29 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensor(GetMeasurementsModel model)
         {
 
-            if (((model.To ?? _dateService.CurrentTime()) - model.From).TotalDays > ApplicationConstants.PublicMeasurementMaxLimitInDays)
+            var daysDifference = ((model.To ?? _dateService.CurrentTime()) - model.From).TotalDays;
+            var limitInDays = ApplicationConstants.PublicMeasurementMaxLimitInDays;
+
+            if (_userService.Roles?.Any() == true)
             {
-                throw new InvalidOperationException($"Max query range is {ApplicationConstants.PublicMeasurementMaxLimitInDays} days");
+                limitInDays = ApplicationConstants.PublicMeasurementMaxLimitInDaysForRegistered;
             }
-            var publicSensors = await _measurementRepository.GetPublicSensors();
+
+            List<string> rolesToCheck = ["User", "Admin", "Viewer"];
+
+            var userRoles = _userService.Roles ?? [];
+
+            if (userRoles.Any(userRole => rolesToCheck.Any(roleToCheck => userRole.Equals(roleToCheck, StringComparison.OrdinalIgnoreCase))))
+            {
+                limitInDays = ApplicationConstants.PublicMeasurementMaxLimitInDaysForUsers;
+            }
+
+            if (daysDifference > limitInDays)
+            {
+                throw new InvalidOperationException($"Max query range is {limitInDays} days");
+            }
+
+            var publicSensors = await _measurementRepository.GetPublicSensors(model.SensorIdentifiers.Count != 0 ? model.SensorIdentifiers: null);
 
             if (publicSensors.Count == 0)
             {

@@ -248,9 +248,17 @@ namespace EnvironmentMonitor.Infrastructure.Data
             return type;
         }
 
-        public async Task<List<PublicSensor>> GetPublicSensors()
+        public async Task<List<PublicSensor>> GetPublicSensors(List<Guid>? identifiers = null)
         {
-            return await _context.PublicSensors
+
+            IQueryable<PublicSensor> query = _context.PublicSensors;
+
+            if (identifiers != null && identifiers.Any())
+            {
+                query = query.Where(ps => identifiers.Contains(ps.Identifier));
+            }
+
+            return await query
                 .Include(ps => ps.Sensor)
                 .Include(ps => ps.MeasurementType)
                 .ToListAsync();
