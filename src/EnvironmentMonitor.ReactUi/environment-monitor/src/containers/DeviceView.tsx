@@ -810,42 +810,6 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const handleDeleteSensor = (
-    deviceIdentifier: string,
-    sensorIdentifier: string,
-  ) => {
-    dispatch(
-      setConfirmDialog({
-        onConfirm: () => {
-          setIsLoading(true);
-          sensorHook
-            .deleteSensor(deviceIdentifier, sensorIdentifier)
-            .then(() => {
-              dispatch(
-                addNotification({
-                  title: "Sensor deleted successfully",
-                  body: "",
-                  severity: "success",
-                }),
-              );
-              return deviceHook.getDeviceInfo(deviceIdentifier);
-            })
-            .then((res) => {
-              setSelectedDevice(res);
-            })
-            .catch((er) => {
-              console.error(er);
-            })
-            .finally(() => {
-              setIsLoading(false);
-            });
-        },
-        title: "Delete sensor?",
-        body: "Are you sure you want to delete this sensor?",
-      }),
-    );
-  };
-
   const handleGenerateApiKey = (description: string) => {
     if (!selectedDevice) {
       return;
@@ -992,8 +956,21 @@ export const DeviceView: React.FC = () => {
           <SensorTable
             sensors={selectedDevice?.sensors ?? []}
             isVirtual={selectedDevice?.isVirtual}
-            deviceIdentifier={selectedDevice?.device.identifier}
-            onDelete={handleDeleteSensor}
+            onEdit={(sensor) => {
+              setSelectedSensor(sensor);
+              setSensorDialogOpen(true);
+            }}
+            onToggleActive={(sensor, active) => {
+              handleUpdateSensor({
+                identifier: sensor.identifier,
+                deviceIdentifier: selectedDevice?.device.identifier ?? "",
+                name: sensor.name,
+                sensorId: sensor.sensorId,
+                scaleMin: sensor.scaleMin,
+                scaleMax: sensor.scaleMax,
+                active: active,
+              });
+            }}
           />
         </Collapsible>
         {selectedDevice && !selectedDevice.isVirtual && (

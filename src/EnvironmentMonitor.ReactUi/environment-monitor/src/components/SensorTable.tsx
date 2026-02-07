@@ -15,28 +15,25 @@ import {
 import { SensorsDialog } from "./SensorsDialog";
 import { useState } from "react";
 import { getAggregationTypeDisplayName } from "../utilities/measurementUtils";
-import { Delete } from "@mui/icons-material";
+import { Edit } from "@mui/icons-material";
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
   title?: string;
   isVirtual?: boolean;
-  deviceIdentifier?: string;
   onEdit?: (sensor: SensorInfo) => void;
-  onDelete?: (deviceIdentifier: string, sensorIdentifier: string) => void;
+  onToggleActive?: (sensor: SensorInfo, isActive: boolean) => void;
 }
 
 export const SensorTable: React.FC<SensorTableProps> = ({
   title,
   sensors,
   isVirtual,
-  deviceIdentifier,
-  onDelete,
+  onEdit,
+  onToggleActive,
 }) => {
   const [selectedSensors, setSelectedSensors] = useState<VirtualSensor[]>([]);
   const [dialogTitle, setDialogTitle] = useState<string>("");
-
-  const editable = !!onDelete;
 
   return (
     <Box marginTop={1}>
@@ -63,8 +60,9 @@ export const SensorTable: React.FC<SensorTableProps> = ({
               <TableCell>Virtual</TableCell>
               <TableCell>Scale min</TableCell>
               <TableCell>Scale max</TableCell>
+              <TableCell>Active</TableCell>
               {isVirtual && <TableCell>Aggregation Type</TableCell>}
-              {editable && <TableCell align="right">Actions</TableCell>}
+              {onEdit && <TableCell align="right"></TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -104,28 +102,40 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                     </TableCell>
                     <TableCell>{r.scaleMin}</TableCell>
                     <TableCell>{r.scaleMax}</TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={r.active ?? false}
+                        size="small"
+                        disabled={!onToggleActive}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          if (onToggleActive) {
+                            onToggleActive(r, e.target.checked);
+                          }
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        sx={{
+                          padding: "0px",
+                        }}
+                      />
+                    </TableCell>
                     {isVirtual && (
                       <TableCell>
                         {getAggregationTypeDisplayName(r.aggregationType)}
                       </TableCell>
                     )}
-                    {editable && (
+                    {onEdit && (
                       <TableCell align="right">
-                        <Box display="flex" justifyContent="flex-end" gap={0.5}>
-                          {onDelete && deviceIdentifier && (
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDelete(deviceIdentifier, r.identifier);
-                              }}
-                              title="Delete sensor"
-                              color="error"
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          )}
-                        </Box>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(r);
+                          }}
+                          title="Edit sensor"
+                        >
+                          <Edit fontSize="small" />
+                        </IconButton>
                       </TableCell>
                     )}
                   </TableRow>

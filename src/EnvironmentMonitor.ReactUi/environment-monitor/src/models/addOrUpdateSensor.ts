@@ -5,4 +5,5 @@ export interface AddOrUpdateSensor {
   name: string;
   scaleMin?: number;
   scaleMax?: number;
+  active?: boolean;
 }

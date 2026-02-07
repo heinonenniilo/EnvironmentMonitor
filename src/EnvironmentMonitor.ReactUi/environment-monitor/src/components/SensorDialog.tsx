@@ -7,6 +7,8 @@ import {
   Box,
   IconButton,
   TextField,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { useState, useEffect } from "react";
@@ -36,6 +38,7 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
   const [sensorId, setSensorId] = useState("");
   const [scaleMin, setScaleMin] = useState("");
   const [scaleMax, setScaleMax] = useState("");
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (open) {
@@ -44,11 +47,13 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
         setSensorId(sensor.sensorId?.toString() ?? "");
         setScaleMin(sensor.scaleMin?.toString() ?? "");
         setScaleMax(sensor.scaleMax?.toString() ?? "");
+        setIsActive(sensor.active ?? true);
       } else {
         setName("");
         setSensorId(nextSensorId !== undefined ? nextSensorId.toString() : "");
         setScaleMin("");
         setScaleMax("");
+        setIsActive(true);
       }
     }
   }, [open, sensor, nextSensorId]);
@@ -65,6 +70,7 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
       sensorId: sensorId ? parseInt(sensorId) : undefined,
       scaleMin: scaleMin ? parseFloat(scaleMin) : undefined,
       scaleMax: scaleMax ? parseFloat(scaleMax) : undefined,
+      active: isActive,
     };
 
     onSave(model);
@@ -81,7 +87,10 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
         (scaleMin || "") !== (sensor.scaleMin?.toString() ?? "");
       const scaleMaxChanged =
         (scaleMax || "") !== (sensor.scaleMax?.toString() ?? "");
-      return !nameChanged && !scaleMinChanged && !scaleMaxChanged;
+      const isActiveChanged = isActive !== (sensor.active ?? true);
+      return (
+        !nameChanged && !scaleMinChanged && !scaleMaxChanged && !isActiveChanged
+      );
     }
     return false;
   };
@@ -144,6 +153,15 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
             value={scaleMax}
             onChange={(e) => setScaleMax(e.target.value)}
             fullWidth
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+              />
+            }
+            label="Active"
           />
         </Box>
       </DialogContent>
