@@ -125,41 +125,6 @@ namespace EnvironmentMonitor.Application.Services
             return mapped;
         }
 
-        public async Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel)
-        {
-            var sensors = await _deviceRepository.GetSensors(new GetSensorsModel()
-            {
-
-                DevicesModel = new GetDevicesModel()
-                {
-                    Ids = [deviceId]
-                },
-                SensorIds = [sensorIdInternal]
-            });
-           
-            if (sensors.Count() > 1)
-            {
-                _logger.LogError("More than one sensor found");
-                return null;
-            }
-
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = [deviceId] })).FirstOrDefault();
-            var sensor = sensors.FirstOrDefault();
-            if (sensor == null || (!_userService.HasAccessToSensor(sensor.Identifier, accessLevel) && !_userService.HasAccessToDevice(device.Identifier, accessLevel)))
-            {
-                if (sensor == null)
-                {
-                    _logger.LogError($"Could not find sensor with internal id: {sensorIdInternal} / Device Id: {deviceId}");
-                }
-                else
-                {
-                    _logger.LogError($"Not authorized to access sensor with id {sensor.Id}");
-                }
-                return null;
-            }
-            return _mapper.Map<SensorDto>(sensor);
-        }
-
         public async Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null)
         {
 

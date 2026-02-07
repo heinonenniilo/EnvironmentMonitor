@@ -23,6 +23,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly IDeviceService _deviceService;
+        private readonly IDeviceSensorService _deviceSensorService;
         private readonly IDateService _dateService;
         private readonly ILocationRepository _locationRepository;
         private readonly IDeviceRepository _deviceRepository;
@@ -34,6 +35,7 @@ namespace EnvironmentMonitor.Application.Services
             IUserService userService,
             IMapper mapper,
             IDeviceService deviceService,
+            IDeviceSensorService deviceSensorService,
             IDateService dateService,
             ILocationRepository locationRepository,
             IDeviceRepository deviceRepository)
@@ -43,6 +45,7 @@ namespace EnvironmentMonitor.Application.Services
             _userService = userService;
             _mapper = mapper;
             _deviceService = deviceService;
+            _deviceSensorService = deviceSensorService;
             _dateService = dateService;
             _locationRepository = locationRepository;
             _deviceRepository = deviceRepository;
@@ -98,7 +101,7 @@ namespace EnvironmentMonitor.Application.Services
 
             foreach (var row in measurement.Measurements)
             {
-                var sensor = await _deviceService.GetSensor(device.Id, row.SensorId, AccessLevels.Write);
+                var sensor = await _deviceSensorService.GetSensor(device.Id, row.SensorId, AccessLevels.Write);
                 if (sensor == null)
                 {
                     _logger.LogWarning($"Sensor with id '{row.SensorId}' not found on device '{device.Identifier}'.");

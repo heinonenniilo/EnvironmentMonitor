@@ -22,7 +22,6 @@ namespace EnvironmentMonitor.Application.Interfaces
             bool? isVirtual = null);
         public Task<List<SensorDto>> GetSensors(List<Guid> identifiers);
         public Task<List<SensorDto>> GetSensors(List<int> deviceIds);
-        public Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel);
         public Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model);
 
         public Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model);
