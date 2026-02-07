@@ -61,6 +61,10 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => model.SensorIds.Contains(x.SensorId));
             }
+            if (model.IsActive != null)
+            {
+                query = query.Where(x => x.Active == model.IsActive.Value);
+            }
             return await query.Select(x => new SensorExtended()
             {
                 Id = x.Id,

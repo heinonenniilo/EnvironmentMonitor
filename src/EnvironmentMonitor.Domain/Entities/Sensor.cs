@@ -25,5 +25,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public double? ScaleMax { get; set; }
         public bool IsVirtual { get; set; }
         public int? AggregationType { get; set; }
+        public bool Active { get; set; } = true;
     }
 }

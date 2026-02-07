@@ -61,43 +61,6 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceDto>>(devices);
         }
 
-        public async Task<List<SensorDto>> GetSensors(List<Guid> identifiers)
-        {
-            var sensors = await _deviceRepository.GetSensors(new GetSensorsModel()
-            {
-                DevicesModel = new GetDevicesModel()
-                {
-                    Identifiers = identifiers
-                }
-            });
-            sensors = sensors.Where(s => _userService.HasAccessToSensor(s.Identifier, AccessLevels.Read)).ToList();
-            return _mapper.Map<List<SensorDto>>(sensors);
-        }
-
-        public async Task<List<SensorDto>> GetSensors(List<int> deviceIds)
-        {
-            var sensors = new List<SensorDto>();
-            var devices = await _deviceRepository.GetDevices(new GetDevicesModel()
-            {
-                Ids = deviceIds
-            });
-
-            if (devices.Count == 0 || devices.Any(d => !_userService.HasAccessToDevice(d.Identifier, AccessLevels.Read)))
-            {
-                _logger.LogWarning($"Unauthorized access to devices: {string.Join(", ", devices.Select(x => x.Id))}");
-                throw new UnauthorizedAccessException();
-            }
-
-            var res = await _deviceRepository.GetSensors(new GetSensorsModel()
-            {
-                DevicesModel = new GetDevicesModel()
-                {
-                    Ids = devices.Select(x => x.Id).ToList()
-                }
-            });
-            return _mapper.Map<List<SensorDto>>(res.ToList());
-        }
-
         public async Task<DeviceDto> GetDevice(string deviceIdentifier, AccessLevels accessLevel)
         {
             var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { DeviceIdentifiers = [deviceIdentifier] })).FirstOrDefault();
@@ -123,41 +86,6 @@ namespace EnvironmentMonitor.Application.Services
             }
             var mapped = _mapper.Map<DeviceDto>(device);
             return mapped;
-        }
-
-        public async Task<SensorDto?> GetSensor(int deviceId, int sensorIdInternal, AccessLevels accessLevel)
-        {
-            var sensors = await _deviceRepository.GetSensors(new GetSensorsModel()
-            {
-
-                DevicesModel = new GetDevicesModel()
-                {
-                    Ids = [deviceId]
-                },
-                SensorIds = [sensorIdInternal]
-            });
-           
-            if (sensors.Count() > 1)
-            {
-                _logger.LogError("More than one sensor found");
-                return null;
-            }
-
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Ids = [deviceId] })).FirstOrDefault();
-            var sensor = sensors.FirstOrDefault();
-            if (sensor == null || (!_userService.HasAccessToSensor(sensor.Identifier, accessLevel) && !_userService.HasAccessToDevice(device.Identifier, accessLevel)))
-            {
-                if (sensor == null)
-                {
-                    _logger.LogError($"Could not find sensor with internal id: {sensorIdInternal} / Device Id: {deviceId}");
-                }
-                else
-                {
-                    _logger.LogError($"Not authorized to access sensor with id {sensor.Id}");
-                }
-                return null;
-            }
-            return _mapper.Map<SensorDto>(sensor);
         }
 
         public async Task AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? datetimeUtc = null)

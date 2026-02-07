@@ -79,6 +79,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
 
             services.AddScoped<IMeasurementRepository, MeasurementRepository>();
             services.AddScoped<IDeviceRepository, DeviceRepository>();
+            services.AddScoped<ISensorRepository, SensorRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>();
             services.AddScoped<IEmailRepository, EmailRepository>();
             services.AddScoped<IApiKeyRepository, ApiKeyRepository>();

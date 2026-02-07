@@ -5,13 +5,13 @@ import {
   DialogTitle,
   IconButton,
 } from "@mui/material";
-import type { VirtualSensor } from "../models/sensor";
 import { Close } from "@mui/icons-material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
-import { getDeviceInfos } from "../reducers/measurementReducer";
-import { getMeasurementUnit } from "../utilities/measurementUtils";
-import type { MeasurementTypes } from "../enums/measurementTypes";
+import type { VirtualSensor } from "../../models/sensor";
+import { getDeviceInfos } from "../../reducers/measurementReducer";
+import { getMeasurementUnit } from "../../utilities/measurementUtils";
+import type { MeasurementTypes } from "../../enums/measurementTypes";
 
 export interface SensorsDialogProps {
   sensors: VirtualSensor[];
@@ -49,7 +49,7 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
       valueGetter: (_value, row) => {
         const sensor = row as VirtualSensor;
         const matchingDevice = devices.find(
-          (d) => d.device.identifier === sensor.sensor.parentIdentifier
+          (d) => d.device.identifier === sensor.sensor.parentIdentifier,
         );
         return matchingDevice
           ? matchingDevice.device.name

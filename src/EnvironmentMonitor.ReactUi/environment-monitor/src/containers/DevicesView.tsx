@@ -56,7 +56,7 @@ export const DevicesView: React.FC = () => {
               title: `Reboot command sent to ${device.name}`,
               body: "",
               severity: "success",
-            })
+            }),
           );
         } else {
           dispatch(
@@ -64,7 +64,7 @@ export const DevicesView: React.FC = () => {
               title: `Sending message failed`,
               body: "",
               severity: "error",
-            })
+            }),
           );
         }
       })
@@ -75,7 +75,7 @@ export const DevicesView: React.FC = () => {
             title: `Sending message failed`,
             body: "",
             severity: "error",
-          })
+          }),
         );
       })
       .finally(() => {
@@ -84,7 +84,7 @@ export const DevicesView: React.FC = () => {
   };
 
   const sorted = [...deviceInfos].sort((a, b) =>
-    dateTimeSort(a.lastMessage ?? new Date(), b.lastMessage ?? new Date())
+    dateTimeSort(a.lastMessage ?? new Date(), b.lastMessage ?? new Date()),
   );
   return (
     <AppContentWrapper title="Devices" isLoading={isLoading}>
@@ -101,7 +101,7 @@ export const DevicesView: React.FC = () => {
               },
               title: `Reboot ${device.device.name}?`,
               body: `Reboot command will be sent to ${device.device.name}.  Id: ${device.device.identifier}, Identifier: '${device.device.identifier}'`,
-            })
+            }),
           );
         }}
       />

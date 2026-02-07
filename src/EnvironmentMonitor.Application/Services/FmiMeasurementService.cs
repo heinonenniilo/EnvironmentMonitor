@@ -76,7 +76,7 @@ namespace EnvironmentMonitor.Application.Services
                 throw new ArgumentException("Invalid device for FMI measurement fetch");
             }
 
-            var sensors = device.Sensors;
+            var sensors = device.Sensors.Where(x => x.Active).ToList();
 
             _logger.LogInformation($"Starting FMI measurement fetch for {sensors.Count} sensors");
             
@@ -242,7 +242,8 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation("Starting FMI sync for Ilmatieteenlaitos devices");
             var devices = await _deviceRepository.GetDevices(new GetDevicesModel
             {
-                CommunicationChannelIds = new List<int> { (int)CommunicationChannels.IlmatieteenLaitos }
+                CommunicationChannelIds = new List<int> { (int)CommunicationChannels.IlmatieteenLaitos },
+                
             });
 
             if (!devices.Any())

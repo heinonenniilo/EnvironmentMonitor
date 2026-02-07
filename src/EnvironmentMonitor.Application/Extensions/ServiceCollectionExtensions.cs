@@ -15,6 +15,7 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<IMeasurementService, MeasurementService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IDeviceService, DeviceService>();
+            services.AddScoped<IDeviceSensorService, DeviceSensorService>();
             services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<IDeviceEmailService, DeviceEmailService>();
             services.AddScoped<IDeviceCommandService, DeviceCommandService>();
