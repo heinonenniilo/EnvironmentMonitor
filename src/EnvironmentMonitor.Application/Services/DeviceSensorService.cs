@@ -92,16 +92,15 @@ namespace EnvironmentMonitor.Application.Services
                 throw new ArgumentException("Identifier is required when updating a sensor.");
             }
 
-            var existingSensor = await _sensorRepository.GetSensor(model.Identifier.Value)
-                ?? throw new EntityNotFoundException($"Sensor with identifier: {model.Identifier} not found.");
-
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [model.DeviceIdentifier], OnlyVisible = false })).FirstOrDefault()
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() 
+            { 
+                Identifiers = [model.DeviceIdentifier], 
+                OnlyVisible = false, 
+                GetSensors = true })).FirstOrDefault()
                 ?? throw new EntityNotFoundException($"Device with identifier: '{model.DeviceIdentifier}' not found.");
-
-            if (existingSensor.DeviceId != device.Id)
-            {
-                throw new InvalidOperationException("Sensor does not belong to the specified device.");
-            }
+         
+            var existingSensor = device.Sensors.FirstOrDefault(s => s.Identifier == model.Identifier.Value)
+                ?? throw new EntityNotFoundException($"Sensor with identifier: {model.Identifier} not found on device: {model.DeviceIdentifier}.");
 
             _logger.LogInformation($"Updating sensor: {model.Identifier}");
 
@@ -109,6 +108,7 @@ namespace EnvironmentMonitor.Application.Services
             existingSensor.ScaleMin = model.ScaleMin;
             existingSensor.ScaleMax = model.ScaleMax;
             existingSensor.Active = model.Active;
+
             if (model.SensorId != null)
             {
                 existingSensor.SensorId = model.SensorId.Value;
