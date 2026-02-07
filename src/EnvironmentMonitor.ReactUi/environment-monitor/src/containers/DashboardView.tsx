@@ -4,10 +4,13 @@ import React, { useEffect, useMemo } from "react";
 import {
   getDashboardTimeRange,
   getDevices,
+  getLocations,
   getSensors,
   getSelectedMeasurementTypes,
+  getSelectedDashboardLocationIdentifiers,
   setDashboardTimeRange,
   setSelectedMeasurementTypes,
+  setSelectedDashboardLocationIdentifiers,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
 import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
@@ -29,6 +32,10 @@ export const DashboardView: React.FC = () => {
 
   const sensors = useSelector(getSensors);
   const devices = useSelector(getDevices);
+  const locations = useSelector(getLocations);
+  const selectedLocationIdentifiers = useSelector(
+    getSelectedDashboardLocationIdentifiers,
+  );
 
   const timeRange = useSelector(getDashboardTimeRange);
 
@@ -40,6 +47,15 @@ export const DashboardView: React.FC = () => {
 
   const measurementsModel: DeviceDashboardModel[] = useMemo(() => {
     return [...devices]
+      .filter((device) => {
+        if (selectedLocationIdentifiers === null) {
+          return true;
+        }
+        return (
+          device.locationIdentifier !== undefined &&
+          selectedLocationIdentifiers.includes(device.locationIdentifier)
+        );
+      })
       .sort((a, b) => stringSort(a.displayName, b.displayName))
       .map((device) => {
         const deviceSensors = sensors.filter(
@@ -48,7 +64,7 @@ export const DashboardView: React.FC = () => {
 
         return { device, sensors: deviceSensors };
       });
-  }, [devices, sensors]);
+  }, [devices, sensors, selectedLocationIdentifiers]);
 
   const list = measurementsModel.map(({ device, sensors }) => {
     return (
@@ -87,6 +103,11 @@ export const DashboardView: React.FC = () => {
           selectedMeasurementTypes={selectedMeasurementTypes}
           onMeasurementTypesChange={(types) =>
             dispatch(setSelectedMeasurementTypes(types))
+          }
+          locations={locations}
+          selectedLocationIdentifiers={selectedLocationIdentifiers}
+          onLocationFilterChange={(identifiers) =>
+            dispatch(setSelectedDashboardLocationIdentifiers(identifiers))
           }
         />
       }
