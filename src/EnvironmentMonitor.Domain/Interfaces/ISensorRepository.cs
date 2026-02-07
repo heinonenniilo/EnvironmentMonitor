@@ -6,7 +6,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
     {
         Task<Sensor?> GetSensor(Guid identifier);
         Task<Sensor?> GetSensor(int id);
-        Task<List<Sensor>> GetSensorsByDevice(int deviceId);
+        Task<List<Sensor>> GetSensorsByDevice(int deviceId, bool? isActive = null);
         Task<Sensor> AddSensor(Sensor sensor, bool saveChanges);
         Task<Sensor> UpdateSensor(Sensor sensor, bool saveChanges);
         Task DeleteSensor(Guid identifier, bool saveChanges);

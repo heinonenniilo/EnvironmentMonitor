@@ -31,11 +31,18 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<List<Sensor>> GetSensorsByDevice(int deviceId)
+        public async Task<List<Sensor>> GetSensorsByDevice(int deviceId, bool? isActive = null)
         {
-            return await _context.Sensors
+            var query = _context.Sensors
                 .Include(x => x.Device)
-                .Where(x => x.DeviceId == deviceId)
+                .Where(x => x.DeviceId == deviceId);
+
+            if (isActive != null)
+            {
+                query = query.Where(x => x.Active == isActive.Value);
+            }
+
+            return await query
                 .OrderBy(x => x.SensorId)
                 .ToListAsync();
         }
