@@ -16,6 +16,7 @@ export interface MeasurementState {
   autoScaleSensorIds: string[];
   timeRange: number;
   selectedMeasurementTypes: number[];
+  selectedDashboardLocationIdentifiers: string[] | null;
 }
 
 export interface DashboardAutoScale {
@@ -31,6 +32,7 @@ const initialState: MeasurementState = {
   timeRange: 24,
   locations: [],
   selectedMeasurementTypes: getAvailableMeasurementTypes(),
+  selectedDashboardLocationIdentifiers: null,
 };
 
 export const measurementSlice = createSlice({
@@ -80,6 +82,12 @@ export const measurementSlice = createSlice({
     setSelectedMeasurementTypes: (state, action: PayloadAction<number[]>) => {
       state.selectedMeasurementTypes = action.payload;
     },
+    setSelectedDashboardLocationIdentifiers: (
+      state,
+      action: PayloadAction<string[] | null>,
+    ) => {
+      state.selectedDashboardLocationIdentifiers = action.payload;
+    },
   },
 });
 
@@ -91,6 +99,7 @@ export const {
   setDashboardTimeRange,
   setLocations,
   setSelectedMeasurementTypes,
+  setSelectedDashboardLocationIdentifiers,
 } = measurementSlice.actions;
 
 export const getDevices = (state: RootState): Device[] =>
@@ -121,6 +130,12 @@ export const getDashboardTimeRange = (state: RootState): number => {
 
 export const getSelectedMeasurementTypes = (state: RootState): number[] => {
   return state.measurementInfo.selectedMeasurementTypes;
+};
+
+export const getSelectedDashboardLocationIdentifiers = (
+  state: RootState,
+): string[] | null => {
+  return state.measurementInfo.selectedDashboardLocationIdentifiers;
 };
 
 export default measurementSlice.reducer;

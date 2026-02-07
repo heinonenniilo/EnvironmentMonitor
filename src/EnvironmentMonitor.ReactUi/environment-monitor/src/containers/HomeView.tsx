@@ -29,7 +29,7 @@ export const HomeView: React.FC = () => {
   const devices = useSelector(getDevices);
   const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
   const [model, setModel] = useState<MeasurementsViewModel | undefined>(
-    undefined
+    undefined,
   );
   const userInfo = useSelector(getUserInfo);
 
@@ -38,7 +38,7 @@ export const HomeView: React.FC = () => {
 
   const getSensorLabel = (
     sensorIdentifier: string,
-    typeId?: MeasurementTypes
+    typeId?: MeasurementTypes,
   ) => {
     const sensorName =
       sensors?.find((s) => s.identifier === sensorIdentifier)?.name ??
@@ -57,10 +57,10 @@ export const HomeView: React.FC = () => {
         const val = parseInt(MeasurementTypes[item]) as MeasurementTypes;
         if (m.measurements.some((m) => m.typeId === val)) {
           const matchingSensor = sensors.find(
-            (s) => s.identifier === m.sensorIdentifier
+            (s) => s.identifier === m.sensorIdentifier,
           );
           const matchingDevice = devices.find(
-            (s) => s.identifier === matchingSensor?.parentIdentifier
+            (s) => s.identifier === matchingSensor?.parentIdentifier,
           );
           returnRows.push({
             latest: m.latestValues[val],
@@ -74,7 +74,7 @@ export const HomeView: React.FC = () => {
       }
     });
     const sorted = [...returnRows].sort((a, b) =>
-      dateTimeSort(a.latest.timestamp, b.latest.timestamp)
+      dateTimeSort(a.latest.timestamp, b.latest.timestamp),
     );
     let lastDevice: Device | undefined;
     for (const row of sorted) {
@@ -105,7 +105,7 @@ export const HomeView: React.FC = () => {
           devices.map((d) => d.identifier),
           selectedMeasurementTypes && selectedMeasurementTypes.length > 0
             ? selectedMeasurementTypes
-            : undefined
+            : undefined,
         )
         .then((res) => {
           setModel(res);
