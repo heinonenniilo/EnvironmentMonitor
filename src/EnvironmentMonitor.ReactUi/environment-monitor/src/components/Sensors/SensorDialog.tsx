@@ -12,8 +12,8 @@ import {
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { useState, useEffect } from "react";
-import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
-import type { SensorInfo } from "../models/sensor";
+import type { AddOrUpdateSensor } from "../../models/addOrUpdateSensor";
+import type { SensorInfo } from "../../models/sensor";
 
 export interface SensorDialogProps {
   open: boolean;
@@ -83,13 +83,19 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
     }
     if (isEditing && sensor) {
       const nameChanged = name.trim() !== sensor.name;
+      const sensorIdChanged =
+        (sensorId || "") !== (sensor.sensorId?.toString() ?? "");
       const scaleMinChanged =
         (scaleMin || "") !== (sensor.scaleMin?.toString() ?? "");
       const scaleMaxChanged =
         (scaleMax || "") !== (sensor.scaleMax?.toString() ?? "");
       const isActiveChanged = isActive !== (sensor.active ?? true);
       return (
-        !nameChanged && !scaleMinChanged && !scaleMaxChanged && !isActiveChanged
+        !nameChanged &&
+        !sensorIdChanged &&
+        !scaleMinChanged &&
+        !scaleMaxChanged &&
+        !isActiveChanged
       );
     }
     return false;
@@ -133,12 +139,6 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
             value={sensorId}
             onChange={(e) => setSensorId(e.target.value)}
             fullWidth
-            disabled={isEditing}
-            slotProps={{
-              input: {
-                readOnly: isEditing,
-              },
-            }}
           />
           <TextField
             label="Scale Min"

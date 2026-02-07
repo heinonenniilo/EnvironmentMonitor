@@ -1,4 +1,4 @@
-import { type SensorInfo, type VirtualSensor } from "../models/sensor";
+import { type SensorInfo, type VirtualSensor } from "../../models/sensor";
 import {
   Box,
   Checkbox,
@@ -14,14 +14,15 @@ import {
 } from "@mui/material";
 import { SensorsDialog } from "./SensorsDialog";
 import { useState } from "react";
-import { getAggregationTypeDisplayName } from "../utilities/measurementUtils";
-import { Edit } from "@mui/icons-material";
+import { getAggregationTypeDisplayName } from "../../utilities/measurementUtils";
+import { Edit, Delete } from "@mui/icons-material";
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
   title?: string;
   isVirtual?: boolean;
   onEdit?: (sensor: SensorInfo) => void;
+  onDelete?: (sensor: SensorInfo) => void;
   onToggleActive?: (sensor: SensorInfo, isActive: boolean) => void;
 }
 
@@ -30,6 +31,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
   sensors,
   isVirtual,
   onEdit,
+  onDelete,
   onToggleActive,
 }) => {
   const [selectedSensors, setSelectedSensors] = useState<VirtualSensor[]>([]);
@@ -62,7 +64,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
               <TableCell>Scale max</TableCell>
               <TableCell>Active</TableCell>
               {isVirtual && <TableCell>Aggregation Type</TableCell>}
-              {onEdit && <TableCell align="right"></TableCell>}
+              {(onEdit || onDelete) && <TableCell align="right"></TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -124,18 +126,35 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                         {getAggregationTypeDisplayName(r.aggregationType)}
                       </TableCell>
                     )}
-                    {onEdit && (
+                    {(onEdit || onDelete) && (
                       <TableCell align="right">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEdit(r);
-                          }}
-                          title="Edit sensor"
-                        >
-                          <Edit fontSize="small" />
-                        </IconButton>
+                        <Box display="flex" justifyContent="flex-end" gap={0.5}>
+                          {onEdit && (
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(r);
+                              }}
+                              title="Edit sensor"
+                            >
+                              <Edit fontSize="small" />
+                            </IconButton>
+                          )}
+                          {onDelete && (
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(r);
+                              }}
+                              title="Delete sensor"
+                              color="error"
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          )}
+                        </Box>
                       </TableCell>
                     )}
                   </TableRow>

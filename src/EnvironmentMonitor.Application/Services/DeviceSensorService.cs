@@ -109,6 +109,10 @@ namespace EnvironmentMonitor.Application.Services
             existingSensor.ScaleMin = model.ScaleMin;
             existingSensor.ScaleMax = model.ScaleMax;
             existingSensor.Active = model.Active;
+            if (model.SensorId != null)
+            {
+                existingSensor.SensorId = model.SensorId.Value;
+            }
 
             var updatedSensor = await _sensorRepository.UpdateSensor(existingSensor, true);
 

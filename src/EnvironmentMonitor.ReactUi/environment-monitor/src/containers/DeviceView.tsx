@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { useApiHook } from "../hooks/apiHook";
 import { type DeviceInfo } from "../models/deviceInfo";
-import { SensorTable } from "../components/SensorTable";
+import { SensorTable } from "../components/Sensors/SensorTable";
 import { DeviceTable } from "../components/DeviceTable";
 import { DeviceControlComponent } from "../components/DeviceControlComponent";
 import { DeviceAttributesTable } from "../components/DeviceAttributesTable";
@@ -35,7 +35,7 @@ import { type DeviceContact } from "../models/deviceContact";
 import { ApiKeyDialog } from "../components/ApiKeyDialog";
 import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
 import type { SensorInfo } from "../models/sensor";
-import { SensorDialog } from "../components/SensorDialog";
+import { SensorDialog } from "../components/Sensors/SensorDialog";
 
 interface PromiseInfo {
   type: string;
@@ -810,6 +810,40 @@ export const DeviceView: React.FC = () => {
       });
   };
 
+  const handleDeleteSensor = (sensor: SensorInfo) => {
+    if (!selectedDevice) return;
+    dispatch(
+      setConfirmDialog({
+        onConfirm: () => {
+          setIsLoading(true);
+          sensorHook
+            .deleteSensor(selectedDevice.device.identifier, sensor.identifier)
+            .then(() => {
+              dispatch(
+                addNotification({
+                  title: "Sensor deleted successfully",
+                  body: "",
+                  severity: "success",
+                }),
+              );
+              return deviceHook.getDeviceInfo(selectedDevice.device.identifier);
+            })
+            .then((res) => {
+              setSelectedDevice(res);
+            })
+            .catch((er) => {
+              console.error(er);
+            })
+            .finally(() => {
+              setIsLoading(false);
+            });
+        },
+        title: "Delete sensor?",
+        body: `Are you sure you want to delete sensor "${sensor.name}"?`,
+      }),
+    );
+  };
+
   const handleGenerateApiKey = (description: string) => {
     if (!selectedDevice) {
       return;
@@ -971,6 +1005,7 @@ export const DeviceView: React.FC = () => {
                 active: active,
               });
             }}
+            onDelete={handleDeleteSensor}
           />
         </Collapsible>
         {selectedDevice && !selectedDevice.isVirtual && (
