@@ -994,17 +994,6 @@ export const DeviceView: React.FC = () => {
               setSelectedSensor(sensor);
               setSensorDialogOpen(true);
             }}
-            onToggleActive={(sensor, active) => {
-              handleUpdateSensor({
-                identifier: sensor.identifier,
-                deviceIdentifier: selectedDevice?.device.identifier ?? "",
-                name: sensor.name,
-                sensorId: sensor.sensorId,
-                scaleMin: sensor.scaleMin,
-                scaleMax: sensor.scaleMax,
-                active: active,
-              });
-            }}
             onDelete={handleDeleteSensor}
           />
         </Collapsible>
