@@ -258,5 +258,41 @@ namespace EnvironmentMonitor.Tests
             var deleteResponse = await _client.DeleteAsync($"/api/sensors/{device.Identifier}/{sensor.Identifier}");
             Assert.That(deleteResponse.IsSuccessStatusCode, Is.False);
         }
+
+        [Test]
+        public async Task ViewerCannotEditSensors()
+        {
+            var model = await PrepareDatabase();
+            var device = model.DeviceInLocation;
+            var sensor = device.Sensors.First();
+
+            await LoginAsync(ViewerUserName, ViewerPassword);
+
+            // POST should fail
+            var addDto = new AddOrUpdateSensorDto
+            {
+                DeviceIdentifier = device.Identifier,
+                SensorId = 88,
+                Name = "Should-Fail",
+            };
+            var postContent = new StringContent(JsonConvert.SerializeObject(addDto), Encoding.UTF8, "application/json");
+            var postResponse = await _client.PostAsync("/api/sensors", postContent);
+            Assert.That(postResponse.IsSuccessStatusCode, Is.False);
+
+            // PUT should fail
+            var updateDto = new AddOrUpdateSensorDto
+            {
+                Identifier = sensor.Identifier,
+                DeviceIdentifier = device.Identifier,
+                Name = "Should-Fail",
+            };
+            var putContent = new StringContent(JsonConvert.SerializeObject(updateDto), Encoding.UTF8, "application/json");
+            var putResponse = await _client.PutAsync("/api/sensors", putContent);
+            Assert.That(putResponse.IsSuccessStatusCode, Is.False);
+
+            // DELETE should fail
+            var deleteResponse = await _client.DeleteAsync($"/api/sensors/{device.Identifier}/{sensor.Identifier}");
+            Assert.That(deleteResponse.IsSuccessStatusCode, Is.False);
+        }
     }
 }
