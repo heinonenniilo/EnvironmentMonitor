@@ -7,7 +7,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "User, Admin")]
     public class SensorsController : ControllerBase
     {
         private readonly IDeviceSensorService _deviceSensorService;
