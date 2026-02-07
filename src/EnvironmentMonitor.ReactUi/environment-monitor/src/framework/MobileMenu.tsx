@@ -150,28 +150,28 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
               </Menu>
             ) : null}
           </AuthorizedComponent>
-          <AuthorizedComponent requiredRole={RoleNames.User}>
-            <MenuItem
-              onClick={
-                locations.length > 0
-                  ? handleMeasurementsOpen
-                  : (e) => {
-                      handleClick(routes.measurements, e);
-                    }
-              }
-              selected={false}
-            >
+          <AuthorizedComponent
+            roleLogic="OR"
+            requiredRoles={[
+              RoleNames.Registered,
+              RoleNames.User,
+              RoleNames.Admin,
+              RoleNames.Viewer,
+              RoleNames.Location,
+            ]}
+          >
+            <MenuItem onClick={handleMeasurementsOpen} selected={false}>
               Measurements
-              {locations.length > 0 ? <ArrowRight sx={{ mr: 1 }} /> : null}
+              <ArrowRight sx={{ mr: 1 }} />
             </MenuItem>
-            {locations.length > 0 ? (
-              <Menu
-                anchorEl={measurementsAnchorEl}
-                open={isMeasurementsMenuOpen}
-                onClose={handleMeasurementsClose}
-                anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                transformOrigin={{ vertical: "top", horizontal: "left" }}
-              >
+            <Menu
+              anchorEl={measurementsAnchorEl}
+              open={isMeasurementsMenuOpen}
+              onClose={handleMeasurementsClose}
+              anchorOrigin={{ vertical: "top", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "left" }}
+            >
+              <AuthorizedComponent requiredRole={RoleNames.User}>
                 <MenuItem
                   onClick={(event) => {
                     handleMeasurementsClose();
@@ -180,16 +180,28 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
                 >
                   Devices
                 </MenuItem>
-                <MenuItem
-                  onClick={(event) => {
-                    handleMeasurementsClose();
-                    handleClick(routes.locationMeasurements, event);
-                  }}
-                >
-                  Locations
-                </MenuItem>
-              </Menu>
-            ) : null}
+              </AuthorizedComponent>
+              {locations.length > 0 ? (
+                <AuthorizedComponent requiredRole={RoleNames.User}>
+                  <MenuItem
+                    onClick={(event) => {
+                      handleMeasurementsClose();
+                      handleClick(routes.locationMeasurements, event);
+                    }}
+                  >
+                    Locations
+                  </MenuItem>
+                </AuthorizedComponent>
+              ) : null}
+              <MenuItem
+                onClick={(event) => {
+                  handleMeasurementsClose();
+                  handleClick(routes.publicMeasurements, event);
+                }}
+              >
+                Public
+              </MenuItem>
+            </Menu>
           </AuthorizedComponent>
           <Menu
             anchorEl={manageAchor}

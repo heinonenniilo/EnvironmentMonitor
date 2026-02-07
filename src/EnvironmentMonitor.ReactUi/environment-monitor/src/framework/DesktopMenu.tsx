@@ -175,21 +175,30 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               {locations.length > 0 ? <ArrowDropDownIcon /> : null}
             </MenuItem>
           </AuthorizedComponent>
-          <AuthorizedComponent requiredRole={RoleNames.User}>
-            {locations.length > 0 ? (
-              <Menu
-                anchorEl={measurementsAnchorEl}
-                open={measurementsMenuOpen}
-                onClose={handleMeasurementsMenuClose}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "left",
-                }}
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "left",
-                }}
-              >
+          <AuthorizedComponent
+            roleLogic="OR"
+            requiredRoles={[
+              RoleNames.Registered,
+              RoleNames.User,
+              RoleNames.Admin,
+              RoleNames.Viewer,
+              RoleNames.Location,
+            ]}
+          >
+            <Menu
+              anchorEl={measurementsAnchorEl}
+              open={measurementsMenuOpen}
+              onClose={handleMeasurementsMenuClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "left",
+              }}
+            >
+              <AuthorizedComponent requiredRole={RoleNames.User}>
                 <MenuItem
                   onClick={() => {
                     handleMeasurementsMenuClose();
@@ -198,28 +207,34 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
                 >
                   Devices
                 </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    handleMeasurementsMenuClose();
-                    onNavigate(routes.locationMeasurements);
-                  }}
-                >
-                  Locations
-                </MenuItem>
-              </Menu>
-            ) : null}
+              </AuthorizedComponent>
+              {locations.length > 0 ? (
+                <AuthorizedComponent requiredRole={RoleNames.User}>
+                  <MenuItem
+                    onClick={() => {
+                      handleMeasurementsMenuClose();
+                      onNavigate(routes.locationMeasurements);
+                    }}
+                  >
+                    Locations
+                  </MenuItem>
+                </AuthorizedComponent>
+              ) : null}
+              <MenuItem
+                onClick={() => {
+                  handleMeasurementsMenuClose();
+                  onNavigate(routes.publicMeasurements);
+                }}
+              >
+                Public
+              </MenuItem>
+            </Menu>
             <MenuItem
-              onClick={
-                locations.length > 0
-                  ? handleMeasurementsClick
-                  : () => {
-                      onNavigate(routes.measurements);
-                    }
-              }
+              onClick={handleMeasurementsClick}
               sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
             >
               Measurements
-              {locations.length > 0 ? <ArrowDropDownIcon /> : null}
+              <ArrowDropDownIcon />
             </MenuItem>
           </AuthorizedComponent>
           <AuthorizedComponent requiredRole={RoleNames.Admin}>

@@ -38,6 +38,7 @@ export interface MeasurementsLeftViewProps {
   timeFrom?: moment.Moment;
   timeTo?: moment.Moment;
   entityName?: string;
+  hideEntitySelector?: boolean;
   selectedMeasurementTypes: number[];
   onMeasurementTypesChange: (measurementTypes: number[]) => void;
 }
@@ -53,6 +54,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   timeFrom,
   timeTo,
   entityName,
+  hideEntitySelector,
   selectedMeasurementTypes,
   onMeasurementTypesChange,
 }) => {
@@ -149,40 +151,44 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
           }}
         />
       </Box>
-      <Box mt={2}>
-        <FormControl fullWidth>
-          <InputLabel id="device-select-label">
-            {entityName ?? "Device"}
-          </InputLabel>
-          <Select
-            labelId="device-select-label"
-            id="device-select"
-            value={
-              selectedEntities
-                ? selectedEntities.map((s) => {
-                    return s.identifier;
-                  })
-                : []
-            }
-            label={entityName ?? "Device"}
-            multiple
-          >
-            {[...entities]
-              .sort((a, b) => stringSort(getEntityTitle(a), getEntityTitle(b)))
-              .map((y) => (
-                <MenuItem
-                  value={y.identifier}
-                  key={`device-${y.identifier}`}
-                  onClick={() => {
-                    onSelectEntity(y.identifier);
-                  }}
-                >
-                  {getEntityTitle(y)}
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
-      </Box>
+      {!hideEntitySelector && (
+        <Box mt={2}>
+          <FormControl fullWidth>
+            <InputLabel id="device-select-label">
+              {entityName ?? "Device"}
+            </InputLabel>
+            <Select
+              labelId="device-select-label"
+              id="device-select"
+              value={
+                selectedEntities
+                  ? selectedEntities.map((s) => {
+                      return s.identifier;
+                    })
+                  : []
+              }
+              label={entityName ?? "Device"}
+              multiple
+            >
+              {[...entities]
+                .sort((a, b) =>
+                  stringSort(getEntityTitle(a), getEntityTitle(b)),
+                )
+                .map((y) => (
+                  <MenuItem
+                    value={y.identifier}
+                    key={`device-${y.identifier}`}
+                    onClick={() => {
+                      onSelectEntity(y.identifier);
+                    }}
+                  >
+                    {getEntityTitle(y)}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        </Box>
+      )}
       <Box mt={2}>
         <FormControl fullWidth>
           <InputLabel id="device-select-label">Sensor</InputLabel>

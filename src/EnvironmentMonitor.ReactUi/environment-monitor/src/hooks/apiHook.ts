@@ -105,6 +105,15 @@ interface measureHook {
     from: moment.Moment,
     to?: moment.Moment,
     latestOnly?: boolean,
+    sensorIds?: string[],
+    measurementTypes?: number[],
+  ) => Promise<MeasurementsViewModel | undefined>;
+
+  getPublicMeasurementsFiltered: (
+    sensorIds: string[],
+    from: moment.Moment,
+    to?: moment.Moment,
+    measurementTypes?: number[],
   ) => Promise<MeasurementsViewModel | undefined>;
 }
 
@@ -497,6 +506,8 @@ export const useApiHook = (): ApiHook => {
         from: moment.Moment,
         to?: moment.Moment,
         latestOnly?: boolean,
+        sensorIds?: string[],
+        measurementTypes?: number[],
       ) => {
         try {
           const res = await apiClient.get<
@@ -504,10 +515,36 @@ export const useApiHook = (): ApiHook => {
             AxiosResponse<MeasurementsViewModel>
           >("/api/Measurements/public", {
             params: {
-              SensorIds: [],
+              SensorIdentifiers: sensorIds,
               from: from.toISOString(),
               to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,
+              MeasurementTypes: measurementTypes,
+            },
+          });
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          showError("Fetching measurements failed");
+          return undefined;
+        }
+      },
+      getPublicMeasurementsFiltered: async (
+        sensorIds: string[],
+        from: moment.Moment,
+        to?: moment.Moment,
+        measurementTypes?: number[],
+      ) => {
+        try {
+          const res = await apiClient.get<
+            any,
+            AxiosResponse<MeasurementsViewModel>
+          >("/api/Measurements/public/measurements", {
+            params: {
+              SensorIdentifiers: sensorIds,
+              from: from.toISOString(),
+              to: to ? to.toISOString() : undefined,
+              MeasurementTypes: measurementTypes,
             },
           });
           return res.data;
