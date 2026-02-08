@@ -203,6 +203,10 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
 
   const memoSets: GraphDataset[] = useMemo(() => {
     if (!model) return [];
+
+    if (!model.measurements || model.measurements.length === 0) {
+      return [];
+    }
     const returnValues: GraphDataset[] = [];
     let id = 0;
 

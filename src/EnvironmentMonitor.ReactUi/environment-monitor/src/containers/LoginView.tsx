@@ -6,14 +6,11 @@ import { useState } from "react";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useDispatch } from "react-redux";
 import { storeUserInfo } from "../reducers/userReducer";
-import { setDevices, setLocations } from "../reducers/measurementReducer";
 
 export const LoginView: React.FC = () => {
   const navigate = useNavigate();
   const dispath = useDispatch();
   const apiHook = useApiHook();
-  const measurementApiHook = useApiHook().measureHook;
-  const locationApiHook = useApiHook().locationHook;
   const [isLoading, setIsLoading] = useState(false);
 
   const loginWithGoogleAuthCode = (persistent: boolean) => {
@@ -52,22 +49,6 @@ export const LoginView: React.FC = () => {
         .catch((ex) => {
           console.error("Failed to fetch user information", ex);
           dispath(storeUserInfo(undefined));
-        }),
-      measurementApiHook
-        .getDevices()
-        .then((res) => {
-          dispath(setDevices(res ?? []));
-        })
-        .catch((ex) => {
-          console.error("Failed to fetch devices", ex);
-        }),
-      locationApiHook
-        .getLocations()
-        .then((res) => {
-          dispath(setLocations(res));
-        })
-        .catch((ex) => {
-          console.error("Failed to fetch locations", ex);
         }),
     ]).finally(() => {
       setIsLoading(false);
