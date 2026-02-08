@@ -77,7 +77,8 @@ namespace EnvironmentMonitor.Application.Services
                     return HasGlobalRole(GlobalRoles.Viewer) || hasRole;
                 case AccessLevels.Write:
                     return HasGlobalRole(GlobalRoles.Admin);
-            };
+            }
+            ;
             return false;
         }
 
@@ -101,7 +102,7 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<ExternalLoginResult> ExternalLogin(ExternalLoginModel model)
         {
             var result = await _userAuthService.LoginWithExternalProvider(model);
-            
+
             if (!result.Success)
             {
                 // Write auth failure to cookie that JavaScript can read
@@ -112,7 +113,7 @@ namespace EnvironmentMonitor.Application.Services
                 // Write auth success to cookie with the external login provider
                 _userCookieService.WriteAuthSuccessCookie(result.LoginProvider);
             }
-            
+
             return result;
         }
 
@@ -134,7 +135,7 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new UnauthorizedAccessException("User not authenticated");
             }
-            
+
             await _userAuthService.ChangePassword(userId, model);
         }
 
@@ -263,5 +264,8 @@ namespace EnvironmentMonitor.Application.Services
         {
             _userCookieService.ClearAuthInfoCookie();
         }
+
+        public List<string> Roles => _currentUser.Roles.ToList();
+
     }
 }

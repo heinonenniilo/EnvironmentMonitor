@@ -105,7 +105,18 @@ interface measureHook {
     from: moment.Moment,
     to?: moment.Moment,
     latestOnly?: boolean,
+    sensorIds?: string[],
+    measurementTypes?: number[],
   ) => Promise<MeasurementsViewModel | undefined>;
+
+  getPublicMeasurementsFiltered: (
+    sensorIds: string[],
+    from: moment.Moment,
+    to?: moment.Moment,
+    measurementTypes?: number[],
+  ) => Promise<MeasurementsViewModel | undefined>;
+
+  getPublicSensors: () => Promise<Sensor[]>;
 }
 
 interface CreateApiKeyRequest {
@@ -497,17 +508,20 @@ export const useApiHook = (): ApiHook => {
         from: moment.Moment,
         to?: moment.Moment,
         latestOnly?: boolean,
+        sensorIds?: string[],
+        measurementTypes?: number[],
       ) => {
         try {
           const res = await apiClient.get<
             any,
             AxiosResponse<MeasurementsViewModel>
-          >("/api/Measurements/public", {
+          >("/api/PublicMeasurements", {
             params: {
-              SensorIds: [],
+              SensorIdentifiers: sensorIds,
               from: from.toISOString(),
               to: to ? to.toISOString() : undefined,
               latestOnly: latestOnly,
+              MeasurementTypes: measurementTypes,
             },
           });
           return res.data;
@@ -515,6 +529,43 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           showError("Fetching measurements failed");
           return undefined;
+        }
+      },
+      getPublicMeasurementsFiltered: async (
+        sensorIds: string[],
+        from: moment.Moment,
+        to?: moment.Moment,
+        measurementTypes?: number[],
+      ) => {
+        try {
+          const res = await apiClient.get<
+            any,
+            AxiosResponse<MeasurementsViewModel>
+          >("/api/PublicMeasurements/measurements", {
+            params: {
+              SensorIdentifiers: sensorIds,
+              from: from.toISOString(),
+              to: to ? to.toISOString() : undefined,
+              MeasurementTypes: measurementTypes,
+            },
+          });
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          showError("Fetching measurements failed");
+          return undefined;
+        }
+      },
+      getPublicSensors: async () => {
+        try {
+          const res = await apiClient.get<any, AxiosResponse<Sensor[]>>(
+            "/api/PublicMeasurements/sensors",
+          );
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          showError("Fetching public sensors failed");
+          return [];
         }
       },
     },

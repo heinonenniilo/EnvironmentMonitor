@@ -12,6 +12,7 @@ export const routes = {
   measurementsByDevice: "/measurements/device/:deviceId",
   locationMeasurements: "/measurements/location",
   measurementsByLocation: "/measurements/location/:locationId",
+  publicMeasurements: "/measurements/public",
   dashboard: "/dashboard",
   locationDashboard: "/dashboard/location",
   devices: "/devices",

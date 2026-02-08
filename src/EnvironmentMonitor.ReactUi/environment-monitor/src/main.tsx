@@ -17,6 +17,7 @@ import { DeviceMessagesView } from "./containers/DeviceMessagesView";
 import { ThemeProvider } from "@mui/material";
 import { baseTheme } from "./utilities/baseTheme";
 import { PublicMeasurementsView } from "./containers/PublicMeasurementsView";
+import { PublicSensorMeasurementsView } from "./containers/PublicSensorMeasurementsView";
 import { LoginView } from "./containers/LoginView";
 import { LoginInfoView } from "./containers/LoginInfoView";
 import { RegisterView } from "./containers/RegisterView";
@@ -39,6 +40,23 @@ createRoot(document.getElementById("root")!).render(
           <App>
             <Routes>
               <Route path={routes.main} element={<PublicMeasurementsView />} />
+              <Route
+                path={routes.publicMeasurements}
+                element={
+                  <AuthorizedComponent
+                    roleLogic="OR"
+                    requiredRoles={[
+                      RoleNames.Registered,
+                      RoleNames.User,
+                      RoleNames.Admin,
+                      RoleNames.Viewer,
+                      RoleNames.Location,
+                    ]}
+                  >
+                    <PublicSensorMeasurementsView />
+                  </AuthorizedComponent>
+                }
+              />
               <Route
                 path={routes.home}
                 element={

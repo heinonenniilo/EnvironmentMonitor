@@ -1,12 +1,10 @@
 ﻿using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
-using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.WebApi.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnvironmentMonitor.WebApi.Controllers
@@ -16,14 +14,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
     public class MeasurementsController : ControllerBase
     {
         private readonly IMeasurementService _measurementService;
-        private readonly ILogger<MeasurementsController> _logger;
+        private readonly IDateService _dateService;
 
-        public MeasurementsController(ILogger<MeasurementsController> logger, IMeasurementService measurementService)
-        {
-            _logger = logger;
+        public MeasurementsController(IDateService dateService, IMeasurementService measurementService)
+        {           
+            _dateService = dateService;
             _measurementService = measurementService;
         }
-
 
         [HttpGet()]
         [Authorize(Roles = "Admin, Viewer, User")]
@@ -45,13 +42,6 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public async Task<MeasurementsByLocationModel> GetMeasurementsByLocation([FromQuery] GetMeasurementsModel model)
         {
             return await _measurementService.GetMeasurementsByLocation(model);
-        }
-
-        [HttpGet("public")]
-        [AllowAnonymous]
-        public async Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensor([FromQuery] GetMeasurementsModel model)
-        {
-            return await _measurementService.GetMeasurementsByPublicSensor(model);
         }
 
         [HttpPost]
