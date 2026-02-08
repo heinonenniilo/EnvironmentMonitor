@@ -42,7 +42,7 @@ Chart.register(
   Tooltip,
   Legend,
   Colors,
-  zoomPlugin
+  zoomPlugin,
 );
 
 export interface MultiSensorGraphProps {
@@ -102,7 +102,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const [autoScale, setAutoScale] = useState(false);
   const [hiddenDatasetIds, setHiddenDatasetIds] = useState<number[]>([]);
   const [measurementsToShow, setMeasurementsToShow] = useState<Measurement[]>(
-    []
+    [],
   );
   const [dialogTitle, setDialogTitle] = useState("");
   const [highlightedDatasetLabel, setHighlightedDatasetLabel] = useState<
@@ -141,7 +141,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   const getSensorLabel = useCallback(
     (sensorIdentifier: string, typeId?: MeasurementTypes) => {
       const matchingSensor = sensors?.find(
-        (s) => s.identifier === sensorIdentifier
+        (s) => s.identifier === sensorIdentifier,
       );
       let sensorName = matchingSensor?.name ?? `${sensorIdentifier}`;
       const device =
@@ -156,32 +156,32 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
 
       return getDatasetLabel(sensorName, typeId as MeasurementTypes);
     },
-    [sensors, entities]
+    [sensors, entities],
   );
 
   const showMeasurementsInDialog = (
     sensorIdentifier: string,
-    type?: MeasurementTypes
+    type?: MeasurementTypes,
   ) => {
     const toShow = model?.measurements.find(
-      (s) => s.sensorIdentifier === sensorIdentifier
+      (s) => s.sensorIdentifier === sensorIdentifier,
     );
     if (toShow) {
       const matchingSensor = sensors?.find(
-        (s) => s.identifier == toShow.sensorIdentifier
+        (s) => s.identifier == toShow.sensorIdentifier,
       );
       const matchingEntity = entities?.find(
-        (d) => d.identifier === matchingSensor?.parentIdentifier
+        (d) => d.identifier === matchingSensor?.parentIdentifier,
       );
       setDialogTitle(
         matchingEntity
           ? `${matchingEntity?.displayName} / ${matchingSensor?.name} ${
               type ? getMeasurementUnit(type) : ""
             }`
-          : `${matchingSensor?.name} ${type ? getMeasurementUnit(type) : ""}`
+          : `${matchingSensor?.name} ${type ? getMeasurementUnit(type) : ""}`,
       );
       setMeasurementsToShow(
-        toShow.measurements.filter((m) => m.typeId === type)
+        toShow.measurements.filter((m) => m.typeId === type),
       );
     }
   };
@@ -272,7 +272,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     }
     if (!singleDevice) {
       if (!entities || entities.length === 0) {
-        return "Select a device";
+        return "Select an entity";
       } else {
         return "";
       }
@@ -382,7 +382,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
               onLegendClick={(_datasetIndex, dataset) => {
                 showMeasurementsInDialog(
                   dataset.sensorIdentifier,
-                  dataset.measurementType
+                  dataset.measurementType,
                 );
               }}
               onLegendHover={(datasetLabel) => {
@@ -396,7 +396,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                   setHiddenDatasetIds((prev) => [...prev, datasetIndex]);
                 } else {
                   setHiddenDatasetIds(
-                    hiddenDatasetIds.filter((d) => d !== datasetIndex)
+                    hiddenDatasetIds.filter((d) => d !== datasetIndex),
                   );
                 }
               }}
@@ -465,7 +465,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
             onLegendClick={(_datasetIndex, dataset) => {
               showMeasurementsInDialog(
                 dataset.sensorIdentifier,
-                dataset.measurementType
+                dataset.measurementType,
               );
             }}
             onLegendHover={(datasetLabel) => {
@@ -479,7 +479,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
                 setHiddenDatasetIds((prev) => [...prev, datasetIndex]);
               } else {
                 setHiddenDatasetIds(
-                  hiddenDatasetIds.filter((d) => d !== datasetIndex)
+                  hiddenDatasetIds.filter((d) => d !== datasetIndex),
                 );
               }
             }}

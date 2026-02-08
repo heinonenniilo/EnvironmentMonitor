@@ -83,7 +83,7 @@ export const PublicSensorMeasurementsView: React.FC = () => {
     const datesToShow = to
       ? `${from.format("DD.MM.YYYY")} -> ${to.format("DD.MM.YYYY")}`
       : `${from.format("DD.MM.YYYY")} ->`;
-    return `Public Sensors: ${datesToShow}`;
+    return `Measurements: ${datesToShow}`;
   };
 
   const onSearch = (
@@ -117,7 +117,7 @@ export const PublicSensorMeasurementsView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      title="Public Measurements"
+      title="Measurements"
       isLoading={isLoading}
       leftMenu={
         <MeasurementsLeftView
@@ -140,6 +140,7 @@ export const PublicSensorMeasurementsView: React.FC = () => {
           sensors={availableSensors}
           timeFrom={timeFrom}
           hideEntitySelector
+          hideMeasurementTypeSelector
           selectedMeasurementTypes={selectedMeasurementTypes}
           onMeasurementTypesChange={(types) =>
             dispatch(setSelectedMeasurementTypes(types))

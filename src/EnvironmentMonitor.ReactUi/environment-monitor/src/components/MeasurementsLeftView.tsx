@@ -39,6 +39,7 @@ export interface MeasurementsLeftViewProps {
   timeTo?: moment.Moment;
   entityName?: string;
   hideEntitySelector?: boolean;
+  hideMeasurementTypeSelector?: boolean;
   selectedMeasurementTypes: number[];
   onMeasurementTypesChange: (measurementTypes: number[]) => void;
 }
@@ -55,6 +56,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   timeTo,
   entityName,
   hideEntitySelector,
+  hideMeasurementTypeSelector,
   selectedMeasurementTypes,
   onMeasurementTypesChange,
 }) => {
@@ -216,50 +218,52 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
         </FormControl>
       </Box>
 
-      <Box mt={2}>
-        <FormControl fullWidth>
-          <InputLabel id="measurement-type-select-label">
-            Measurement Type
-          </InputLabel>
-          <Select
-            labelId="measurement-type-select-label"
-            id="measurement-type-select"
-            value={selectedMeasurementTypes}
-            multiple
-            label="Measurement Type"
-            endAdornment={
-              selectedMeasurementTypes.length > 0 ? (
-                <IconButton
-                  size="small"
-                  onClick={handleClearMeasurementTypes}
-                  sx={{ marginRight: 3 }}
-                >
-                  <Clear fontSize="small" />
-                </IconButton>
-              ) : null
-            }
-          >
-            {availableMeasurementTypes
-              .sort((a, b) =>
-                stringSort(
-                  getMeasurementTypeDisplayName(a as MeasurementTypes),
-                  getMeasurementTypeDisplayName(b as MeasurementTypes),
-                ),
-              )
-              .map((type) => (
-                <MenuItem
-                  value={type}
-                  key={`measurement-type-${type}`}
-                  onClick={() => {
-                    handleToggleMeasurementType(type);
-                  }}
-                >
-                  {getMeasurementTypeDisplayName(type as MeasurementTypes)}
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
-      </Box>
+      {!hideMeasurementTypeSelector && (
+        <Box mt={2}>
+          <FormControl fullWidth>
+            <InputLabel id="measurement-type-select-label">
+              Measurement Type
+            </InputLabel>
+            <Select
+              labelId="measurement-type-select-label"
+              id="measurement-type-select"
+              value={selectedMeasurementTypes}
+              multiple
+              label="Measurement Type"
+              endAdornment={
+                selectedMeasurementTypes.length > 0 ? (
+                  <IconButton
+                    size="small"
+                    onClick={handleClearMeasurementTypes}
+                    sx={{ marginRight: 3 }}
+                  >
+                    <Clear fontSize="small" />
+                  </IconButton>
+                ) : null
+              }
+            >
+              {availableMeasurementTypes
+                .sort((a, b) =>
+                  stringSort(
+                    getMeasurementTypeDisplayName(a as MeasurementTypes),
+                    getMeasurementTypeDisplayName(b as MeasurementTypes),
+                  ),
+                )
+                .map((type) => (
+                  <MenuItem
+                    value={type}
+                    key={`measurement-type-${type}`}
+                    onClick={() => {
+                      handleToggleMeasurementType(type);
+                    }}
+                  >
+                    {getMeasurementTypeDisplayName(type as MeasurementTypes)}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        </Box>
+      )}
 
       <Box mt={2}>
         <Button
@@ -270,9 +274,11 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
                 fromDate,
                 toDate,
                 selectedSensors,
-                selectedMeasurementTypes.length > 0
-                  ? selectedMeasurementTypes
-                  : undefined,
+                hideMeasurementTypeSelector
+                  ? undefined
+                  : selectedMeasurementTypes.length > 0
+                    ? selectedMeasurementTypes
+                    : undefined,
               );
             }
           }}
