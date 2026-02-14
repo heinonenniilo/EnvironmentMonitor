@@ -12,15 +12,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
     [Route("api/[controller]")]
     public class PublicMeasurementsController : ControllerBase
     {
-        private readonly IMeasurementService _measurementService;
+        private readonly IPublicSensorService _publicSensorService;
         private readonly IDateService _dateService;
 
         private static readonly int PublicMeasurementMaxLimitInDays = ApplicationConstants.PublicMeasurementMaxLimitInDays;
 
-        public PublicMeasurementsController(IDateService dateService, IMeasurementService measurementService)
+        public PublicMeasurementsController(IDateService dateService, IPublicSensorService publicSensorService)
         {
             _dateService = dateService;
-            _measurementService = measurementService;
+            _publicSensorService = publicSensorService;
         }
 
         [HttpGet]
@@ -28,7 +28,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public async Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensor([FromQuery] GetMeasurementsModel model)
         {
             var currentTime = _dateService.CurrentTime();
-            return await _measurementService.GetMeasurementsByPublicSensor(new GetMeasurementsModel()
+            return await _publicSensorService.GetMeasurementsByPublicSensor(new GetMeasurementsModel()
             {
                 LatestOnly = model.LatestOnly,
                 From = (currentTime - model.From).TotalDays > PublicMeasurementMaxLimitInDays ? currentTime.AddDays(-1 * PublicMeasurementMaxLimitInDays) : model.From,
@@ -40,14 +40,21 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin, Viewer, User, Registered")]
         public async Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensorFilter([FromQuery] GetMeasurementsModel model)
         {
-            return await _measurementService.GetMeasurementsByPublicSensor(model);
+            return await _publicSensorService.GetMeasurementsByPublicSensor(model);
         }
 
         [HttpGet("sensors")]
         [Authorize(Roles = "Admin, Viewer, User, Registered")]
         public async Task<List<SensorDto>> GetPublicSensors()
         {
-            return await _measurementService.GetPublicSensors();
+            return await _publicSensorService.GetPublicSensors();
+        }
+
+        [HttpPut("sensors")]
+        [Authorize(Roles = "Admin")]
+        public async Task<List<SensorDto>> ManagePublicSensors([FromBody] ManagePublicSensorsRequest request)
+        {
+            return await _publicSensorService.ManagePublicSensors(request);
         }
     }
 }

@@ -81,6 +81,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<IDeviceRepository, DeviceRepository>();
             services.AddScoped<ISensorRepository, SensorRepository>();
             services.AddScoped<ILocationRepository, LocationRepository>();
+            services.AddScoped<IPublicSensorRepository, PublicSensorRepository>();
             services.AddScoped<IEmailRepository, EmailRepository>();
             services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
             services.AddSingleton<IApiKeyHashService, ApiKeyHashService>();
