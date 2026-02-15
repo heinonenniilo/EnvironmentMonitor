@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models.GetModels;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -18,13 +19,18 @@ namespace EnvironmentMonitor.Infrastructure.Data
             _logger = logger;
         }
 
-        public async Task<List<PublicSensor>> GetPublicSensors(List<Guid>? identifiers = null)
+        public async Task<List<PublicSensor>> GetPublicSensors(GetPublicSensorsModel model)
         {
             IQueryable<PublicSensor> query = _context.PublicSensors;
 
-            if (identifiers != null && identifiers.Any())
+            if (model.Identifiers != null && model.Identifiers.Any())
             {
-                query = query.Where(ps => identifiers.Contains(ps.Identifier));
+                query = query.Where(ps => model.Identifiers.Contains(ps.Identifier));
+            }
+
+            if (model.IsActive != null)
+            {
+                query = query.Where(ps => ps.Active == model.IsActive.Value);
             }
 
             return await query

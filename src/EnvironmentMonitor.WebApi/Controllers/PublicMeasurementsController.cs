@@ -3,6 +3,7 @@ using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.GetModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,9 +46,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpGet("sensors")]
         [Authorize(Roles = "Admin, Viewer, User, Registered")]
-        public async Task<List<SensorDto>> GetPublicSensors()
+        public async Task<List<SensorDto>> GetPublicSensors([FromQuery] GetPublicSensorsModel model)
         {
-            return await _publicSensorService.GetPublicSensors();
+            return await _publicSensorService.GetPublicSensors(model);
         }
 
         [HttpPut("sensors")]

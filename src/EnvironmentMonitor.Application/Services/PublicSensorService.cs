@@ -6,6 +6,7 @@ using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.GetModels;
 using EnvironmentMonitor.Domain.Models.ReturnModel;
 using Microsoft.Extensions.Logging;
 
@@ -63,7 +64,11 @@ namespace EnvironmentMonitor.Application.Services
                 throw new InvalidOperationException($"Max query range is {limitInDays} days");
             }
 
-            var publicSensors = await _publicSensorRepository.GetPublicSensors(model.SensorIdentifiers.Count != 0 ? model.SensorIdentifiers : null);
+            var publicSensors = await _publicSensorRepository.GetPublicSensors(new GetPublicSensorsModel()
+            {
+                Identifiers = model.SensorIdentifiers.Count != 0 ? model.SensorIdentifiers : null,
+                IsActive = true
+            });
 
             if (publicSensors.Count == 0)
             {
@@ -109,9 +114,14 @@ namespace EnvironmentMonitor.Application.Services
             return returnModel;
         }
 
-        public async Task<List<SensorDto>> GetPublicSensors()
+        public async Task<List<SensorDto>> GetPublicSensors(GetPublicSensorsModel model)
         {
-            var publicSensors = await _publicSensorRepository.GetPublicSensors();
+            if (!_userService.IsAdmin)
+            {
+                model.IsActive = true;
+            }
+
+            var publicSensors = await _publicSensorRepository.GetPublicSensors(model);
             var mapped = _mapper.Map<List<SensorDto>>(publicSensors);
 
             if (_userService.IsAdmin)
@@ -155,6 +165,7 @@ namespace EnvironmentMonitor.Application.Services
                     existing.Name = item.Name;
                     existing.SensorId = sensor.Id;
                     existing.TypeId = item.TypeId;
+                    existing.Active = item.Active;
                     await _publicSensorRepository.UpdatePublicSensor(existing, false);
                 }
                 else
@@ -172,6 +183,7 @@ namespace EnvironmentMonitor.Application.Services
                         SensorId = sensor.Id,
                         Sensor = sensor,
                         TypeId = item.TypeId,
+                        Active = item.Active,
                         Created = now,
                         CreatedUtc = _dateService.LocalToUtc(now),
                     };
@@ -191,7 +203,7 @@ namespace EnvironmentMonitor.Application.Services
 
             await _publicSensorRepository.SaveChanges();
 
-            var publicSensors = await _publicSensorRepository.GetPublicSensors();
+            var publicSensors = await _publicSensorRepository.GetPublicSensors(new GetPublicSensorsModel());
             return _mapper.Map<List<SensorDto>>(publicSensors);
         }
 

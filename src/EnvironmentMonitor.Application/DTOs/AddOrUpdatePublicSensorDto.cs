@@ -6,6 +6,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public required string Name { get; set; }
         public required Guid SensorIdentifier { get; set; }
         public int? TypeId { get; set; }
+        public bool Active { get; set; } = true;
     }
 
     public class ManagePublicSensorsRequest
