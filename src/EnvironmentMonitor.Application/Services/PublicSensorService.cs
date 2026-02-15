@@ -122,21 +122,7 @@ namespace EnvironmentMonitor.Application.Services
             }
 
             var publicSensors = await _publicSensorRepository.GetPublicSensors(model);
-            var mapped = _mapper.Map<List<SensorDto>>(publicSensors);
-
-            if (_userService.IsAdmin)
-            {
-                foreach (var dto in mapped)
-                {
-                    var publicSensor = publicSensors.FirstOrDefault(ps => ps.Identifier == dto.Identifier);
-                    if (publicSensor?.Sensor != null)
-                    {
-                        dto.ParentIdentifier = publicSensor.Sensor.Identifier;
-                    }
-                }
-            }
-
-            return mapped;
+            return GetPublicSensorDtos(publicSensors);
         }
 
         public async Task<List<SensorDto>> ManagePublicSensors(ManagePublicSensorsRequest request)
@@ -204,7 +190,7 @@ namespace EnvironmentMonitor.Application.Services
             await _publicSensorRepository.SaveChanges();
 
             var publicSensors = await _publicSensorRepository.GetPublicSensors(new GetPublicSensorsModel());
-            return _mapper.Map<List<SensorDto>>(publicSensors);
+            return GetPublicSensorDtos(publicSensors);
         }
 
         private List<MeasurementsInfoDto> GetMeasurementInfo(ICollection<MeasurementExtended> measurements, List<Guid> sensorIds)
@@ -226,6 +212,24 @@ namespace EnvironmentMonitor.Application.Services
                     }
                 }
                 returnList.Add(rowToAdd);
+            }
+            return returnList;
+        }
+
+        // For admins, fill actual sensor identifier.
+        private List<SensorDto> GetPublicSensorDtos(List<PublicSensor> publicSensors)
+        {
+            var returnList = _mapper.Map<List<SensorDto>>(publicSensors);
+            if (_userService.IsAdmin)
+            {
+                foreach (var sensor in returnList)
+                {
+                    var matchingSensor = publicSensors.FirstOrDefault(ps => ps.Identifier == sensor.Identifier);
+                    if (matchingSensor != null)
+                    {
+                        sensor.ParentIdentifier = matchingSensor.Sensor.Identifier;
+                    }
+                }
             }
             return returnList;
         }
