@@ -51,14 +51,19 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
     string | null
   >(null);
 
-  // Filter sensors based on selected device
-  const filteredSensors = useMemo(() => {
-    if (!formDeviceIdentifier) {
-      return allSensors;
-    }
-    return allSensors.filter(
-      (s) => s.parentIdentifier === formDeviceIdentifier,
+  // Sort devices by display name
+  const sortedDevices = useMemo(() => {
+    return [...devices].sort((a, b) =>
+      (a.displayName ?? a.name).localeCompare(b.displayName ?? b.name),
     );
+  }, [devices]);
+
+  // Filter sensors based on selected device and sort by name
+  const filteredSensors = useMemo(() => {
+    const sensors = !formDeviceIdentifier
+      ? allSensors
+      : allSensors.filter((s) => s.parentIdentifier === formDeviceIdentifier);
+    return [...sensors].sort((a, b) => a.name.localeCompare(b.name));
   }, [allSensors, formDeviceIdentifier]);
 
   useEffect(() => {
@@ -137,7 +142,7 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
             error={formName.length > 0 && !formName.trim()}
           />
           <Autocomplete
-            options={devices}
+            options={sortedDevices}
             getOptionLabel={(option) => getDeviceDisplayName(option)}
             value={
               devices.find((d) => d.identifier === formDeviceIdentifier) ?? null
