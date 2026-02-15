@@ -38,6 +38,7 @@ import type { ApiKeyDto, UpdateApiKeyRequest } from "../models/apiKey";
 import type { UpdateDeviceDto } from "../models/updateDeviceDto";
 import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
 import type { SensorInfo } from "../models/sensor";
+import type { ManagePublicSensorsRequest } from "../models/managePublicSensorsRequest";
 
 interface ApiHook {
   userHook: userHook;
@@ -49,6 +50,7 @@ interface ApiHook {
   userManagementHook: userManagementHook;
   apiKeysHook: apiKeysHook;
   sensorHook: sensorHook;
+  publicSensorHook: publicSensorHook;
 }
 
 interface userHook {
@@ -228,6 +230,13 @@ interface sensorHook {
     deviceIdentifier: string,
     sensorIdentifier: string,
   ) => Promise<void>;
+}
+
+interface publicSensorHook {
+  getPublicSensors: () => Promise<Sensor[]>;
+  managePublicSensors: (
+    request: ManagePublicSensorsRequest,
+  ) => Promise<Sensor[]>;
 }
 
 const apiClient = axios.create({
@@ -1102,6 +1111,33 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError("Failed to delete sensor");
+          throw ex;
+        }
+      },
+    },
+    publicSensorHook: {
+      getPublicSensors: async () => {
+        try {
+          const res = await apiClient.get<any, AxiosResponse<Sensor[]>>(
+            "/api/PublicMeasurements/sensors",
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to get public sensors");
+          return [];
+        }
+      },
+      managePublicSensors: async (request: ManagePublicSensorsRequest) => {
+        try {
+          const res = await apiClient.put<any, AxiosResponse<Sensor[]>>(
+            "/api/PublicMeasurements/sensors",
+            request,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError("Failed to manage public sensors");
           throw ex;
         }
       },

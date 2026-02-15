@@ -31,6 +31,7 @@ import { UserInfoView } from "./containers/UserInfoView";
 import { UsersView } from "./containers/UsersView";
 import { UserView } from "./containers/UserView";
 import { ApiKeysView } from "./containers/ApiKeysView";
+import { ManagePublicSensorsView } from "./containers/ManagePublicSensorsView";
 
 createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
@@ -196,6 +197,14 @@ createRoot(document.getElementById("root")!).render(
                 element={
                   <AuthorizedComponent requiredRole={RoleNames.Admin}>
                     <ApiKeysView />
+                  </AuthorizedComponent>
+                }
+              />
+              <Route
+                path={routes.managePublicSensors}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.Admin}>
+                    <ManagePublicSensorsView />
                   </AuthorizedComponent>
                 }
               />

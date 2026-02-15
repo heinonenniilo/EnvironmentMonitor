@@ -310,6 +310,15 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               >
                 API Keys
               </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  setAnchorE2(null);
+                  onNavigate(routes.managePublicSensors);
+                }}
+              >
+                Public Sensors
+              </MenuItem>
             </Menu>
             <MenuItem
               onClick={(event) => {
