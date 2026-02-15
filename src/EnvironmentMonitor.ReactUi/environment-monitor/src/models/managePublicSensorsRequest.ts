@@ -3,6 +3,12 @@ export interface AddOrUpdatePublicSensorDto {
   name: string;
   sensorIdentifier: string;
   typeId?: number;
+  active?: boolean;
+}
+
+export interface GetPublicSensorsModel {
+  identifiers?: string[];
+  isActive?: boolean;
 }
 
 export interface ManagePublicSensorsRequest {

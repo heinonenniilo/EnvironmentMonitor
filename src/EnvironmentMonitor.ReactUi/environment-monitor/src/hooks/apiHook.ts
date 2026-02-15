@@ -38,7 +38,10 @@ import type { ApiKeyDto, UpdateApiKeyRequest } from "../models/apiKey";
 import type { UpdateDeviceDto } from "../models/updateDeviceDto";
 import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
 import type { SensorInfo } from "../models/sensor";
-import type { ManagePublicSensorsRequest } from "../models/managePublicSensorsRequest";
+import type {
+  ManagePublicSensorsRequest,
+  GetPublicSensorsModel,
+} from "../models/managePublicSensorsRequest";
 
 interface ApiHook {
   userHook: userHook;
@@ -233,7 +236,7 @@ interface sensorHook {
 }
 
 interface publicSensorHook {
-  getPublicSensors: () => Promise<Sensor[]>;
+  getPublicSensors: (model?: GetPublicSensorsModel) => Promise<Sensor[]>;
   managePublicSensors: (
     request: ManagePublicSensorsRequest,
   ) => Promise<Sensor[]>;
@@ -1116,10 +1119,13 @@ export const useApiHook = (): ApiHook => {
       },
     },
     publicSensorHook: {
-      getPublicSensors: async () => {
+      getPublicSensors: async (model?: GetPublicSensorsModel) => {
         try {
           const res = await apiClient.get<any, AxiosResponse<Sensor[]>>(
             "/api/PublicMeasurements/sensors",
+            {
+              params: model,
+            },
           );
           return res.data;
         } catch (ex) {

@@ -9,6 +9,8 @@ import {
   TextField,
   Typography,
   Autocomplete,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { useState, useEffect, useMemo } from "react";
@@ -47,6 +49,7 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
   const [formName, setFormName] = useState("");
   const [formSensorIdentifier, setFormSensorIdentifier] = useState("");
   const [formTypeId, setFormTypeId] = useState<number | undefined>(undefined);
+  const [formIsActive, setFormIsActive] = useState(true);
   const [formDeviceIdentifier, setFormDeviceIdentifier] = useState<
     string | null
   >(null);
@@ -72,6 +75,7 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
         setFormName(editingSensor.name ?? "");
         setFormSensorIdentifier(editingSensor.parentIdentifier ?? "");
         setFormTypeId(editingSensor.measurementType);
+        setFormIsActive(editingSensor.active ?? true);
         // Resolve device from sensor's parentIdentifier
         const sourceSensor = allSensors.find(
           (s) => s.identifier === editingSensor.parentIdentifier,
@@ -81,6 +85,7 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
         setFormName("");
         setFormSensorIdentifier("");
         setFormTypeId(undefined);
+        setFormIsActive(true);
         setFormDeviceIdentifier(null);
       }
     }
@@ -98,6 +103,7 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
       name: formName.trim(),
       sensorIdentifier: (formSensorIdentifier ?? "").trim(),
       typeId: formTypeId,
+      active: formIsActive,
     });
   };
 
@@ -108,7 +114,8 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
     !editingSensor ||
     formName.trim() !== editingSensor.name ||
     formSensorIdentifier !== editingSensor.parentIdentifier ||
-    formTypeId !== editingSensor.measurementType;
+    formTypeId !== editingSensor.measurementType ||
+    formIsActive !== (editingSensor.active ?? true);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -193,6 +200,16 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
             )}
             size="small"
             fullWidth
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formIsActive}
+                onChange={(e) => setFormIsActive(e.target.checked)}
+                size="small"
+              />
+            }
+            label="Active"
           />
           {formSensorIdentifier && (
             <Box>

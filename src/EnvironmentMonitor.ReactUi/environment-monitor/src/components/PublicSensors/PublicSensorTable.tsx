@@ -1,5 +1,6 @@
 import {
   Box,
+  Checkbox,
   IconButton,
   Paper,
   Table,
@@ -37,6 +38,7 @@ export const PublicSensorTable: React.FC<PublicSensorTableProps> = ({
               <TableCell>Name</TableCell>
               <TableCell>Source Sensor</TableCell>
               <TableCell>Type</TableCell>
+              <TableCell>Active</TableCell>
               {(onEdit || onDelete) && (
                 <TableCell align="right">Actions</TableCell>
               )}
@@ -45,7 +47,7 @@ export const PublicSensorTable: React.FC<PublicSensorTableProps> = ({
           <TableBody>
             {sensors.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4}>
+                <TableCell colSpan={5}>
                   <Typography
                     variant="body2"
                     color="text.secondary"
@@ -73,6 +75,13 @@ export const PublicSensorTable: React.FC<PublicSensorTableProps> = ({
                             sensor.measurementType as MeasurementTypes,
                           )
                         : "-"}
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={!!sensor.active}
+                        disabled
+                        size="small"
+                      />
                     </TableCell>
                     {(onEdit || onDelete) && (
                       <TableCell align="right">
