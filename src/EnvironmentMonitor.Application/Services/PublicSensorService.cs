@@ -112,7 +112,21 @@ namespace EnvironmentMonitor.Application.Services
         public async Task<List<SensorDto>> GetPublicSensors()
         {
             var publicSensors = await _publicSensorRepository.GetPublicSensors();
-            return _mapper.Map<List<SensorDto>>(publicSensors);
+            var mapped = _mapper.Map<List<SensorDto>>(publicSensors);
+
+            if (_userService.IsAdmin)
+            {
+                foreach (var dto in mapped)
+                {
+                    var publicSensor = publicSensors.FirstOrDefault(ps => ps.Identifier == dto.Identifier);
+                    if (publicSensor?.Sensor != null)
+                    {
+                        dto.ParentIdentifier = publicSensor.Sensor.Identifier;
+                    }
+                }
+            }
+
+            return mapped;
         }
 
         public async Task<List<SensorDto>> ManagePublicSensors(ManagePublicSensorsRequest request)
