@@ -21,6 +21,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IMapper _mapper;
         private readonly IDateService _dateService;
         private readonly ILogger<PublicSensorService> _logger;
+        private readonly IMeasurementAnalyzeService _measurementInfoService;
 
         public PublicSensorService(
             IPublicSensorRepository publicSensorRepository,
@@ -29,7 +30,8 @@ namespace EnvironmentMonitor.Application.Services
             IUserService userService,
             IMapper mapper,
             IDateService dateService,
-            ILogger<PublicSensorService> logger)
+            ILogger<PublicSensorService> logger,
+            IMeasurementAnalyzeService measurementInfoService)
         {
             _publicSensorRepository = publicSensorRepository;
             _measurementRepository = measurementRepository;
@@ -38,6 +40,7 @@ namespace EnvironmentMonitor.Application.Services
             _mapper = mapper;
             _dateService = dateService;
             _logger = logger;
+            _measurementInfoService = measurementInfoService;
         }
 
         public async Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensor(GetMeasurementsModel model)
@@ -92,7 +95,7 @@ namespace EnvironmentMonitor.Application.Services
                 MeasurementTypes = model.MeasurementTypes
             });
 
-            var info = GetMeasurementInfo(res.ToList(), sensorIds);
+            var info = _measurementInfoService.GetMeasurementInfo(res.ToList(), sensorIds);
 
             var returnModel = new MeasurementsBySensorModel()
             {
@@ -191,29 +194,6 @@ namespace EnvironmentMonitor.Application.Services
 
             var publicSensors = await _publicSensorRepository.GetPublicSensors(new GetPublicSensorsModel());
             return GetPublicSensorDtos(publicSensors);
-        }
-
-        private List<MeasurementsInfoDto> GetMeasurementInfo(ICollection<MeasurementExtended> measurements, List<Guid> sensorIds)
-        {
-            var returnList = new List<MeasurementsInfoDto>();
-            foreach (var sensorId in sensorIds)
-            {
-                var measurementsToCheck = measurements.Where(x => x.SensorIdentifier == sensorId).ToList();
-                if (!measurementsToCheck.Any())
-                    continue;
-                var rowToAdd = new MeasurementsInfoDto() { SensorIdentifier = sensorId };
-                foreach (MeasurementTypes type in Enum.GetValues(typeof(MeasurementTypes)))
-                {
-                    if (measurementsToCheck.Any(x => x.TypeId == (int)type && x.SensorIdentifier == sensorId))
-                    {
-                        rowToAdd.MinValues[(int)type] = _mapper.Map<Measurement, MeasurementDto>(measurementsToCheck.Where(x => x.TypeId == (int)type).OrderBy(x => x.Value).First());
-                        rowToAdd.MaxValues[(int)type] = _mapper.Map<Measurement, MeasurementDto>(measurementsToCheck.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.Value).First());
-                        rowToAdd.LatestValues[(int)type] = _mapper.Map<Measurement, MeasurementDto>(measurementsToCheck.Where(x => x.TypeId == (int)type).OrderByDescending(x => x.Timestamp).First());
-                    }
-                }
-                returnList.Add(rowToAdd);
-            }
-            return returnList;
         }
 
         // For admins, fill actual sensor identifier.
