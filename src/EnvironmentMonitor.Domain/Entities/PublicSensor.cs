@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Domain.Entities
 {
-    public class PublicSensor
+    public class PublicSensor : TrackedEntity
     {
         public int Id { get; set; }
         public Guid Identifier { get; set; }
@@ -15,5 +15,6 @@ namespace EnvironmentMonitor.Domain.Entities
         public required string Name { get; set; }
         public int? TypeId { get; set; }
         public MeasurementType? MeasurementType { get; set; }
+        public bool Active { get; set; } = true;
     }
 }

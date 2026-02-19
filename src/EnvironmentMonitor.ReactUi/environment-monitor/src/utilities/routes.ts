@@ -22,4 +22,5 @@ export const routes = {
   users: "/users",
   userView: "/users/:userId",
   apiKeys: "/api-keys",
+  managePublicSensors: "/manage/public-sensors",
 };

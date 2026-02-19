@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
 import { MeasurementsLeftView } from "../components/MeasurementsLeftView";
 import {
-  getDashboardTimeRange,
   getSelectedMeasurementTypes,
   setSelectedMeasurementTypes,
 } from "../reducers/measurementReducer";
@@ -16,6 +15,7 @@ import moment from "moment";
 
 export const PublicSensorMeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
+  const publicSensorHook = useApiHook().publicSensorHook;
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -29,7 +29,6 @@ export const PublicSensorMeasurementsView: React.FC = () => {
     undefined,
   );
   const [timeTo, setTimeTo] = useState<moment.Moment | undefined>(undefined);
-  const dashboardTimeRange = useSelector(getDashboardTimeRange);
   const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
 
   // Available public sensors fetched from backend
@@ -51,27 +50,14 @@ export const PublicSensorMeasurementsView: React.FC = () => {
     }
   };
 
-  // Fetch available public sensors on mount
+  // Fetch available public sensors on mount (only active ones)
   useEffect(() => {
-    if (!measurementApiHook) return;
-
     setIsLoading(true);
-    const fromDate = moment()
-      .utc(true)
-      .add(-1 * dashboardTimeRange, "hour")
-      .startOf("day");
 
-    measurementApiHook
-      .getPublicMeasurements(fromDate, undefined, true)
+    publicSensorHook
+      .getPublicSensors({ isActive: true })
       .then((res) => {
-        if (res?.sensors) {
-          setAvailableSensors(
-            res.sensors.map((s) => ({
-              ...s,
-              parentIdentifier: "public",
-            })),
-          );
-        }
+        setAvailableSensors(res);
       })
       .finally(() => {
         setIsLoading(false);

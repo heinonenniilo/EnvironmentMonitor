@@ -267,6 +267,14 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             >
               API Keys
             </MenuItem>
+            <MenuItem
+              onClick={(event) => {
+                setManageAnchor(null);
+                handleClick(routes.managePublicSensors, event);
+              }}
+            >
+              Public Sensors
+            </MenuItem>
           </Menu>
           <AuthorizedComponent requiredRole={RoleNames.Admin}>
             <MenuItem

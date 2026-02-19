@@ -14,7 +14,5 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<MeasurementsModel> GetMeasurements(GetMeasurementsModel model);
         public Task<MeasurementsBySensorModel> GetMeasurementsBySensor(GetMeasurementsModel model);
         public Task<MeasurementsByLocationModel> GetMeasurementsByLocation(GetMeasurementsModel model);
-        public Task<MeasurementsBySensorModel> GetMeasurementsByPublicSensor(GetMeasurementsModel model);
-        public Task<List<SensorDto>> GetPublicSensors();
     }
 }

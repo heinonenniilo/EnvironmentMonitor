@@ -21,17 +21,20 @@ namespace EnvironmentMonitor.Application.DTOs
         public int? MeasurementType { get; set; }
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? AggregationType { get; set; }
+        public bool? Active { get; set; }
 
         public virtual void Mapping(Profile profile)
         {
             profile.CreateMap<Sensor, SensorDto>()
                 .ForMember(x => x.ParentIdentifier, opt => opt.MapFrom(d => d.Device != null ? d.Device.Identifier : (Guid?)null))
                 .ForMember(x => x.DisplayName, opt => opt.MapFrom(x => x.Name))
+                .ForMember(x => x.Active, opt => opt.Ignore())
                 .ReverseMap();
 
             profile.CreateMap<SensorExtended, SensorDto>()
                 .ForMember(x => x.ParentIdentifier, opt => opt.MapFrom(x => x.DeviceIdentifier))
                 .ForMember(x => x.DisplayName, opt => opt.MapFrom(x => x.Name))
+                .ForMember(x => x.Active, opt => opt.Ignore())
                 .ReverseMap();
 
             profile.CreateMap<LocationSensor, SensorDto>()
@@ -41,12 +44,14 @@ namespace EnvironmentMonitor.Application.DTOs
                 .ForMember(x => x.ParentIdentifier, opt => opt.MapFrom(x => x.Location != null ? x.Location.Identifier : (Guid?)null))
                 .ForMember(x => x.MeasurementType, opt => opt.MapFrom(x => x.TypeId))
                 .ForMember(x => x.DisplayName, opt => opt.MapFrom(x => x.Name))
+                .ForMember(x => x.Active, opt => opt.Ignore())
                 .ReverseMap();
             profile.CreateMap<PublicSensor, SensorDto>()
                 .ForMember(x => x.ScaleMin, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMin : null))
                 .ForMember(x => x.ScaleMax, opt => opt.MapFrom(x => x.Sensor != null ? x.Sensor.ScaleMax : null))
                 .ForMember(x => x.MeasurementType, opt => opt.MapFrom(x => x.TypeId))
                 .ForMember(x => x.DisplayName, opt => opt.MapFrom(x => x.Name))
+                .ForMember(x => x.Active, opt => opt.MapFrom(x => (bool?)x.Active))
                 .ReverseMap();
         }
     }
