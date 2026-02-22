@@ -115,7 +115,7 @@ export const ApiKeyTable: React.FC<ApiKeyTableProps> = ({
   ];
 
   return (
-    <Box sx={{ height: 600, width: "100%" }}>
+    <Box sx={{ width: "100%" }}>
       <DataGrid
         rows={apiKeys}
         columns={columns}
