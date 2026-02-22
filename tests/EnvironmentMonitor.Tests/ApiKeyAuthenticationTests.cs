@@ -26,6 +26,10 @@ namespace EnvironmentMonitor.Tests
             using var scope = _factory.Services.CreateScope();
             var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
             _apiKey = configuration.GetSection("ApiKey").Value;
+
+            var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
+            await cacheService.ClearAsync();
+
             await LogoutAsync();
         }
 
