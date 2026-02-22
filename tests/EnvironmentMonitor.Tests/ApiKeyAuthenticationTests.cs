@@ -19,6 +19,8 @@ namespace EnvironmentMonitor.Tests
     public class ApiKeyAuthenticationTests : BaseIntegrationTest
     {
         private string? _apiKey;
+        private const string ApiKeyCachePrefix = "apikey:";
+        private readonly List<string> _createdSecretIds = new();
 
         [SetUp]
         public async Task Setup()
@@ -27,6 +29,22 @@ namespace EnvironmentMonitor.Tests
             var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
             _apiKey = configuration.GetSection("ApiKey").Value;
             await LogoutAsync();
+        }
+
+        [TearDown]
+        public async Task CleanupApiKeyCache()
+        {
+            if (_createdSecretIds.Count > 0)
+            {
+                using var scope = _factory.Services.CreateScope();
+                var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
+
+                foreach (var id in _createdSecretIds)
+                {
+                    await cacheService.RemoveAsync($"{ApiKeyCachePrefix}{id}");
+                }
+                _createdSecretIds.Clear();
+            }
         }
 
         private async Task<(string SecretId, string SecretValue)> CreateApiKeyAsync(List<Guid> deviceIds, List<Guid>? locationIds = null, string? description = null)
@@ -54,6 +72,8 @@ namespace EnvironmentMonitor.Tests
             
             string secretValue = apiKeyResponse.apiKey;
             string secretId = apiKeyResponse.id;
+
+            _createdSecretIds.Add(secretId);
 
             // Logout after creating the API key
             await LogoutAsync();
