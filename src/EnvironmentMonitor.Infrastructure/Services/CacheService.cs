@@ -53,11 +53,13 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             var data = JsonSerializer.Serialize(value, _jsonOptions);
             await _cache.SetStringAsync(key, data, options);
+            _logger.LogDebug("Cache entry set for key '{Key}' with expiration of {ExpirationMinutes} minutes", key, expiration.TotalMinutes);
         }
 
         public async Task RemoveAsync(string key)
         {
             await _cache.RemoveAsync(key);
+            _logger.LogDebug("Cache entry removed for key '{Key}'", key);
         }
     }
 }
