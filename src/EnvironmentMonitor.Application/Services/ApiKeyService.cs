@@ -21,7 +21,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IMapper _mapper;
         private readonly ICacheService _cacheService;
         private readonly ILogger<ApiKeyService> _logger;
-        private readonly TimeSpan _cacheExpiration;
+        private readonly ApiKeySettings _apiKeySettings;
 
         private const string ApiKeyCachePrefix = "apikey:";
 
@@ -40,7 +40,7 @@ namespace EnvironmentMonitor.Application.Services
             _mapper = mapper;
             _cacheService = cacheService;
             _logger = logger;
-            _cacheExpiration = TimeSpan.FromMinutes(apiKeySettings.ApiKeyCacheExpirationMinutes);
+            _apiKeySettings = apiKeySettings;           
         }
 
         public async Task<CreateApiKeyResponse> CreateApiKey(CreateApiKeyRequest request)
@@ -157,8 +157,8 @@ namespace EnvironmentMonitor.Application.Services
                 return null;
             }
 
-            await _cacheService.SetAsync($"{ApiKeyCachePrefix}{secretId}", secret, _cacheExpiration);
-            _logger.LogInformation("API key '{SecretId}' verified and cached with expiration of {ExpirationMinutes} minutes", secretId, _cacheExpiration.TotalMinutes);
+            await _cacheService.SetAsync($"{ApiKeyCachePrefix}{secretId}", secret, _apiKeySettings.CacheExpiration);
+            _logger.LogInformation("API key '{SecretId}' verified and cached with expiration of {ExpirationMinutes} minutes", secretId, _apiKeySettings.CacheExpiration);
 
             return secret;
         }
