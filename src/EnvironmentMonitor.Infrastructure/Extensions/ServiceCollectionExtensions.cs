@@ -86,6 +86,9 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             services.AddScoped<IApiKeyRepository, ApiKeyRepository>();
             services.AddSingleton<IApiKeyHashService, ApiKeyHashService>();
             services.AddSingleton<IIdentifierGenerator, IdentifierGenerator>();
+            services.AddSingleton<ICacheService, CacheService>();
+
+            services.AddDistributedMemoryCache();
 
             // Identity stuff
             services.AddIdentity<ApplicationUser, ApplicationUserRole>(options =>

@@ -18,17 +18,25 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IApiKeyHashService _apiKeyHashService;
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
+        private readonly ICacheService _cacheService;
+        private readonly TimeSpan _cacheExpiration;
+
+        private const string ApiKeyCachePrefix = "apikey:";
 
         public ApiKeyService(
             IApiKeyRepository apiKeyRepository,
             IApiKeyHashService apiKeyHashService,
             IUserService userService,
-            IMapper mapper)
+            IMapper mapper,
+            ICacheService cacheService,
+            ApiKeySettings apiKeySettings)
         {
             _apiKeyRepository = apiKeyRepository;
             _apiKeyHashService = apiKeyHashService;
             _userService = userService;
             _mapper = mapper;
+            _cacheService = cacheService;
+            _cacheExpiration = TimeSpan.FromMinutes(apiKeySettings.ApiKeyCacheExpirationMinutes);
         }
 
         public async Task<CreateApiKeyResponse> CreateApiKey(CreateApiKeyRequest request)
@@ -106,20 +114,32 @@ namespace EnvironmentMonitor.Application.Services
             EnsureAdmin();
 
             await _apiKeyRepository.DeleteApiKey(id);
+            await _cacheService.RemoveAsync($"{ApiKeyCachePrefix}{id}");
         }
 
         public async Task<ApiSecret?> VerifyApiKey(string secretId, string providedApiKey)
         {
-            var secret = await _apiKeyRepository.GetApiKey(secretId);
+            var secret = await _cacheService.GetAsync<ApiSecret>($"{ApiKeyCachePrefix}{secretId}");
 
-            if (secret == null || !secret.Enabled)
+            if (secret == null)
             {
-                return null;
-            }
+                secret = await _apiKeyRepository.GetApiKey(secretId);
 
-            var isValid = _apiKeyHashService.VerifyApiKeyHash(providedApiKey, secret.Hash);
-            
-            if (!isValid)
+                if (secret == null || !secret.Enabled)
+                {
+                    return null;
+                }
+
+                var isValid = _apiKeyHashService.VerifyApiKeyHash(providedApiKey, secret.Hash);
+
+                if (!isValid)
+                {
+                    return null;
+                }
+
+                await _cacheService.SetAsync($"{ApiKeyCachePrefix}{secretId}", secret, _cacheExpiration);
+            }
+            else if (!secret.Enabled)
             {
                 return null;
             }
@@ -132,6 +152,7 @@ namespace EnvironmentMonitor.Application.Services
             EnsureAdmin();
 
             var updatedSecret = await _apiKeyRepository.UpdateApiKey(id, request.Enabled, request.Description);
+            await _cacheService.RemoveAsync($"{ApiKeyCachePrefix}{id}");
 
             return _mapper.Map<ApiKeyDto>(updatedSecret);
         }
