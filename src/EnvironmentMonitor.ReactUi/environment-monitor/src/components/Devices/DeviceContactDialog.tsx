@@ -9,7 +9,7 @@ import {
   TextField,
 } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import { type DeviceContact } from "../models/deviceContact";
+import { type DeviceContact } from "../../models/deviceContact";
 import { useState, useEffect } from "react";
 
 export interface DeviceContactDialogProps {

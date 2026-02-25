@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
-import { MeasurementsLeftView } from "../components/MeasurementsLeftView";
+import { MeasurementsLeftView } from "../components/Measurements/MeasurementsLeftView";
 import {
   getDashboardTimeRange,
   getDeviceAutoScale,
@@ -15,7 +15,7 @@ import {
 import { Box } from "@mui/material";
 import { type Device } from "../models/device";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
-import { MultiSensorGraph } from "../components/MultiSensorGraph";
+import { MultiSensorGraph } from "../components/Measurements/MultiSensorGraph";
 import { type Sensor } from "../models/sensor";
 import { useParams } from "react-router";
 import moment from "moment";

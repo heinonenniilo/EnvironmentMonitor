@@ -12,7 +12,7 @@ import styled from "styled-components";
 import { Menu as MenuIcon } from "@mui/icons-material";
 import { routes } from "../utilities/routes";
 import { UserMenu } from "./UserMenu";
-import { AuthorizedComponent } from "../components/AuthorizedComponent";
+import { AuthorizedComponent } from "./AuthorizedComponent";
 import { RoleNames } from "../enums/roleNames";
 import {
   getIsLeftMenuOpen,

@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
-import { useApiHook } from "../hooks/apiHook";
-import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
-import type { PaginatedResult } from "../models/paginatedResult";
-import type { DeviceMessage } from "../models/deviceMessage";
+import { useApiHook } from "../../hooks/apiHook";
+import type { GetDeviceMessagesModel } from "../../models/getDeviceMessagesModel";
+import type { PaginatedResult } from "../../models/paginatedResult";
+import type { DeviceMessage } from "../../models/deviceMessage";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { Box, Checkbox, useMediaQuery, useTheme } from "@mui/material";
 import { useSelector } from "react-redux";
-import { getLocations } from "../reducers/measurementReducer";
-import { getFormattedDate } from "../utilities/datetimeUtils";
-import { defaultStart } from "../containers/DeviceMessagesView";
-import type { DeviceInfo } from "../models/deviceInfo";
+import { getLocations } from "../../reducers/measurementReducer";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
+import { defaultStart } from "../../containers/DeviceMessagesView";
+import type { DeviceInfo } from "../../models/deviceInfo";
 import { Link } from "react-router";
-import { getCommunicationChannelDisplayName } from "../enums/communicationChannels";
+import { getCommunicationChannelDisplayName } from "../../enums/communicationChannels";
 
 interface Props {
   model: GetDeviceMessagesModel | undefined;

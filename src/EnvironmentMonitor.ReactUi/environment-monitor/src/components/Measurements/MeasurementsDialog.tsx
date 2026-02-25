@@ -5,12 +5,12 @@ import {
   DialogTitle,
   IconButton,
 } from "@mui/material";
-import type { Measurement } from "../models/measurement";
+import type { Measurement } from "../../models/measurement";
 import { Close } from "@mui/icons-material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import { getFormattedDate } from "../utilities/datetimeUtils";
-import { formatMeasurement } from "../utilities/measurementUtils";
-import type { Sensor } from "../models/sensor";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
+import { formatMeasurement } from "../../utilities/measurementUtils";
+import type { Sensor } from "../../models/sensor";
 
 export interface MeasurementsDialogProps {
   measurements: Measurement[];
@@ -35,7 +35,7 @@ export const MeasurementsDialog: React.FC<MeasurementsDialogProps> = ({
       flex: 1,
       valueFormatter: (value, row) => {
         const matchingSensor = sensors?.find(
-          (s) => s.identifier === (row as Measurement).sensorIdentifier
+          (s) => s.identifier === (row as Measurement).sensorIdentifier,
         );
 
         if (matchingSensor) {

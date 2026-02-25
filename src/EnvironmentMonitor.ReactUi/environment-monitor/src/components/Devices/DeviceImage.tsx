@@ -15,14 +15,14 @@ import {
   FileUpload,
   WidthFull,
 } from "@mui/icons-material";
-import { type DeviceInfo } from "../models/deviceInfo";
-import { Collapsible } from "./CollabsibleComponent";
+import { type DeviceInfo } from "../../models/deviceInfo";
+import { Collapsible } from "../../framework/CollabsibleComponent";
 import { useSwipeable } from "react-swipeable";
 import { useDropzone } from "react-dropzone";
 import { DeviceImageDialog } from "./DeviceImageDialog";
-import { dateTimeSort, getFormattedDate } from "../utilities/datetimeUtils";
-import { formatBytes } from "../utilities/stringUtils";
-import { getDeviceAttachmentUrl } from "../utilities/entityUtils";
+import { dateTimeSort, getFormattedDate } from "../../utilities/datetimeUtils";
+import { formatBytes } from "../../utilities/stringUtils";
+import { getDeviceAttachmentUrl } from "../../utilities/entityUtils";
 
 export interface DeviceImageProps {
   device: DeviceInfo | undefined;
@@ -59,7 +59,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
       return;
     }
     setCurrentIndex(
-      (prev) => (prev - 1 + attachments.length) % attachments.length
+      (prev) => (prev - 1 + attachments.length) % attachments.length,
     );
     setIsLoadingImage(true);
   };
@@ -112,7 +112,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
     }
     return getDeviceAttachmentUrl(
       device.device.identifier,
-      activeAttachment.guid
+      activeAttachment.guid,
     );
   };
 

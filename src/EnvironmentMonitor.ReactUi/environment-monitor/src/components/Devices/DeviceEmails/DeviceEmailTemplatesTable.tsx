@@ -1,8 +1,8 @@
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import { type DeviceEmailTemplateDto } from "../../models/deviceEmailTemplate";
+import { type DeviceEmailTemplateDto } from "../../../models/deviceEmailTemplate";
 import { IconButton } from "@mui/material";
 import { Edit } from "@mui/icons-material";
-import { getFormattedDate } from "../../utilities/datetimeUtils";
+import { getFormattedDate } from "../../../utilities/datetimeUtils";
 
 export interface DeviceEmailTemplatesTableProps {
   templates: DeviceEmailTemplateDto[];

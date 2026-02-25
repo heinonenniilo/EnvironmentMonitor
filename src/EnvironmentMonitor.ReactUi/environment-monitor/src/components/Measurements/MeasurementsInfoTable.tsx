@@ -7,14 +7,14 @@ import {
   TableHead,
   TableRow,
 } from "@mui/material";
-import { formatMeasurement } from "../utilities/measurementUtils";
-import { getFormattedDate } from "../utilities/datetimeUtils";
-import type { Measurement } from "../models/measurement";
-import type { Device } from "../models/device";
-import type { Sensor } from "../models/sensor";
-import type { MeasurementTypes } from "../enums/measurementTypes";
+import { formatMeasurement } from "../../utilities/measurementUtils";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
+import type { Measurement } from "../../models/measurement";
+import type { Device } from "../../models/device";
+import type { Sensor } from "../../models/sensor";
+import type { MeasurementTypes } from "../../enums/measurementTypes";
 import { Link } from "react-router";
-import { routes } from "../utilities/routes";
+import { routes } from "../../utilities/routes";
 
 export interface MeasurementsInfoTableProps {
   infoRows: MeasurementInfo[];

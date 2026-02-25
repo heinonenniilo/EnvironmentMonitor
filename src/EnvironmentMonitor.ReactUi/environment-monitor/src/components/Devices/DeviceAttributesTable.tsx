@@ -1,4 +1,4 @@
-import type { DeviceAttribute } from "../models/deviceAttribute";
+import type { DeviceAttribute } from "../../models/deviceAttribute";
 import {
   Box,
   Paper,
@@ -10,7 +10,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { getFormattedDate } from "../utilities/datetimeUtils";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
 
 export interface DeviceAttributesTableProps {
   attributes: DeviceAttribute[];

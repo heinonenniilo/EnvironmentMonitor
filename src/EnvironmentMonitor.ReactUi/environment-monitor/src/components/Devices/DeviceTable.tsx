@@ -1,4 +1,4 @@
-import { type DeviceInfo } from "../models/deviceInfo";
+import { type DeviceInfo } from "../../models/deviceInfo";
 import {
   Box,
   Checkbox,
@@ -8,9 +8,9 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
-import { routes } from "../utilities/routes";
+import { routes } from "../../utilities/routes";
 import { Link } from "react-router";
-import { getFormattedDate } from "../utilities/datetimeUtils";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { CheckCircle, Photo, WarningAmber } from "@mui/icons-material";
 import { useState } from "react";
@@ -18,12 +18,12 @@ import { DeviceImageDialog } from "./DeviceImageDialog";
 import {
   getDeviceDefaultImageUrl,
   getEntityTitle,
-} from "../utilities/entityUtils";
-import type { DeviceMessagesLocationState } from "../containers/DeviceMessagesView";
+} from "../../utilities/entityUtils";
+import type { DeviceMessagesLocationState } from "../../containers/DeviceMessagesView";
 import {
   CommunicationChannels,
   getCommunicationChannelDisplayName,
-} from "../enums/communicationChannels";
+} from "../../enums/communicationChannels";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];

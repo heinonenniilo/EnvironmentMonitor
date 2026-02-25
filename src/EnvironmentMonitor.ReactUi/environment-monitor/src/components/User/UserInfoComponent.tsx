@@ -17,7 +17,7 @@ import type { User } from "../../models/user";
 import type { Device } from "../../models/device";
 import type { LocationModel } from "../../models/location";
 import { ChangePasswordComponent } from "./ChangePasswordComponent";
-import { Collapsible } from "../CollabsibleComponent";
+import { Collapsible } from "../../framework/CollabsibleComponent";
 import { RoleNames } from "../../enums/roleNames";
 import { stringSort } from "../../utilities/stringUtils";
 
@@ -26,7 +26,7 @@ export interface UserInfoComponentProps {
   isLoading: boolean;
   onChangePassword: (
     currentPassword: string,
-    newPassword: string
+    newPassword: string,
   ) => Promise<void>;
   onRemove: (user: User) => void;
   elevation?: boolean;
@@ -47,7 +47,7 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
 
   // Check if user has Admin or Viewer role
   const hasAdminOrViewerRole = user.roles.some(
-    (role) => role === RoleNames.Admin || role === RoleNames.Viewer
+    (role) => role === RoleNames.Admin || role === RoleNames.Viewer,
   );
 
   const getProviderIcon = () => {
@@ -137,7 +137,7 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
                       <TableBody>
                         {[...devices]
                           .sort((a, b) =>
-                            stringSort(a.displayName, b.displayName)
+                            stringSort(a.displayName, b.displayName),
                           )
                           .map((device, index) => (
                             <TableRow key={index}>

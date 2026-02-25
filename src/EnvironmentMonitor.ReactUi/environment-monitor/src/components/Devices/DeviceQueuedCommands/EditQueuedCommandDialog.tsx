@@ -13,8 +13,8 @@ import { Close } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import moment, { type Moment } from "moment";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
-import { getFormattedDate } from "../../utilities/datetimeUtils";
-import type { DeviceQueuedCommandDto } from "../../models/deviceQueuedCommand";
+import { getFormattedDate } from "../../../utilities/datetimeUtils";
+import type { DeviceQueuedCommandDto } from "../../../models/deviceQueuedCommand";
 
 export interface EditQueuedCommandDialogProps {
   open: boolean;

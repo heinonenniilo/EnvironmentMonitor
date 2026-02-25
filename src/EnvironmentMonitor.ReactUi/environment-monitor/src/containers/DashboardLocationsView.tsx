@@ -9,7 +9,7 @@ import {
   setSelectedMeasurementTypes,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
-import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
+import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRangeSelectorComponent";
 import { DashboardLocationGraph } from "../components/Dashboard/DashboardLocationGraph";
 import { DashboardLeftMenu } from "../components/Dashboard/DashboardLeftMenu";
 import { toggleLeftMenuOpen } from "../reducers/userInterfaceReducer";

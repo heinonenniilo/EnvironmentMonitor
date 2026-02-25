@@ -7,9 +7,9 @@ import {
   setDashboardTimeRange,
 } from "../reducers/measurementReducer";
 import { useDispatch, useSelector } from "react-redux";
-import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
+import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRangeSelectorComponent";
 import moment from "moment";
-import { MultiSensorGraph } from "../components/MultiSensorGraph";
+import { MultiSensorGraph } from "../components/Measurements/MultiSensorGraph";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import { Fullscreen, Refresh } from "@mui/icons-material";
 export const PublicMeasurementsView: React.FC = () => {
@@ -19,7 +19,7 @@ export const PublicMeasurementsView: React.FC = () => {
   const dispatch = useDispatch();
   const timeRange = useSelector(getDashboardTimeRange);
   const [model, setModel] = useState<MeasurementsViewModel | undefined>(
-    undefined
+    undefined,
   );
   const handleTimeRangeChange = (selection: number) => {
     dispatch(setDashboardTimeRange(selection));

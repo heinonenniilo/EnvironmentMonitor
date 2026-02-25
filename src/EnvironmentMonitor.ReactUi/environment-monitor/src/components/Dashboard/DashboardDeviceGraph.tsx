@@ -9,7 +9,7 @@ import {
   toggleAutoScale,
 } from "../../reducers/measurementReducer";
 import { Box } from "@mui/material";
-import { MultiSensorGraph } from "../MultiSensorGraph";
+import { MultiSensorGraph } from "../Measurements/MultiSensorGraph";
 import { useApiHook } from "../../hooks/apiHook";
 import moment from "moment";
 
@@ -29,7 +29,7 @@ export const DashboardDeviceGraph: React.FC<{
   >(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [lastTimeRange, setLastTimeRange] = useState<number | undefined>(
-    undefined
+    undefined,
   );
   const [lastMeasurementTypes, setLastMeasurementTypes] = useState<
     number[] | undefined
@@ -85,7 +85,7 @@ export const DashboardDeviceGraph: React.FC<{
         undefined,
         measurementTypes && measurementTypes.length > 0
           ? measurementTypes
-          : undefined
+          : undefined,
       )
       .then((res) => {
         setLastTimeRange(timeRange);
@@ -128,7 +128,7 @@ export const DashboardDeviceGraph: React.FC<{
         useAutoScale={useAutoScale}
         onSetAutoScale={(state) =>
           dispatch(
-            toggleAutoScale({ deviceIdentifier: device.identifier, state })
+            toggleAutoScale({ deviceIdentifier: device.identifier, state }),
           )
         }
         onRefresh={fetchMeasurements}

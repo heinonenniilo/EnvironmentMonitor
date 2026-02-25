@@ -1,4 +1,4 @@
-import { type DeviceEvent } from "../models/deviceEvent";
+import { type DeviceEvent } from "../../models/deviceEvent";
 import {
   Box,
   Paper,
@@ -10,7 +10,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { getFormattedDate } from "../utilities/datetimeUtils";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
 
 export interface DeviceEventTableProps {
   events: DeviceEvent[];

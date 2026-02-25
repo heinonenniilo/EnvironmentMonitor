@@ -24,7 +24,7 @@ import { RegisterView } from "./containers/RegisterView";
 import { EmailConfirmationView } from "./containers/EmailConfirmationView";
 import { ForgotPasswordView } from "./containers/ForgotPasswordView";
 import { ResetPasswordView } from "./containers/ResetPasswordView";
-import { AuthorizedComponent } from "./components/AuthorizedComponent";
+import { AuthorizedComponent } from "./framework/AuthorizedComponent";
 import { RoleNames } from "./enums/roleNames";
 import { DeviceEmailsView } from "./containers/DeviceEmailsView";
 import { UserInfoView } from "./containers/UserInfoView";

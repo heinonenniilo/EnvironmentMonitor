@@ -2,8 +2,8 @@ import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useEffect, useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
 import { type DeviceEmailTemplateDto } from "../models/deviceEmailTemplate";
-import { DeviceEmailTemplatesTable } from "../components/DeviceEmails/DeviceEmailTemplatesTable";
-import { EditEmailTemplateDialog } from "../components/DeviceEmails/EditEmailTemplateDialog";
+import { DeviceEmailTemplatesTable } from "../components/Devices/DeviceEmails/DeviceEmailTemplatesTable";
+import { EditEmailTemplateDialog } from "../components/Devices/DeviceEmails/EditEmailTemplateDialog";
 import { useDispatch } from "react-redux";
 import { addNotification } from "../reducers/userInterfaceReducer";
 

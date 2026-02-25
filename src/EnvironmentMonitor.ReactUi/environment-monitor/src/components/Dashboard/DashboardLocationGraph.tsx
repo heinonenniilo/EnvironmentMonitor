@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { type MeasurementsByLocation } from "../../models/measurementsBySensor";
 
 import { Box } from "@mui/material";
-import { MultiSensorGraph } from "../MultiSensorGraph";
+import { MultiSensorGraph } from "../Measurements/MultiSensorGraph";
 import { useApiHook } from "../../hooks/apiHook";
 import moment from "moment";
 import { type LocationModel } from "../../models/location";
@@ -20,7 +20,7 @@ export const DashboardLocationGraph: React.FC<{
 
   const [isLoading, setIsLoading] = useState(false);
   const [lastTimeRange, setLastTimeRange] = useState<number | undefined>(
-    undefined
+    undefined,
   );
   const [lastMeasurementTypes, setLastMeasurementTypes] = useState<
     number[] | undefined
@@ -71,7 +71,7 @@ export const DashboardLocationGraph: React.FC<{
         undefined,
         measurementTypes && measurementTypes.length > 0
           ? measurementTypes
-          : undefined
+          : undefined,
       )
       .then((res) => {
         setLastTimeRange(timeRange);

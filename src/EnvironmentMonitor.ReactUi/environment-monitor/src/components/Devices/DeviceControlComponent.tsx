@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import moment, { type Moment } from "moment";
-import { type DeviceInfo } from "../models/deviceInfo";
+import { type DeviceInfo } from "../../models/deviceInfo";
 import { useState } from "react";
 
 export interface DeviceControlComponentProps {
