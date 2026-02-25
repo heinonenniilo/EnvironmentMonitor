@@ -10,16 +10,16 @@ import {
 import React, { useEffect, useState } from "react";
 import moment from "moment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
-import { type Sensor } from "../models/sensor";
-import { stringSort } from "../utilities/stringUtils";
-import { getEntityTitle } from "../utilities/entityUtils";
-import { type Entity } from "../models/entity";
+import { type Sensor } from "../../models/sensor";
+import { stringSort } from "../../utilities/stringUtils";
+import { getEntityTitle } from "../../utilities/entityUtils";
+import { type Entity } from "../../models/entity";
 import {
   getAvailableMeasurementTypes,
   getMeasurementTypeDisplayName,
   getMeasurementUnit,
-} from "../utilities/measurementUtils";
-import { MeasurementTypes } from "../enums/measurementTypes";
+} from "../../utilities/measurementUtils";
+import { MeasurementTypes } from "../../enums/measurementTypes";
 import { Clear } from "@mui/icons-material";
 
 export interface MeasurementsLeftViewProps {

@@ -13,7 +13,7 @@ import {
   setSelectedDashboardLocationIdentifiers,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
-import { TimeRangeSelectorComponent } from "../components/TimeRangeSelectorComponent";
+import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRangeSelectorComponent";
 import { DashboardDeviceGraph } from "../components/Dashboard/DashboardDeviceGraph";
 import { type Sensor } from "../models/sensor";
 import { type Device } from "../models/device";

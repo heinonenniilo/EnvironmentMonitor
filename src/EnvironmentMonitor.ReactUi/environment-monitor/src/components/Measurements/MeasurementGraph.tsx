@@ -1,6 +1,6 @@
 import { LineChart } from "@mui/x-charts";
-import { MeasurementTypes } from "../enums/measurementTypes";
-import { type Sensor } from "../models/sensor";
+import { MeasurementTypes } from "../../enums/measurementTypes";
+import { type Sensor } from "../../models/sensor";
 import {
   Box,
   Table,
@@ -11,9 +11,9 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { type MeasurementsBySensor } from "../models/measurementsBySensor";
-import { formatMeasurement } from "../utilities/measurementUtils";
-import { type Device } from "../models/device";
+import { type MeasurementsBySensor } from "../../models/measurementsBySensor";
+import { formatMeasurement } from "../../utilities/measurementUtils";
+import { type Device } from "../../models/device";
 
 export interface MeasurementGraphProps {
   sensor: Sensor | undefined;
@@ -37,7 +37,7 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
         const humidityRow = model.measurements.find(
           (m) =>
             m.timestamp === x.timestamp &&
-            m.typeId === MeasurementTypes.Humidity
+            m.typeId === MeasurementTypes.Humidity,
         );
         return {
           timestamp: new Date(x.timestamp),
@@ -49,7 +49,7 @@ export const MeasurementGraph: React.FC<MeasurementGraphProps> = ({
   };
 
   const hasHumidity = model?.measurements.some(
-    (d) => d.typeId === MeasurementTypes.Humidity
+    (d) => d.typeId === MeasurementTypes.Humidity,
   );
 
   const getMinMeasurement = (type: MeasurementTypes) => {

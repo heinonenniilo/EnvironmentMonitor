@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Typography, Button, Paper } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router";
-import { routes } from "../utilities/routes";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import { routes } from "../../utilities/routes";
 
 const EmailConfirmationPage: React.FC = () => {
   const navigate = useNavigate();

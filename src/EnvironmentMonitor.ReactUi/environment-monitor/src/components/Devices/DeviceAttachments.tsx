@@ -1,14 +1,14 @@
 import { Box, Checkbox, IconButton, Tooltip, Typography } from "@mui/material";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import { Collapsible } from "./CollabsibleComponent";
-import type { DeviceAttachment } from "../models/deviceAttachment";
-import { getFormattedDate } from "../utilities/datetimeUtils";
-import { formatBytes } from "../utilities/stringUtils";
+import { Collapsible } from "../../framework/CollabsibleComponent";
+import type { DeviceAttachment } from "../../models/deviceAttachment";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
+import { formatBytes } from "../../utilities/stringUtils";
 import { FileUpload, Download, Delete } from "@mui/icons-material";
 import { useRef, useState } from "react";
-import type { DeviceInfo } from "../models/deviceInfo";
-import { getDeviceAttachmentUrl } from "../utilities/entityUtils";
-import { FileUploadDialog } from "./FileUploadDialog";
+import type { DeviceInfo } from "../../models/deviceInfo";
+import { getDeviceAttachmentUrl } from "../../utilities/entityUtils";
+import { FileUploadDialog } from "../FileUploadDialog";
 
 export interface DeviceAttachmentsProps {
   attachments: DeviceAttachment[];
@@ -17,7 +17,7 @@ export interface DeviceAttachmentsProps {
   onUploadAttachment: (
     file: File,
     customName?: string,
-    isSecret?: boolean
+    isSecret?: boolean,
   ) => void;
   onDeleteAttachment: (attachmentId: string) => void;
 }
@@ -107,7 +107,7 @@ export const DeviceAttachments: React.FC<DeviceAttachmentsProps> = ({
                   // Create download URL using attachment guid
                   const downloadUrl = getDeviceAttachmentUrl(
                     device?.device.identifier ?? "",
-                    attachment.guid
+                    attachment.guid,
                   );
                   console.log("Downloading from URL:", downloadUrl);
                   const link = document.createElement("a");
@@ -153,7 +153,7 @@ export const DeviceAttachments: React.FC<DeviceAttachmentsProps> = ({
   const handleUploadConfirm = (
     file: File,
     customName?: string,
-    isSecret?: boolean
+    isSecret?: boolean,
   ) => {
     onUploadAttachment(file, customName, isSecret);
     setSelectedFile(null);

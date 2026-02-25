@@ -7,7 +7,7 @@ import { ApiKeyTable } from "../components/ApiKeys/ApiKeyTable";
 import { ApiKeyDetailsDialog } from "../components/ApiKeys/ApiKeyDetailsDialog";
 import { CreateApiKeyDialog } from "../components/ApiKeys/CreateApiKeyDialog";
 import { EditDescriptionDialog } from "../components/ApiKeys/EditDescriptionDialog";
-import { ApiKeyDialog } from "../components/ApiKeyDialog";
+import { ApiKeyDialog } from "../components/ApiKeys/ApiKeyDialog";
 import type { ApiKeyDto } from "../models/apiKey";
 import type { DeviceInfo } from "../models/deviceInfo";
 import type { LocationModel } from "../models/location";

@@ -1,8 +1,8 @@
 import "chartjs-adapter-moment";
-import { MeasurementTypes } from "../enums/measurementTypes";
-import { type Sensor } from "../models/sensor";
+import { MeasurementTypes } from "../../enums/measurementTypes";
+import { type Sensor } from "../../models/sensor";
 import { Box, Dialog, DialogContent, DialogTitle } from "@mui/material";
-import { type MeasurementsViewModel } from "../models/measurementsBySensor";
+import { type MeasurementsViewModel } from "../../models/measurementsBySensor";
 import {
   Chart,
   Colors,
@@ -16,23 +16,23 @@ import {
 import {
   getDatasetLabel,
   getMeasurementUnit,
-} from "../utilities/measurementUtils";
+} from "../../utilities/measurementUtils";
 import {
   type MeasurementInfo,
   MeasurementsInfoTable,
 } from "./MeasurementsInfoTable";
-import { routes } from "../utilities/routes";
+import { routes } from "../../utilities/routes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { stringSort } from "../utilities/stringUtils";
-import { getColor } from "../utilities/graphUtils";
+import { stringSort } from "../../utilities/stringUtils";
+import { getColor } from "../../utilities/graphUtils";
 import zoomPlugin from "chartjs-plugin-zoom";
 import { MeasurementsDialog } from "./MeasurementsDialog";
-import type { Measurement } from "../models/measurement";
-import type { Entity } from "../models/entity";
-import { LoadingOverlay } from "../framework/LoadingOverlay";
+import type { Measurement } from "../../models/measurement";
+import type { Entity } from "../../models/entity";
+import { LoadingOverlay } from "../../framework/LoadingOverlay";
 import { GraphHeader } from "./GraphHeader";
-import { LineGraph } from "../framework/LineGraph";
-import type { GraphDataset } from "../models/GraphDataset";
+import { LineGraph } from "../../framework/LineGraph";
+import type { GraphDataset } from "../../models/GraphDataset";
 
 Chart.register(
   TimeScale,

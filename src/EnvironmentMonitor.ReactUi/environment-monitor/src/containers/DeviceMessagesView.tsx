@@ -10,12 +10,12 @@ import {
 import moment from "moment";
 import { Box } from "@mui/material";
 import type { GetDeviceMessagesModel } from "../models/getDeviceMessagesModel";
-import { DeviceMessagesTable } from "../components/DeviceMessageTable";
-import { DeviceMessagesLeftView } from "../components/DeviceMessagesLeftView";
+import { DeviceMessagesTable } from "../components/Devices/DeviceMessageTable";
+import { DeviceMessagesLeftView } from "../components/Devices/DeviceMessagesLeftView";
 import { useApiHook } from "../hooks/apiHook";
 import type { DeviceMessage } from "../models/deviceMessage";
 import type { MeasurementsModel } from "../models/measurementsBySensor";
-import { MeasurementsDialog } from "../components/MeasurementsDialog";
+import { MeasurementsDialog } from "../components/Measurements/MeasurementsDialog";
 import { useLocation } from "react-router";
 export const defaultStart = moment()
   .local(true)
@@ -34,7 +34,7 @@ export const DeviceMessagesView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const sensors = useSelector(getSensors);
   const [getModel, setGetModel] = useState<GetDeviceMessagesModel | undefined>(
-    undefined
+    undefined,
   );
   const [measurementsModel, setMeasurementsModel] = useState<
     MeasurementsModel | undefined
@@ -73,7 +73,7 @@ export const DeviceMessagesView: React.FC = () => {
         : undefined;
 
     const selectedLocation = locations.find(
-      (l) => l.identifier === selectedDevice?.device.locationIdentifier
+      (l) => l.identifier === selectedDevice?.device.locationIdentifier,
     );
 
     setGetModel({
@@ -94,7 +94,7 @@ export const DeviceMessagesView: React.FC = () => {
     setIsLoading(true);
 
     const matchingDevice = deviceInfos.find(
-      (d) => d.device.identifier === message.deviceIdentifier
+      (d) => d.device.identifier === message.deviceIdentifier,
     );
     if (matchingDevice) {
       setDialogTitle(`${matchingDevice.device.name} - ${message.identifier}`);

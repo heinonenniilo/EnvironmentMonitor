@@ -10,10 +10,10 @@ import {
   Divider,
 } from "@mui/material";
 import { Close, Visibility } from "@mui/icons-material";
-import { type DeviceEmailTemplateDto } from "../../models/deviceEmailTemplate";
+import { type DeviceEmailTemplateDto } from "../../../models/deviceEmailTemplate";
 import { useState, useEffect } from "react";
 import { EmailTemplatePreview } from "./EmailTemplatePreview";
-import { LoadingOverlay } from "../../framework/LoadingOverlay";
+import { LoadingOverlay } from "../../../framework/LoadingOverlay";
 
 export interface EditEmailTemplateDialogProps {
   open: boolean;

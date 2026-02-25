@@ -12,7 +12,7 @@ import moment from "moment";
 import {
   MeasurementsInfoTable,
   type MeasurementInfo,
-} from "../components/MeasurementsInfoTable";
+} from "../components/Measurements/MeasurementsInfoTable";
 import { MeasurementTypes } from "../enums/measurementTypes";
 import { getDatasetLabel } from "../utilities/measurementUtils";
 import { getUserInfo } from "../reducers/userReducer";

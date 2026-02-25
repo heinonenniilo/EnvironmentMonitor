@@ -1,4 +1,4 @@
-import type { DeviceContact } from "../models/deviceContact";
+import type { DeviceContact } from "../../models/deviceContact";
 import {
   Box,
   Paper,
@@ -11,7 +11,7 @@ import {
   Typography,
   IconButton,
 } from "@mui/material";
-import { getFormattedDate } from "../utilities/datetimeUtils";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
 import { Edit, Delete } from "@mui/icons-material";
 
 export interface DeviceContactsProps {

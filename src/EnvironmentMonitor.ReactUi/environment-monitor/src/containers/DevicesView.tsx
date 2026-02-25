@@ -2,7 +2,7 @@ import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useEffect, useState } from "react";
 import { type Device } from "../models/device";
 import { useApiHook } from "../hooks/apiHook";
-import { DeviceTable } from "../components/DeviceTable";
+import { DeviceTable } from "../components/Devices/DeviceTable";
 import { dateTimeSort } from "../utilities/datetimeUtils";
 import { useDispatch, useSelector } from "react-redux";
 import {

@@ -1,6 +1,6 @@
-import { type DeviceQueuedCommandDto } from "../../models/deviceQueuedCommand";
+import { type DeviceQueuedCommandDto } from "../../../models/deviceQueuedCommand";
 import { Box, Typography, Chip, IconButton, Tooltip } from "@mui/material";
-import { getFormattedDate } from "../../utilities/datetimeUtils";
+import { getFormattedDate } from "../../../utilities/datetimeUtils";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useState } from "react";
 import { Delete, Schedule, Visibility, ContentCopy } from "@mui/icons-material";

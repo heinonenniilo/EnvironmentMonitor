@@ -2,14 +2,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
-import { MeasurementsLeftView } from "../components/MeasurementsLeftView";
+import { MeasurementsLeftView } from "../components/Measurements/MeasurementsLeftView";
 import {
   getSelectedMeasurementTypes,
   setSelectedMeasurementTypes,
 } from "../reducers/measurementReducer";
 import { Box } from "@mui/material";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
-import { MultiSensorGraph } from "../components/MultiSensorGraph";
+import { MultiSensorGraph } from "../components/Measurements/MultiSensorGraph";
 import { type Sensor } from "../models/sensor";
 import moment from "moment";
 
