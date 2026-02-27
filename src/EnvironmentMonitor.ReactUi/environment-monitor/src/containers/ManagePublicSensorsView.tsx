@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useApiHook } from "../hooks/apiHook";
-import { Box, Button, IconButton, Tooltip } from "@mui/material";
+import { Box, IconButton, Tooltip } from "@mui/material";
 import { Add, Refresh } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -114,7 +114,7 @@ export const ManagePublicSensorsView: React.FC = () => {
 
   return (
     <AppContentWrapper
-      title="Manage Public Sensors"
+      title="Public Sensors"
       isLoading={isLoading}
       titleComponent={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -123,17 +123,17 @@ export const ManagePublicSensorsView: React.FC = () => {
               <Refresh />
             </IconButton>
           </Tooltip>
-          <Button
-            startIcon={<Add />}
-            variant="contained"
-            size="small"
-            onClick={() => {
-              setEditingSensor(undefined);
-              setDialogOpen(true);
-            }}
-          >
-            Add
-          </Button>
+          <Tooltip title="Add Public Sensor">
+            <IconButton
+              onClick={() => {
+                setEditingSensor(undefined);
+                setDialogOpen(true);
+              }}
+              size="medium"
+            >
+              <Add />
+            </IconButton>
+          </Tooltip>
         </Box>
       }
     >
