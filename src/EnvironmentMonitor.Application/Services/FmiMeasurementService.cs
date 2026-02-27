@@ -26,7 +26,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IIdentifierGenerator _identifierGenerator;
 
         private const int MaxDaysPerFetch = 6;
-        private DateTime FetchLimit => _dateService.CurrentTime().AddDays(-MaxDaysPerFetch);
+        private DateTime FetchLimit => _dateService.LocalToUtc(_dateService.CurrentTime()).AddDays(-MaxDaysPerFetch);
 
         public FmiMeasurementService(
             IFmiWeatherClient weatherClient,
@@ -113,7 +113,7 @@ namespace EnvironmentMonitor.Application.Services
 
             foreach (var sensor in sensors)
             {
-                sensorLatestTimestamps[sensor.Id] = latestMeasurements.FirstOrDefault(x => x.SensorId == sensor.Id)?.Timestamp;
+                sensorLatestTimestamps[sensor.Id] = latestMeasurements.FirstOrDefault(x => x.SensorId == sensor.Id)?.TimestampUtc;
             }
 
             var minSensorTimestamp = sensorLatestTimestamps.Any(x => x.Value == null) ? null : sensorLatestTimestamps.Values.Min();
