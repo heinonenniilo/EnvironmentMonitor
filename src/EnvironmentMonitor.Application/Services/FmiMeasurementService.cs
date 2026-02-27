@@ -25,6 +25,9 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IUserService _userService;
         private readonly IIdentifierGenerator _identifierGenerator;
 
+        private const int MaxDaysPerFetch = 6;
+        private DateTime FetchLimit => _dateService.CurrentTime().AddDays(-MaxDaysPerFetch);
+
         public FmiMeasurementService(
             IFmiWeatherClient weatherClient,
             IMeasurementRepository measurementRepository,
@@ -39,14 +42,14 @@ namespace EnvironmentMonitor.Application.Services
             _deviceRepository = deviceRepository;
             _dateService = dateService;
             _logger = logger;
-            _userService = userService;       
+            _userService = userService;
             _identifierGenerator = identifierGenerator;
             // Define measurement types and map FMI parameter codes to them
             var types = new List<MeasurementType>
             {
                 new MeasurementType { Id = (int)MeasurementTypes.Temperature, Name = "Temperature", Unit = "C" },
                 new MeasurementType { Id = (int)MeasurementTypes.Humidity, Name = "Humidity", Unit = "%" }
-            };            
+            };
             // Map FMI parameter codes (t2m for temperature, rh for humidity) to types
             _typeMap = types.ToDictionary(
                 t => t.Name switch
@@ -79,7 +82,7 @@ namespace EnvironmentMonitor.Application.Services
             var sensors = device.Sensors.Where(x => x.Active).ToList();
 
             _logger.LogInformation($"Starting FMI measurement fetch for {sensors.Count} sensors");
-            
+
             var totalMeasurementsAdded = 0;
             // Group sensors by place name
             var sensorsByPlace = sensors
@@ -96,21 +99,41 @@ namespace EnvironmentMonitor.Application.Services
 
             var endTimeUtc = request.EndTimeUtc;
             var startTimeUtc = request.StartTimeUtc;
-            _logger.LogInformation($"Fetching measurements for {places.Count} unique places from FMI (last 3 days): {string.Join(", ", places)}");
-            // Get latest timestamp for each sensor before making API call
+            _logger.LogInformation($"Fetching measurements for {places.Count} unique places from FMI: {string.Join(", ", places)}");
 
+            // Get latest timestamp for each sensor before making API call
             var sensorLatestTimestamps = new Dictionary<int, DateTime?>();
+
+            var latestMeasurements = await _measurementRepository.GetMeasurements(new GetMeasurementsModel()
+            {
+                SensorIdentifiers = sensors.Select(s => s.Identifier).ToList(),
+                LatestOnly = true,
+            }
+            );
+
             foreach (var sensor in sensors)
             {
-                var sensorLatest = await GetLatestMeasurementTimestampForSensor(sensor.Id);
-                sensorLatestTimestamps[sensor.Id] = sensorLatest;               
+                sensorLatestTimestamps[sensor.Id] = latestMeasurements.FirstOrDefault(x => x.SensorId == sensor.Id)?.Timestamp;
             }
 
-            var apiCallStartUtc = sensorLatestTimestamps.Values.Any(x => !x.HasValue) ? null : sensorLatestTimestamps.Values.Min();
+            var minSensorTimestamp = sensorLatestTimestamps.Any(x => x.Value == null) ? null : sensorLatestTimestamps.Values.Min();
+            var datesToCheck = new List<DateTime>() { FetchLimit, startTimeUtc };
+            if (minSensorTimestamp != null)
+            {
+                datesToCheck.Add(minSensorTimestamp.Value);
+            }
+
+            var apiCallStartUtc = datesToCheck.Max();
+
+            if (endTimeUtc <= apiCallStartUtc)
+            {
+                _logger.LogInformation($"No new measurements to fetch from FMI. Latest measurement timestamp: {minSensorTimestamp:u}, API call start time: {apiCallStartUtc:u}, end time: {endTimeUtc:u}");
+                return 0;
+            }
 
             var allMeasurementsByPlace = await _weatherClient.GetSeriesAsync(
                 places,
-                apiCallStartUtc != null ? apiCallStartUtc.Value: startTimeUtc,
+                apiCallStartUtc,
                 endTimeUtc,
                 new[] { IlmatieteenlaitosConstants.TemperatureTypeKey, IlmatieteenlaitosConstants.HumidityTypeKey });
 
@@ -156,7 +179,7 @@ namespace EnvironmentMonitor.Application.Services
                     }
                 }
                 var latestTimestamp = sensorLatestTimestamps[sensor.Id];
-            
+
                 foreach (var seriesEntry in series)
                 {
                     if (!_typeMap.TryGetValue(seriesEntry.Key, out var type))
@@ -242,8 +265,8 @@ namespace EnvironmentMonitor.Application.Services
             _logger.LogInformation("Starting FMI sync for Ilmatieteenlaitos devices");
             var devices = await _deviceRepository.GetDevices(new GetDevicesModel
             {
-                CommunicationChannelIds = new List<int> { (int)CommunicationChannels.IlmatieteenLaitos },
-                
+                CommunicationChannelIds = [(int)CommunicationChannels.IlmatieteenLaitos],
+
             });
 
             if (!devices.Any())
@@ -263,25 +286,6 @@ namespace EnvironmentMonitor.Application.Services
                 };
                 var totalMeasurements = await FetchAndStoreMeasurements(request);
                 _logger.LogInformation($"FMI sync completed successfully for '{device.Name}'. Total measurements added: {totalMeasurements}");
-            }
-        }
-
-        private async Task<DateTime?> GetLatestMeasurementTimestampForSensor(int sensorId)
-        {
-            try
-            {
-                var latestMeasurements = await _measurementRepository.Get(
-                    filter: m => m.SensorId == sensorId,
-                    orderBy: q => q.OrderByDescending(m => m.TimestampUtc)
-                );
-
-                var latestMeasurement = latestMeasurements.FirstOrDefault();
-                return latestMeasurement?.TimestampUtc;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, $"Error getting latest measurement timestamp for sensor {sensorId}, will fetch all measurements");
-                return null;
             }
         }
 
