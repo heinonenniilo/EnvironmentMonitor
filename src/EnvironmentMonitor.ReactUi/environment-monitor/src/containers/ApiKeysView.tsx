@@ -236,11 +236,7 @@ export const ApiKeysView: React.FC = () => {
             </IconButton>
           </Tooltip>
           <Tooltip title="Create New API Key">
-            <IconButton
-              onClick={() => setCreateDialogOpen(true)}
-              size="medium"
-              color="primary"
-            >
+            <IconButton onClick={() => setCreateDialogOpen(true)} size="medium">
               <Add />
             </IconButton>
           </Tooltip>
