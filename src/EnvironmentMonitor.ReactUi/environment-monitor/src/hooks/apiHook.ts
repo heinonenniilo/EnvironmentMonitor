@@ -1,7 +1,5 @@
 import qs from "qs";
 import moment from "moment";
-import { useDispatch } from "react-redux";
-import { addNotification } from "../reducers/userInterfaceReducer";
 import type { User } from "../models/user";
 import type { AuthInfoCookie } from "../models/authInfoCookie";
 import type { LocationModel } from "../models/location";
@@ -42,6 +40,8 @@ import type {
   ManagePublicSensorsRequest,
   GetPublicSensorsModel,
 } from "../models/managePublicSensorsRequest";
+import type { ProblemDetails } from "../models/problemDetails";
+import { useNotification } from "./useNotification";
 
 interface ApiHook {
   userHook: userHook;
@@ -251,16 +251,27 @@ const apiClient = axios.create({
 });
 
 export const useApiHook = (): ApiHook => {
-  const dispatch = useDispatch();
+  const notification = useNotification();
 
-  const showError = (title?: string, body?: string) => {
-    dispatch(
-      addNotification({
-        title: title ?? "Error occured",
-        body: body ?? "",
-        severity: "error",
-      }),
-    );
+  const getErrorDetails = (
+    ex: unknown,
+    fallbackTitle?: string,
+    fallbackBody?: string,
+  ): { title: string; body: string } => {
+    const responseData = (ex as { response?: { data?: ProblemDetails } })
+      ?.response?.data;
+    const backendTitle = responseData?.title;
+    const backendDetail = responseData?.detail;
+
+    return {
+      title: backendTitle ?? fallbackTitle ?? "Error occured",
+      body: backendDetail ?? fallbackBody ?? "",
+    };
+  };
+
+  const showError = (ex: unknown, fallbackTitle?: string, fallbackBody?: string) => {
+    const { title, body } = getErrorDetails(ex, fallbackTitle, fallbackBody);
+    notification.error(title, body);
   };
   return {
     userHook: {
@@ -276,7 +287,7 @@ export const useApiHook = (): ApiHook => {
           return response.data;
         } catch (ex: any) {
           console.error(ex);
-          showError();
+          showError(ex);
           return undefined;
         }
       },
@@ -305,7 +316,7 @@ export const useApiHook = (): ApiHook => {
           return response.data;
         } catch (ex: any) {
           console.error(ex);
-          showError("Login failed");
+          showError(ex, "Login failed");
           return false;
         }
       },
@@ -317,7 +328,7 @@ export const useApiHook = (): ApiHook => {
           return true;
         } catch (ex: any) {
           console.error(ex);
-          showError();
+          showError(ex);
           return false;
         }
       },
@@ -335,7 +346,7 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           const errorMessage =
             ex?.response?.data?.message || "Registration failed";
-          showError(errorMessage);
+          showError(ex, errorMessage);
           throw new Error(errorMessage);
         }
       },
@@ -352,7 +363,7 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           const errorMessage =
             ex?.response?.data?.message || "Failed to send reset email";
-          showError(errorMessage);
+          showError(ex, errorMessage);
           throw new Error(errorMessage);
         }
       },
@@ -371,7 +382,7 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           const errorMessage =
             ex?.response?.data?.message || "Failed to reset password";
-          showError(errorMessage);
+          showError(ex, errorMessage);
           throw new Error(errorMessage);
         }
       },
@@ -389,7 +400,7 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           const errorMessage =
             ex?.response?.data?.message || "Failed to change password";
-          showError(errorMessage);
+          showError(ex, errorMessage);
           throw new Error(errorMessage);
         }
       },
@@ -404,7 +415,7 @@ export const useApiHook = (): ApiHook => {
           console.error(ex);
           const errorMessage =
             ex?.response?.data?.message || "Failed to delete user account";
-          showError(errorMessage);
+          showError(ex, errorMessage);
           throw new Error(errorMessage);
         }
       },
@@ -418,7 +429,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError("Fetching devices failed");
+          showError(ex, "Fetching devices failed");
           return undefined;
         }
       },
@@ -435,7 +446,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError();
+          showError(ex);
           return [];
         }
       },
@@ -454,7 +465,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError("Fetching measurements failed");
+          showError(ex, "Fetching measurements failed");
           return undefined;
         }
       },
@@ -483,7 +494,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError("Fetching measurements failed");
+          showError(ex, "Fetching measurements failed");
           return undefined;
         }
       },
@@ -512,7 +523,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError("Fetching measurements failed");
+          showError(ex, "Fetching measurements failed");
           return undefined;
         }
       },
@@ -539,7 +550,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError("Fetching measurements failed");
+          showError(ex, "Fetching measurements failed");
           return undefined;
         }
       },
@@ -564,7 +575,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError("Fetching measurements failed");
+          showError(ex, "Fetching measurements failed");
           return undefined;
         }
       },
@@ -576,7 +587,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError("Fetching public sensors failed");
+          showError(ex, "Fetching public sensors failed");
           return [];
         }
       },
@@ -589,7 +600,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError("Failed to update device");
+          showError(ex, "Failed to update device");
           throw ex;
         }
       },
@@ -606,7 +617,7 @@ export const useApiHook = (): ApiHook => {
           }
         } catch (ex: any) {
           console.error(ex);
-          showError();
+          showError(ex);
           return false;
         }
       },
@@ -618,15 +629,21 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex: any) {
           console.error(ex);
-          showError();
+          showError(ex);
           return undefined;
         }
       },
       getDeviceInfo: async (identifier: string) => {
-        const res = await apiClient.get<any, AxiosResponse<DeviceInfo>>(
-          `/api/devices/${identifier}/info`,
-        );
-        return res.data;
+        try {
+          const res = await apiClient.get<any, AxiosResponse<DeviceInfo>>(
+            `/api/devices/${identifier}/info`,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to get device info");
+          throw ex;
+        }
       },
       setMotionControlState: async (
         identifier: string,
@@ -647,7 +664,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError();
+          showError(ex);
           return [];
         }
       },
@@ -670,7 +687,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError();
+          showError(ex);
           return [];
         }
       },
@@ -682,7 +699,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError();
+          showError(ex);
           return [];
         }
       },
@@ -708,7 +725,7 @@ export const useApiHook = (): ApiHook => {
           );
           return res.data;
         } catch (ex) {
-          showError("Failed to upload image");
+          showError(ex, "Failed to upload image");
           throw ex;
         }
       },
@@ -722,7 +739,7 @@ export const useApiHook = (): ApiHook => {
           );
           return res.data;
         } catch (ex) {
-          showError("Deleting attachment failed");
+          showError(ex, "Deleting attachment failed");
           throw ex;
         }
       },
@@ -740,7 +757,7 @@ export const useApiHook = (): ApiHook => {
           );
           return res.data;
         } catch (ex) {
-          showError("Setting default attachment failed");
+          showError(ex, "Setting default attachment failed");
           throw ex;
         }
       },
@@ -762,7 +779,7 @@ export const useApiHook = (): ApiHook => {
           });
           return res.data;
         } catch (ex) {
-          showError("Failed to fetch device status");
+          showError(ex, "Failed to fetch device status");
           throw ex;
         }
       },
@@ -781,7 +798,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to get device messages");
+          showError(ex, "Failed to get device messages");
           throw ex;
         }
       },
@@ -796,7 +813,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to get queued commands");
+          showError(ex, "Failed to get queued commands");
           throw ex;
         }
       },
@@ -811,7 +828,7 @@ export const useApiHook = (): ApiHook => {
           return res.status === 200;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to delete queued command");
+          showError(ex, "Failed to delete queued command");
           throw ex;
         }
       },
@@ -832,7 +849,7 @@ export const useApiHook = (): ApiHook => {
           return res.status === 200;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to update queued command");
+          showError(ex, "Failed to update queued command");
           throw ex;
         }
       },
@@ -852,7 +869,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to copy queued command");
+          showError(ex, "Failed to copy queued command");
           throw ex;
         }
       },
@@ -866,7 +883,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to get locations");
+          showError(ex, "Failed to get locations");
           return [];
         }
       },
@@ -881,7 +898,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to create device contact");
+          showError(ex, "Failed to create device contact");
           throw ex;
         }
       },
@@ -894,7 +911,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to update device contact");
+          showError(ex, "Failed to update device contact");
           throw ex;
         }
       },
@@ -903,7 +920,7 @@ export const useApiHook = (): ApiHook => {
           await apiClient.delete(`/api/devicecontacts`, { data: model });
         } catch (ex) {
           console.error(ex);
-          showError("Failed to delete device contact");
+          showError(ex, "Failed to delete device contact");
           throw ex;
         }
       },
@@ -918,7 +935,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to get email templates");
+          showError(ex, "Failed to get email templates");
           throw ex;
         }
       },
@@ -931,7 +948,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to update email template");
+          showError(ex, "Failed to update email template");
           throw ex;
         }
       },
@@ -945,7 +962,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to get users");
+          showError(ex, "Failed to get users");
           throw ex;
         }
       },
@@ -958,9 +975,9 @@ export const useApiHook = (): ApiHook => {
         } catch (ex: any) {
           console.error(ex);
           if (ex?.response?.status === 404) {
-            showError("User not found");
+            showError(ex, "User not found");
           } else {
-            showError("Failed to get user");
+            showError(ex, "Failed to get user");
           }
           return undefined;
         }
@@ -971,7 +988,7 @@ export const useApiHook = (): ApiHook => {
           return true;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to delete user");
+          showError(ex, "Failed to delete user");
           return false;
         }
       },
@@ -981,7 +998,7 @@ export const useApiHook = (): ApiHook => {
           return true;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to manage user roles");
+          showError(ex, "Failed to manage user roles");
           return false;
         }
       },
@@ -991,7 +1008,7 @@ export const useApiHook = (): ApiHook => {
           return true;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to manage user claims");
+          showError(ex, "Failed to manage user claims");
           return false;
         }
       },
@@ -1005,7 +1022,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to get API keys");
+          showError(ex, "Failed to get API keys");
           throw ex;
         }
       },
@@ -1018,9 +1035,9 @@ export const useApiHook = (): ApiHook => {
         } catch (ex: any) {
           console.error(ex);
           if (ex?.response?.status === 404) {
-            showError("API key not found");
+            showError(ex, "API key not found");
           } else {
-            showError("Failed to get API key");
+            showError(ex, "Failed to get API key");
           }
           return undefined;
         }
@@ -1036,7 +1053,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to create API key");
+          showError(ex, "Failed to create API key");
           throw ex;
         }
       },
@@ -1046,7 +1063,7 @@ export const useApiHook = (): ApiHook => {
           return true;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to delete API key");
+          showError(ex, "Failed to delete API key");
           return false;
         }
       },
@@ -1059,7 +1076,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to update API key");
+          showError(ex, "Failed to update API key");
           throw ex;
         }
       },
@@ -1073,7 +1090,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to get sensors");
+          showError(ex, "Failed to get sensors");
           throw ex;
         }
       },
@@ -1086,7 +1103,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to add sensor");
+          showError(ex, "Failed to add sensor");
           throw ex;
         }
       },
@@ -1099,7 +1116,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to update sensor");
+          showError(ex, "Failed to update sensor");
           throw ex;
         }
       },
@@ -1113,7 +1130,7 @@ export const useApiHook = (): ApiHook => {
           );
         } catch (ex) {
           console.error(ex);
-          showError("Failed to delete sensor");
+          showError(ex, "Failed to delete sensor");
           throw ex;
         }
       },
@@ -1130,7 +1147,7 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to get public sensors");
+          showError(ex, "Failed to get public sensors");
           return [];
         }
       },
@@ -1143,10 +1160,11 @@ export const useApiHook = (): ApiHook => {
           return res.data;
         } catch (ex) {
           console.error(ex);
-          showError("Failed to manage public sensors");
+          showError(ex, "Failed to manage public sensors");
           throw ex;
         }
       },
     },
   };
 };
+
