@@ -29,6 +29,7 @@ import { NotificationsComponent } from "./NotificationsComponent";
 import type { User } from "../models/user";
 import { routes } from "../utilities/routes";
 import { RoleNames } from "../enums/roleNames";
+import { useNotification } from "../hooks/useNotification";
 
 interface AppProps {
   children: React.ReactNode;
@@ -47,17 +48,25 @@ export const App: React.FC<AppProps> = (props) => {
   const [hasFetched, setHasFetched] = useState(false);
   const [inited, setInited] = useState(false);
   const notifications = useSelector(getNotifications);
+  const notification = useNotification();
 
   const devices = useSelector(getDevices);
   const confirmationDialogProps = useSelector(getConfirmationDialog);
 
   const handleLogOut = () => {
-    apiHook.userHook.logOut().then(() => {
-      dispath(setSensors([]));
-      dispath(setDevices([]));
-      dispath(storeUserInfo(undefined));
-      navigate(routes.main);
-    });
+    setIsLoading(true);
+    apiHook.userHook
+      .logOut()
+      .then(() => {
+        dispath(setSensors([]));
+        dispath(setDevices([]));
+        dispath(storeUserInfo(undefined));
+        notification.success("Logged out successfully");
+        navigate(routes.main);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const handleNavigate = (route: string) => {
