@@ -3,8 +3,11 @@ import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
 import {
   getDevices,
+  getLocations,
+  getSelectedDashboardLocationIdentifiers,
   getSelectedMeasurementTypes,
   getSensors,
+  setSelectedDashboardLocationIdentifiers,
   setSelectedMeasurementTypes,
 } from "../reducers/measurementReducer";
 import { useApiHook } from "../hooks/apiHook";
@@ -27,7 +30,11 @@ export const HomeView: React.FC = () => {
   const dispatch = useDispatch();
   const sensors = useSelector(getSensors);
   const devices = useSelector(getDevices);
+  const locations = useSelector(getLocations);
   const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
+  const selectedLocationIdentifiers = useSelector(
+    getSelectedDashboardLocationIdentifiers,
+  );
   const [model, setModel] = useState<MeasurementsViewModel | undefined>(
     undefined,
   );
@@ -94,7 +101,17 @@ export const HomeView: React.FC = () => {
   };
 
   const loadMeasurements = () => {
-    if (devices.length > 0 && hook) {
+    const filteredDevices = devices.filter((device) => {
+      if (selectedLocationIdentifiers === null) {
+        return true;
+      }
+
+      return (
+        device.locationIdentifier !== undefined &&
+        selectedLocationIdentifiers.includes(device.locationIdentifier)
+      );
+    });
+    if (filteredDevices.length > 0 && hook) {
       setIsLoading(true);
       hook
         .getMeasurementsBySensor(
@@ -102,7 +119,7 @@ export const HomeView: React.FC = () => {
           moment(),
           undefined,
           true,
-          devices.map((d) => d.identifier),
+          filteredDevices.map((d) => d.identifier),
           selectedMeasurementTypes && selectedMeasurementTypes.length > 0
             ? selectedMeasurementTypes
             : undefined,
@@ -118,13 +135,15 @@ export const HomeView: React.FC = () => {
         .finally(() => {
           setIsLoading(false);
         });
+    } else {
+      setModel({ measurements: [] });
     }
   };
 
   useEffect(() => {
     loadMeasurements();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [devices, selectedMeasurementTypes]);
+  }, [selectedLocationIdentifiers, selectedMeasurementTypes]);
 
   return (
     <AppContentWrapper
@@ -144,6 +163,11 @@ export const HomeView: React.FC = () => {
           selectedMeasurementTypes={selectedMeasurementTypes}
           onMeasurementTypesChange={(types) =>
             dispatch(setSelectedMeasurementTypes(types))
+          }
+          locations={locations}
+          selectedLocationIdentifiers={selectedLocationIdentifiers}
+          onLocationFilterChange={(identifiers) =>
+            dispatch(setSelectedDashboardLocationIdentifiers(identifiers))
           }
         />
       }
