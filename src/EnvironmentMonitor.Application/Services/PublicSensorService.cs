@@ -64,7 +64,7 @@ namespace EnvironmentMonitor.Application.Services
 
             if (daysDifference > limitInDays)
             {
-                throw new InvalidOperationException($"Max query range is {limitInDays} days");
+                throw new ArgumentException($"Max query range is {limitInDays} days");
             }
 
             var publicSensors = await _publicSensorRepository.GetPublicSensors(new GetPublicSensorsModel()
