@@ -148,14 +148,23 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 throw new EntityNotFoundException("One or more devices not found.");
             }
 
-            foreach (var device in devices)
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                device.LocationId = locationId;
-            }
+                await _context.LocationSensors
+                    .Where(x => deviceIds.Contains(x.DeviceId))
+                    .ExecuteDeleteAsync();
 
-            if (saveChanges)
+                await _context.Devices
+                    .Where(x => deviceIds.Contains(x.Id))
+                    .ExecuteUpdateAsync(s => s.SetProperty(d => d.LocationId, locationId));
+
+                await transaction.CommitAsync();
+            }
+            catch
             {
-                await _context.SaveChangesAsync();
+                await transaction.RollbackAsync();
+                throw;
             }
         }
 
