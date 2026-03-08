@@ -12,5 +12,6 @@ namespace EnvironmentMonitor.Domain.Models.GetModels
         public List<Guid>? Identifiers { get; set; }
         public bool IncludeLocationSensors { get; set; }
         public bool? Visible { get; set; }
+        public bool GetDevices { get; set; }
     }
 }
