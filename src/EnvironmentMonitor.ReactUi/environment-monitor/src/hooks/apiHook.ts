@@ -36,6 +36,9 @@ import type { ApiKeyDto, UpdateApiKeyRequest } from "../models/apiKey";
 import type { UpdateDeviceDto } from "../models/updateDeviceDto";
 import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
 import type { SensorInfo } from "../models/sensor";
+import type { AddLocation } from "../models/addLocation";
+import type { AddOrUpdateLocationSensor } from "../models/addOrUpdateLocationSensor";
+import type { MoveDevicesToLocation } from "../models/moveDevicesToLocation";
 import type {
   ManagePublicSensorsRequest,
   GetPublicSensorsModel,
@@ -80,7 +83,21 @@ interface userHook {
 }
 
 interface locationHook {
-  getLocations: () => Promise<LocationModel[]>;
+  getLocations: (getDevices?: boolean) => Promise<LocationModel[]>;
+  getLocation: (identifier: string) => Promise<LocationModel | undefined>;
+  addLocation: (model: AddLocation) => Promise<LocationModel>;
+  deleteLocation: (locationIdentifier: string) => Promise<void>;
+  addLocationSensor: (
+    model: AddOrUpdateLocationSensor,
+  ) => Promise<LocationModel>;
+  updateLocationSensor: (
+    model: AddOrUpdateLocationSensor,
+  ) => Promise<LocationModel>;
+  deleteLocationSensor: (
+    locationIdentifier: string,
+    sensorIdentifier: string,
+  ) => Promise<LocationModel>;
+  moveDevicesToLocation: (model: MoveDevicesToLocation) => Promise<void>;
 }
 
 interface measureHook {
@@ -875,16 +892,110 @@ export const useApiHook = (): ApiHook => {
       },
     },
     locationHook: {
-      getLocations: async () => {
+      getLocations: async (getDevices = false) => {
         try {
           const res = await apiClient.get<any, AxiosResponse<LocationModel[]>>(
             `/api/locations/`,
+            {
+              params: {
+                getDevices,
+              },
+            },
           );
           return res.data;
         } catch (ex) {
           console.error(ex);
           showError(ex, "Failed to get locations");
           return [];
+        }
+      },
+      getLocation: async (identifier: string) => {
+        try {
+          const res = await apiClient.get<any, AxiosResponse<LocationModel[]>>(
+            `/api/locations/`,
+            {
+              params: {
+                getDevices: true,
+              },
+            },
+          );
+          return res.data.find((location) => location.identifier === identifier);
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to get location");
+          return undefined;
+        }
+      },
+      addLocation: async (model: AddLocation) => {
+        try {
+          const res = await apiClient.post<any, AxiosResponse<LocationModel>>(
+            `/api/locations`,
+            model,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to add location");
+          throw ex;
+        }
+      },
+      deleteLocation: async (locationIdentifier: string) => {
+        try {
+          await apiClient.delete(`/api/locations/${locationIdentifier}`);
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to delete location");
+          throw ex;
+        }
+      },
+      addLocationSensor: async (model: AddOrUpdateLocationSensor) => {
+        try {
+          const res = await apiClient.post<any, AxiosResponse<LocationModel>>(
+            `/api/locations/sensors`,
+            model,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to add location sensor");
+          throw ex;
+        }
+      },
+      updateLocationSensor: async (model: AddOrUpdateLocationSensor) => {
+        try {
+          const res = await apiClient.put<any, AxiosResponse<LocationModel>>(
+            `/api/locations/sensors`,
+            model,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to update location sensor");
+          throw ex;
+        }
+      },
+      deleteLocationSensor: async (
+        locationIdentifier: string,
+        sensorIdentifier: string,
+      ) => {
+        try {
+          const res = await apiClient.delete<any, AxiosResponse<LocationModel>>(
+            `/api/locations/${locationIdentifier}/sensors/${sensorIdentifier}`,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to delete location sensor");
+          throw ex;
+        }
+      },
+      moveDevicesToLocation: async (model: MoveDevicesToLocation) => {
+        try {
+          await apiClient.post(`/api/locations/move-devices`, model);
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to move devices to location");
+          throw ex;
         }
       },
     },

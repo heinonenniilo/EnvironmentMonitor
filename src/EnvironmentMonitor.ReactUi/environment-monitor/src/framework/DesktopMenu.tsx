@@ -269,6 +269,15 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
                 onClick={() => {
                   handleMenuClose();
                   setAnchorE2(null);
+                  onNavigate(routes.locations);
+                }}
+              >
+                Locations
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  setAnchorE2(null);
                   onNavigate(routes.devices);
                 }}
               >

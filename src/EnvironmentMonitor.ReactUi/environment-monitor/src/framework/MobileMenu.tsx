@@ -230,6 +230,14 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             <MenuItem
               onClick={(event) => {
                 setManageAnchor(null);
+                handleClick(routes.locations, event);
+              }}
+            >
+              Locations
+            </MenuItem>
+            <MenuItem
+              onClick={(event) => {
+                setManageAnchor(null);
                 handleClick(routes.devices, event);
               }}
             >

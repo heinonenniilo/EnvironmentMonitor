@@ -17,6 +17,8 @@ export const routes = {
   locationDashboard: "/dashboard/location",
   devices: "/devices",
   deviceView: "/devices/:deviceId",
+  locations: "/locations",
+  locationView: "/locations/:locationId",
   deviceMessages: "/devices/messages",
   deviceEmails: "/device-emails",
   users: "/users",
