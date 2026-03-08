@@ -35,7 +35,9 @@ export const LocationView: React.FC = () => {
   const locationHook = useApiHook().locationHook;
   const measureHook = useApiHook().measureHook;
 
-  const [location, setLocation] = useState<LocationModel | undefined>(undefined);
+  const [location, setLocation] = useState<LocationModel | undefined>(
+    undefined,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [sensorDialogOpen, setSensorDialogOpen] = useState(false);
   const [moveDevicesOpen, setMoveDevicesOpen] = useState(false);
@@ -67,7 +69,7 @@ export const LocationView: React.FC = () => {
 
   const refreshLocations = () => {
     locationHook
-      .getLocations()
+      .getLocations(true)
       .then((response) => {
         dispatch(setLocations(response));
       })
@@ -101,30 +103,27 @@ export const LocationView: React.FC = () => {
     }
   }, [devices]);
 
-  const availableSensors = useMemo(
-    () => {
-      const locationDeviceIdentifiers = new Set(
-        (location?.devices ?? []).map((device) => device.identifier),
+  const availableSensors = () => {
+    const locationDeviceIdentifiers = new Set(
+      (location?.devices ?? []).map((device) => device.identifier),
+    );
+    const assignedLocationSensorIdentifiers = new Set(
+      locations.flatMap((item) =>
+        item.locationSensors.map((locationSensor) => locationSensor.identifier),
+      ),
+    );
+
+    return sensors.filter((sensor) => {
+      const belongsToLocationDevice = locationDeviceIdentifiers.has(
+        sensor.parentIdentifier,
       );
-      const assignedLocationSensorIdentifiers = new Set(
-        locations.flatMap((item) =>
-          item.locationSensors.map((locationSensor) => locationSensor.identifier),
-        ),
+      const alreadyAdded = assignedLocationSensorIdentifiers.has(
+        sensor.identifier,
       );
 
-      return sensors.filter((sensor) => {
-        const belongsToLocationDevice = locationDeviceIdentifiers.has(
-          sensor.parentIdentifier,
-        );
-        const alreadyAdded = assignedLocationSensorIdentifiers.has(
-          sensor.identifier,
-        );
-
-        return belongsToLocationDevice && !alreadyAdded;
-      });
-    },
-    [location?.devices, locations, sensors],
-  );
+      return belongsToLocationDevice && !alreadyAdded;
+    });
+  };
 
   const movableDevices = useMemo(
     () =>
@@ -134,7 +133,10 @@ export const LocationView: React.FC = () => {
     [allDevices, location?.identifier],
   );
 
-  const handleLocationUpdate = (updatedLocation: LocationModel, message: string) => {
+  const handleLocationUpdate = (
+    updatedLocation: LocationModel,
+    message: string,
+  ) => {
     setLocation(updatedLocation);
     refreshLocations();
     dispatch(
@@ -190,7 +192,10 @@ export const LocationView: React.FC = () => {
           locationHook
             .deleteLocationSensor(location.identifier, sensor.identifier)
             .then((response) => {
-              handleLocationUpdate(response, "Location sensor deleted successfully");
+              handleLocationUpdate(
+                response,
+                "Location sensor deleted successfully",
+              );
             })
             .catch((error) => {
               console.error(error);
@@ -354,7 +359,7 @@ export const LocationView: React.FC = () => {
         open={sensorDialogOpen}
         locationIdentifier={location?.identifier ?? ""}
         sensor={selectedSensor}
-        availableSensors={availableSensors}
+        availableSensors={availableSensors()}
         allSensors={sensors}
         devices={location?.devices ?? []}
         onClose={() => {
