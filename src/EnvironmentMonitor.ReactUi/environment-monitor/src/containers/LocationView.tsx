@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Box, IconButton, Typography } from "@mui/material";
-import { Add, Delete, DriveFileMove, Edit } from "@mui/icons-material";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import { Add, Delete, DriveFileMove, Edit, Refresh } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useApiHook } from "../hooks/apiHook";
@@ -324,19 +324,16 @@ export const LocationView: React.FC = () => {
       titleComponent={
         location ? (
           <Box display="flex" alignItems="center" gap={1}>
-            <IconButton
-              title="Edit location"
-              onClick={() => setEditDialogOpen(true)}
-            >
-              <Edit />
-            </IconButton>
-            <IconButton
-              color="error"
-              title="Delete location"
-              onClick={handleDeleteLocation}
-            >
-              <Delete />
-            </IconButton>
+            <Tooltip title="Edit location">
+              <IconButton onClick={() => setEditDialogOpen(true)}>
+                <Edit />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete location">
+              <IconButton color="error" onClick={handleDeleteLocation}>
+                <Delete />
+              </IconButton>
+            </Tooltip>
           </Box>
         ) : undefined
       }
@@ -351,16 +348,17 @@ export const LocationView: React.FC = () => {
             title="Location Sensors"
             isOpen={true}
             customComponent={
-              <IconButton
-                size="small"
-                title="Add location sensor"
-                onClick={() => {
-                  setSelectedSensor(null);
-                  setSensorDialogOpen(true);
-                }}
-              >
-                <Add />
-              </IconButton>
+              <Tooltip title="Add location sensor">
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    setSelectedSensor(null);
+                    setSensorDialogOpen(true);
+                  }}
+                >
+                  <Add />
+                </IconButton>
+              </Tooltip>
             }
           >
             <LocationSensorsTable
@@ -377,13 +375,21 @@ export const LocationView: React.FC = () => {
             title="Devices"
             isOpen={true}
             customComponent={
-              <IconButton
-                size="small"
-                title="Move devices to location"
-                onClick={() => setMoveDevicesOpen(true)}
-              >
-                <DriveFileMove />
-              </IconButton>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Tooltip title="Refresh devices">
+                  <IconButton size="small" onClick={loadLocationDeviceInfos}>
+                    <Refresh />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Move devices to location">
+                  <IconButton
+                    size="small"
+                    onClick={() => setMoveDevicesOpen(true)}
+                  >
+                    <DriveFileMove />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             }
           >
             <DeviceTable
