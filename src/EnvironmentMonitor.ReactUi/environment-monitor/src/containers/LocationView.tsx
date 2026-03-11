@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { Box, IconButton, Typography } from "@mui/material";
-import { Add, Delete, DriveFileMove } from "@mui/icons-material";
+import { Add, Delete, DriveFileMove, Edit } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useApiHook } from "../hooks/apiHook";
@@ -25,6 +25,7 @@ import { LocationSensorsTable } from "../components/Locations/LocationSensorsTab
 import { LocationSensorDialog } from "../components/Locations/LocationSensorDialog";
 import { LocationDevicesTable } from "../components/Locations/LocationDevicesTable";
 import { MoveDevicesDialog } from "../components/Locations/MoveDevicesDialog";
+import { EditLocationDialog } from "../components/Locations/EditLocationDialog";
 import { routes } from "../utilities/routes";
 
 export const LocationView: React.FC = () => {
@@ -40,6 +41,7 @@ export const LocationView: React.FC = () => {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [sensorDialogOpen, setSensorDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [moveDevicesOpen, setMoveDevicesOpen] = useState(false);
   const [selectedSensor, setSelectedSensor] = useState<Sensor | null>(null);
   const [allDevices, setAllDevices] = useState<Device[]>([]);
@@ -275,19 +277,43 @@ export const LocationView: React.FC = () => {
     );
   };
 
+  const handleEditLocation = (model: LocationModel) => {
+    setIsLoading(true);
+    locationHook
+      .updateLocation(model)
+      .then((response) => {
+        handleLocationUpdate(response, "Location updated successfully");
+        setEditDialogOpen(false);
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   return (
     <AppContentWrapper
       title={getEntityTitle(location)}
       isLoading={isLoading}
       titleComponent={
         location ? (
-          <IconButton
-            color="error"
-            title="Delete location"
-            onClick={handleDeleteLocation}
-          >
-            <Delete />
-          </IconButton>
+          <Box display="flex" alignItems="center" gap={1}>
+            <IconButton
+              title="Edit location"
+              onClick={() => setEditDialogOpen(true)}
+            >
+              <Edit />
+            </IconButton>
+            <IconButton
+              color="error"
+              title="Delete location"
+              onClick={handleDeleteLocation}
+            >
+              <Delete />
+            </IconButton>
+          </Box>
         ) : undefined
       }
     >
@@ -378,6 +404,12 @@ export const LocationView: React.FC = () => {
         devices={movableDevices}
         onClose={() => setMoveDevicesOpen(false)}
         onSave={handleMoveDevices}
+      />
+      <EditLocationDialog
+        open={editDialogOpen}
+        location={location}
+        onClose={() => setEditDialogOpen(false)}
+        onSave={handleEditLocation}
       />
     </AppContentWrapper>
   );

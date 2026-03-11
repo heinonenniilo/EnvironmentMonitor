@@ -87,6 +87,7 @@ interface locationHook {
   getLocations: (model?: GetLocationsModel) => Promise<LocationModel[]>;
   getLocation: (identifier: string) => Promise<LocationModel | undefined>;
   addLocation: (model: AddLocation) => Promise<LocationModel>;
+  updateLocation: (model: LocationModel) => Promise<LocationModel>;
   deleteLocation: (locationIdentifier: string) => Promise<void>;
   addLocationSensor: (
     model: AddOrUpdateLocationSensor,
@@ -941,6 +942,19 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError(ex, "Failed to add location");
+          throw ex;
+        }
+      },
+      updateLocation: async (model: LocationModel) => {
+        try {
+          const res = await apiClient.put<any, AxiosResponse<LocationModel>>(
+            `/api/locations`,
+            model,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to update location");
           throw ex;
         }
       },
