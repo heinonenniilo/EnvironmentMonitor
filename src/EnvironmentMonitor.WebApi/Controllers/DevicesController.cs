@@ -123,7 +123,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpGet(template: "info")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos() => await _deviceService.GetDeviceInfos(false, null, false, true);
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(List<Guid>? locationIdentifiers = null) => await _deviceService.GetDeviceInfos(false, null, false, true, false, locationIdentifiers: locationIdentifiers);
 
         [HttpGet(template: "{identifier}/info")]
         [Authorize(Roles = "Admin")]

@@ -106,10 +106,19 @@ namespace EnvironmentMonitor.Application.Services
         }
 
         public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false, 
-            bool getContacts = false, bool? isVirtual = null)
+            bool getContacts = false, bool? isVirtual = null, List<Guid>? locationIdentifiers = null)
         {
             _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
             var infos = new List<DeviceInfo>();
+
+            if (locationIdentifiers != null)
+            {
+                if (!_userService.HasAccessToLocations(locationIdentifiers, AccessLevels.Read))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+            }
+
             if (identifiers?.Any() == true)
             {
                 infos = (await _deviceRepository.GetDeviceInfo(new GetDevicesModel()
@@ -120,7 +129,8 @@ namespace EnvironmentMonitor.Application.Services
                     GetLocation = getLocation,
                     GetAttributes = getAttributes,
                     GetContacts = getContacts,
-                    IsVirtual = isVirtual
+                    IsVirtual = isVirtual,
+                    LocationIdentifiers = locationIdentifiers
                 }))
                 .Where(d => _userService.HasAccessToDevice(d.Device.Identifier, AccessLevels.Read)).ToList();
             }
@@ -134,6 +144,7 @@ namespace EnvironmentMonitor.Application.Services
                     GetLocation = getLocation,
                     GetAttributes = getAttributes,
                     IsVirtual = isVirtual, 
+                    LocationIdentifiers = locationIdentifiers
                 });
             }
             var listToReturn = _mapper.Map<List<DeviceInfoDto>>(infos);
