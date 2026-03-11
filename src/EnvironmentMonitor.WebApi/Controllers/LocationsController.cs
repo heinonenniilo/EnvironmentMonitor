@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain.Models.GetModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +18,8 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet]
-        public async Task<List<LocationDto>> GetLocations([FromQuery] bool getDevices = false) => await _locationService.GetLocations(getDevices);
+        public async Task<List<LocationDto>> GetLocations([FromQuery] GetLocationsModel model)
+            => await _locationService.GetLocations(model);
 
         [HttpPost]
         [Authorize(Roles = "Admin")]

@@ -30,22 +30,29 @@ namespace EnvironmentMonitor.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<List<LocationDto>> GetLocations(bool getDevices = false)
+        public async Task<List<LocationDto>> GetLocations(GetLocationsModel model)
         {
-            List<Guid>? ids;
-            if (_userService.IsAdmin)
+            if (!_userService.IsAdmin)
             {
-                ids = null;
-            }
-            else
-            {
-                if (getDevices)
+                if (model.GetDevices)
                 {
                     throw new UnauthorizedAccessException();
                 }
-                ids = _userService.GetLocations();
+
+                if (model.Identifiers != null && model.Identifiers.Count > 0)
+                {
+                    if (!_userService.HasAccessToLocations(model.Identifiers, AccessLevels.Read))
+                    {
+                        throw new UnauthorizedAccessException();
+                    }
+                }
+                else
+                {
+                    model.Identifiers = _userService.GetLocations();
+                }
             }
-            var locations = await _locationRepository.GetLocations(new GetLocationsModel() { Identifiers = ids, IncludeLocationSensors = true, GetDevices = getDevices });
+            model.IncludeLocationSensors = true;
+            var locations = await _locationRepository.GetLocations(model);
             return _mapper.Map<List<LocationDto>>(locations);
         }
 
