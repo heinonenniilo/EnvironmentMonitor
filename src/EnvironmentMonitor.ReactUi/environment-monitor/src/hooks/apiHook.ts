@@ -39,6 +39,7 @@ import type { SensorInfo } from "../models/sensor";
 import type { AddLocation } from "../models/addLocation";
 import type { AddOrUpdateLocationSensor } from "../models/addOrUpdateLocationSensor";
 import type { MoveDevicesToLocation } from "../models/moveDevicesToLocation";
+import type { GetLocationsModel } from "../models/getLocationsModel";
 import type {
   ManagePublicSensorsRequest,
   GetPublicSensorsModel,
@@ -83,7 +84,7 @@ interface userHook {
 }
 
 interface locationHook {
-  getLocations: (getDevices?: boolean) => Promise<LocationModel[]>;
+  getLocations: (model?: GetLocationsModel) => Promise<LocationModel[]>;
   getLocation: (identifier: string) => Promise<LocationModel | undefined>;
   addLocation: (model: AddLocation) => Promise<LocationModel>;
   deleteLocation: (locationIdentifier: string) => Promise<void>;
@@ -892,13 +893,15 @@ export const useApiHook = (): ApiHook => {
       },
     },
     locationHook: {
-      getLocations: async (getDevices = false) => {
+      getLocations: async (model?: GetLocationsModel) => {
         try {
           const res = await apiClient.get<any, AxiosResponse<LocationModel[]>>(
             `/api/locations/`,
             {
               params: {
-                getDevices,
+                includeLocationSensors: true,
+                getDevices: false,
+                ...model,
               },
             },
           );
@@ -915,11 +918,13 @@ export const useApiHook = (): ApiHook => {
             `/api/locations/`,
             {
               params: {
+                identifiers: [identifier],
+                includeLocationSensors: true,
                 getDevices: true,
               },
             },
           );
-          return res.data.find((location) => location.identifier === identifier);
+          return res.data[0];
         } catch (ex) {
           console.error(ex);
           showError(ex, "Failed to get location");

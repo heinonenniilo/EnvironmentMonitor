@@ -69,7 +69,7 @@ export const LocationView: React.FC = () => {
 
   const refreshLocations = () => {
     locationHook
-      .getLocations(true)
+      .getLocations({ getDevices: true })
       .then((response) => {
         dispatch(setLocations(response));
       })

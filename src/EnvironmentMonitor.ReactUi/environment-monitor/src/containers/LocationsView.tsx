@@ -23,7 +23,7 @@ export const LocationsView: React.FC = () => {
   const loadLocations = () => {
     setIsLoading(true);
     locationHook
-      .getLocations(true)
+      .getLocations({ getDevices: true })
       .then((response) => {
         setLocationsState(response);
         dispatch(
