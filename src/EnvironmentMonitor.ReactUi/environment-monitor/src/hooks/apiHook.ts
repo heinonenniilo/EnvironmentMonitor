@@ -158,7 +158,9 @@ interface CreateApiKeyResponse {
 
 interface deviceHook {
   rebootDevice: (deviceIdentifier: string) => Promise<boolean>;
-  getDeviceInfos: () => Promise<DeviceInfo[] | undefined>;
+  getDeviceInfos: (
+    locationIdentifiers?: string[],
+  ) => Promise<DeviceInfo[] | undefined>;
   getDeviceInfo: (identifier: string) => Promise<DeviceInfo>;
   setMotionControlState: (
     identifier: string,
@@ -640,10 +642,15 @@ export const useApiHook = (): ApiHook => {
           return false;
         }
       },
-      getDeviceInfos: async () => {
+      getDeviceInfos: async (locationIdentifiers?: string[]) => {
         try {
           const res = await apiClient.get<any, AxiosResponse<DeviceInfo[]>>(
             "/api/devices/info",
+            {
+              params: {
+                locationIdentifiers,
+              },
+            },
           );
           return res.data;
         } catch (ex: any) {

@@ -7,6 +7,7 @@ import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useApiHook } from "../hooks/apiHook";
 import type { LocationModel } from "../models/location";
 import type { Device } from "../models/device";
+import type { DeviceInfo } from "../models/deviceInfo";
 import type { Sensor } from "../models/sensor";
 import {
   getDevices,
@@ -23,9 +24,10 @@ import { getEntityTitle } from "../utilities/entityUtils";
 import { Collapsible } from "../framework/CollabsibleComponent";
 import { LocationSensorsTable } from "../components/Locations/LocationSensorsTable";
 import { LocationSensorDialog } from "../components/Locations/LocationSensorDialog";
-import { LocationDevicesTable } from "../components/Locations/LocationDevicesTable";
 import { MoveDevicesDialog } from "../components/Locations/MoveDevicesDialog";
 import { EditLocationDialog } from "../components/Locations/EditLocationDialog";
+import { LocationInfo } from "../components/Locations/LocationInfo";
+import { DeviceTable } from "../components/Devices/DeviceTable";
 import { routes } from "../utilities/routes";
 
 export const LocationView: React.FC = () => {
@@ -34,6 +36,7 @@ export const LocationView: React.FC = () => {
   const dispatch = useDispatch();
 
   const locationHook = useApiHook().locationHook;
+  const deviceHook = useApiHook().deviceHook;
   const measureHook = useApiHook().measureHook;
 
   const [location, setLocation] = useState<LocationModel | undefined>(
@@ -45,6 +48,9 @@ export const LocationView: React.FC = () => {
   const [moveDevicesOpen, setMoveDevicesOpen] = useState(false);
   const [selectedSensor, setSelectedSensor] = useState<Sensor | null>(null);
   const [allDevices, setAllDevices] = useState<Device[]>([]);
+  const [locationDeviceInfos, setLocationDeviceInfos] = useState<DeviceInfo[]>(
+    [],
+  );
 
   const sensors = useSelector(getSensors);
   const devices = useSelector(getDevices);
@@ -66,6 +72,22 @@ export const LocationView: React.FC = () => {
       })
       .finally(() => {
         setIsLoading(false);
+      });
+  };
+
+  const loadLocationDeviceInfos = () => {
+    if (!locationId) {
+      setLocationDeviceInfos([]);
+      return;
+    }
+
+    deviceHook
+      .getDeviceInfos([locationId])
+      .then((response) => {
+        setLocationDeviceInfos(response ?? []);
+      })
+      .catch((error) => {
+        console.error(error);
       });
   };
 
@@ -95,6 +117,7 @@ export const LocationView: React.FC = () => {
 
   useEffect(() => {
     loadLocation();
+    loadLocationDeviceInfos();
     refreshDevices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locationId]);
@@ -232,6 +255,7 @@ export const LocationView: React.FC = () => {
         refreshDevices();
         refreshLocations();
         loadLocation();
+        loadLocationDeviceInfos();
         setMoveDevicesOpen(false);
       })
       .catch((error) => {
@@ -320,21 +344,7 @@ export const LocationView: React.FC = () => {
       {location ? (
         <Box display="flex" flexDirection="column" gap={2}>
           <Collapsible title="Info" isOpen={true}>
-            <Box display="flex" flexDirection="column" gap={1} p={1}>
-              <Typography variant="body2">
-                Identifier: {location.identifier}
-              </Typography>
-              <Typography variant="body2">Name: {location.name}</Typography>
-              <Typography variant="body2">
-                Visible: {location.visible ? "Yes" : "No"}
-              </Typography>
-              <Typography variant="body2">
-                Sensors: {location.locationSensors.length}
-              </Typography>
-              <Typography variant="body2">
-                Devices: {location.devices?.length ?? 0}
-              </Typography>
-            </Box>
+            <LocationInfo location={location} />
           </Collapsible>
 
           <Collapsible
@@ -376,7 +386,13 @@ export const LocationView: React.FC = () => {
               </IconButton>
             }
           >
-            <LocationDevicesTable devices={location.devices ?? []} />
+            <DeviceTable
+              devices={locationDeviceInfos}
+              renderLink
+              renderLinkToDeviceMessages
+              hideId
+              showDeviceIdentifier
+            />
           </Collapsible>
         </Box>
       ) : (
