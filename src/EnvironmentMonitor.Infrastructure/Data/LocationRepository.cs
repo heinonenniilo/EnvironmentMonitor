@@ -168,6 +168,21 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
         }
 
+        public async Task<Location> UpdateLocation(Location location, bool saveChanges)
+        {
+            var existing = await _context.Locations.FirstOrDefaultAsync(x => x.Id == location.Id)
+                ?? throw new EntityNotFoundException($"Location with id: {location.Id} not found.");
+
+            existing.Name = location.Name;
+            existing.Visible = location.Visible;
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+            return existing;
+        }
+
         public async Task SaveChanges()
         {
             await _context.SaveChangesAsync();

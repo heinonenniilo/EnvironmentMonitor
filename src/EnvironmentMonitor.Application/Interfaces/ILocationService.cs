@@ -16,6 +16,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<LocationDto> AddLocationSensor(AddOrUpdateLocationSensorDto model);
         public Task<LocationDto> UpdateLocationSensor(AddOrUpdateLocationSensorDto model);
         public Task<LocationDto> DeleteLocationSensor(AddOrUpdateLocationSensorDto model);
+        public Task<LocationDto> UpdateLocation(LocationDto model);
         public Task MoveDevicesToLocation(MoveDevicesToLocationDto model);
     }
 }

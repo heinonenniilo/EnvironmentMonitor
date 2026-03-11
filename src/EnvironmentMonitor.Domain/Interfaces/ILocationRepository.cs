@@ -18,6 +18,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task<LocationSensor> UpdateLocationSensor(int locationId, int sensorId, int deviceId, string name, int? typeId, bool saveChanges);
         public Task DeleteLocationSensor(int locationId, int sensorId, int deviceId, bool saveChanges);
         public Task MoveDevicesToLocation(int locationId, List<int> deviceIds, bool saveChanges);
+        public Task<Location> UpdateLocation(Location location, bool saveChanges);
         public Task SaveChanges();
     }
 }

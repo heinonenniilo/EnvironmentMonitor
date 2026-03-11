@@ -173,6 +173,25 @@ namespace EnvironmentMonitor.Application.Services
             return await GetLocationDto(location.Id);
         }
 
+        public async Task<LocationDto> UpdateLocation(LocationDto model)
+        {
+            if (!_userService.HasAccessToLocations([model.Identifier], AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var locations = await _locationRepository.GetLocations(new GetLocationsModel { Identifiers = [model.Identifier] });
+            var location = locations.FirstOrDefault()
+                ?? throw new EntityNotFoundException($"Location with identifier: '{model.Identifier}' not found.");
+
+            location.Name = model.Name;
+            location.Visible = model.Visible;
+
+            await _locationRepository.UpdateLocation(location, true);
+
+            return await GetLocationDto(location.Id);
+        }
+
         public async Task MoveDevicesToLocation(MoveDevicesToLocationDto model)
         {
             if (!_userService.HasAccessToLocations([model.LocationIdentifier], AccessLevels.Write))

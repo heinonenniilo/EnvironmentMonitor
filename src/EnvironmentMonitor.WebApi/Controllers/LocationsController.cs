@@ -25,6 +25,10 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<LocationDto> AddLocation([FromBody] AddLocationDto model) => await _locationService.AddLocation(model);
 
+        [HttpPut]
+        [Authorize(Roles = "Admin")]
+        public async Task<LocationDto> UpdateLocation([FromBody] LocationDto model) => await _locationService.UpdateLocation(model);
+
         [HttpDelete("{locationIdentifier}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteLocation(Guid locationIdentifier)
