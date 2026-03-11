@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Box, Button, IconButton, Typography } from "@mui/material";
-import { Add, DriveFileMove } from "@mui/icons-material";
+import { Box, IconButton, Typography } from "@mui/material";
+import { Add, Delete, DriveFileMove } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useApiHook } from "../hooks/apiHook";
@@ -281,9 +281,13 @@ export const LocationView: React.FC = () => {
       isLoading={isLoading}
       titleComponent={
         location ? (
-          <Button color="error" onClick={handleDeleteLocation}>
-            Delete
-          </Button>
+          <IconButton
+            color="error"
+            title="Delete location"
+            onClick={handleDeleteLocation}
+          >
+            <Delete />
+          </IconButton>
         ) : undefined
       }
     >
