@@ -1,5 +1,8 @@
 using EnvironmentMonitor.Application.DTOs;
+using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Infrastructure.Data;
+using EnvironmentMonitor.Infrastructure.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -373,6 +376,110 @@ namespace EnvironmentMonitor.Tests
                 Assert.That(updateResponse.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
                 Assert.That(sensorResponse.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
                 Assert.That(moveResponse.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+            });
+        }
+
+        [Test]
+        public async Task UserCanFetchAccessibleLocations()
+        {
+            var model = await PrepareDatabase();
+
+            // Add a third location and give LocationUser access to it
+            using (var scope = _factory.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
+                var userManager = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
+
+                var extraLocation = new Location { Name = "Extra-Location" };
+                db.Locations.Add(extraLocation);
+                await db.SaveChangesAsync();
+
+                var user = await userManager.FindByEmailAsync(LocationUserName);
+                await userManager.AddClaimAsync(user, new System.Security.Claims.Claim(
+                   EntityRoles.Location.ToString(), extraLocation.Identifier.ToString()));
+            }
+
+            await LoginAsync(LocationUserName, LocationUserPassword);
+
+            var response = await _client.GetAsync("/api/locations");
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            var locations = JsonConvert.DeserializeObject<List<LocationDto>>(await response.Content.ReadAsStringAsync());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(locations, Has.Count.EqualTo(2));
+                Assert.That(locations.Any(l => l.Identifier == model.Location.Identifier), Is.True);
+                Assert.That(locations.Any(l => l.Identifier == model.LocationWithNoDefinedAccess.Identifier), Is.False);
+            });
+        }
+
+        [Test]
+        public async Task UserCanFetchSingleAccessibleLocation()
+        {
+            var model = await PrepareDatabase();
+            await LoginAsync(LocationUserName, LocationUserPassword);
+
+            var response = await _client.GetAsync($"/api/locations/{model.Location.Identifier}");
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            var location = JsonConvert.DeserializeObject<LocationDto>(await response.Content.ReadAsStringAsync());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(location, Is.Not.Null);
+                Assert.That(location.Identifier, Is.EqualTo(model.Location.Identifier));
+                Assert.That(location.LocationSensors, Is.Not.Null);
+            });
+        }
+
+        [Test]
+        public async Task UserCannotFetchLocationWithNoAccess()
+        {
+            var model = await PrepareDatabase();
+            await LoginAsync(LocationUserName, LocationUserPassword);
+
+            var response = await _client.GetAsync($"/api/locations/{model.LocationWithNoDefinedAccess.Identifier}");
+
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.Forbidden));
+        }
+
+        [Test]
+        public async Task AdminCanFetchAllLocations()
+        {
+            var model = await PrepareDatabase();
+            await LoginAsync(AdminUserName, AdminPassword);
+
+            var response = await _client.GetAsync("/api/locations");
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            var locations = JsonConvert.DeserializeObject<List<LocationDto>>(await response.Content.ReadAsStringAsync());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(locations.Any(l => l.Identifier == model.Location.Identifier), Is.True);
+                Assert.That(locations.Any(l => l.Identifier == model.LocationWithNoDefinedAccess.Identifier), Is.True);
+            });
+        }
+
+        [Test]
+        public async Task AdminCanFetchSingleLocationWithDevices()
+        {
+            var model = await PrepareDatabase();
+            await LoginAsync(AdminUserName, AdminPassword);
+
+            var response = await _client.GetAsync($"/api/locations/{model.Location.Identifier}");
+            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
+
+            var location = JsonConvert.DeserializeObject<LocationDto>(await response.Content.ReadAsStringAsync());
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(location, Is.Not.Null);
+                Assert.That(location.Identifier, Is.EqualTo(model.Location.Identifier));
+                Assert.That(location.Devices, Is.Not.Null);
+                Assert.That(location.Devices.Count, Is.GreaterThan(0));
+                Assert.That(location.LocationSensors, Is.Not.Null);
             });
         }
     }
