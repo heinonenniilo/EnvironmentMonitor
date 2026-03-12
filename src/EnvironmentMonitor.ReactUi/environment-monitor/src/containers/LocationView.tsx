@@ -340,7 +340,7 @@ export const LocationView: React.FC = () => {
         ) : undefined
       }
     >
-      {location ? (
+      {location && (
         <Box display="flex" flexDirection="column" gap={2}>
           <Collapsible title="Info" isOpen={true}>
             <LocationInfo location={location} />
@@ -403,10 +403,6 @@ export const LocationView: React.FC = () => {
             />
           </Collapsible>
         </Box>
-      ) : (
-        <Typography variant="body1" p={1}>
-          Location not found.
-        </Typography>
       )}
 
       <LocationSensorDialog
