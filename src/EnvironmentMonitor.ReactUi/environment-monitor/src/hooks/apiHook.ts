@@ -922,17 +922,10 @@ export const useApiHook = (): ApiHook => {
       },
       getLocation: async (identifier: string) => {
         try {
-          const res = await apiClient.get<any, AxiosResponse<LocationModel[]>>(
-            `/api/locations/`,
-            {
-              params: {
-                identifiers: [identifier],
-                includeLocationSensors: true,
-                getDevices: true,
-              },
-            },
+          const res = await apiClient.get<any, AxiosResponse<LocationModel>>(
+            `/api/locations/${identifier}`,
           );
-          return res.data[0];
+          return res.data;
         } catch (ex) {
           console.error(ex);
           showError(ex, "Failed to get location");

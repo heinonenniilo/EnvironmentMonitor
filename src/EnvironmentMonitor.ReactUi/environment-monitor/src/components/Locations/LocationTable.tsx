@@ -57,19 +57,6 @@ export const LocationTable: React.FC<LocationTableProps> = ({
         />
       ),
     },
-    {
-      field: "locationSensors",
-      headerName: "Sensors",
-      width: 90,
-      valueGetter: (_value, row) =>
-        (row as LocationModel).locationSensors?.length ?? 0,
-    },
-    {
-      field: "devices",
-      headerName: "Devices",
-      width: 90,
-      valueGetter: (_value, row) => (row as LocationModel).devices?.length ?? 0,
-    },
   ];
 
   if (onDelete) {
