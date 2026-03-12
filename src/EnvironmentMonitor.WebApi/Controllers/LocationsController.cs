@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,27 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpGet]
         public async Task<List<LocationDto>> GetLocations([FromQuery] GetLocationsModel model)
-            => await _locationService.GetLocations(model);
+        {
+            return await _locationService.GetLocations(new GetLocationsModel()
+            {
+                GetDevices = false,
+                Identifiers = model.Identifiers,
+                IncludeLocationSensors = true
+            });
+        }
+
+        [HttpGet("{locationIdentifier}")]
+        public async Task<LocationDto> GetLocation([FromRoute] Guid locationIdentifier)
+        {
+            var locations = await _locationService.GetLocations(new GetLocationsModel()
+            {
+                Identifiers = [locationIdentifier],
+                GetDevices = true,
+                IncludeLocationSensors = true
+            });
+            return locations.FirstOrDefault()
+                ?? throw new EntityNotFoundException($"Location with identifier: '{locationIdentifier}' not found.");
+        }
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
