@@ -118,7 +118,9 @@ export const LocationView: React.FC = () => {
   useEffect(() => {
     loadLocation();
     loadLocationDeviceInfos();
-    refreshDevices();
+    if (devices.length === 0) {
+      refreshDevices();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locationId]);
 
