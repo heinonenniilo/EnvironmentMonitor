@@ -34,11 +34,6 @@ namespace EnvironmentMonitor.Application.Services
         {
             if (!_userService.IsAdmin)
             {
-                if (model.GetDevices)
-                {
-                    throw new UnauthorizedAccessException();
-                }
-
                 if (model.Identifiers != null && model.Identifiers.Count > 0)
                 {
                     if (!_userService.HasAccessToLocations(model.Identifiers, AccessLevels.Read))
