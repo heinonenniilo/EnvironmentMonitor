@@ -6,14 +6,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useApiHook } from "../hooks/apiHook";
 import type { LocationModel } from "../models/location";
-import type { Device } from "../models/device";
 import type { DeviceInfo } from "../models/deviceInfo";
 import type { Sensor } from "../models/sensor";
 import {
-  getDevices,
   getLocations,
   getSensors,
-  setDevices,
   setLocations,
 } from "../reducers/measurementReducer";
 import {
@@ -37,7 +34,6 @@ export const LocationView: React.FC = () => {
 
   const locationHook = useApiHook().locationHook;
   const deviceHook = useApiHook().deviceHook;
-  const measureHook = useApiHook().measureHook;
 
   const [location, setLocation] = useState<LocationModel | undefined>(
     undefined,
@@ -47,13 +43,12 @@ export const LocationView: React.FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [moveDevicesOpen, setMoveDevicesOpen] = useState(false);
   const [selectedSensor, setSelectedSensor] = useState<Sensor | null>(null);
-  const [allDevices, setAllDevices] = useState<Device[]>([]);
+  const [allDevices, setAllDevices] = useState<DeviceInfo[]>([]);
   const [locationDeviceInfos, setLocationDeviceInfos] = useState<DeviceInfo[]>(
     [],
   );
 
   const sensors = useSelector(getSensors);
-  const devices = useSelector(getDevices);
   const locations = useSelector(getLocations);
 
   const loadLocation = () => {
@@ -103,12 +98,11 @@ export const LocationView: React.FC = () => {
   };
 
   const refreshDevices = () => {
-    measureHook
-      .getDevices()
+    deviceHook
+      .getDeviceInfos()
       .then((response) => {
         const nextDevices = response ?? [];
         setAllDevices(nextDevices);
-        dispatch(setDevices(nextDevices));
       })
       .catch((error) => {
         console.error(error);
@@ -118,17 +112,9 @@ export const LocationView: React.FC = () => {
   useEffect(() => {
     loadLocation();
     loadLocationDeviceInfos();
-    if (devices.length === 0) {
-      refreshDevices();
-    }
+    refreshDevices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locationId]);
-
-  useEffect(() => {
-    if (devices.length > 0) {
-      setAllDevices(devices);
-    }
-  }, [devices]);
 
   const availableSensors = () => {
     const locationDeviceIdentifiers = new Set(
@@ -155,8 +141,12 @@ export const LocationView: React.FC = () => {
   const movableDevices = useMemo(
     () =>
       allDevices
-        .filter((device) => device.locationIdentifier !== location?.identifier)
-        .sort((a, b) => getEntityTitle(a).localeCompare(getEntityTitle(b))),
+        .filter(
+          (device) => device.device.locationIdentifier !== location?.identifier,
+        )
+        .sort((a, b) =>
+          getEntityTitle(a.device).localeCompare(getEntityTitle(b.device)),
+        ),
     [allDevices, location?.identifier],
   );
 
@@ -421,7 +411,7 @@ export const LocationView: React.FC = () => {
       <MoveDevicesDialog
         open={moveDevicesOpen}
         locationName={getEntityTitle(location)}
-        devices={movableDevices}
+        devices={movableDevices.map((deviceInfo) => deviceInfo.device)}
         onClose={() => setMoveDevicesOpen(false)}
         onSave={handleMoveDevices}
       />
