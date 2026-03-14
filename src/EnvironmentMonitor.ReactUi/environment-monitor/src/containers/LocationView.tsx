@@ -314,20 +314,18 @@ export const LocationView: React.FC = () => {
       title={getEntityTitle(location)}
       isLoading={isLoading}
       titleComponent={
-        location ? (
-          <Box display="flex" alignItems="center" gap={1}>
-            <Tooltip title="Edit location">
-              <IconButton onClick={() => setEditDialogOpen(true)}>
-                <Edit />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Delete location">
-              <IconButton color="error" onClick={handleDeleteLocation}>
-                <Delete />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        ) : undefined
+        <Box display="flex" alignItems="center" gap={1}>
+          <Tooltip title="Edit location">
+            <IconButton onClick={() => setEditDialogOpen(true)}>
+              <Edit />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete location">
+            <IconButton color="error" onClick={handleDeleteLocation}>
+              <Delete />
+            </IconButton>
+          </Tooltip>
+        </Box>
       }
     >
       {location && (
