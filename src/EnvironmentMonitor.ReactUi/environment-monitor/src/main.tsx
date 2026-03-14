@@ -12,6 +12,8 @@ import { MeasurementsView } from "./containers/MeasurementsView";
 import { LocationMeasurementsView } from "./containers/LocationMeasurementsView";
 import { DevicesView } from "./containers/DevicesView";
 import { DeviceView } from "./containers/DeviceView";
+import { LocationsView } from "./containers/LocationsView";
+import { LocationView } from "./containers/LocationView";
 import { store } from "./setup/appStore";
 import { DeviceMessagesView } from "./containers/DeviceMessagesView";
 import { ThemeProvider } from "@mui/material";
@@ -141,6 +143,22 @@ createRoot(document.getElementById("root")!).render(
                 element={
                   <AuthorizedComponent requiredRole={RoleNames.User}>
                     <LocationMeasurementsView />
+                  </AuthorizedComponent>
+                }
+              />
+              <Route
+                path={routes.locations}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.Admin}>
+                    <LocationsView />
+                  </AuthorizedComponent>
+                }
+              />
+              <Route
+                path={routes.locationView}
+                element={
+                  <AuthorizedComponent requiredRole={RoleNames.Admin}>
+                    <LocationView />
                   </AuthorizedComponent>
                 }
               />

@@ -230,10 +230,10 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             <MenuItem
               onClick={(event) => {
                 setManageAnchor(null);
-                handleClick(routes.devices, event);
+                handleClick(routes.apiKeys, event);
               }}
             >
-              Devices
+              API Keys
             </MenuItem>
             <MenuItem
               onClick={(event) => {
@@ -246,6 +246,14 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             <MenuItem
               onClick={(event) => {
                 setManageAnchor(null);
+                handleClick(routes.devices, event);
+              }}
+            >
+              Devices
+            </MenuItem>
+            <MenuItem
+              onClick={(event) => {
+                setManageAnchor(null);
                 handleClick(routes.deviceEmails, event);
               }}
             >
@@ -254,18 +262,10 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             <MenuItem
               onClick={(event) => {
                 setManageAnchor(null);
-                handleClick(routes.users, event);
+                handleClick(routes.locations, event);
               }}
             >
-              Users
-            </MenuItem>
-            <MenuItem
-              onClick={(event) => {
-                setManageAnchor(null);
-                handleClick(routes.apiKeys, event);
-              }}
-            >
-              API Keys
+              Locations
             </MenuItem>
             <MenuItem
               onClick={(event) => {
@@ -274,6 +274,14 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
               }}
             >
               Public Sensors
+            </MenuItem>
+            <MenuItem
+              onClick={(event) => {
+                setManageAnchor(null);
+                handleClick(routes.users, event);
+              }}
+            >
+              Users
             </MenuItem>
           </Menu>
           <AuthorizedComponent requiredRole={RoleNames.Admin}>

@@ -1,6 +1,7 @@
 export interface Sensor {
   identifier: string;
   name: string;
+  displayName?: string;
   parentIdentifier: string;
 
   scaleMin?: number;

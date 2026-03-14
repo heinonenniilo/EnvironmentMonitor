@@ -1,4 +1,5 @@
 ﻿using EnvironmentMonitor.Application.DTOs;
+using EnvironmentMonitor.Domain.Models.GetModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,13 @@ namespace EnvironmentMonitor.Application.Interfaces
 {
     public interface ILocationService
     {
-        public Task< List<LocationDto>> GetLocations();
+        public Task<List<LocationDto>> GetLocations(GetLocationsModel model);
+        public Task<LocationDto> AddLocation(AddLocationDto model);
+        public Task DeleteLocation(Guid locationIdentifier);
+        public Task<LocationDto> AddLocationSensor(AddOrUpdateLocationSensorDto model);
+        public Task<LocationDto> UpdateLocationSensor(AddOrUpdateLocationSensorDto model);
+        public Task<LocationDto> DeleteLocationSensor(AddOrUpdateLocationSensorDto model);
+        public Task<LocationDto> UpdateLocation(LocationDto model);
+        public Task MoveDevicesToLocation(MoveDevicesToLocationDto model);
     }
 }

@@ -269,10 +269,10 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
                 onClick={() => {
                   handleMenuClose();
                   setAnchorE2(null);
-                  onNavigate(routes.devices);
+                  onNavigate(routes.apiKeys);
                 }}
               >
-                Devices
+                API Keys
               </MenuItem>
               <MenuItem
                 onClick={() => {
@@ -287,6 +287,15 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
                 onClick={() => {
                   handleMenuClose();
                   setAnchorE2(null);
+                  onNavigate(routes.devices);
+                }}
+              >
+                Devices
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  setAnchorE2(null);
                   onNavigate(routes.deviceEmails);
                 }}
               >
@@ -296,19 +305,10 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
                 onClick={() => {
                   handleMenuClose();
                   setAnchorE2(null);
-                  onNavigate(routes.users);
+                  onNavigate(routes.locations);
                 }}
               >
-                Users
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  handleMenuClose();
-                  setAnchorE2(null);
-                  onNavigate(routes.apiKeys);
-                }}
-              >
-                API Keys
+                Locations
               </MenuItem>
               <MenuItem
                 onClick={() => {
@@ -318,6 +318,15 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
                 }}
               >
                 Public Sensors
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  handleMenuClose();
+                  setAnchorE2(null);
+                  onNavigate(routes.users);
+                }}
+              >
+                Users
               </MenuItem>
             </Menu>
             <MenuItem

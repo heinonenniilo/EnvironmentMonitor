@@ -19,7 +19,7 @@ namespace EnvironmentMonitor.Application.Interfaces
 
         public Task<List<DeviceDto>> GetDevices(bool onlyVisible, bool getLocation);
         public Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false, bool getContacts = false, 
-            bool? isVirtual = null);
+            bool? isVirtual = null, List<Guid>? locationIdentifiers = null);
         public Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model);
 
         public Task<DeviceStatusModel> GetDeviceStatus(GetDeviceStatusModel model);
