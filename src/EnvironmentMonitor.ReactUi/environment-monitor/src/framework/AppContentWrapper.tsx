@@ -1,9 +1,15 @@
-import { Box, Container, Typography, useMediaQuery } from "@mui/material";
+import {
+  Backdrop,
+  Box,
+  CircularProgress,
+  Container,
+  Typography,
+  useMediaQuery,
+} from "@mui/material";
 import React, { useEffect, useState, type JSX } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { LeftMenu } from "./LefMenu";
-import { LoadingOverlay } from "./LoadingOverlay";
 import {
   getHasLeftMenu,
   getIsLeftMenuOpen,
@@ -76,8 +82,13 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
     );
   };
   return (
-    <Box sx={{ position: "relative", flexGrow: 1 }}>
-      <LoadingOverlay isLoading={props.isLoading || isLoggingIn} />
+    <>
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={props.isLoading || isLoggingIn}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
       <Box
         sx={{
           flexGrow: 1,
@@ -112,6 +123,6 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
           <PageContent>{props.children}</PageContent>
         </Container>
       </Box>
-    </Box>
+    </>
   );
 };
