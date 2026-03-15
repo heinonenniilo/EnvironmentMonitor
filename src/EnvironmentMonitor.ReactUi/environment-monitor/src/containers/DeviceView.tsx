@@ -1099,6 +1099,7 @@ export const DeviceView: React.FC = () => {
             useAutoScale
             onRefresh={loadMeasurements}
             isLoading={isLoadingMeasurements}
+            showFullScreenIcon
           />
         </Collapsible>
         <Collapsible title="Online status">
