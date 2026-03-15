@@ -43,6 +43,7 @@ interface PromiseInfo {
 }
 
 const timeRangeDefaultDays = 7;
+const measurementTimeRangeDefaultHours = 48;
 
 export const DeviceView: React.FC = () => {
   const [selectedDevice, setSelectedDevice] = useState<DeviceInfo | undefined>(
@@ -64,6 +65,9 @@ export const DeviceView: React.FC = () => {
     undefined,
   );
 
+  const [measurementTimeRange, setMeasurementTimeRange] = useState(
+    measurementTimeRangeDefaultHours,
+  );
   const [statusTimeRange, setStatusTimeRange] = useState(
     timeRangeDefaultDays * 24,
   );
@@ -99,7 +103,7 @@ export const DeviceView: React.FC = () => {
 
     const momentStart = moment()
       .local(true)
-      .add(-1 * 48, "hour")
+      .add(-1 * measurementTimeRange, "hour")
       .utc(true);
 
     setIsLoadingMeasurments(true);
@@ -125,7 +129,7 @@ export const DeviceView: React.FC = () => {
     }
     const momentStart = moment()
       .local(true)
-      .add(-1 * 48, "hour")
+      .add(-1 * measurementTimeRange, "hour")
       .utc(true);
     setIsLoadingMeasurments(true);
     measurementApiHook
@@ -144,7 +148,7 @@ export const DeviceView: React.FC = () => {
         setIsLoadingMeasurments(false);
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedDevice]);
+  }, [selectedDevice, measurementTimeRange]);
 
   useEffect(() => {
     if (!selectedDevice) {
@@ -1079,14 +1083,23 @@ export const DeviceView: React.FC = () => {
         />
 
         <Collapsible title="Measurements">
+          <TimeRangeSelectorComponent
+            timeRange={measurementTimeRange}
+            onSelectTimeRange={setMeasurementTimeRange}
+          />
           <MultiSensorGraph
             sensors={selectedDevice?.sensors}
             model={model}
             minHeight={400}
-            title={`${selectedDevice?.device.name} - Last 48 h`}
+            title={`${selectedDevice?.device.name} - Last ${
+              measurementTimeRange < 72
+                ? `${measurementTimeRange} h`
+                : `${measurementTimeRange / 24} days`
+            }`}
             useAutoScale
             onRefresh={loadMeasurements}
             isLoading={isLoadingMeasurements}
+            showFullScreenIcon
           />
         </Collapsible>
         <Collapsible title="Online status">

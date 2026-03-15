@@ -8,6 +8,7 @@ import { useApiHook } from "../hooks/apiHook";
 import type { LocationModel } from "../models/location";
 import type { DeviceInfo } from "../models/deviceInfo";
 import type { Sensor } from "../models/sensor";
+import type { MeasurementsByLocation } from "../models/measurementsBySensor";
 import {
   getLocations,
   getSensors,
@@ -25,7 +26,12 @@ import { MoveDevicesDialog } from "../components/Locations/MoveDevicesDialog";
 import { EditLocationDialog } from "../components/Locations/EditLocationDialog";
 import { LocationInfo } from "../components/Locations/LocationInfo";
 import { DeviceTable } from "../components/Devices/DeviceTable";
+import { MultiSensorGraph } from "../components/Measurements/MultiSensorGraph";
+import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRangeSelectorComponent";
 import { routes } from "../utilities/routes";
+import moment from "moment";
+
+const measurementTimeRangeDefaultHours = 48;
 
 export const LocationView: React.FC = () => {
   const { locationId } = useParams<{ locationId?: string }>();
@@ -34,11 +40,21 @@ export const LocationView: React.FC = () => {
 
   const locationHook = useApiHook().locationHook;
   const deviceHook = useApiHook().deviceHook;
+  const measurementApiHook = useApiHook().measureHook;
 
   const [location, setLocation] = useState<LocationModel | undefined>(
     undefined,
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingDeviceInformation, setIsLoadingDeviceInformation] =
+    useState(false);
+  const [isLoadingMeasurements, setIsLoadingMeasurements] = useState(false);
+  const [measurementModel, setMeasurementModel] = useState<
+    MeasurementsByLocation | undefined
+  >(undefined);
+  const [measurementTimeRange, setMeasurementTimeRange] = useState(
+    measurementTimeRangeDefaultHours,
+  );
   const [sensorDialogOpen, setSensorDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [moveDevicesOpen, setMoveDevicesOpen] = useState(false);
@@ -76,6 +92,7 @@ export const LocationView: React.FC = () => {
       return;
     }
 
+    setIsLoadingDeviceInformation(true);
     deviceHook
       .getDeviceInfos([locationId])
       .then((response) => {
@@ -83,6 +100,9 @@ export const LocationView: React.FC = () => {
       })
       .catch((error) => {
         console.error(error);
+      })
+      .finally(() => {
+        setIsLoadingDeviceInformation(false);
       });
   };
 
@@ -109,12 +129,45 @@ export const LocationView: React.FC = () => {
       });
   };
 
+  const loadMeasurements = () => {
+    if (!locationId) {
+      return;
+    }
+
+    const momentStart = moment()
+      .local(true)
+      .add(-1 * measurementTimeRange, "hour")
+      .utc(true);
+
+    setIsLoadingMeasurements(true);
+    measurementApiHook
+      .getMeasurementsByLocation([locationId], momentStart, undefined)
+      .then((res) => {
+        setMeasurementModel(res?.measurements[0]);
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setIsLoadingMeasurements(false);
+      });
+  };
+
+  const handleMeasurementTimeRangeChange = (timeRange: number) => {
+    setMeasurementTimeRange(timeRange);
+  };
+
   useEffect(() => {
     loadLocation();
     loadLocationDeviceInfos();
     refreshDevices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locationId]);
+
+  useEffect(() => {
+    loadMeasurements();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [measurementTimeRange, locationId]);
 
   const availableSensors = () => {
     const locationDeviceIdentifiers = new Set(
@@ -364,6 +417,7 @@ export const LocationView: React.FC = () => {
           <Collapsible
             title="Devices"
             isOpen={true}
+            isLoading={isLoadingDeviceInformation}
             customComponent={
               <Box display="flex" alignItems="center" gap={1}>
                 <Tooltip title="Refresh devices">
@@ -388,6 +442,29 @@ export const LocationView: React.FC = () => {
               renderLinkToDeviceMessages
               hideId
               showDeviceIdentifier
+            />
+          </Collapsible>
+
+          <Collapsible title="Measurements">
+            <TimeRangeSelectorComponent
+              timeRange={measurementTimeRange}
+              onSelectTimeRange={handleMeasurementTimeRangeChange}
+            />
+            <MultiSensorGraph
+              sensors={measurementModel?.sensors}
+              entities={location ? [location] : undefined}
+              model={measurementModel}
+              minHeight={400}
+              title={`${location.name} - Last ${
+                measurementTimeRange < 72
+                  ? `${measurementTimeRange} h`
+                  : `${measurementTimeRange / 24} days`
+              }`}
+              useAutoScale
+              onRefresh={loadMeasurements}
+              isLoading={isLoadingMeasurements}
+              enableHighlightOnRowHover
+              showFullScreenIcon
             />
           </Collapsible>
         </Box>
