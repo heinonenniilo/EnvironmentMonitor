@@ -1,4 +1,4 @@
-import { Box, Container } from "@mui/material";
+import { Backdrop, Box, CircularProgress, Container } from "@mui/material";
 import React, { useEffect, useState } from "react";
 // import { getIsReLogging, getUserInfo, getUserVm } from "reducers/userReducer";
 import { AdapterMoment } from "@mui/x-date-pickers/AdapterMoment";
@@ -26,7 +26,6 @@ import {
 } from "../reducers/userInterfaceReducer";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { NotificationsComponent } from "./NotificationsComponent";
-import { LoadingOverlay } from "./LoadingOverlay";
 import type { User } from "../models/user";
 import { routes } from "../utilities/routes";
 import { RoleNames } from "../enums/roleNames";
@@ -134,8 +133,13 @@ export const App: React.FC<AppProps> = (props) => {
   return (
     <CookiesProvider>
       <LocalizationProvider dateAdapter={AdapterMoment} adapterLocale="es">
-        <Box sx={{ position: "relative", minHeight: "100vh" }}>
-          <LoadingOverlay isLoading={isLoading} />
+        <>
+          <Backdrop
+            sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+            open={isLoading}
+          >
+            <CircularProgress color="inherit" />
+          </Backdrop>
           <ConfirmationDialog
             isOpen={confirmationDialogProps !== undefined}
             body={confirmationDialogProps?.body ?? ""}
@@ -171,7 +175,7 @@ export const App: React.FC<AppProps> = (props) => {
           >
             {props.children}
           </Box>
-        </Box>
+        </>
       </LocalizationProvider>
     </CookiesProvider>
   );
