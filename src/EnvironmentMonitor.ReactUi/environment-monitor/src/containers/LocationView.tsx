@@ -39,6 +39,8 @@ export const LocationView: React.FC = () => {
     undefined,
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingDeviceInformation, setIsLoadingDeviceInformation] =
+    useState(false);
   const [sensorDialogOpen, setSensorDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [moveDevicesOpen, setMoveDevicesOpen] = useState(false);
@@ -76,6 +78,7 @@ export const LocationView: React.FC = () => {
       return;
     }
 
+    setIsLoadingDeviceInformation(true);
     deviceHook
       .getDeviceInfos([locationId])
       .then((response) => {
@@ -83,6 +86,9 @@ export const LocationView: React.FC = () => {
       })
       .catch((error) => {
         console.error(error);
+      })
+      .finally(() => {
+        setIsLoadingDeviceInformation(false);
       });
   };
 
@@ -364,6 +370,7 @@ export const LocationView: React.FC = () => {
           <Collapsible
             title="Devices"
             isOpen={true}
+            isLoading={isLoadingDeviceInformation}
             customComponent={
               <Box display="flex" alignItems="center" gap={1}>
                 <Tooltip title="Refresh devices">
