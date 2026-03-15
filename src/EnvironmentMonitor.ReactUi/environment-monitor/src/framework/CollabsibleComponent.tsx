@@ -2,16 +2,18 @@ import { useState, type JSX } from "react";
 import { Box, Typography, IconButton, Collapse } from "@mui/material";
 import { ExpandMore } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
+import { LoadingOverlay } from "./LoadingOverlay";
 
 export interface CollapsibleProps {
   title: string;
   children: React.ReactNode;
   isOpen?: boolean;
+  isLoading?: boolean;
   customComponent?: JSX.Element;
 }
 
 const ExpandMoreIconButton = styled((props: any) => {
-  const { expand, ...other } = props;
+  const { ...other } = props;
   return <IconButton {...other} />;
 })(({ theme, expand }: { theme?: any; expand: boolean }) => ({
   transform: expand ? "rotate(180deg)" : "rotate(0deg)",
@@ -25,6 +27,7 @@ export const Collapsible: React.FC<CollapsibleProps> = ({
   title,
   children,
   isOpen,
+  isLoading = false,
   customComponent,
 }) => {
   const [open, setOpen] = useState(isOpen ?? false);
@@ -55,7 +58,12 @@ export const Collapsible: React.FC<CollapsibleProps> = ({
       </Box>
 
       <Collapse in={open}>
-        <Box>{children}</Box>
+        <Box
+          sx={{ position: "relative", minHeight: isLoading ? 80 : undefined }}
+        >
+          {children}
+          <LoadingOverlay isLoading={isLoading} />
+        </Box>
       </Collapse>
     </Box>
   );
