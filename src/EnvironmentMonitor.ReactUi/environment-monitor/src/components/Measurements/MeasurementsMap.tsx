@@ -3,9 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import {
   CircleMarker,
   MapContainer,
+  Popup,
   TileLayer,
   Tooltip,
   useMap,
+  useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -21,6 +23,7 @@ import {
   getMeasurementTypeDisplayName,
 } from "../../utilities/measurementUtils";
 import { stringSort } from "../../utilities/stringUtils";
+import { MultiSensorGraph } from "./MultiSensorGraph";
 
 export interface MeasurementsMapProps {
   model: MeasurementsViewModel | undefined;
@@ -147,6 +150,92 @@ const MapViewport: React.FC<{ sensors: SensorMapItem[] }> = ({ sensors }) => {
   return null;
 };
 
+const MapInteractionHandler: React.FC<{ onMapClick: () => void }> = ({
+  onMapClick,
+}) => {
+  useMapEvents({
+    click: () => {
+      onMapClick();
+    },
+  });
+
+  return null;
+};
+
+interface SensorTooltipContentProps {
+  item: SensorMapItem;
+}
+
+const SensorHoverTooltipContent: React.FC<SensorTooltipContentProps> = ({
+  item,
+}) => {
+  return (
+    <Box>
+      <Typography
+        variant="caption"
+        sx={{
+          display: "block",
+          fontWeight: 700,
+          lineHeight: 1.2,
+        }}
+      >
+        {getSensorTitle(item.sensor)}
+      </Typography>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: "block", lineHeight: 1.15 }}
+      >
+        {formatMeasurement(item.primaryMeasurement)}
+      </Typography>
+    </Box>
+  );
+};
+
+interface SensorPopupContentProps {
+  item: SensorMapItem;
+  model: MeasurementsViewModel | undefined;
+}
+
+const SensorPopupContent: React.FC<SensorPopupContentProps> = ({
+  item,
+  model,
+}) => {
+  return (
+    <Box>
+      <Typography
+        variant="caption"
+        sx={{
+          display: "block",
+          fontWeight: 700,
+          lineHeight: 1.2,
+        }}
+      >
+        {getSensorTitle(item.sensor)}
+      </Typography>
+      <Box sx={{ width: 320, height: 200, mt: 0.5 }}>
+        <MultiSensorGraph
+          sensors={[item.sensor]}
+          model={{
+            measurements:
+              model?.measurements.filter(
+                (measurementBySensor) =>
+                  measurementBySensor.sensorIdentifier ===
+                  item.sensor.identifier,
+              ) ?? [],
+            sensors: [item.sensor],
+          }}
+          minHeight={180}
+          hideInfo
+          hideHeader
+          hideUseAutoScale
+          useAutoScale
+        />
+      </Box>
+    </Box>
+  );
+};
+
 export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
   model,
   measurementTypes,
@@ -154,6 +243,9 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
   onHoveredSensorIdentifierChange,
 }) => {
   const [hoveredSensorIdentifier, setHoveredSensorIdentifier] = useState<
+    string | null
+  >(null);
+  const [selectedSensorIdentifier, setSelectedSensorIdentifier] = useState<
     string | null
   >(null);
 
@@ -199,6 +291,17 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
         stringSort(getSensorTitle(a.sensor), getSensorTitle(b.sensor)),
       );
   }, [measurementTypes, model]);
+
+  useEffect(() => {
+    console.log("IN USE EFFECT");
+    onHoveredSensorIdentifierChange?.(
+      selectedSensorIdentifier ?? hoveredSensorIdentifier,
+    );
+  }, [
+    hoveredSensorIdentifier,
+    onHoveredSensorIdentifierChange,
+    selectedSensorIdentifier,
+  ]);
 
   return (
     <Paper
@@ -284,12 +387,20 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
             scrollWheelZoom
             style={{ height: "100%", width: "100%" }}
           >
+            <MapInteractionHandler
+              onMapClick={() => {
+                setSelectedSensorIdentifier(null);
+              }}
+            />
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <MapViewport sensors={sensorsWithCoordinates} />
             {sensorsWithCoordinates.map((item) => {
               const markerColor = getTemperatureColor(
                 item.temperatureMeasurement?.sensorValue,
               );
+              const showHoverTooltip =
+                hoveredSensorIdentifier === item.sensor.identifier &&
+                selectedSensorIdentifier !== item.sensor.identifier;
 
               return (
                 <CircleMarker
@@ -299,13 +410,19 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
                   eventHandlers={{
                     mouseover: () => {
                       setHoveredSensorIdentifier(item.sensor.identifier);
-                      onHoveredSensorIdentifierChange?.(item.sensor.identifier);
                     },
                     mouseout: () => {
                       setHoveredSensorIdentifier((current) =>
                         current === item.sensor.identifier ? null : current,
                       );
-                      onHoveredSensorIdentifierChange?.(null);
+                    },
+                    click: () => {
+                      setSelectedSensorIdentifier(item.sensor.identifier);
+                    },
+                    popupclose: () => {
+                      setSelectedSensorIdentifier((current) =>
+                        current === item.sensor.identifier ? null : current,
+                      );
                     },
                   }}
                   pathOptions={{
@@ -325,33 +442,8 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
                         : "sensor-summary-tooltip"
                     }
                   >
-                    {hoveredSensorIdentifier === item.sensor.identifier ? (
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            display: "block",
-                            fontWeight: 700,
-                            lineHeight: 1.2,
-                          }}
-                        >
-                          {getSensorTitle(item.sensor)}
-                        </Typography>
-                        {item.latestMeasurements.map((measurement) => (
-                          <Typography
-                            key={`${item.sensor.identifier}-${measurement.typeId}`}
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ display: "block", lineHeight: 1.15 }}
-                          >
-                            {getMeasurementTypeDisplayName(
-                              measurement.typeId as MeasurementTypes,
-                            )}
-                            {": "}
-                            {formatMeasurement(measurement)}
-                          </Typography>
-                        ))}
-                      </Box>
+                    {showHoverTooltip ? (
+                      <SensorHoverTooltipContent item={item} />
                     ) : (
                       <Box
                         component="span"
@@ -366,6 +458,9 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
                       </Box>
                     )}
                   </Tooltip>
+                  <Popup minWidth={340}>
+                    <SensorPopupContent item={item} model={model} />
+                  </Popup>
                 </CircleMarker>
               );
             })}

@@ -50,6 +50,7 @@ export interface MultiSensorGraphProps {
   entities?: Entity[];
   model: MeasurementsViewModel | undefined;
   hideInfo?: boolean;
+  hideHeader?: boolean;
   minHeight?: number;
   titleAsLink?: boolean;
   linkToLocationMeasurements?: boolean;
@@ -78,6 +79,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   model,
   entities,
   hideInfo,
+  hideHeader,
   minHeight,
   titleAsLink,
   linkToLocationMeasurements,
@@ -424,31 +426,33 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         </DialogContent>
       </Dialog>
       <LoadingOverlay isLoading={isLoading ?? false} />
-      <GraphHeader
-        title={getTitle()}
-        titleAsLink={titleAsLink}
-        linkTo={
-          linkToLocationMeasurements
-            ? `${routes.locationMeasurements}/${singleDevice?.identifier}`
-            : `${routes.measurements}/${singleDevice?.identifier}`
-        }
-        zoomable={zoomable}
-        hideUseAutoScale={hideUseAutoScale}
-        autoScale={autoScale}
-        onResetZoom={handleResetZoom}
-        onFullScreen={
-          showFullScreenIcon ? () => handleSetFullScreen(true) : undefined
-        }
-        onSetAutoScale={handleSetAutoScale}
-        onRefresh={onRefresh}
-        showControls={
-          zoomable ||
-          onRefresh !== undefined ||
-          !hideUseAutoScale ||
-          showFullScreenIcon ||
-          false
-        }
-      />
+      {!hideHeader ? (
+        <GraphHeader
+          title={getTitle()}
+          titleAsLink={titleAsLink}
+          linkTo={
+            linkToLocationMeasurements
+              ? `${routes.locationMeasurements}/${singleDevice?.identifier}`
+              : `${routes.measurements}/${singleDevice?.identifier}`
+          }
+          zoomable={zoomable}
+          hideUseAutoScale={hideUseAutoScale}
+          autoScale={autoScale}
+          onResetZoom={handleResetZoom}
+          onFullScreen={
+            showFullScreenIcon ? () => handleSetFullScreen(true) : undefined
+          }
+          onSetAutoScale={handleSetAutoScale}
+          onRefresh={onRefresh}
+          showControls={
+            zoomable ||
+            onRefresh !== undefined ||
+            !hideUseAutoScale ||
+            showFullScreenIcon ||
+            false
+          }
+        />
+      ) : null}
       <Box
         flex={1}
         flexGrow={1}
