@@ -197,14 +197,19 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
 
   return (
     <Paper
-      elevation={1}
+      elevation={0}
       sx={{
         mt: 2,
-        p: 2,
+        p: 1,
         width: "100%",
+        height: "100%",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
+        borderRadius: 1,
+        border: "1px solid",
+        borderColor: "divider",
+        backgroundColor: "background.paper",
       }}
     >
       {sensorsWithCoordinates.length === 0 ? (
@@ -230,13 +235,14 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
           sx={{
             minHeight: minHeight ?? undefined,
             flex: 1,
+            height: "100%",
             borderRadius: 2,
             overflow: "hidden",
             border: "1px solid",
             borderColor: "divider",
             "& .leaflet-container": {
               minHeight: minHeight ?? undefined,
-              height: minHeight ?? 360,
+              height: "100%",
               width: "100%",
               fontFamily: "inherit",
             },
@@ -271,7 +277,7 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
             center={[0, 0]}
             zoom={2}
             scrollWheelZoom
-            style={{ height: minHeight ?? 360, width: "100%" }}
+            style={{ height: "100%", width: "100%" }}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

@@ -55,6 +55,7 @@ export const PublicMeasurementsView: React.FC = () => {
     <AppContentWrapper
       title="Latest measurements"
       isLoading={isLoading}
+      allowFullWidth
       titleComponent={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <TimeRangeSelectorComponent
@@ -74,23 +75,49 @@ export const PublicMeasurementsView: React.FC = () => {
         </Box>
       }
     >
-      <MultiSensorGraph
-        sensors={model?.sensors ?? []}
-        model={model}
-        title={isFullScreen ? `Range: ${timeRange} hours` : " "}
-        useAutoScale
-        hideUseAutoScale
-        minHeight={500}
-        enableHighlightOnRowHover
-        isFullScreen={isFullScreen}
-        onSetFullScreen={(state) => setIsFullScreen(state)}
-        showFullScreenIcon={false}
-      />
-      <MeasurementsMap
-        model={model}
-        measurementTypes={selectedMeasurementTypes}
-        minHeight={800}
-      />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", xl: "row" },
+          gap: 2,
+          width: "100%",
+          alignItems: "stretch",
+        }}
+      >
+        <Box
+          sx={{
+            flex: { xs: "1 1 auto", lg: "1 1 58%" },
+            minWidth: 0,
+            display: "flex",
+          }}
+        >
+          <MultiSensorGraph
+            sensors={model?.sensors ?? []}
+            model={model}
+            title={isFullScreen ? `Range: ${timeRange} hours` : " "}
+            useAutoScale
+            hideUseAutoScale
+            minHeight={500}
+            enableHighlightOnRowHover
+            isFullScreen={isFullScreen}
+            onSetFullScreen={(state) => setIsFullScreen(state)}
+            showFullScreenIcon={false}
+          />
+        </Box>
+        <Box
+          sx={{
+            flex: { xs: "1 1 auto", lg: "1 1 42%" },
+            minWidth: 0,
+            display: "flex",
+          }}
+        >
+          <MeasurementsMap
+            model={model}
+            measurementTypes={selectedMeasurementTypes}
+            minHeight={500}
+          />
+        </Box>
+      </Box>
     </AppContentWrapper>
   );
 };
