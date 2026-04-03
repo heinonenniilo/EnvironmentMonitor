@@ -1,6 +1,12 @@
 import { Box, Paper, Typography } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from "react-leaflet";
+import {
+  CircleMarker,
+  MapContainer,
+  TileLayer,
+  Tooltip,
+  useMap,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { MeasurementTypes } from "../../enums/measurementTypes";
@@ -171,10 +177,7 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
           return undefined;
         }
 
-        if (
-          sensor.latitude === undefined ||
-          sensor.longitude === undefined
-        ) {
+        if (sensor.latitude === undefined || sensor.longitude === undefined) {
           return undefined;
         }
 
@@ -279,10 +282,7 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
             scrollWheelZoom
             style={{ height: "100%", width: "100%" }}
           >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             <MapViewport sensors={sensorsWithCoordinates} />
             {sensorsWithCoordinates.map((item) => {
               const markerColor = getTemperatureColor(
