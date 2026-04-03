@@ -338,7 +338,7 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
                               measurement.typeId as MeasurementTypes,
                             )}
                             {": "}
-                            {formatMeasurement(measurement, true)}
+                            {formatMeasurement(measurement)}
                           </Typography>
                         ))}
                       </Box>
