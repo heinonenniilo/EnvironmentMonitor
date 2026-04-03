@@ -84,6 +84,9 @@ export const PublicMeasurementsView: React.FC = () => {
           flexDirection: { xs: "column", xl: "row" },
           gap: 2,
           width: "100%",
+          flex: 1,
+          height: "100%",
+          minHeight: 0,
           alignItems: "stretch",
         }}
       >
@@ -92,6 +95,7 @@ export const PublicMeasurementsView: React.FC = () => {
             flex: { xs: "1 1 auto", lg: "1 1 58%" },
             minWidth: 0,
             display: "flex",
+            minHeight: 0,
           }}
         >
           <MultiSensorGraph
@@ -113,6 +117,7 @@ export const PublicMeasurementsView: React.FC = () => {
             flex: { xs: "1 1 auto", lg: "1 1 42%" },
             minWidth: 0,
             display: "flex",
+            minHeight: 0,
           }}
         >
           <MeasurementsMap
