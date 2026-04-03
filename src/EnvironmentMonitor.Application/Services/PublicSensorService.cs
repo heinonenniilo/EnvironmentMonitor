@@ -155,6 +155,8 @@ namespace EnvironmentMonitor.Application.Services
                     existing.SensorId = sensor.Id;
                     existing.TypeId = item.TypeId;
                     existing.Active = item.Active;
+                    existing.Latitude = item.Latitude;
+                    existing.Longitude = item.Longitude;
                     await _publicSensorRepository.UpdatePublicSensor(existing, false);
                 }
                 else
@@ -173,6 +175,8 @@ namespace EnvironmentMonitor.Application.Services
                         Sensor = sensor,
                         TypeId = item.TypeId,
                         Active = item.Active,
+                        Latitude = item.Latitude,
+                        Longitude = item.Longitude,
                         Created = now,
                         CreatedUtc = _dateService.LocalToUtc(now),
                     };
