@@ -4,6 +4,8 @@ export interface AddOrUpdatePublicSensorDto {
   sensorIdentifier: string;
   typeId?: number;
   active?: boolean;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface GetPublicSensorsModel {

@@ -9,6 +9,8 @@ export interface Sensor {
   measurementType?: number;
   aggregationType?: number;
   active?: boolean;
+  longitude?: number;
+  latitude?: number;
 }
 
 export interface SensorInfo extends Sensor {
