@@ -65,6 +65,7 @@ export interface MultiSensorGraphProps {
   isFullScreen?: boolean;
   enableHighlightOnRowHover?: boolean;
   showFullScreenIcon?: boolean;
+  highlightedSensorIdentifier?: string | null;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
   onSetFullScreen?: (state: boolean) => void;
@@ -91,6 +92,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   highlightPoints,
   enableHighlightOnRowHover,
   showFullScreenIcon,
+  highlightedSensorIdentifier,
   isFullScreen: isFullScreenProp,
   onSetFullScreen,
   onSetAutoScale,
@@ -234,20 +236,33 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     return returnValues
       .sort((a, b) => stringSort(a.label, b.label))
       .map((s, idx) => {
-        const isHighlighted = highlightedDatasetLabel === s.label;
+        const isHighlighted = highlightedSensorIdentifier
+          ? s.sensorIdentifier === highlightedSensorIdentifier
+          : highlightedDatasetLabel === s.label;
         const color = getColor(idx);
+        const hasExternalHighlight = highlightedSensorIdentifier !== null;
 
         return {
           ...s,
           borderColor: color,
           backgroundColor: color,
-          opacity: !highlightedDatasetLabel ? 1 : isHighlighted ? 1 : 0.3,
-          borderWidth: !highlightedDatasetLabel ? 2 : isHighlighted ? 4 : 1,
+          opacity:
+            !highlightedDatasetLabel && !hasExternalHighlight
+              ? 1
+              : isHighlighted
+                ? 1
+                : 0.3,
+          borderWidth:
+            !highlightedDatasetLabel && !hasExternalHighlight
+              ? 2
+              : isHighlighted
+                ? 4
+                : 1,
           id: idx,
         };
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model, highlightedDatasetLabel]);
+  }, [model, highlightedDatasetLabel, highlightedSensorIdentifier]);
 
   const getInfoValues = () => {
     const returnArray: MeasurementInfo[] = [];

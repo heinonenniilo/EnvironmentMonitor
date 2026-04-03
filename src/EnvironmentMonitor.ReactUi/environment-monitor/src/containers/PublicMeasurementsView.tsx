@@ -17,6 +17,9 @@ import { Fullscreen, Refresh } from "@mui/icons-material";
 export const PublicMeasurementsView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [hoveredSensorIdentifier, setHoveredSensorIdentifier] = useState<
+    string | null
+  >(null);
   const apiHook = useApiHook().measureHook;
   const dispatch = useDispatch();
   const timeRange = useSelector(getDashboardTimeRange);
@@ -102,6 +105,7 @@ export const PublicMeasurementsView: React.FC = () => {
             isFullScreen={isFullScreen}
             onSetFullScreen={(state) => setIsFullScreen(state)}
             showFullScreenIcon={false}
+            highlightedSensorIdentifier={hoveredSensorIdentifier}
           />
         </Box>
         <Box
@@ -115,6 +119,7 @@ export const PublicMeasurementsView: React.FC = () => {
             model={model}
             measurementTypes={selectedMeasurementTypes}
             minHeight={500}
+            onHoveredSensorIdentifierChange={setHoveredSensorIdentifier}
           />
         </Box>
       </Box>

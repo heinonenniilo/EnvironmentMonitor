@@ -26,6 +26,7 @@ export interface MeasurementsMapProps {
   model: MeasurementsViewModel | undefined;
   measurementTypes?: number[];
   minHeight?: number | null;
+  onHoveredSensorIdentifierChange?: (sensorIdentifier: string | null) => void;
 }
 
 interface SensorMapItem {
@@ -150,6 +151,7 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
   model,
   measurementTypes,
   minHeight = 360,
+  onHoveredSensorIdentifierChange,
 }) => {
   const [hoveredSensorIdentifier, setHoveredSensorIdentifier] = useState<
     string | null
@@ -297,11 +299,13 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
                   eventHandlers={{
                     mouseover: () => {
                       setHoveredSensorIdentifier(item.sensor.identifier);
+                      onHoveredSensorIdentifierChange?.(item.sensor.identifier);
                     },
                     mouseout: () => {
                       setHoveredSensorIdentifier((current) =>
                         current === item.sensor.identifier ? null : current,
                       );
+                      onHoveredSensorIdentifierChange?.(null);
                     },
                   }}
                   pathOptions={{
