@@ -4,12 +4,14 @@ import { useApiHook } from "../hooks/apiHook";
 import type { MeasurementsViewModel } from "../models/measurementsBySensor";
 import {
   getDashboardTimeRange,
+  getSelectedMeasurementTypes,
   setDashboardTimeRange,
 } from "../reducers/measurementReducer";
 import { useDispatch, useSelector } from "react-redux";
 import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRangeSelectorComponent";
 import moment from "moment";
 import { MultiSensorGraph } from "../components/Measurements/MultiSensorGraph";
+import { MeasurementsMap } from "../components/Measurements/MeasurementsMap";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import { Fullscreen, Refresh } from "@mui/icons-material";
 export const PublicMeasurementsView: React.FC = () => {
@@ -18,6 +20,7 @@ export const PublicMeasurementsView: React.FC = () => {
   const apiHook = useApiHook().measureHook;
   const dispatch = useDispatch();
   const timeRange = useSelector(getDashboardTimeRange);
+  const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
   const [model, setModel] = useState<MeasurementsViewModel | undefined>(
     undefined,
   );
@@ -82,6 +85,11 @@ export const PublicMeasurementsView: React.FC = () => {
         isFullScreen={isFullScreen}
         onSetFullScreen={(state) => setIsFullScreen(state)}
         showFullScreenIcon={false}
+      />
+      <MeasurementsMap
+        model={model}
+        measurementTypes={selectedMeasurementTypes}
+        minHeight={800}
       />
     </AppContentWrapper>
   );
