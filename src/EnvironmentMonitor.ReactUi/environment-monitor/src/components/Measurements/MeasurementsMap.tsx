@@ -293,7 +293,6 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
   }, [measurementTypes, model]);
 
   useEffect(() => {
-    console.log("IN USE EFFECT");
     onHoveredSensorIdentifierChange?.(
       selectedSensorIdentifier ?? hoveredSensorIdentifier,
     );
