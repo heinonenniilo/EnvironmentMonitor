@@ -62,59 +62,77 @@ const getFilteredLatestMeasurements = (
     );
 };
 
+const getTemperatureFillColor = (temperature?: number) => {
+  if (temperature === undefined) {
+    return "#78909c";
+  }
+
+  if (temperature <= -30) return "#3B0F70";
+  if (temperature <= -25) return "#1F4E9E";
+  if (temperature <= -20) return "#2C7FB8";
+  if (temperature <= -15) return "#41B6C4";
+  if (temperature <= -10) return "#7FD3E8";
+  if (temperature <= -5) return "#BDEDF6";
+  if (temperature <= 0) return "#F2F2F2";
+  if (temperature <= 5) return "#FFF3A1";
+  if (temperature <= 10) return "#FFD166";
+  if (temperature <= 15) return "#FCA311";
+  if (temperature <= 20) return "#F77F00";
+  if (temperature <= 25) return "#E85D04";
+  if (temperature <= 30) return "#D62828";
+
+  return "#7F0000";
+};
+
 const getTemperatureColor = (temperature?: number) => {
   if (temperature === undefined) {
     return {
-      borderColor: "#546e7a",
+      borderColor: "#37474f",
       fillColor: "#78909c",
-      tooltipBorderColor: "rgba(84, 110, 122, 0.3)",
+      tooltipBorderColor: "#37474f",
+      textColor: "#102027",
     };
   }
 
-  if (temperature <= -10) {
-    return {
-      borderColor: "#0d47a1",
-      fillColor: "#1976d2",
-      tooltipBorderColor: "rgba(13, 71, 161, 0.3)",
-    };
-  }
+  const fillColor = getTemperatureFillColor(temperature);
+  let borderColor: string;
+  const textColor = "#111111";
 
-  if (temperature <= 0) {
-    return {
-      borderColor: "#1565c0",
-      fillColor: "#42a5f5",
-      tooltipBorderColor: "rgba(21, 101, 192, 0.3)",
-    };
-  }
-
-  if (temperature <= 10) {
-    return {
-      borderColor: "#00897b",
-      fillColor: "#26a69a",
-      tooltipBorderColor: "rgba(0, 137, 123, 0.3)",
-    };
-  }
-
-  if (temperature <= 20) {
-    return {
-      borderColor: "#7cb342",
-      fillColor: "#9ccc65",
-      tooltipBorderColor: "rgba(124, 179, 66, 0.3)",
-    };
-  }
-
-  if (temperature <= 28) {
-    return {
-      borderColor: "#f9a825",
-      fillColor: "#fbc02d",
-      tooltipBorderColor: "rgba(249, 168, 37, 0.3)",
-    };
+  if (temperature <= -30) {
+    borderColor = "#220748";
+  } else if (temperature <= -25) {
+    borderColor = "#15386f";
+  } else if (temperature <= -20) {
+    borderColor = "#18577f";
+  } else if (temperature <= -15) {
+    borderColor = "#23838f";
+  } else if (temperature <= -10) {
+    borderColor = "#2f95ad";
+  } else if (temperature <= -5) {
+    borderColor = "#2d7f98";
+  } else if (temperature <= 0) {
+    borderColor = "#9e9e9e";
+  } else if (temperature <= 5) {
+    borderColor = "#caa500";
+  } else if (temperature <= 10) {
+    borderColor = "#cf9200";
+  } else if (temperature <= 15) {
+    borderColor = "#c27700";
+  } else if (temperature <= 20) {
+    borderColor = "#b85d00";
+  } else if (temperature <= 25) {
+    borderColor = "#a64100";
+  } else if (temperature <= 30) {
+    borderColor = "#8f1a1a";
+  } else {
+    borderColor = "#4d0000";
   }
 
   return {
-    borderColor: "#c62828",
-    fillColor: "#ef5350",
-    tooltipBorderColor: "rgba(198, 40, 40, 0.3)",
+    borderColor,
+    fillColor,
+    tooltipBorderColor: borderColor,
+    textColor,
   };
 };
 
@@ -405,7 +423,7 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
                 <CircleMarker
                   key={item.sensor.identifier}
                   center={[item.sensor.latitude!, item.sensor.longitude!]}
-                  radius={8}
+                  radius={9}
                   eventHandlers={{
                     mouseover: () => {
                       setHoveredSensorIdentifier(item.sensor.identifier);
@@ -427,8 +445,8 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
                   pathOptions={{
                     color: markerColor.borderColor,
                     fillColor: markerColor.fillColor,
-                    fillOpacity: 0.85,
-                    weight: 2,
+                    fillOpacity: 0.92,
+                    weight: 3,
                   }}
                 >
                   <Tooltip
@@ -450,7 +468,13 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
                           display: "inline-block",
                           borderBottom: "2px solid",
                           borderColor: markerColor.tooltipBorderColor,
+                          color: markerColor.textColor,
+                          backgroundColor: "rgba(255,255,255,0.88)",
+                          borderRadius: "6px",
+                          px: 0.5,
+                          py: "1px",
                           lineHeight: 1.1,
+                          fontWeight: 700,
                         }}
                       >
                         {formatMeasurement(item.primaryMeasurement, true)}
