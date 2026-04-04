@@ -73,7 +73,7 @@ const getTemperatureFillColor = (temperature?: number) => {
   if (temperature <= -15) return "#41B6C4";
   if (temperature <= -10) return "#7FD3E8";
   if (temperature <= -5) return "#BDEDF6";
-  if (temperature <= 0) return "#F2F2F2";
+  if (temperature <= 0) return "#DCEEFF";
   if (temperature <= 5) return "#FFF3A1";
   if (temperature <= 10) return "#FFD166";
   if (temperature <= 15) return "#FCA311";
@@ -111,7 +111,7 @@ const getTemperatureColor = (temperature?: number) => {
   } else if (temperature <= -5) {
     borderColor = "#2d7f98";
   } else if (temperature <= 0) {
-    borderColor = "#9e9e9e";
+    borderColor = "#6c9bcf";
   } else if (temperature <= 5) {
     borderColor = "#caa500";
   } else if (temperature <= 10) {
