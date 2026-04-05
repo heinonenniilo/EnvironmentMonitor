@@ -352,9 +352,7 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
             px: 2,
             textAlign: "center",
           }}
-        >
-          No sensor locations available for the selected measurements.
-        </Box>
+        ></Box>
       ) : (
         <Box
           sx={{
