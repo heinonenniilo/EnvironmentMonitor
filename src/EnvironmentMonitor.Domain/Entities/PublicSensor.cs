@@ -15,6 +15,8 @@ namespace EnvironmentMonitor.Domain.Entities
         public required string Name { get; set; }
         public int? TypeId { get; set; }
         public MeasurementType? MeasurementType { get; set; }
+        public double? Longitude { get; set; }
+        public double? Latitude { get; set; }
         public bool Active { get; set; } = true;
     }
 }

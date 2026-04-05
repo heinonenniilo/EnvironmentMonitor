@@ -29,6 +29,7 @@ export interface AppContentWrapperProps {
   titleComponent?: JSX.Element;
   useSmallTitle?: boolean;
   title?: string;
+  allowFullWidth?: boolean;
 }
 
 const PageContent = styled.div<{ max?: number }>`
@@ -103,7 +104,7 @@ export const AppContentWrapper: React.FC<AppContentWrapperProps> = (props) => {
         }}
       >
         <Container
-          maxWidth="xl"
+          maxWidth={props.allowFullWidth ? false : "xl"}
           sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}
         >
           {drawTitle()}

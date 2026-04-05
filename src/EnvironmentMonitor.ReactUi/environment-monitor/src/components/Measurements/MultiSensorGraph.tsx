@@ -50,6 +50,7 @@ export interface MultiSensorGraphProps {
   entities?: Entity[];
   model: MeasurementsViewModel | undefined;
   hideInfo?: boolean;
+  hideHeader?: boolean;
   minHeight?: number;
   titleAsLink?: boolean;
   linkToLocationMeasurements?: boolean;
@@ -65,6 +66,7 @@ export interface MultiSensorGraphProps {
   isFullScreen?: boolean;
   enableHighlightOnRowHover?: boolean;
   showFullScreenIcon?: boolean;
+  highlightedSensorIdentifier?: string | null;
   onSetAutoScale?: (state: boolean) => void;
   onRefresh?: () => void;
   onSetFullScreen?: (state: boolean) => void;
@@ -77,6 +79,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   model,
   entities,
   hideInfo,
+  hideHeader,
   minHeight,
   titleAsLink,
   linkToLocationMeasurements,
@@ -91,6 +94,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
   highlightPoints,
   enableHighlightOnRowHover,
   showFullScreenIcon,
+  highlightedSensorIdentifier,
   isFullScreen: isFullScreenProp,
   onSetFullScreen,
   onSetAutoScale,
@@ -234,20 +238,33 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
     return returnValues
       .sort((a, b) => stringSort(a.label, b.label))
       .map((s, idx) => {
-        const isHighlighted = highlightedDatasetLabel === s.label;
+        const isHighlighted = highlightedSensorIdentifier
+          ? s.sensorIdentifier === highlightedSensorIdentifier
+          : highlightedDatasetLabel === s.label;
         const color = getColor(idx);
+        const hasExternalHighlight = highlightedSensorIdentifier !== null;
 
         return {
           ...s,
           borderColor: color,
           backgroundColor: color,
-          opacity: !highlightedDatasetLabel ? 1 : isHighlighted ? 1 : 0.3,
-          borderWidth: !highlightedDatasetLabel ? 2 : isHighlighted ? 4 : 1,
+          opacity:
+            !highlightedDatasetLabel && !hasExternalHighlight
+              ? 1
+              : isHighlighted
+                ? 1
+                : 0.3,
+          borderWidth:
+            !highlightedDatasetLabel && !hasExternalHighlight
+              ? 2
+              : isHighlighted
+                ? 4
+                : 1,
           id: idx,
         };
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [model, highlightedDatasetLabel]);
+  }, [model, highlightedDatasetLabel, highlightedSensorIdentifier]);
 
   const getInfoValues = () => {
     const returnArray: MeasurementInfo[] = [];
@@ -409,31 +426,33 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         </DialogContent>
       </Dialog>
       <LoadingOverlay isLoading={isLoading ?? false} />
-      <GraphHeader
-        title={getTitle()}
-        titleAsLink={titleAsLink}
-        linkTo={
-          linkToLocationMeasurements
-            ? `${routes.locationMeasurements}/${singleDevice?.identifier}`
-            : `${routes.measurements}/${singleDevice?.identifier}`
-        }
-        zoomable={zoomable}
-        hideUseAutoScale={hideUseAutoScale}
-        autoScale={autoScale}
-        onResetZoom={handleResetZoom}
-        onFullScreen={
-          showFullScreenIcon ? () => handleSetFullScreen(true) : undefined
-        }
-        onSetAutoScale={handleSetAutoScale}
-        onRefresh={onRefresh}
-        showControls={
-          zoomable ||
-          onRefresh !== undefined ||
-          !hideUseAutoScale ||
-          showFullScreenIcon ||
-          false
-        }
-      />
+      {!hideHeader ? (
+        <GraphHeader
+          title={getTitle()}
+          titleAsLink={titleAsLink}
+          linkTo={
+            linkToLocationMeasurements
+              ? `${routes.locationMeasurements}/${singleDevice?.identifier}`
+              : `${routes.measurements}/${singleDevice?.identifier}`
+          }
+          zoomable={zoomable}
+          hideUseAutoScale={hideUseAutoScale}
+          autoScale={autoScale}
+          onResetZoom={handleResetZoom}
+          onFullScreen={
+            showFullScreenIcon ? () => handleSetFullScreen(true) : undefined
+          }
+          onSetAutoScale={handleSetAutoScale}
+          onRefresh={onRefresh}
+          showControls={
+            zoomable ||
+            onRefresh !== undefined ||
+            !hideUseAutoScale ||
+            showFullScreenIcon ||
+            false
+          }
+        />
+      ) : null}
       <Box
         flex={1}
         flexGrow={1}

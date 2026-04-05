@@ -29,12 +29,30 @@ export interface PublicSensorDialogProps {
   editingSensor?: Sensor;
 }
 
+interface PublicSensorFormState {
+  name: string;
+  sensorIdentifier: string;
+  typeId?: number;
+  isActive: boolean;
+  latitude: string;
+  longitude: string;
+}
+
 const measurementTypeOptions = [
   { label: "Temperature", value: MeasurementTypes.Temperature },
   { label: "Humidity", value: MeasurementTypes.Humidity },
   { label: "Light", value: MeasurementTypes.Light },
   { label: "Motion", value: MeasurementTypes.Motion },
 ];
+
+const defaultFormState: PublicSensorFormState = {
+  name: "",
+  sensorIdentifier: "",
+  typeId: undefined,
+  isActive: true,
+  latitude: "",
+  longitude: "",
+};
 
 export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
   open,
@@ -46,10 +64,8 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
 }) => {
   const isEditing = !!editingSensor;
 
-  const [formName, setFormName] = useState("");
-  const [formSensorIdentifier, setFormSensorIdentifier] = useState("");
-  const [formTypeId, setFormTypeId] = useState<number | undefined>(undefined);
-  const [formIsActive, setFormIsActive] = useState(true);
+  const [formState, setFormState] =
+    useState<PublicSensorFormState>(defaultFormState);
   const [formDeviceIdentifier, setFormDeviceIdentifier] = useState<
     string | null
   >(null);
@@ -69,23 +85,36 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
     return [...sensors].sort((a, b) => a.name.localeCompare(b.name));
   }, [allSensors, formDeviceIdentifier]);
 
+  const updateFormState = (updates: Partial<PublicSensorFormState>) => {
+    setFormState((current) => ({ ...current, ...updates }));
+  };
+
   useEffect(() => {
     if (open) {
       if (editingSensor) {
-        setFormName(editingSensor.name ?? "");
-        setFormSensorIdentifier(editingSensor.parentIdentifier ?? "");
-        setFormTypeId(editingSensor.measurementType);
-        setFormIsActive(editingSensor.active ?? true);
+        setFormState({
+          name: editingSensor.name ?? "",
+          sensorIdentifier: editingSensor.parentIdentifier ?? "",
+          typeId: editingSensor.measurementType,
+          isActive: editingSensor.active ?? true,
+          latitude:
+            editingSensor.latitude !== undefined &&
+            editingSensor.latitude !== null
+              ? String(editingSensor.latitude)
+              : "",
+          longitude:
+            editingSensor.longitude !== undefined &&
+            editingSensor.longitude !== null
+              ? String(editingSensor.longitude)
+              : "",
+        });
         // Resolve device from sensor's parentIdentifier
         const sourceSensor = allSensors.find(
           (s) => s.identifier === editingSensor.parentIdentifier,
         );
         setFormDeviceIdentifier(sourceSensor?.parentIdentifier ?? null);
       } else {
-        setFormName("");
-        setFormSensorIdentifier("");
-        setFormTypeId(undefined);
-        setFormIsActive(true);
+        setFormState(defaultFormState);
         setFormDeviceIdentifier(null);
       }
     }
@@ -96,26 +125,55 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
   };
 
   const handleSave = () => {
-    if (!formName.trim() || !(formSensorIdentifier ?? "").trim()) return;
+    if (!formState.name.trim() || !formState.sensorIdentifier.trim()) return;
+
+    const latitude =
+      formState.latitude.trim() === ""
+        ? undefined
+        : Number(formState.latitude.trim());
+    const longitude =
+      formState.longitude.trim() === ""
+        ? undefined
+        : Number(formState.longitude.trim());
 
     onSave({
       identifier: editingSensor?.identifier,
-      name: formName.trim(),
-      sensorIdentifier: (formSensorIdentifier ?? "").trim(),
-      typeId: formTypeId,
-      active: formIsActive,
+      name: formState.name.trim(),
+      sensorIdentifier: formState.sensorIdentifier.trim(),
+      typeId: formState.typeId,
+      active: formState.isActive,
+      latitude,
+      longitude,
     });
   };
 
+  const isLatitudeValid =
+    formState.latitude.trim() === "" ||
+    !Number.isNaN(Number(formState.latitude.trim()));
+  const isLongitudeValid =
+    formState.longitude.trim() === "" ||
+    !Number.isNaN(Number(formState.longitude.trim()));
+
   const isFormValid =
-    formName.trim() !== "" && (formSensorIdentifier ?? "").trim() !== "";
+    formState.name.trim() !== "" &&
+    formState.sensorIdentifier.trim() !== "" &&
+    isLatitudeValid &&
+    isLongitudeValid;
 
   const isFormDirty =
     !editingSensor ||
-    formName.trim() !== editingSensor.name ||
-    formSensorIdentifier !== editingSensor.parentIdentifier ||
-    formTypeId !== editingSensor.measurementType ||
-    formIsActive !== (editingSensor.active ?? true);
+    formState.name.trim() !== editingSensor.name ||
+    formState.sensorIdentifier !== editingSensor.parentIdentifier ||
+    formState.typeId !== editingSensor.measurementType ||
+    formState.isActive !== (editingSensor.active ?? true) ||
+    formState.latitude.trim() !==
+      (editingSensor.latitude !== undefined && editingSensor.latitude !== null
+        ? String(editingSensor.latitude)
+        : "") ||
+    formState.longitude.trim() !==
+      (editingSensor.longitude !== undefined && editingSensor.longitude !== null
+        ? String(editingSensor.longitude)
+        : "");
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -141,12 +199,12 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
           <TextField
             label="Name"
-            value={formName}
-            onChange={(e) => setFormName(e.target.value)}
+            value={formState.name}
+            onChange={(e) => updateFormState({ name: e.target.value })}
             fullWidth
             required
             size="small"
-            error={formName.length > 0 && !formName.trim()}
+            error={formState.name.length > 0 && !formState.name.trim()}
           />
           <Autocomplete
             options={sortedDevices}
@@ -157,7 +215,7 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
             onChange={(_e, value) => {
               setFormDeviceIdentifier(value?.identifier ?? null);
               // Clear sensor selection when device changes
-              setFormSensorIdentifier("");
+              updateFormState({ sensorIdentifier: "" });
             }}
             renderInput={(params) => (
               <TextField {...params} label="Device (filter)" size="small" />
@@ -169,11 +227,11 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
             options={filteredSensors}
             getOptionLabel={(option) => `${option.name} (${option.identifier})`}
             value={
-              allSensors.find((s) => s.identifier === formSensorIdentifier) ??
+              allSensors.find((s) => s.identifier === formState.sensorIdentifier) ??
               null
             }
             onChange={(_e, value) => {
-              setFormSensorIdentifier(value?.identifier ?? "");
+              updateFormState({ sensorIdentifier: value?.identifier ?? "" });
             }}
             renderInput={(params) => (
               <TextField
@@ -190,10 +248,11 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
             options={measurementTypeOptions}
             getOptionLabel={(option) => option.label}
             value={
-              measurementTypeOptions.find((o) => o.value === formTypeId) ?? null
+              measurementTypeOptions.find((o) => o.value === formState.typeId) ??
+              null
             }
             onChange={(_e, value) => {
-              setFormTypeId(value?.value);
+              updateFormState({ typeId: value?.value });
             }}
             renderInput={(params) => (
               <TextField {...params} label="Measurement Type" size="small" />
@@ -204,34 +263,60 @@ export const PublicSensorDialog: React.FC<PublicSensorDialogProps> = ({
           <FormControlLabel
             control={
               <Switch
-                checked={formIsActive}
-                onChange={(e) => setFormIsActive(e.target.checked)}
+                checked={formState.isActive}
+                onChange={(e) => updateFormState({ isActive: e.target.checked })}
                 size="small"
               />
             }
             label="Active"
           />
-          {formSensorIdentifier && (
+          <TextField
+            label="Latitude"
+            value={formState.latitude}
+            onChange={(e) => updateFormState({ latitude: e.target.value })}
+            fullWidth
+            size="small"
+            error={!isLatitudeValid}
+            helperText={!isLatitudeValid ? "Latitude must be a number" : " "}
+          />
+          <TextField
+            label="Longitude"
+            value={formState.longitude}
+            onChange={(e) => updateFormState({ longitude: e.target.value })}
+            fullWidth
+            size="small"
+            error={!isLongitudeValid}
+            helperText={!isLongitudeValid ? "Longitude must be a number" : " "}
+          />
+          {formState.sensorIdentifier && (
             <Box>
               <Typography variant="subtitle2" gutterBottom>
                 Summary
               </Typography>
               <Typography variant="body2">
-                Name: <strong>{formName || "-"}</strong>
+                Name: <strong>{formState.name || "-"}</strong>
               </Typography>
               <Typography variant="body2">
                 Source Sensor:{" "}
                 <strong>
-                  {allSensors.find((s) => s.identifier === formSensorIdentifier)
-                    ?.name ?? formSensorIdentifier}
+                  {allSensors.find(
+                    (s) => s.identifier === formState.sensorIdentifier,
+                  )?.name ?? formState.sensorIdentifier}
                 </strong>
               </Typography>
               <Typography variant="body2">
                 Type:{" "}
                 <strong>
-                  {measurementTypeOptions.find((o) => o.value === formTypeId)
-                    ?.label ?? "-"}
+                  {measurementTypeOptions.find(
+                    (o) => o.value === formState.typeId,
+                  )?.label ?? "-"}
                 </strong>
+              </Typography>
+              <Typography variant="body2">
+                Latitude: <strong>{formState.latitude.trim() || "-"}</strong>
+              </Typography>
+              <Typography variant="body2">
+                Longitude: <strong>{formState.longitude.trim() || "-"}</strong>
               </Typography>
             </Box>
           )}

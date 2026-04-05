@@ -22,6 +22,10 @@ namespace EnvironmentMonitor.Application.DTOs
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public int? AggregationType { get; set; }
         public bool? Active { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public double? Longitude { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public double? Latitude { get; set; }
 
         public virtual void Mapping(Profile profile)
         {
