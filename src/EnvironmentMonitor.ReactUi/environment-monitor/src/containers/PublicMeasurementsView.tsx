@@ -86,7 +86,6 @@ export const PublicMeasurementsView: React.FC = () => {
           width: "100%",
           flex: 1,
           height: "100%",
-          minHeight: 0,
           alignItems: "stretch",
           maxHeight: "100%",
           paddingBottom: 2,
@@ -120,7 +119,6 @@ export const PublicMeasurementsView: React.FC = () => {
             minWidth: 0,
             display: "flex",
             minHeight: 0,
-            maxHeight: { xs: undefined, lg: "100" },
           }}
         >
           <MeasurementsMap
