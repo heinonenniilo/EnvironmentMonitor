@@ -88,6 +88,8 @@ export const PublicMeasurementsView: React.FC = () => {
           height: "100%",
           minHeight: 0,
           alignItems: "stretch",
+          maxHeight: "100%",
+          paddingBottom: 2,
         }}
       >
         <Box
@@ -118,6 +120,7 @@ export const PublicMeasurementsView: React.FC = () => {
             minWidth: 0,
             display: "flex",
             minHeight: 0,
+            maxHeight: { xs: undefined, lg: "100" },
           }}
         >
           <MeasurementsMap

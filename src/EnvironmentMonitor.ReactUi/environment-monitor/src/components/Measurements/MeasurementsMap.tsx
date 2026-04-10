@@ -347,7 +347,6 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
             borderColor: "divider",
             borderRadius: 2,
             color: "text.secondary",
-            px: 2,
             textAlign: "center",
           }}
         ></Box>
