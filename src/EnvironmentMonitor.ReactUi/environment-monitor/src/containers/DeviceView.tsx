@@ -14,7 +14,7 @@ import {
 } from "../reducers/userInterfaceReducer";
 import { DeviceEventTable } from "../components/Devices/DeviceEventTable";
 import { type DeviceEvent } from "../models/deviceEvent";
-import { Box, IconButton, Typography, Button } from "@mui/material";
+import { Box, IconButton, Typography, Button, Tooltip } from "@mui/material";
 import { DeviceImage } from "../components/Devices/DeviceImage";
 import { Collapsible } from "../framework/CollabsibleComponent";
 import { DeviceQueuedCommandsTable } from "../components/Devices/DeviceQueuedCommands/DeviceQueuedCommandsTable";
@@ -36,11 +36,6 @@ import { ApiKeyDialog } from "../components/ApiKeys/ApiKeyDialog";
 import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
 import type { SensorInfo } from "../models/sensor";
 import { SensorDialog } from "../components/Sensors/SensorDialog";
-
-interface PromiseInfo {
-  type: string;
-  data: any | undefined;
-}
 
 const timeRangeDefaultDays = 7;
 const measurementTimeRangeDefaultHours = 48;
@@ -95,6 +90,70 @@ export const DeviceView: React.FC = () => {
   const deviceContactsHook = useApiHook().deviceContactsHook;
   const apiKeysHook = useApiHook().apiKeysHook;
   const sensorHook = useApiHook().sensorHook;
+
+  const loadDeviceData = (identifier: string) => {
+    const promises = [
+      deviceHook
+        .getDeviceInfo(identifier)
+        .then((res) => ({
+          type: "deviceInfo",
+          data: res,
+          error: null,
+        }))
+        .catch((error) => ({
+          type: "deviceInfo",
+          data: null,
+          error,
+        })),
+      deviceHook
+        .getDeviceEvents(identifier)
+        .then((res) => ({
+          type: "deviceEvents",
+          data: res,
+          error: null,
+        }))
+        .catch((error) => ({
+          type: "deviceEvents",
+          data: [],
+          error,
+        })),
+      deviceHook
+        .getQueuedCommands({ deviceIdentifiers: [identifier] })
+        .then((res) => ({
+          type: "queuedCommands",
+          data: res,
+          error: null,
+        }))
+        .catch((error) => ({
+          type: "queuedCommands",
+          data: [],
+          error,
+        })),
+    ];
+
+    setIsLoading(true);
+    return Promise.all(promises)
+      .then((results) => {
+        results.forEach((value) => {
+          if (value.error) {
+            console.error(`Error in ${value.type}:`, value.error);
+            return;
+          }
+
+          if (value.type === "deviceInfo") {
+            setSelectedDevice(value.data as DeviceInfo);
+          } else if (value.type === "deviceEvents") {
+            setDeviceEvents(value.data as DeviceEvent[]);
+          } else if (value.type === "queuedCommands") {
+            setQueuedCommands(value.data as DeviceQueuedCommandDto[]);
+          }
+        });
+      })
+      .finally(() => {
+        setHasFetched(true);
+        setIsLoading(false);
+      });
+  };
 
   const loadMeasurements = () => {
     if (!selectedDevice) {
@@ -179,66 +238,7 @@ export const DeviceView: React.FC = () => {
 
   useEffect(() => {
     if (deviceId && !hasFetched) {
-      const promises = [
-        deviceHook
-          .getDeviceInfo(deviceId)
-          .then((res) => ({
-            type: "deviceInfo",
-            data: res,
-            error: null,
-          }))
-          .catch((error) => ({
-            type: "deviceInfo",
-            data: null,
-            error,
-          })),
-        deviceHook
-          .getDeviceEvents(deviceId)
-          .then((res) => ({
-            type: "deviceEvents",
-            data: res,
-            error: null,
-          }))
-          .catch((er) => {
-            console.log(er);
-          }),
-        deviceHook
-          .getQueuedCommands({ deviceIdentifiers: [deviceId] })
-          .then((res) => ({
-            type: "queuedCommands",
-            data: res,
-            error: null,
-          }))
-          .catch((er) => {
-            console.log(er);
-          }),
-      ];
-
-      setIsLoading(true);
-      Promise.allSettled(promises)
-        .then((results) => {
-          results.forEach((result) => {
-            if (result.status === "fulfilled") {
-              const value = result.value as PromiseInfo;
-              if (value.type === "deviceInfo") {
-                setSelectedDevice(value.data as DeviceInfo);
-              } else if (value.type === "deviceEvents") {
-                setDeviceEvents(value.data as DeviceEvent[]);
-              } else if (value.type === "queuedCommands") {
-                setQueuedCommands(value.data as DeviceQueuedCommandDto[]);
-              }
-            } else if (result.status === "rejected") {
-              console.error(
-                `Error in ${result.reason.type}:`,
-                result.reason.error,
-              );
-            }
-          });
-        })
-        .finally(() => {
-          setHasFetched(true);
-          setIsLoading(false);
-        });
+      loadDeviceData(deviceId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deviceId, hasFetched]);
@@ -895,6 +895,15 @@ export const DeviceView: React.FC = () => {
     <AppContentWrapper
       title={getEntityTitle(selectedDevice?.device)}
       isLoading={isLoading}
+      titleComponent={
+        selectedDevice ? (
+          <Tooltip title="Refresh device">
+            <IconButton onClick={() => loadDeviceData(selectedDevice.device.identifier)}>
+              <Refresh />
+            </IconButton>
+          </Tooltip>
+        ) : undefined
+      }
     >
       <Box
         display={"flex"}
