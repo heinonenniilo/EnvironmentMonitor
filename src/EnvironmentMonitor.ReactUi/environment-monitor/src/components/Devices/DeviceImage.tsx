@@ -207,7 +207,7 @@ export const DeviceImage: React.FC<DeviceImageProps> = ({
               </Typography>
               <Typography variant="body2">
                 {activeAttachment !== undefined
-                  ? getFormattedDate(activeAttachment?.created)
+                  ? getFormattedDate(activeAttachment?.created, true)
                   : "-"}
               </Typography>
               <Typography
