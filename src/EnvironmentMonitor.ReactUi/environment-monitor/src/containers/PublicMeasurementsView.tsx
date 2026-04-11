@@ -86,8 +86,9 @@ export const PublicMeasurementsView: React.FC = () => {
           width: "100%",
           flex: 1,
           height: "100%",
-          minHeight: 0,
           alignItems: "stretch",
+          maxHeight: "100%",
+          paddingBottom: 2,
         }}
       >
         <Box

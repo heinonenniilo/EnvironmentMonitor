@@ -324,8 +324,6 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
     <Paper
       elevation={0}
       sx={{
-        mt: 2,
-        p: 1,
         width: "100%",
         height: "100%",
         overflow: "hidden",
@@ -349,7 +347,6 @@ export const MeasurementsMap: React.FC<MeasurementsMapProps> = ({
             borderColor: "divider",
             borderRadius: 2,
             color: "text.secondary",
-            px: 2,
             textAlign: "center",
           }}
         ></Box>

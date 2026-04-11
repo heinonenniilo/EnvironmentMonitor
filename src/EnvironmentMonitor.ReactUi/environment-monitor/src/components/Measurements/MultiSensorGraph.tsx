@@ -510,7 +510,7 @@ export const MultiSensorGraph: React.FC<MultiSensorGraphProps> = ({
         </div>
       </Box>
       {!hideInfo ? (
-        <Box width={"100%"} maxHeight={"200px"} overflow={"auto"}>
+        <Box width={"100%"} maxHeight={"150px"} overflow={"auto"}>
           <MeasurementsInfoTable
             onClick={(row) => {
               if (!row.sensor) {
