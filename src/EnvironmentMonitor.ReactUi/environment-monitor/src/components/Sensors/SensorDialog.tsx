@@ -9,11 +9,17 @@ import {
   TextField,
   FormControlLabel,
   Checkbox,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from "@mui/material";
+import type { SelectChangeEvent } from "@mui/material";
 import { Close } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import type { AddOrUpdateSensor } from "../../models/addOrUpdateSensor";
 import type { SensorInfo } from "../../models/sensor";
+import { AggregationTypes } from "../../enums/aggregationTypes";
 
 export interface SensorDialogProps {
   open: boolean;
@@ -39,6 +45,10 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
   const [scaleMin, setScaleMin] = useState("");
   const [scaleMax, setScaleMax] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [isVirtual, setIsVirtual] = useState(false);
+  const [aggregationType, setAggregationType] = useState<AggregationTypes>(
+    AggregationTypes.Min,
+  );
 
   useEffect(() => {
     if (open) {
@@ -48,15 +58,25 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
         setScaleMin(sensor.scaleMin?.toString() ?? "");
         setScaleMax(sensor.scaleMax?.toString() ?? "");
         setIsActive(sensor.active ?? true);
+        setIsVirtual(sensor.isVirtual ?? false);
+        setAggregationType(
+          sensor.aggregationType ?? AggregationTypes.Min,
+        );
       } else {
         setName("");
         setSensorId(nextSensorId !== undefined ? nextSensorId.toString() : "");
         setScaleMin("");
         setScaleMax("");
         setIsActive(true);
+        setIsVirtual(false);
+        setAggregationType(AggregationTypes.Min);
       }
     }
   }, [open, sensor, nextSensorId]);
+
+  const handleAggregationTypeChange = (event: SelectChangeEvent<number>) => {
+    setAggregationType(Number(event.target.value) as AggregationTypes);
+  };
 
   const handleSave = () => {
     if (!onSave || !name.trim() || !deviceIdentifier) {
@@ -71,6 +91,8 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
       scaleMin: scaleMin ? parseFloat(scaleMin) : undefined,
       scaleMax: scaleMax ? parseFloat(scaleMax) : undefined,
       active: isActive,
+      isVirtual,
+      aggregationType: isVirtual ? aggregationType : undefined,
     };
 
     onSave(model);
@@ -90,12 +112,17 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
       const scaleMaxChanged =
         (scaleMax || "") !== (sensor.scaleMax?.toString() ?? "");
       const isActiveChanged = isActive !== (sensor.active ?? true);
+      const isVirtualChanged = isVirtual !== (sensor.isVirtual ?? false);
+      const aggregationTypeChanged =
+        aggregationType !== (sensor.aggregationType ?? AggregationTypes.Min);
       return (
         !nameChanged &&
         !sensorIdChanged &&
         !scaleMinChanged &&
         !scaleMaxChanged &&
-        !isActiveChanged
+        !isActiveChanged &&
+        !isVirtualChanged &&
+        (!isVirtual || !aggregationTypeChanged)
       );
     }
     return false;
@@ -163,6 +190,31 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
             }
             label="Active"
           />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isVirtual}
+                onChange={(e) => setIsVirtual(e.target.checked)}
+              />
+            }
+            label="Virtual"
+          />
+          {isVirtual && (
+            <FormControl fullWidth>
+              <InputLabel id="aggregation-type-label">
+                Aggregation Type
+              </InputLabel>
+              <Select
+                labelId="aggregation-type-label"
+                label="Aggregation Type"
+                value={aggregationType}
+                onChange={handleAggregationTypeChange}
+              >
+                <MenuItem value={AggregationTypes.Min}>MIN</MenuItem>
+                <MenuItem value={AggregationTypes.Max}>MAX</MenuItem>
+              </Select>
+            </FormControl>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>
