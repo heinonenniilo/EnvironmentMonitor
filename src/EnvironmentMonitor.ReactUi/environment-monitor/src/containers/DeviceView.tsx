@@ -36,6 +36,7 @@ import { ApiKeyDialog } from "../components/ApiKeys/ApiKeyDialog";
 import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
 import type { SensorInfo } from "../models/sensor";
 import { SensorDialog } from "../components/Sensors/SensorDialog";
+import type { AddVirtualSensorRowDto } from "../models/updateVirtualSensorRows";
 
 const timeRangeDefaultDays = 7;
 const measurementTimeRangeDefaultHours = 48;
@@ -848,6 +849,44 @@ export const DeviceView: React.FC = () => {
     );
   };
 
+  const handleUpdateVirtualSensorRows = (
+    sensor: SensorInfo,
+    rowsToAdd: AddVirtualSensorRowDto[],
+    rowsToDelete: string[],
+  ) => {
+    if (!selectedDevice) {
+      return;
+    }
+
+    setIsLoading(true);
+    sensorHook
+      .updateVirtualSensorRows({
+        deviceIdentifier: selectedDevice.device.identifier,
+        sensorIdentifier: sensor.identifier,
+        rowsToAdd,
+        rowsToDelete,
+      })
+      .then(() => {
+        dispatch(
+          addNotification({
+            title: "Virtual sensor rows updated successfully",
+            body: "",
+            severity: "success",
+          }),
+        );
+        return deviceHook.getDeviceInfo(selectedDevice.device.identifier);
+      })
+      .then((res) => {
+        setSelectedDevice(res);
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   const handleGenerateApiKey = (description: string) => {
     if (!selectedDevice) {
       return;
@@ -1008,6 +1047,7 @@ export const DeviceView: React.FC = () => {
               setSensorDialogOpen(true);
             }}
             onDelete={handleDeleteSensor}
+            onUpdateVirtualSensorRows={handleUpdateVirtualSensorRows}
           />
         </Collapsible>
         {selectedDevice && !selectedDevice.isVirtual && (

@@ -16,6 +16,7 @@ import { SensorsDialog } from "./SensorsDialog";
 import { useState } from "react";
 import { getAggregationTypeDisplayName } from "../../utilities/measurementUtils";
 import { Edit, Delete } from "@mui/icons-material";
+import type { AddVirtualSensorRowDto } from "../../models/updateVirtualSensorRows";
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
@@ -24,6 +25,11 @@ export interface SensorTableProps {
   onEdit?: (sensor: SensorInfo) => void;
   onDelete?: (sensor: SensorInfo) => void;
   onToggleActive?: (sensor: SensorInfo, isActive: boolean) => void;
+  onUpdateVirtualSensorRows?: (
+    sensor: SensorInfo,
+    rowsToAdd: AddVirtualSensorRowDto[],
+    rowsToDelete: string[],
+  ) => void;
 }
 
 export const SensorTable: React.FC<SensorTableProps> = ({
@@ -33,7 +39,10 @@ export const SensorTable: React.FC<SensorTableProps> = ({
   onEdit,
   onDelete,
   onToggleActive,
+  onUpdateVirtualSensorRows,
 }) => {
+  const [selectedParentSensor, setSelectedParentSensor] =
+    useState<SensorInfo | null>(null);
   const [selectedSensors, setSelectedSensors] = useState<VirtualSensor[]>([]);
   const [dialogTitle, setDialogTitle] = useState<string>("");
 
@@ -45,13 +54,22 @@ export const SensorTable: React.FC<SensorTableProps> = ({
         </Typography>
       )}
       <SensorsDialog
-        isOpen={selectedSensors.length > 0}
+        isOpen={selectedParentSensor !== null}
         onClose={() => {
+          setSelectedParentSensor(null);
           setSelectedSensors([]);
           setDialogTitle("");
         }}
         sensors={selectedSensors}
         title={dialogTitle}
+        editable={!!isVirtual && !!selectedParentSensor}
+        onSave={(rowsToAdd, rowsToDelete) => {
+          if (!selectedParentSensor || !onUpdateVirtualSensorRows) {
+            return;
+          }
+
+          onUpdateVirtualSensorRows(selectedParentSensor, rowsToAdd, rowsToDelete);
+        }}
       />
       <TableContainer component={Paper}>
         <Table size="small">
@@ -75,15 +93,17 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                   <TableRow
                     key={r.identifier}
                     onClick={() => {
-                      if (r.sensors.length > 0) {
+                      if (isVirtual || r.sensors.length > 0) {
+                        setSelectedParentSensor(r);
                         setSelectedSensors(r.sensors);
                         setDialogTitle(`Sensors for ${r.name}`);
                       }
                     }}
                     sx={{
-                      cursor: r.sensors.length > 0 ? "pointer" : "default",
+                      cursor:
+                        isVirtual || r.sensors.length > 0 ? "pointer" : "default",
                       "&:hover":
-                        r.sensors.length > 0
+                        isVirtual || r.sensors.length > 0
                           ? {
                               backgroundColor: "action.hover",
                             }

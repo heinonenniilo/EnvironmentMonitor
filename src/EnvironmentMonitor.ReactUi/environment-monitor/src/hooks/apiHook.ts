@@ -45,6 +45,7 @@ import type {
   GetPublicSensorsModel,
 } from "../models/managePublicSensorsRequest";
 import type { ProblemDetails } from "../models/problemDetails";
+import type { UpdateVirtualSensorRowsDto } from "../models/updateVirtualSensorRows";
 import { useNotification } from "./useNotification";
 
 interface ApiHook {
@@ -250,6 +251,9 @@ interface sensorHook {
   getSensors: (deviceIdentifier: string) => Promise<SensorInfo[]>;
   addSensor: (model: AddOrUpdateSensor) => Promise<SensorInfo>;
   updateSensor: (model: AddOrUpdateSensor) => Promise<SensorInfo>;
+  updateVirtualSensorRows: (
+    model: UpdateVirtualSensorRowsDto,
+  ) => Promise<SensorInfo>;
   deleteSensor: (
     deviceIdentifier: string,
     sensorIdentifier: string,
@@ -1247,6 +1251,19 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError(ex, "Failed to update sensor");
+          throw ex;
+        }
+      },
+      updateVirtualSensorRows: async (model: UpdateVirtualSensorRowsDto) => {
+        try {
+          const res = await apiClient.put<any, AxiosResponse<SensorInfo>>(
+            `/api/sensors/virtual-sensor-rows`,
+            model,
+          );
+          return res.data;
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to update virtual sensor rows");
           throw ex;
         }
       },
