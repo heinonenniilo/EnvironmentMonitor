@@ -48,6 +48,10 @@ export const SensorTable: React.FC<SensorTableProps> = ({
   const [selectedSensors, setSelectedSensors] = useState<VirtualSensor[]>([]);
   const [dialogTitle, setDialogTitle] = useState<string>("");
 
+  const canClickRow = (sensor: SensorInfo) => {
+    return isVirtual || sensor.isVirtual || sensor.sensors.length > 0;
+  };
+
   return (
     <Box marginTop={1}>
       {title && (
@@ -65,7 +69,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
         sensors={selectedSensors}
         title={dialogTitle}
         location={location}
-        editable={!!isVirtual && !!selectedParentSensor}
+        editable={isVirtual || (selectedParentSensor?.isVirtual ?? false)}
         onSave={(rowsToAdd, rowsToDelete) => {
           if (!selectedParentSensor || !onUpdateVirtualSensorRows) {
             return Promise.resolve();
@@ -100,23 +104,19 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                   <TableRow
                     key={r.identifier}
                     onClick={() => {
-                      if (isVirtual || r.isVirtual || r.sensors.length > 0) {
+                      if (canClickRow(r)) {
                         setSelectedParentSensor(r);
                         setSelectedSensors(r.sensors);
                         setDialogTitle(`Sensors for ${r.name}`);
                       }
                     }}
                     sx={{
-                      cursor:
-                        isVirtual || r.sensors.length > 0
-                          ? "pointer"
-                          : "default",
-                      "&:hover":
-                        isVirtual || r.sensors.length > 0
-                          ? {
-                              backgroundColor: "action.hover",
-                            }
-                          : undefined,
+                      cursor: canClickRow(r) ? "pointer" : "default",
+                      "&:hover": canClickRow(r)
+                        ? {
+                            backgroundColor: "action.hover",
+                          }
+                        : undefined,
                     }}
                   >
                     <TableCell>{r.name}</TableCell>
