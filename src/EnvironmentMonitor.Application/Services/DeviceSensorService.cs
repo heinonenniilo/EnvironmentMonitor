@@ -108,6 +108,8 @@ namespace EnvironmentMonitor.Application.Services
                 ScaleMin = model.ScaleMin,
                 ScaleMax = model.ScaleMax,
                 Active = model.Active,
+                IsVirtual = model.IsVirtual,
+                AggregationType = model.AggregationType,
             };
 
             var addedSensor = await _sensorRepository.AddSensor(sensor, true);
@@ -145,6 +147,8 @@ namespace EnvironmentMonitor.Application.Services
             existingSensor.ScaleMin = model.ScaleMin;
             existingSensor.ScaleMax = model.ScaleMax;
             existingSensor.Active = model.Active;
+            existingSensor.IsVirtual = model.IsVirtual;
+            existingSensor.AggregationType = model.AggregationType;
 
             if (model.SensorId != null)
             {

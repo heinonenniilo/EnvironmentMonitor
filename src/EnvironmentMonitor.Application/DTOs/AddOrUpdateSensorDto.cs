@@ -11,5 +11,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public double? ScaleMin { get; set; }
         public double? ScaleMax { get; set; }
         public bool Active { get; set; } = true;
+        public bool IsVirtual { get; set; } = false;
+        public int? AggregationType { get; set; }
     }
 }
