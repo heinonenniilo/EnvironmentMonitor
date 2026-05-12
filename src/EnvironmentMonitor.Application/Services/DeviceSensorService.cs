@@ -202,11 +202,6 @@ namespace EnvironmentMonitor.Application.Services
             })).FirstOrDefault()
                 ?? throw new EntityNotFoundException($"Device with identifier: '{model.DeviceIdentifier}' not found.");
 
-            if (!device.IsVirtual)
-            {
-                throw new InvalidOperationException($"Device with identifier: '{model.DeviceIdentifier}' is not a virtual device.");
-            }
-
             var sensor = device.Sensors.FirstOrDefault(s => s.Identifier == model.SensorIdentifier)
                 ?? throw new EntityNotFoundException($"Sensor with identifier: '{model.SensorIdentifier}' not found on device: '{model.DeviceIdentifier}'.");
 
