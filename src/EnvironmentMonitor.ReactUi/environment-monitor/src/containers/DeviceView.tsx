@@ -937,7 +937,9 @@ export const DeviceView: React.FC = () => {
       titleComponent={
         selectedDevice ? (
           <Tooltip title="Refresh device">
-            <IconButton onClick={() => loadDeviceData(selectedDevice.device.identifier)}>
+            <IconButton
+              onClick={() => loadDeviceData(selectedDevice.device.identifier)}
+            >
               <Refresh />
             </IconButton>
           </Tooltip>
@@ -1319,7 +1321,7 @@ export const DeviceView: React.FC = () => {
       />
       <SensorDialog
         open={sensorDialogOpen}
-        deviceIdentifier={selectedDevice?.device.identifier ?? ""}
+        device={selectedDevice}
         nextSensorId={
           selectedDevice?.sensors && selectedDevice.sensors.length > 0
             ? Math.max(...selectedDevice.sensors.map((s) => s.sensorId)) + 1

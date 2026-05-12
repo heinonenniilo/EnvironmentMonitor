@@ -20,10 +20,11 @@ import { useState, useEffect } from "react";
 import type { AddOrUpdateSensor } from "../../models/addOrUpdateSensor";
 import type { SensorInfo } from "../../models/sensor";
 import { AggregationTypes } from "../../enums/aggregationTypes";
+import type { DeviceInfo } from "../../models/deviceInfo";
 
 export interface SensorDialogProps {
   open: boolean;
-  deviceIdentifier: string;
+  device: DeviceInfo | undefined;
   nextSensorId?: number;
   sensor?: SensorInfo | null;
   onClose: () => void;
@@ -32,14 +33,14 @@ export interface SensorDialogProps {
 
 export const SensorDialog: React.FC<SensorDialogProps> = ({
   open,
-  deviceIdentifier,
+  device,
   nextSensorId,
   sensor,
   onClose,
   onSave,
 }) => {
   const isEditing = !!sensor;
-
+  const deviceIdentifier = device?.device.identifier ?? "";
   const [name, setName] = useState("");
   const [sensorId, setSensorId] = useState("");
   const [scaleMin, setScaleMin] = useState("");
@@ -59,19 +60,18 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
         setScaleMax(sensor.scaleMax?.toString() ?? "");
         setIsActive(sensor.active ?? true);
         setIsVirtual(sensor.isVirtual ?? false);
-        setAggregationType(
-          sensor.aggregationType ?? AggregationTypes.Min,
-        );
+        setAggregationType(sensor.aggregationType ?? AggregationTypes.Min);
       } else {
         setName("");
         setSensorId(nextSensorId !== undefined ? nextSensorId.toString() : "");
         setScaleMin("");
         setScaleMax("");
         setIsActive(true);
-        setIsVirtual(false);
+        setIsVirtual(device?.isVirtual ?? false);
         setAggregationType(AggregationTypes.Min);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, sensor, nextSensorId]);
 
   const handleAggregationTypeChange = (event: SelectChangeEvent<number>) => {
@@ -193,6 +193,7 @@ export const SensorDialog: React.FC<SensorDialogProps> = ({
           <FormControlLabel
             control={
               <Checkbox
+                disabled={device?.isVirtual ?? false}
                 checked={isVirtual}
                 onChange={(e) => setIsVirtual(e.target.checked)}
               />
