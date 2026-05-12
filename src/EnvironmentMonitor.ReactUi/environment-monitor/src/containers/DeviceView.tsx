@@ -1042,6 +1042,7 @@ export const DeviceView: React.FC = () => {
           <SensorTable
             sensors={selectedDevice?.sensors ?? []}
             isVirtual={selectedDevice?.isVirtual}
+            location={selectedDevice?.device.locationIdentifier}
             onEdit={(sensor) => {
               setSelectedSensor(sensor);
               setSensorDialogOpen(true);

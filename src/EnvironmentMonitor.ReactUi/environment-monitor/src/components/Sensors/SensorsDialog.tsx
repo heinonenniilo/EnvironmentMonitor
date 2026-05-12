@@ -15,7 +15,11 @@ import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import { useMemo, useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import type { Sensor, VirtualSensor } from "../../models/sensor";
-import { getDeviceInfos, getDevices, getSensors } from "../../reducers/measurementReducer";
+import {
+  getDeviceInfos,
+  getDevices,
+  getSensors,
+} from "../../reducers/measurementReducer";
 import {
   getAvailableMeasurementTypes,
   getMeasurementTypeDisplayName,
@@ -30,6 +34,7 @@ export interface SensorsDialogProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  location?: string;
   editable?: boolean;
   onSave?: (
     rowsToAdd: AddVirtualSensorRowDto[],
@@ -50,6 +55,7 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
   isOpen,
   onClose,
   title,
+  location,
   editable,
   onSave,
 }) => {
@@ -108,6 +114,13 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
           return false;
         }
 
+        const parentDevice = devices.find(
+          (device) => device.identifier === sensor.parentIdentifier,
+        );
+        if (location && parentDevice?.locationIdentifier !== location) {
+          return false;
+        }
+
         if (selectedDeviceIdentifier) {
           return sensor.parentIdentifier === selectedDeviceIdentifier;
         }
@@ -115,18 +128,30 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
         return true;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allSensors, deviceInfoMap, rows, selectedDeviceIdentifier]);
 
   const deviceOptions = useMemo(() => {
     return [...devices]
-      .filter((device) => deviceInfoMap.get(device.identifier) !== true)
+      .filter((device) => {
+        if (deviceInfoMap.get(device.identifier) === true) {
+          return false;
+        }
+
+        if (location && device.locationIdentifier !== location) {
+          return false;
+        }
+
+        return true;
+      })
       .sort((a, b) => getEntityTitle(a).localeCompare(getEntityTitle(b)));
-  }, [deviceInfoMap, devices]);
+  }, [deviceInfoMap, devices, location]);
 
   const rowsToDelete = useMemo(() => {
     return rows
       .filter((row) => !row.isNew && row.isRemoved)
       .map((row) => row.sensor.identifier);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows, sensors]);
 
   const rowsToAdd = useMemo(() => {
@@ -238,7 +263,11 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
                   : "Mark sensor for removal"
             }
           >
-            {row.isRemoved ? <Close fontSize="small" /> : <Delete fontSize="small" />}
+            {row.isRemoved ? (
+              <Close fontSize="small" />
+            ) : (
+              <Delete fontSize="small" />
+            )}
           </IconButton>
         );
       },
@@ -311,7 +340,9 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
                 select
                 label="Source Sensor"
                 value={selectedSensorIdentifier}
-                onChange={(event) => setSelectedSensorIdentifier(event.target.value)}
+                onChange={(event) =>
+                  setSelectedSensorIdentifier(event.target.value)
+                }
                 fullWidth
                 size="small"
               >
@@ -363,7 +394,9 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
                     {
                       rowId: `new-${selectedSensor.identifier}`,
                       sensor: selectedSensor,
-                      typeId: selectedTypeId ? Number(selectedTypeId) : undefined,
+                      typeId: selectedTypeId
+                        ? Number(selectedTypeId)
+                        : undefined,
                       isNew: true,
                       isRemoved: false,
                     },

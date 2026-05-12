@@ -22,6 +22,7 @@ export interface SensorTableProps {
   sensors: SensorInfo[];
   title?: string;
   isVirtual?: boolean;
+  location?: string;
   onEdit?: (sensor: SensorInfo) => void;
   onDelete?: (sensor: SensorInfo) => void;
   onToggleActive?: (sensor: SensorInfo, isActive: boolean) => void;
@@ -36,6 +37,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
   title,
   sensors,
   isVirtual,
+  location,
   onEdit,
   onDelete,
   onToggleActive,
@@ -62,6 +64,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
         }}
         sensors={selectedSensors}
         title={dialogTitle}
+        location={location}
         editable={!!isVirtual && !!selectedParentSensor}
         onSave={(rowsToAdd, rowsToDelete) => {
           if (!selectedParentSensor || !onUpdateVirtualSensorRows) {
