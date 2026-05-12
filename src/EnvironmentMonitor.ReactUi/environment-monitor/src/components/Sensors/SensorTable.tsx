@@ -100,7 +100,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                   <TableRow
                     key={r.identifier}
                     onClick={() => {
-                      if (isVirtual || r.sensors.length > 0) {
+                      if (isVirtual || r.isVirtual || r.sensors.length > 0) {
                         setSelectedParentSensor(r);
                         setSelectedSensors(r.sensors);
                         setDialogTitle(`Sensors for ${r.name}`);
@@ -108,7 +108,9 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                     }}
                     sx={{
                       cursor:
-                        isVirtual || r.sensors.length > 0 ? "pointer" : "default",
+                        isVirtual || r.sensors.length > 0
+                          ? "pointer"
+                          : "default",
                       "&:hover":
                         isVirtual || r.sensors.length > 0
                           ? {
