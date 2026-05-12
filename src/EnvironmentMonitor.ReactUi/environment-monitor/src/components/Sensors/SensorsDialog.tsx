@@ -39,7 +39,7 @@ export interface SensorsDialogProps {
   onSave?: (
     rowsToAdd: AddVirtualSensorRowDto[],
     rowsToDelete: string[],
-  ) => void;
+  ) => Promise<void>;
 }
 
 interface EditableVirtualSensorRow {
@@ -66,6 +66,7 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
   const [selectedDeviceIdentifier, setSelectedDeviceIdentifier] = useState("");
   const [selectedSensorIdentifier, setSelectedSensorIdentifier] = useState("");
   const [selectedTypeId, setSelectedTypeId] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -463,16 +464,30 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
             Cancel
           </Button>
           <Button
-            onClick={() => {
+            onClick={async () => {
               if (!onSave) {
                 return;
               }
 
-              onSave(rowsToAdd, rowsToDelete);
-              onClose();
+              setIsSaving(true);
+              try {
+                await onSave(rowsToAdd, rowsToDelete);
+                setRows((current) =>
+                  current
+                    .filter((row) => !row.isRemoved)
+                    .map((row) => ({
+                      ...row,
+                      rowId: row.sensor.identifier,
+                      isNew: false,
+                      isRemoved: false,
+                    })),
+                );
+              } finally {
+                setIsSaving(false);
+              }
             }}
             variant="contained"
-            disabled={!isDirty}
+            disabled={!isDirty || isSaving}
           >
             Save
           </Button>

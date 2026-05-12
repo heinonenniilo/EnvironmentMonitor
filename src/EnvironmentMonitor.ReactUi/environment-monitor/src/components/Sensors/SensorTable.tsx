@@ -30,7 +30,7 @@ export interface SensorTableProps {
     sensor: SensorInfo,
     rowsToAdd: AddVirtualSensorRowDto[],
     rowsToDelete: string[],
-  ) => void;
+  ) => Promise<void>;
 }
 
 export const SensorTable: React.FC<SensorTableProps> = ({
@@ -68,10 +68,14 @@ export const SensorTable: React.FC<SensorTableProps> = ({
         editable={!!isVirtual && !!selectedParentSensor}
         onSave={(rowsToAdd, rowsToDelete) => {
           if (!selectedParentSensor || !onUpdateVirtualSensorRows) {
-            return;
+            return Promise.resolve();
           }
 
-          onUpdateVirtualSensorRows(selectedParentSensor, rowsToAdd, rowsToDelete);
+          return onUpdateVirtualSensorRows(
+            selectedParentSensor,
+            rowsToAdd,
+            rowsToDelete,
+          );
         }}
       />
       <TableContainer component={Paper}>
