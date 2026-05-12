@@ -11,5 +11,6 @@ namespace EnvironmentMonitor.Application.Interfaces
         Task<SensorInfoDto> AddSensor(AddOrUpdateSensorDto model);
         Task<SensorInfoDto> UpdateSensor(AddOrUpdateSensorDto model);
         Task DeleteSensor(Guid deviceIdentifier, Guid sensorIdentifier);
+        Task<SensorInfoDto> UpdateVirtualSensorRows(UpdateVirtualSensorRowsDto model);
     }
 }

@@ -21,6 +21,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             return await _context.Sensors
                 .Include(x => x.Device)
+                .Include(x => x.VirtualSensorRows)
+                    .ThenInclude(x => x.ValueSensor)
                 .FirstOrDefaultAsync(x => x.Identifier == identifier);
         }
 
@@ -134,6 +136,46 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
 
             _logger.LogInformation($"Deleted sensor '{sensor.Name}' (Identifier: {identifier})");
+        }
+
+        public async Task AddVirtualSensorRow(VirtualSensorRow row, bool saveChanges)
+        {
+            var existing = await _context.VirtualSensorRows
+                .FirstOrDefaultAsync(x => x.VirtualSensorId == row.VirtualSensorId && x.ValueSensorId == row.ValueSensorId);
+
+            if (existing != null)
+            {
+                throw new DuplicateEntityException($"A VirtualSensorRow for sensor value id {row.ValueSensorId} already exists on virtual sensor id {row.VirtualSensorId}.");
+            }
+
+            await _context.VirtualSensorRows.AddAsync(row);
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            _logger.LogInformation($"Added VirtualSensorRow: VirtualSensorId={row.VirtualSensorId}, ValueSensorId={row.ValueSensorId}");
+        }
+
+        public async Task DeleteVirtualSensorRow(int virtualSensorId, int valueSensorId, bool saveChanges)
+        {
+            var row = await _context.VirtualSensorRows
+                .FirstOrDefaultAsync(x => x.VirtualSensorId == virtualSensorId && x.ValueSensorId == valueSensorId);
+
+            if (row == null)
+            {
+                throw new EntityNotFoundException($"VirtualSensorRow for virtual sensor id {virtualSensorId} and value sensor id {valueSensorId} not found.");
+            }
+
+            _context.VirtualSensorRows.Remove(row);
+
+            if (saveChanges)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            _logger.LogInformation($"Deleted VirtualSensorRow: VirtualSensorId={virtualSensorId}, ValueSensorId={valueSensorId}");
         }
 
         public async Task SaveChanges()

@@ -10,6 +10,8 @@ namespace EnvironmentMonitor.Domain.Interfaces
         Task<Sensor> AddSensor(Sensor sensor, bool saveChanges);
         Task<Sensor> UpdateSensor(Sensor sensor, bool saveChanges);
         Task DeleteSensor(Guid identifier, bool saveChanges);
+        Task AddVirtualSensorRow(VirtualSensorRow row, bool saveChanges);
+        Task DeleteVirtualSensorRow(int virtualSensorId, int valueSensorId, bool saveChanges);
         Task SaveChanges();
     }
 }
