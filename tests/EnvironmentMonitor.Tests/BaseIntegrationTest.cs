@@ -70,7 +70,6 @@ namespace EnvironmentMonitor.Tests
                     new Table("dbo", "CommunicationChannels"),
                     new Table("dbo", "DeviceAttributeTypes"),
                     new Table("dbo", "DeviceEventTypes"),
-                    new Table("dbo", "DeviceAttributeTypes"),
                     new Table("dbo", "DeviceQueuedCommandTypes"),
                     new Table("application", "AspNetRoles"),
                 ],
