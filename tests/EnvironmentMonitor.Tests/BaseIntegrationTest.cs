@@ -69,6 +69,7 @@ namespace EnvironmentMonitor.Tests
                     new Table("dbo", "EmailTemplates"),
                     new Table("dbo", "CommunicationChannels"),
                     new Table("dbo", "DeviceAttributeTypes"),
+                    new Table("dbo", "DeviceEventTypes"),
                     new Table("application", "AspNetRoles")
                 ],
             });
