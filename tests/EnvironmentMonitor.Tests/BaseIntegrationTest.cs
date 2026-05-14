@@ -70,7 +70,9 @@ namespace EnvironmentMonitor.Tests
                     new Table("dbo", "CommunicationChannels"),
                     new Table("dbo", "DeviceAttributeTypes"),
                     new Table("dbo", "DeviceEventTypes"),
-                    new Table("application", "AspNetRoles")
+                    new Table("dbo", "DeviceAttributeTypes"),
+                    new Table("dbo", "DeviceQueuedCommandTypes"),
+                    new Table("application", "AspNetRoles"),
                 ],
             });
             _client = _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
