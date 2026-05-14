@@ -28,6 +28,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILocationRepository _locationRepository;
         private readonly IDeviceRepository _deviceRepository;
         private readonly IMeasurementAnalyzeService _measurementInfoService;
+        private readonly ITransactionService _transactionService;
         
         public MeasurementService(
             IMeasurementRepository measurement,
@@ -39,7 +40,8 @@ namespace EnvironmentMonitor.Application.Services
             IDateService dateService,
             ILocationRepository locationRepository,
             IDeviceRepository deviceRepository,
-            IMeasurementAnalyzeService measurementInfoService)
+            IMeasurementAnalyzeService measurementInfoService,
+            ITransactionService transactionService)
         {
             _measurementRepository = measurement;
             _logger = logger;
@@ -51,6 +53,7 @@ namespace EnvironmentMonitor.Application.Services
             _locationRepository = locationRepository;
             _deviceRepository = deviceRepository;
             _measurementInfoService = measurementInfoService;
+            _transactionService = transactionService;
         }
 
         public async Task AddMeasurements(SaveMeasurementsDto measurement)
@@ -86,81 +89,96 @@ namespace EnvironmentMonitor.Application.Services
                     SourceId = measurement.Source != null ? (int)measurement.Source : null,
                 };
             }
-            var isDuplicate = false;
-            if (!string.IsNullOrEmpty(measurement.Identifier) && deviceMessage != null)
-            {
-                var existingMessage = await _measurementRepository.GetDeviceMessage(measurement.Identifier, device.Id);
-                isDuplicate = existingMessage != null;
-                deviceMessage.IsDuplicate = isDuplicate;
-                await _measurementRepository.AddDeviceMessage(deviceMessage, isDuplicate);
-            }
 
-            if (isDuplicate)
+            using (var transaction = await _transactionService.BeginTransactionAsync())
             {
-                _logger.LogWarning($"Duplicate message. Identifier: '{measurement.Identifier}'. Returning.");
-                return;
-            }
-
-            foreach (var row in measurement.Measurements)
-            {
-                var sensor = await _deviceSensorService.GetSensor(device.Id, row.SensorId, AccessLevels.Write);
-                if (sensor == null)
+                var isDuplicate = false;
+                if (!string.IsNullOrEmpty(measurement.Identifier) && deviceMessage != null)
                 {
-                    _logger.LogWarning($"Sensor with id '{row.SensorId}' not found on device '{device.Identifier}'.");
-                    continue;
+                    var existingMessage = await _measurementRepository.GetDeviceMessage(measurement.Identifier, device.Id);
+                    isDuplicate = existingMessage != null;
+                    deviceMessage.IsDuplicate = isDuplicate;
+                    await _measurementRepository.AddDeviceMessage(deviceMessage, true);
                 }
-                var sensorInDb = (await _deviceRepository.GetSensors(new GetSensorsModel() { Identifiers = [sensor.Identifier], DevicesModel = new GetDevicesModel(), IncludeVirtualSensors = true })).FirstOrDefault();
-                MeasurementType? type = await _measurementRepository.GetMeasurementType(row.TypeId);
-                if (type == null)
-                {
-                    _logger.LogWarning($"Measurement type id ({row.TypeId}) not found. ");
-                    continue;
-                }
-                _logger.LogInformation($"Found measurement type: {type.Id}. Name: '{type.Name}'");
-                if (sensor == null || sensorInDb == null || (sensor.Identifier != sensorInDb.Identifier))
-                {
-                    _logger.LogWarning($"Could not find a sensor with device id: '{device.Identifier}' and sensor id: '{row.SensorId}'");
-                    continue;
-                }
-                _logger.LogInformation($"Found sensor: {sensor.Identifier}. Name: '{sensor.Name}'");
 
-                var createdAt = _dateService.CurrentTime();
-                var measurementToAdd = new Measurement()
+                if (isDuplicate)
                 {
-                    SensorId = sensorInDb.Id,
-                    Value = row.SensorValue,
-                    Timestamp = _dateService.UtcToLocal(row.TimestampUtc),
-                    CreatedAt = createdAt,
-                    CreatedAtUtc = _dateService.LocalToUtc(createdAt),
-                    TimestampUtc = row.TimestampUtc,
-                    TypeId = row.TypeId
-                };
-                measurementsToAdd.Add(measurementToAdd);
-                if (sensorInDb.VirtualSensorRowValues.Count != 0)
-                {
-                    _logger.LogInformation($"Start processing virtual sensor measurements related to sensor ({sensorInDb.Id})");
-                    await _measurementRepository.ProcessVirtualSensorMeasurement(measurementToAdd, sensorInDb.Id, false);
+                    _logger.LogWarning($"Duplicate message. Identifier: '{measurement.Identifier}'. Returning.");
+                    await transaction.CommitAsync();
+                    return;
                 }
+
+                foreach (var row in measurement.Measurements)
+                {
+                    var sensor = await _deviceSensorService.GetSensor(device.Id, row.SensorId, AccessLevels.Write);
+
+                    if (sensor == null)
+                    {
+                        _logger.LogWarning($"Sensor with id '{row.SensorId}' not found on device '{device.Identifier}'.");
+                        continue;
+                    }
+
+                    var sensorInDb = (await _deviceRepository.GetSensors(new GetSensorsModel() { Identifiers = [sensor.Identifier], DevicesModel = new GetDevicesModel(), IncludeVirtualSensors = true })).FirstOrDefault();
+                    MeasurementType? type = await _measurementRepository.GetMeasurementType(row.TypeId);
+
+                    if (type == null)
+                    {
+                        _logger.LogWarning($"Measurement type id ({row.TypeId}) not found. ");
+                        continue;
+                    }
+
+                    _logger.LogInformation($"Found measurement type: {type.Id}. Name: '{type.Name}'");
+                    if (sensor == null || sensorInDb == null || (sensor.Identifier != sensorInDb.Identifier))
+                    {
+                        _logger.LogWarning($"Could not find a sensor with device id: '{device.Identifier}' and sensor id: '{row.SensorId}'");
+                        continue;
+                    }
+
+                    _logger.LogInformation($"Found sensor: {sensor.Identifier}. Name: '{sensor.Name}'");
+
+                    var createdAt = _dateService.CurrentTime();
+                    var measurementToAdd = new Measurement()
+                    {
+                        SensorId = sensorInDb.Id,
+                        Value = row.SensorValue,
+                        Timestamp = _dateService.UtcToLocal(row.TimestampUtc),
+                        CreatedAt = createdAt,
+                        CreatedAtUtc = _dateService.LocalToUtc(createdAt),
+                        TimestampUtc = row.TimestampUtc,
+                        TypeId = row.TypeId
+                    };
+                    measurementsToAdd.Add(measurementToAdd);
+                    if (sensorInDb.VirtualSensorRowValues.Count != 0)
+                    {
+                        _logger.LogInformation($"Start processing virtual sensor measurements related to sensor ({sensorInDb.Id})");
+                        await _measurementRepository.ProcessVirtualSensorMeasurement(measurementToAdd, sensorInDb.Id, true);
+                    }
+                }
+
+                _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device ({device.Identifier}): '{device.Name}'");
+
+                if (measurement.FirstMessage)
+                {
+                    await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", true, measurement.EnqueuedUtc);
+                }
+
+                if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < device.GetOfflineThresholdInMinutes())
+                {
+                    await _deviceService.SetStatus(new SetDeviceStatusModel()
+                    {
+                        Idenfifier = device.Identifier,
+                        Status = true,
+                        TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
+                        Message = "Device is online",
+                        DeviceMessage = deviceMessage
+                    }, true);
+                }
+
+                await _measurementRepository.AddMeasurements(measurementsToAdd, true, deviceMessage);
+
+                await transaction.CommitAsync();
             }
 
-            _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device ({device.Identifier}): '{device.Name}'");
-            if (measurement.FirstMessage)
-            {
-                await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", false, measurement.EnqueuedUtc);
-            }
-
-            if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < device.GetOfflineThresholdInMinutes())
-            {
-                await _deviceService.SetStatus(new SetDeviceStatusModel()
-                {
-                    Idenfifier = device.Identifier,
-                    Status = true,
-                    TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
-                    Message = "Device is online",
-                    DeviceMessage = deviceMessage
-                }, false);
-            }
-            await _measurementRepository.AddMeasurements(measurementsToAdd, true, deviceMessage);
             _logger.LogInformation("Measurementsadded");
         }
 
