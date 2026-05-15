@@ -32,5 +32,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpDelete("{deviceIdentifier}/{sensorIdentifier}")]
         public async Task DeleteSensor([FromRoute] Guid deviceIdentifier, [FromRoute] Guid sensorIdentifier)
             => await _deviceSensorService.DeleteSensor(deviceIdentifier, sensorIdentifier);
+
+        [HttpPut("virtual-sensor-rows")]
+        public async Task<SensorInfoDto> UpdateVirtualSensorRows([FromBody] UpdateVirtualSensorRowsDto model)
+            => await _deviceSensorService.UpdateVirtualSensorRows(model);
     }
 }

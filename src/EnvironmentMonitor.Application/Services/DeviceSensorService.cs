@@ -108,6 +108,8 @@ namespace EnvironmentMonitor.Application.Services
                 ScaleMin = model.ScaleMin,
                 ScaleMax = model.ScaleMax,
                 Active = model.Active,
+                IsVirtual = model.IsVirtual,
+                AggregationType = model.AggregationType,
             };
 
             var addedSensor = await _sensorRepository.AddSensor(sensor, true);
@@ -145,6 +147,8 @@ namespace EnvironmentMonitor.Application.Services
             existingSensor.ScaleMin = model.ScaleMin;
             existingSensor.ScaleMax = model.ScaleMax;
             existingSensor.Active = model.Active;
+            existingSensor.IsVirtual = model.IsVirtual;
+            existingSensor.AggregationType = model.AggregationType;
 
             if (model.SensorId != null)
             {
@@ -181,6 +185,60 @@ namespace EnvironmentMonitor.Application.Services
             await _sensorRepository.DeleteSensor(sensorIdentifier, true);
 
             _logger.LogInformation($"Successfully deleted sensor: {sensorIdentifier}");
+        }
+
+        public async Task<SensorInfoDto> UpdateVirtualSensorRows(UpdateVirtualSensorRowsDto model)
+        {
+            if (!_userService.HasAccessToDevice(model.DeviceIdentifier, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var device = (await _deviceRepository.GetDevices(new GetDevicesModel()
+            {
+                Identifiers = [model.DeviceIdentifier],
+                OnlyVisible = false,
+                GetSensors = true
+            })).FirstOrDefault()
+                ?? throw new EntityNotFoundException($"Device with identifier: '{model.DeviceIdentifier}' not found.");
+
+            var sensor = device.Sensors.FirstOrDefault(s => s.Identifier == model.SensorIdentifier)
+                ?? throw new EntityNotFoundException($"Sensor with identifier: '{model.SensorIdentifier}' not found on device: '{model.DeviceIdentifier}'.");
+
+            if (!sensor.IsVirtual)
+            {
+                throw new InvalidOperationException($"Sensor with identifier: '{model.SensorIdentifier}' is not a virtual sensor.");
+            }
+
+            foreach (var rowToDelete in model.RowsToDelete)
+            {
+                var valueSensor = await _sensorRepository.GetSensor(rowToDelete)
+                    ?? throw new EntityNotFoundException($"Sensor with identifier: '{rowToDelete}' not found.");
+
+                await _sensorRepository.DeleteVirtualSensorRow(sensor.Id, valueSensor.Id, false);
+            }
+
+            foreach (var rowToAdd in model.RowsToAdd)
+            {
+                var valueSensor = await _sensorRepository.GetSensor(rowToAdd.ValueSensorIdentifier)
+                    ?? throw new EntityNotFoundException($"Sensor with identifier: '{rowToAdd.ValueSensorIdentifier}' not found.");
+
+                await _sensorRepository.AddVirtualSensorRow(new Domain.Entities.VirtualSensorRow
+                {
+                    VirtualSensorId = sensor.Id,
+                    ValueSensorId = valueSensor.Id,
+                    TypeId = rowToAdd.TypeId
+                }, false);
+            }
+
+            await _sensorRepository.SaveChanges();
+
+            _logger.LogInformation($"Updated VirtualSensorRows for sensor: {model.SensorIdentifier}");
+
+            var updatedSensor = await _sensorRepository.GetSensor(model.SensorIdentifier)
+                ?? throw new EntityNotFoundException($"Sensor with identifier: '{model.SensorIdentifier}' not found after update.");
+
+            return _mapper.Map<SensorInfoDto>(updatedSensor);
         }
 
         public async Task<List<SensorDto>> GetSensors(List<Guid> deviceIdentifiers)
