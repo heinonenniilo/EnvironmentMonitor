@@ -17,12 +17,13 @@ import { useState } from "react";
 import { getAggregationTypeDisplayName } from "../../utilities/measurementUtils";
 import { Edit, Delete } from "@mui/icons-material";
 import type { AddVirtualSensorRowDto } from "../../models/updateVirtualSensorRows";
+import type { DeviceInfo } from "../../models/deviceInfo";
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
   title?: string;
-  isVirtual?: boolean;
   location?: string;
+  device?: DeviceInfo;
   onEdit?: (sensor: SensorInfo) => void;
   onDelete?: (sensor: SensorInfo) => void;
   onToggleActive?: (sensor: SensorInfo, isActive: boolean) => void;
@@ -30,14 +31,14 @@ export interface SensorTableProps {
     sensor: SensorInfo,
     rowsToAdd: AddVirtualSensorRowDto[],
     rowsToDelete: string[],
-  ) => Promise<void>;
+  ) => void;
 }
 
 export const SensorTable: React.FC<SensorTableProps> = ({
   title,
   sensors,
-  isVirtual,
   location,
+  device,
   onEdit,
   onDelete,
   onToggleActive,
@@ -48,9 +49,15 @@ export const SensorTable: React.FC<SensorTableProps> = ({
   const [selectedSensors, setSelectedSensors] = useState<VirtualSensor[]>([]);
   const [dialogTitle, setDialogTitle] = useState<string>("");
 
+  const isVirtual = device?.isVirtual ?? false;
+
   const canClickRow = (sensor: SensorInfo) => {
     return isVirtual || sensor.isVirtual || sensor.sensors.length > 0;
   };
+
+  if (!device) {
+    return null;
+  }
 
   return (
     <Box marginTop={1}>
@@ -69,13 +76,14 @@ export const SensorTable: React.FC<SensorTableProps> = ({
         sensors={selectedSensors}
         title={dialogTitle}
         location={location}
+        device={device && !device.isVirtual ? device : undefined}
         editable={isVirtual || (selectedParentSensor?.isVirtual ?? false)}
         onSave={(rowsToAdd, rowsToDelete) => {
           if (!selectedParentSensor || !onUpdateVirtualSensorRows) {
-            return Promise.resolve();
+            return;
           }
 
-          return onUpdateVirtualSensorRows(
+          onUpdateVirtualSensorRows(
             selectedParentSensor,
             rowsToAdd,
             rowsToDelete,

@@ -12,7 +12,10 @@ import moment from "moment";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import { type Sensor } from "../../models/sensor";
 import { stringSort } from "../../utilities/stringUtils";
-import { getEntityTitle } from "../../utilities/entityUtils";
+import {
+  getEntityTitle,
+  getEntityTitleWithParent,
+} from "../../utilities/entityUtils";
 import { type Entity } from "../../models/entity";
 import {
   getAvailableMeasurementTypes,
@@ -101,12 +104,10 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
         (d) => d.identifier === sensor.parentIdentifier,
       );
 
-      const letToReturn = `${
-        matchingEntity?.displayName ?? matchingEntity?.name
-      }: ${sensor.name}`;
+      const sensorNameToShow = getEntityTitleWithParent(sensor, matchingEntity);
 
       if (measurementUnit) {
-        return `${letToReturn} (${measurementUnit})`;
+        return `${sensorNameToShow} (${measurementUnit})`;
       }
       return `${matchingEntity?.displayName ?? matchingEntity?.name}: ${
         sensor.name

@@ -1,5 +1,4 @@
 import type { Entity } from "../models/entity";
-
 export const getEntityTitle = (entity: Entity | undefined): string => {
   if (!entity) {
     return "";
@@ -13,7 +12,17 @@ export const getDeviceDefaultImageUrl = (identifier: string) => {
 
 export const getDeviceAttachmentUrl = (
   deviceId: string,
-  attachmentId: string
+  attachmentId: string,
 ) => {
   return `/api/devices/${deviceId}/attachment/${attachmentId}`;
+};
+
+export const getEntityTitleWithParent = (
+  entity: Entity,
+  parent?: Entity,
+): string => {
+  if (parent) {
+    return `${getEntityTitle(parent)} - ${getEntityTitle(entity)}`;
+  }
+  return getEntityTitle(entity);
 };
