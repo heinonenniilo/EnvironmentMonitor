@@ -76,6 +76,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
         sensors={selectedSensors}
         title={dialogTitle}
         location={location}
+        device={device && !device.isVirtual ? device : undefined}
         editable={isVirtual || (selectedParentSensor?.isVirtual ?? false)}
         onSave={(rowsToAdd, rowsToDelete) => {
           if (!selectedParentSensor || !onUpdateVirtualSensorRows) {
