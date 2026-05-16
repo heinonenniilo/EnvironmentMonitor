@@ -27,19 +27,23 @@ import {
 } from "../../utilities/measurementUtils";
 import type { MeasurementTypes } from "../../enums/measurementTypes";
 import type { AddVirtualSensorRowDto } from "../../models/updateVirtualSensorRows";
-import { getEntityTitle } from "../../utilities/entityUtils";
+import {
+  getEntityTitle,
+  getEntityTitleWithParent,
+} from "../../utilities/entityUtils";
+import { stringSort } from "../../utilities/stringUtils";
 
 export interface SensorsDialogProps {
   sensors: VirtualSensor[];
   isOpen: boolean;
-  onClose: () => void;
   title?: string;
   location?: string;
   editable?: boolean;
+  onClose: () => void;
   onSave?: (
     rowsToAdd: AddVirtualSensorRowDto[],
     rowsToDelete: string[],
-  ) => Promise<void>;
+  ) => void;
 }
 
 interface EditableVirtualSensorRow {
@@ -68,6 +72,12 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
   const [selectedTypeId, setSelectedTypeId] = useState<string>("");
   const [isSaving, setIsSaving] = useState(false);
 
+  const revertChanges = () => {
+    setRows(
+      rows.filter((r) => !r.isNew).map((r) => ({ ...r, isRemoved: false })),
+    );
+  };
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -92,7 +102,7 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
       new Map(
         deviceInfos.map((deviceInfo) => [
           deviceInfo.device.identifier,
-          deviceInfo.isVirtual,
+          deviceInfo,
         ]),
       ),
     [deviceInfos],
@@ -110,7 +120,9 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
           return false;
         }
 
-        const isVirtualDevice = deviceInfoMap.get(sensor.parentIdentifier);
+        const isVirtualDevice = deviceInfoMap.get(
+          sensor.parentIdentifier,
+        )?.isVirtual;
         if (isVirtualDevice === true) {
           return false;
         }
@@ -128,14 +140,21 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
 
         return true;
       })
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => {
+        const aDeviceInfo = deviceInfoMap.get(a.parentIdentifier);
+        const bDeviceInfo = deviceInfoMap.get(b.parentIdentifier);
+        return stringSort(
+          getEntityTitleWithParent(a, aDeviceInfo?.device),
+          getEntityTitleWithParent(b, bDeviceInfo?.device),
+        );
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allSensors, deviceInfoMap, rows, selectedDeviceIdentifier]);
 
   const deviceOptions = useMemo(() => {
     return [...devices]
       .filter((device) => {
-        if (deviceInfoMap.get(device.identifier) === true) {
+        if (deviceInfoMap.get(device.identifier)?.isVirtual === true) {
           return false;
         }
 
@@ -349,14 +368,13 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
               >
                 <MenuItem value="">Select sensor</MenuItem>
                 {availableSensors.map((sensor) => {
-                  const device = devices.find(
-                    (item) => item.identifier === sensor.parentIdentifier,
-                  );
+                  const device = deviceInfoMap.get(
+                    sensor.parentIdentifier,
+                  )?.device;
 
                   return (
                     <MenuItem key={sensor.identifier} value={sensor.identifier}>
-                      {sensor.name}
-                      {device ? ` - ${getEntityTitle(device)}` : ""}
+                      {getEntityTitleWithParent(sensor, device)}
                     </MenuItem>
                   );
                 })}
@@ -461,6 +479,9 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
         <DialogActions>
           <Button onClick={onClose} color="inherit">
             Cancel
+          </Button>
+          <Button disabled={!isDirty} onClick={revertChanges}>
+            Revert
           </Button>
           <Button
             onClick={async () => {

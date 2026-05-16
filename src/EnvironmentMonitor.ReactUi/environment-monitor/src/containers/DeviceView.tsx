@@ -849,17 +849,17 @@ export const DeviceView: React.FC = () => {
     );
   };
 
-  const handleUpdateVirtualSensorRows = async (
+  const handleUpdateVirtualSensorRows = (
     sensor: SensorInfo,
     rowsToAdd: AddVirtualSensorRowDto[],
     rowsToDelete: string[],
-  ): Promise<void> => {
+  ): void => {
     if (!selectedDevice) {
       return;
     }
 
     setIsLoading(true);
-    return sensorHook
+    sensorHook
       .updateVirtualSensorRows({
         deviceIdentifier: selectedDevice.device.identifier,
         sensorIdentifier: sensor.identifier,
@@ -1043,7 +1043,7 @@ export const DeviceView: React.FC = () => {
         >
           <SensorTable
             sensors={selectedDevice?.sensors ?? []}
-            isVirtual={selectedDevice?.isVirtual}
+            device={selectedDevice}
             location={selectedDevice?.device.locationIdentifier}
             onEdit={(sensor) => {
               setSelectedSensor(sensor);
