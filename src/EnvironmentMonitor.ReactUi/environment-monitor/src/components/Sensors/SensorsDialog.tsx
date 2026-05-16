@@ -403,7 +403,6 @@ export const SensorsDialog: React.FC<SensorsDialogProps> = ({
                     },
                   ]);
                   setSelectedSensorIdentifier("");
-                  setSelectedTypeId("");
                 }}
                 disabled={!selectedSensorIdentifier}
               >
