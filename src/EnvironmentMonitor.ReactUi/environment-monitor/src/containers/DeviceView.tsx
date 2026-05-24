@@ -899,7 +899,7 @@ export const DeviceView: React.FC = () => {
       isLoading={isLoading}
       titleComponent={
         selectedDevice ? (
-          <>
+          <Box display="flex" alignItems="center" gap={1}>
             <Tooltip title="Refresh device">
               <IconButton
                 onClick={() => loadDeviceData(selectedDevice.device.identifier)}
@@ -917,7 +917,7 @@ export const DeviceView: React.FC = () => {
                 <Edit />
               </IconButton>
             </Tooltip>
-          </>
+          </Box>
         ) : undefined
       }
     >
