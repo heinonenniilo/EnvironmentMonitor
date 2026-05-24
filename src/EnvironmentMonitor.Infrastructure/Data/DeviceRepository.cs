@@ -334,6 +334,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             deviceToUpdate.Visible = device.Visible;
             deviceToUpdate.CommunicationChannelId = device.CommunicationChannelId;
 
+            if (!string.IsNullOrEmpty(device.DeviceIdentifier) && !device.DeviceIdentifier.Equals(deviceToUpdate.DeviceIdentifier, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation($"Updating device identifier for device id: {deviceToUpdate.Id} from '{deviceToUpdate.DeviceIdentifier}' to '{device.DeviceIdentifier}'");
+                deviceToUpdate.DeviceIdentifier = device.DeviceIdentifier;
+            }
+
             if (deviceInDb == null)
             {
                 _logger.LogInformation($"Adding device named: '{deviceToUpdate.Name}'");
