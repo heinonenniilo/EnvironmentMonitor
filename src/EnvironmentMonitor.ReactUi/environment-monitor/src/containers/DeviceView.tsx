@@ -7,7 +7,7 @@ import { SensorTable } from "../components/Sensors/SensorTable";
 import { DeviceTable } from "../components/Devices/DeviceTable";
 import { DeviceControlComponent } from "../components/Devices/DeviceControlComponent";
 import { DeviceAttributesTable } from "../components/Devices/DeviceAttributesTable";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   addNotification,
   setConfirmDialog,
@@ -24,7 +24,7 @@ import moment from "moment";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { type DeviceStatusModel } from "../models/deviceStatus";
 import { MeasurementTypes } from "../enums/measurementTypes";
-import { setDevices } from "../reducers/measurementReducer";
+import { getLocations, setDevices } from "../reducers/measurementReducer";
 import { getEntityTitle } from "../utilities/entityUtils";
 import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRangeSelectorComponent";
 import { DeviceAttachments } from "../components/Devices/DeviceAttachments";
@@ -48,6 +48,7 @@ export const DeviceView: React.FC = () => {
     undefined,
   );
   const [deviceEvents, setDeviceEvents] = useState<DeviceEvent[]>([]);
+  const locations = useSelector(getLocations);
   const [queuedCommands, setQueuedCommands] = useState<
     DeviceQueuedCommandDto[]
   >([]);
@@ -937,6 +938,7 @@ export const DeviceView: React.FC = () => {
             devices={selectedDevice ? [selectedDevice] : []}
             disableSort
             renderLinkToDeviceMessages
+            locations={locations}
           />
         </Collapsible>
 
