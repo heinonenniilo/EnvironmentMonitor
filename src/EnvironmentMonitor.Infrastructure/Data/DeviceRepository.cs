@@ -349,10 +349,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 await _context.SaveChangesAsync();
             }
+
             var toReturn = (await GetDeviceInfo(new GetDevicesModel()
             {
                 Ids = [deviceToUpdate.Id],
                 GetAttachments = true,
+                GetLocation = true,
                 OnlyVisible = false
             }))
             .FirstOrDefault();
