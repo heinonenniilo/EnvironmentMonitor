@@ -71,8 +71,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 if (entry.State == EntityState.Modified)
                 {
-                    entry.Entity.Updated ??= now;
-                    entry.Entity.UpdatedUtc ??= utcNow;
+                    entry.Entity.Updated = now;
+                    entry.Entity.UpdatedUtc = utcNow;
                 }
             }
         }
