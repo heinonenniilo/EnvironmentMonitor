@@ -899,13 +899,25 @@ export const DeviceView: React.FC = () => {
       isLoading={isLoading}
       titleComponent={
         selectedDevice ? (
-          <Tooltip title="Refresh device">
-            <IconButton
-              onClick={() => loadDeviceData(selectedDevice.device.identifier)}
-            >
-              <Refresh />
-            </IconButton>
-          </Tooltip>
+          <>
+            <Tooltip title="Refresh device">
+              <IconButton
+                onClick={() => loadDeviceData(selectedDevice.device.identifier)}
+              >
+                <Refresh />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Edit device">
+              <IconButton
+                onClick={() => setEditDeviceDialogOpen(true)}
+                sx={{ ml: 1, cursor: "pointer" }}
+                size="small"
+                title="Edit device"
+              >
+                <Edit />
+              </IconButton>
+            </Tooltip>
+          </>
         ) : undefined
       }
     >
@@ -915,22 +927,7 @@ export const DeviceView: React.FC = () => {
         flexDirection={"column"}
         height={"100%"}
       >
-        <Collapsible
-          title="Info"
-          isOpen={true}
-          customComponent={
-            selectedDevice ? (
-              <IconButton
-                onClick={() => setEditDeviceDialogOpen(true)}
-                sx={{ ml: 1, cursor: "pointer" }}
-                size="small"
-                title="Edit device"
-              >
-                <Edit />
-              </IconButton>
-            ) : undefined
-          }
-        >
+        <Collapsible title="Info" isOpen={true} customComponent={undefined}>
           <DeviceTable
             hideName
             showDeviceIdentifier
