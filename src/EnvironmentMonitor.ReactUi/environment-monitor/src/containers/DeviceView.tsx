@@ -30,13 +30,15 @@ import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRange
 import { DeviceAttachments } from "../components/Devices/DeviceAttachments";
 import { DeviceContacts } from "../components/Devices/DeviceContacts";
 import { DeviceContactDialog } from "../components/Devices/DeviceContactDialog";
-import { Refresh, Add, VpnKey } from "@mui/icons-material";
+import { Refresh, Add, VpnKey, Edit } from "@mui/icons-material";
 import { type DeviceContact } from "../models/deviceContact";
 import { ApiKeyDialog } from "../components/ApiKeys/ApiKeyDialog";
 import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
 import type { SensorInfo } from "../models/sensor";
 import { SensorDialog } from "../components/Sensors/SensorDialog";
 import type { AddVirtualSensorRowDto } from "../models/updateVirtualSensorRows";
+import { EditDeviceDialog } from "../components/Devices/EditDeviceDialog";
+import type { UpdateDeviceDto } from "../models/updateDeviceDto";
 
 const timeRangeDefaultDays = 7;
 const measurementTimeRangeDefaultHours = 48;
@@ -82,6 +84,7 @@ export const DeviceView: React.FC = () => {
   } | null>(null);
   const [sensorDialogOpen, setSensorDialogOpen] = useState(false);
   const [selectedSensor, setSelectedSensor] = useState<SensorInfo | null>(null);
+  const [editDeviceDialogOpen, setEditDeviceDialogOpen] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -383,56 +386,15 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const updateVisible = (device: DeviceInfo) => {
+  const updateDevice = (model: UpdateDeviceDto) => {
     setIsLoading(true);
     deviceHook
-      .updateDevice({
-        device: { ...device.device, visible: !device.device.visible },
-      })
+      .updateDevice(model)
       .then((res) => {
         setSelectedDevice(res);
         dispatch(
           addNotification({
-            title: `Visibility status updated for ${res.device.name}`,
-            body: "_",
-            severity: "success",
-          }),
-        );
-        // Update devices
-        measurementApiHook
-          .getDevices()
-          .then((res) => {
-            if (res) {
-              dispatch(setDevices(res));
-            }
-          })
-          .catch((ex) => {
-            console.error(ex);
-          });
-      })
-      .catch((er) => {
-        console.error(er);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
-
-  const updateCommunicationChannel = (
-    device: DeviceInfo,
-    channelId: number,
-  ) => {
-    setIsLoading(true);
-    deviceHook
-      .updateDevice({
-        device: device.device,
-        communicationChannelId: channelId,
-      })
-      .then((res) => {
-        setSelectedDevice(res);
-        dispatch(
-          addNotification({
-            title: `Communication channel updated for ${res.device.name}`,
+            title: `Device updated for ${res.device.name}`,
             body: "_",
             severity: "success",
           }),
@@ -952,35 +914,26 @@ export const DeviceView: React.FC = () => {
         flexDirection={"column"}
         height={"100%"}
       >
-        <Collapsible title="Info" isOpen={true}>
+        <Collapsible
+          title="Info"
+          isOpen={true}
+          customComponent={
+            selectedDevice ? (
+              <IconButton
+                onClick={() => setEditDeviceDialogOpen(true)}
+                sx={{ ml: 1, cursor: "pointer" }}
+                size="small"
+                title="Edit device"
+              >
+                <Edit />
+              </IconButton>
+            ) : undefined
+          }
+        >
           <DeviceTable
             hideName
             showDeviceIdentifier
             hideId
-            onClickVisible={(device) => {
-              dispatch(
-                setConfirmDialog({
-                  onConfirm: () => {
-                    updateVisible(device);
-                  },
-                  title: "Update visible status",
-                  body: `Visible status will be ${!device.device.visible} for ${
-                    device.device.name
-                  }`,
-                }),
-              );
-            }}
-            onCommunicationChannelChange={(device, channelId) => {
-              dispatch(
-                setConfirmDialog({
-                  onConfirm: () => {
-                    updateCommunicationChannel(device, channelId);
-                  },
-                  title: "Update communication channel",
-                  body: `Communication channel will be updated for ${device.device.name}`,
-                }),
-              );
-            }}
             devices={selectedDevice ? [selectedDevice] : []}
             disableSort
             renderLinkToDeviceMessages
@@ -1318,6 +1271,12 @@ export const DeviceView: React.FC = () => {
         onGenerate={handleGenerateApiKey}
         generatedKey={generatedApiKey}
         isLoading={isLoading}
+      />
+      <EditDeviceDialog
+        open={editDeviceDialogOpen}
+        device={selectedDevice}
+        onClose={() => setEditDeviceDialogOpen(false)}
+        onSave={updateDevice}
       />
       <SensorDialog
         open={sensorDialogOpen}
