@@ -36,47 +36,56 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
   onClose,
   onSave,
 }) => {
-  const [name, setName] = useState("");
-  const [deviceIdentifier, setDeviceIdentifier] = useState("");
-  const [visible, setVisible] = useState(false);
-  const [communicationChannelId, setCommunicationChannelId] = useState(0);
+  const [model, setModel] = useState<UpdateDeviceDto | undefined>(undefined);
+
+  const createModel = (device: DeviceInfo): UpdateDeviceDto => ({
+    device: { ...device.device },
+    communicationChannelId: device.communicationChannelId ?? 0,
+    deviceIdentifier: device.deviceIdentifier,
+  });
 
   useEffect(() => {
     if (!open || !device) {
       return;
     }
 
-    setName(device.device.name);
-    setDeviceIdentifier(device.deviceIdentifier);
-    setVisible(device.device.visible);
-    setCommunicationChannelId(device.communicationChannelId ?? 0);
+    setModel(createModel(device));
   }, [device, open]);
 
   const handleSave = () => {
-    if (!device || !name.trim() || !deviceIdentifier.trim()) {
+    if (!model || !model.device.name.trim() || !model.deviceIdentifier?.trim()) {
       return;
     }
 
     onSave({
-      device: {
-        ...device.device,
-        name: name.trim(),
-        visible,
-      },
-      communicationChannelId,
-      deviceIdentifier: deviceIdentifier.trim(),
+      ...model,
+      device: { ...model.device, name: model.device.name.trim() },
+      deviceIdentifier: model.deviceIdentifier.trim(),
     });
     onClose();
   };
 
+  const hasChanges =
+    !!device &&
+    !!model &&
+    (model.device.name.trim() !== device.device.name ||
+      model.deviceIdentifier?.trim() !== device.deviceIdentifier ||
+      model.device.visible !== device.device.visible ||
+      model.communicationChannelId !== (device.communicationChannelId ?? 0));
+
   const isSaveDisabled =
-    !device ||
-    !name.trim() ||
-    !deviceIdentifier.trim() ||
-    (name.trim() === device.device.name &&
-      deviceIdentifier.trim() === device.deviceIdentifier &&
-      visible === device.device.visible &&
-      communicationChannelId === (device.communicationChannelId ?? 0));
+    !model ||
+    !model.device.name.trim() ||
+    !model.deviceIdentifier?.trim() ||
+    !hasChanges;
+
+  const handleRevert = () => {
+    if (!device) {
+      return;
+    }
+
+    setModel(createModel(device));
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -97,15 +106,33 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
           <TextField
             autoFocus
             label="Name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
+            value={model?.device.name ?? ""}
+            onChange={(event) =>
+              setModel((current) =>
+                current
+                  ? {
+                      ...current,
+                      device: { ...current.device, name: event.target.value },
+                    }
+                  : current,
+              )
+            }
             fullWidth
             required
           />
           <TextField
             label="Device identifier"
-            value={deviceIdentifier}
-            onChange={(event) => setDeviceIdentifier(event.target.value)}
+            value={model?.deviceIdentifier ?? ""}
+            onChange={(event) =>
+              setModel((current) =>
+                current
+                  ? {
+                      ...current,
+                      deviceIdentifier: event.target.value,
+                    }
+                  : current,
+              )
+            }
             fullWidth
             required
           />
@@ -116,9 +143,16 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
             <Select
               labelId="device-communication-channel-label"
               label="Communication channel"
-              value={communicationChannelId}
+              value={model?.communicationChannelId ?? 0}
               onChange={(event) =>
-                setCommunicationChannelId(event.target.value as number)
+                setModel((current) =>
+                  current
+                    ? {
+                        ...current,
+                        communicationChannelId: event.target.value as number,
+                      }
+                    : current,
+                )
               }
             >
               {Object.values(CommunicationChannels)
@@ -135,8 +169,20 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
           <FormControlLabel
             control={
               <Checkbox
-                checked={visible}
-                onChange={(event) => setVisible(event.target.checked)}
+                checked={model?.device.visible ?? false}
+                onChange={(event) =>
+                  setModel((current) =>
+                    current
+                      ? {
+                          ...current,
+                          device: {
+                            ...current.device,
+                            visible: event.target.checked,
+                          },
+                        }
+                      : current,
+                  )
+                }
               />
             }
             label="Visible"
@@ -146,6 +192,9 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
       <DialogActions>
         <Button onClick={onClose} color="inherit">
           Cancel
+        </Button>
+        <Button onClick={handleRevert} color="inherit" disabled={!hasChanges}>
+          Revert
         </Button>
         <Button
           variant="contained"
