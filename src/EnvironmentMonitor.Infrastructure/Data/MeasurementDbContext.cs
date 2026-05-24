@@ -1,4 +1,5 @@
 using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -12,9 +13,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
 {
     public class MeasurementDbContext : DbContext
     {
-        public MeasurementDbContext(DbContextOptions<MeasurementDbContext> options)
+        private readonly IDateService _dateService;
+
+        public MeasurementDbContext(DbContextOptions<MeasurementDbContext> options, IDateService dateService)
             : base(options)
         {
+            _dateService = dateService;
         }
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -45,7 +49,34 @@ namespace EnvironmentMonitor.Infrastructure.Data
         public DbSet<EmailTemplate> EmailTemplates { get; set; }
         public DbSet<DeviceContact> DeviceContacts { get; set; }
         public DbSet<CommunicationChannel> CommunicationChannels { get; set; }
-        
+
+        public override int SaveChanges()
+        {
+            StampEntities();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            StampEntities();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void StampEntities()
+        {
+            var now = _dateService.CurrentTime();
+            var utcNow = _dateService.LocalToUtc(now);
+
+            foreach (var entry in ChangeTracker.Entries<TrackedEntity>())
+            {
+                if (entry.State == EntityState.Modified)
+                {
+                    entry.Entity.Updated ??= now;
+                    entry.Entity.UpdatedUtc ??= utcNow;
+                }
+            }
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeasurementDbContext).Assembly, type =>
