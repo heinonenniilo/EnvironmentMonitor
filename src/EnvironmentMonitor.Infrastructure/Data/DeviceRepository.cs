@@ -326,7 +326,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
             else
             {
-                deviceToUpdate = new Device() { Name = device.Name, DeviceIdentifier = device.DeviceIdentifier };
+                deviceToUpdate = new Device() { Name = device.Name, DeviceIdentifier = device.DeviceIdentifier, Created = _dateService.CurrentTime() };
             }
 
             deviceToUpdate.Name = string.IsNullOrEmpty(device.Name) ? deviceToUpdate.Name : device.Name;
