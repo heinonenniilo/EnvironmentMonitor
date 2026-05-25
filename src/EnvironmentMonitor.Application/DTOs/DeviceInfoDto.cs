@@ -12,6 +12,10 @@ namespace EnvironmentMonitor.Application.DTOs
         public DateTime? OnlineSince { get; set; }
         public DateTime? RebootedOn { get; set; }
         public DateTime? LastMessage { get; set; }
+
+        public DateTime Created { get; set; }
+        public DateTime? Updated { get; set; }
+
         public List<DeviceAttachmentDto> Attachments { get; set; } = [];
         public Guid? DefaultImageGuid { get; set; }
         public string DeviceIdentifier { get; set; }
@@ -34,6 +38,8 @@ namespace EnvironmentMonitor.Application.DTOs
                 .ForMember(x => x.Attributes, opt => opt.MapFrom(x => x.Device.DeviceAttributes ?? new List<DeviceAttribute>()))
                 .ForMember(x => x.Contacts, opt => opt.MapFrom(x => x.Device.Contacts ?? new List<DeviceContact>()))
                 .ForMember(x => x.CommunicationChannelId, opt => opt.MapFrom(x => x.Device.CommunicationChannelId))
+                .ForMember(x => x.Created, opt => opt.MapFrom(x => x.Device.Created))
+                .ForMember(x => x.Updated, opt => opt.MapFrom(x => x.Device.Updated))
                 .ReverseMap();
         }
     }
