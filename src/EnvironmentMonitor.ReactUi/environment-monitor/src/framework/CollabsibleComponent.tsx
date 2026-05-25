@@ -59,7 +59,13 @@ export const Collapsible: React.FC<CollapsibleProps> = ({
 
       <Collapse in={open}>
         <Box
-          sx={{ position: "relative", minHeight: isLoading ? 80 : undefined }}
+          sx={{
+            position: "relative",
+            minHeight: isLoading ? 80 : undefined,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
+          }}
         >
           {children}
           <LoadingOverlay isLoading={isLoading} />
