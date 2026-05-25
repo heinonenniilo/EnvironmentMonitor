@@ -18,4 +18,6 @@ export interface DeviceInfo {
   attributes: DeviceAttribute[];
   contacts: DeviceContact[];
   communicationChannelId?: number;
+  created: Date;
+  updated?: Date;
 }

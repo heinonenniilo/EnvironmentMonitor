@@ -7,7 +7,7 @@ import { SensorTable } from "../components/Sensors/SensorTable";
 import { DeviceTable } from "../components/Devices/DeviceTable";
 import { DeviceControlComponent } from "../components/Devices/DeviceControlComponent";
 import { DeviceAttributesTable } from "../components/Devices/DeviceAttributesTable";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
   addNotification,
   setConfirmDialog,
@@ -24,7 +24,7 @@ import moment from "moment";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { type DeviceStatusModel } from "../models/deviceStatus";
 import { MeasurementTypes } from "../enums/measurementTypes";
-import { getLocations, setDevices } from "../reducers/measurementReducer";
+import { setDevices } from "../reducers/measurementReducer";
 import { getEntityTitle } from "../utilities/entityUtils";
 import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRangeSelectorComponent";
 import { DeviceAttachments } from "../components/Devices/DeviceAttachments";
@@ -39,6 +39,7 @@ import { SensorDialog } from "../components/Sensors/SensorDialog";
 import type { AddVirtualSensorRowDto } from "../models/updateVirtualSensorRows";
 import { EditDeviceDialog } from "../components/Devices/EditDeviceDialog";
 import type { UpdateDeviceDto } from "../models/updateDeviceDto";
+import { DeviceInfoComponent } from "../components/Devices/DeviceInfo";
 
 const timeRangeDefaultDays = 7;
 const measurementTimeRangeDefaultHours = 48;
@@ -48,7 +49,6 @@ export const DeviceView: React.FC = () => {
     undefined,
   );
   const [deviceEvents, setDeviceEvents] = useState<DeviceEvent[]>([]);
-  const locations = useSelector(getLocations);
   const [queuedCommands, setQueuedCommands] = useState<
     DeviceQueuedCommandDto[]
   >([]);
@@ -930,13 +930,12 @@ export const DeviceView: React.FC = () => {
         <Collapsible title="Info" isOpen={true} customComponent={undefined}>
           <DeviceTable
             hideName
-            showDeviceIdentifier
             hideId
             devices={selectedDevice ? [selectedDevice] : []}
             disableSort
             renderLinkToDeviceMessages
-            locations={locations}
           />
+          {selectedDevice && <DeviceInfoComponent device={selectedDevice} />}
         </Collapsible>
 
         {selectedDevice && !selectedDevice.isVirtual && (

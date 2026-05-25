@@ -1,33 +1,10 @@
-import { Box, Checkbox, Typography } from "@mui/material";
+import { Box } from "@mui/material";
 import type { LocationModel } from "../../models/location";
+import { InfoRow } from "../InfoRow";
 
 export interface LocationInfoProps {
   location: LocationModel;
 }
-
-const labelWidth = 72;
-
-interface InfoRowProps {
-  label: string;
-  value?: string | number;
-  checked?: boolean;
-}
-
-const InfoRow: React.FC<InfoRowProps> = ({ label, value, checked }) => (
-  <Box display="flex" alignItems="center" gap={2}>
-    <Typography
-      variant="body2"
-      sx={{ minWidth: labelWidth, fontWeight: 600, color: "text.secondary" }}
-    >
-      {label}
-    </Typography>
-    {checked !== undefined ? (
-      <Checkbox checked={checked} disabled size="small" sx={{ p: 0 }} />
-    ) : (
-      <Typography variant="body2">{value}</Typography>
-    )}
-  </Box>
-);
 
 export const LocationInfo: React.FC<LocationInfoProps> = ({ location }) => {
   return (
