@@ -326,13 +326,19 @@ namespace EnvironmentMonitor.Infrastructure.Data
             }
             else
             {
-                deviceToUpdate = new Device() { Name = device.Name, DeviceIdentifier = device.DeviceIdentifier };
+                deviceToUpdate = new Device() { Name = device.Name, DeviceIdentifier = device.DeviceIdentifier, Created = _dateService.CurrentTime() };
             }
 
             deviceToUpdate.Name = string.IsNullOrEmpty(device.Name) ? deviceToUpdate.Name : device.Name;
             deviceToUpdate.DeviceIdentifier = string.IsNullOrEmpty(device.DeviceIdentifier) ? deviceToUpdate.DeviceIdentifier : device.DeviceIdentifier;
             deviceToUpdate.Visible = device.Visible;
             deviceToUpdate.CommunicationChannelId = device.CommunicationChannelId;
+
+            if (!string.IsNullOrEmpty(device.DeviceIdentifier) && !device.DeviceIdentifier.Equals(deviceToUpdate.DeviceIdentifier, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation($"Updating device identifier for device id: {deviceToUpdate.Id} from '{deviceToUpdate.DeviceIdentifier}' to '{device.DeviceIdentifier}'");
+                deviceToUpdate.DeviceIdentifier = device.DeviceIdentifier;
+            }
 
             if (deviceInDb == null)
             {
@@ -343,10 +349,12 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 await _context.SaveChangesAsync();
             }
+
             var toReturn = (await GetDeviceInfo(new GetDevicesModel()
             {
                 Ids = [deviceToUpdate.Id],
                 GetAttachments = true,
+                GetLocation = true,
                 OnlyVisible = false
             }))
             .FirstOrDefault();

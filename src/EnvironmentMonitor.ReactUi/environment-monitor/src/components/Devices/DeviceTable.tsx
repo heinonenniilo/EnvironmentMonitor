@@ -24,9 +24,11 @@ import {
   CommunicationChannels,
   getCommunicationChannelDisplayName,
 } from "../../enums/communicationChannels";
+import type { LocationModel } from "../../models/location";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
+  locations?: LocationModel[];
   onReboot?: (device: DeviceInfo) => void;
   onClickVisible?: (device: DeviceInfo) => void;
   onCommunicationChannelChange?: (
@@ -45,6 +47,7 @@ export interface DeviceTableProps {
 
 export const DeviceTable: React.FC<DeviceTableProps> = ({
   devices,
+  locations,
   title,
   disableSort,
   hideName,
@@ -362,6 +365,29 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       flex: 1,
       minWidth: 200,
       valueGetter: (_value, row) => (row as DeviceInfo).deviceIdentifier,
+    });
+  }
+
+  if (locations && locations.length > 0) {
+    columns.splice(2, 0, {
+      field: "location",
+      headerName: "Location",
+      hideable: true,
+      flex: 1,
+      minWidth: 200,
+      renderCell: (params) => {
+        const row = params.row as DeviceInfo;
+
+        const location = locations.find(
+          (l) => l.identifier === row.device.locationIdentifier,
+        );
+
+        return (
+          <Link to={`${routes.locations}/${location?.identifier}`}>
+            {location?.name ?? "-"}
+          </Link>
+        );
+      },
     });
   }
 

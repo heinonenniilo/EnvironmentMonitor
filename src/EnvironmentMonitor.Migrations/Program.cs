@@ -86,7 +86,8 @@ class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<MeasurementDbCont
         // Configure the DbContext to use SQL Server
         builder.UseSqlServer(connectionString);
 
-        return new MeasurementDbContext(builder.Options);
+        var dateService = new DateService(new Microsoft.Extensions.Logging.Abstractions.NullLogger<DateService>());
+        return new MeasurementDbContext(builder.Options, dateService);
     }
 }
 

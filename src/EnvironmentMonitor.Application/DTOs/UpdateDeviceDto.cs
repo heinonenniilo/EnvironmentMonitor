@@ -10,5 +10,6 @@ namespace EnvironmentMonitor.Application.DTOs
     {
         public required DeviceDto Device { get; set; }
         public int? CommunicationChannelId { get; set; }
+        public string? DeviceIdentifier { get; set; }
     }
 }

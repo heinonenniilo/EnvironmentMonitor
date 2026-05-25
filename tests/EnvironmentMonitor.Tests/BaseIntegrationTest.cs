@@ -314,7 +314,8 @@ namespace EnvironmentMonitor.Tests
                             SensorId = 2
                         }
                     ],
-                    Location = location
+                    Location = location,
+                    Created = DateTime.Now,
                 };
 
                 var deviceWithBaseLocation = new Device()
@@ -326,7 +327,8 @@ namespace EnvironmentMonitor.Tests
                         Name = "Test-01",
                         SensorId = 1
                     }],
-                    Location = measurementDbContext.Locations.First(x => x.Id == 0)
+                    Location = measurementDbContext.Locations.First(x => x.Id == 0),
+                    Created = DateTime.Now,
                 };
 
 
@@ -338,7 +340,8 @@ namespace EnvironmentMonitor.Tests
                         Name = "Test-01",
                         SensorId = 1
                     }],
-                    Location = locationWithNoAccess
+                    Location = locationWithNoAccess,
+                    Created = DateTime.Now,
                 };
                 measurementDbContext.Devices.Add(deviceWithBaseLocation);
                 measurementDbContext.Devices.Add(deviceInLocation);
