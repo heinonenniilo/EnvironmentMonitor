@@ -17,6 +17,9 @@ namespace EnvironmentMonitor.Application.DTOs
         public bool IsVirtual { get; set; }
         public bool Active { get; set; }
 
+        public DateTime Created { get; set; }
+        public DateTime? Updated { get; set; }
+
         public override void Mapping(Profile profile)
         {
             profile.CreateMap<Sensor, SensorInfoDto>()               
