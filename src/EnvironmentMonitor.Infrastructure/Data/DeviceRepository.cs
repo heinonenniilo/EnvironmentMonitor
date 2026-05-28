@@ -78,6 +78,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 TypeId = x.TypeId,
                 VirtualSensorRowValues = x.VirtualSensorRowValues,
                 VirtualSensorRows = x.VirtualSensorRows,
+                Created = x.Created,
+                Updated = x.Updated,
             }).ToListAsync();
         }
 
