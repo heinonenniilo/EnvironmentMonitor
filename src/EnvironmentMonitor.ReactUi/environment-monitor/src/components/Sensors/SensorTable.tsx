@@ -18,6 +18,7 @@ import { getAggregationTypeDisplayName } from "../../utilities/measurementUtils"
 import { Edit, Delete } from "@mui/icons-material";
 import type { AddVirtualSensorRowDto } from "../../models/updateVirtualSensorRows";
 import type { DeviceInfo } from "../../models/deviceInfo";
+import { getFormattedDate } from "../../utilities/datetimeUtils";
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
@@ -100,6 +101,8 @@ export const SensorTable: React.FC<SensorTableProps> = ({
               <TableCell>Scale min</TableCell>
               <TableCell>Scale max</TableCell>
               <TableCell>Active</TableCell>
+              <TableCell>Created</TableCell>
+              <TableCell>Updated</TableCell>
               {isVirtual && <TableCell>Aggregation Type</TableCell>}
               {(onEdit || onDelete) && <TableCell align="right"></TableCell>}
             </TableRow>
@@ -157,6 +160,10 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                           padding: "0px",
                         }}
                       />
+                    </TableCell>
+                    <TableCell>{getFormattedDate(r.created, true)}</TableCell>
+                    <TableCell>
+                      {r.updated ? getFormattedDate(r.updated, true) : ""}
                     </TableCell>
                     {isVirtual && (
                       <TableCell>

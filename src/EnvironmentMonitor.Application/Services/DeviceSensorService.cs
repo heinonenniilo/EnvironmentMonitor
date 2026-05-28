@@ -17,12 +17,14 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDeviceRepository _deviceRepository;
         private readonly ISensorRepository _sensorRepository;
         private readonly IMapper _mapper;
+        private readonly IDateService _dateService;
 
         public DeviceSensorService(
             ILogger<DeviceSensorService> logger,
             IUserService userService,
             IDeviceRepository deviceRepository,
             ISensorRepository sensorRepository,
+            IDateService dateService,
             IMapper mapper)
         {
             _logger = logger;
@@ -30,6 +32,7 @@ namespace EnvironmentMonitor.Application.Services
             _deviceRepository = deviceRepository;
             _sensorRepository = sensorRepository;
             _mapper = mapper;
+            _dateService = dateService;
         }
 
         public async Task<List<SensorInfoDto>> GetSensors(Guid deviceIdentifier)
@@ -100,6 +103,8 @@ namespace EnvironmentMonitor.Application.Services
 
             _logger.LogInformation($"Adding sensor '{model.Name}' (SensorId: {model.SensorId}) to device: {model.DeviceIdentifier}");
 
+            var now = _dateService.CurrentTime();
+
             var sensor = new Sensor
             {
                 DeviceId = device.Id,
@@ -110,6 +115,8 @@ namespace EnvironmentMonitor.Application.Services
                 Active = model.Active,
                 IsVirtual = model.IsVirtual,
                 AggregationType = model.AggregationType,
+                Created = now,
+                CreatedUtc = _dateService.LocalToUtc(now)
             };
 
             var addedSensor = await _sensorRepository.AddSensor(sensor, true);

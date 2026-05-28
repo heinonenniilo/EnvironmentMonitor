@@ -307,11 +307,13 @@ namespace EnvironmentMonitor.Tests
                     Sensors = [
                         new Sensor() {
                             Name = "Temperature-Sensor-01",
-                            SensorId = 1
+                            SensorId = 1,
+                            Created = DateTime.Now
                         },
                         new Sensor() {
                             Name = "Temperature-Sensor-02",
-                            SensorId = 2
+                            SensorId = 2,
+                            Created = DateTime.Now
                         }
                     ],
                     Location = location,
@@ -325,7 +327,8 @@ namespace EnvironmentMonitor.Tests
                     Sensors = [new Sensor()
                     {
                         Name = "Test-01",
-                        SensorId = 1
+                        SensorId = 1,
+                        Created = DateTime.Now
                     }],
                     Location = measurementDbContext.Locations.First(x => x.Id == 0),
                     Created = DateTime.Now,
@@ -338,7 +341,8 @@ namespace EnvironmentMonitor.Tests
                     DeviceIdentifier = "Device-03",
                     Sensors = [new Sensor() {
                         Name = "Test-01",
-                        SensorId = 1
+                        SensorId = 1,
+                        Created = DateTime.Now
                     }],
                     Location = locationWithNoAccess,
                     Created = DateTime.Now,

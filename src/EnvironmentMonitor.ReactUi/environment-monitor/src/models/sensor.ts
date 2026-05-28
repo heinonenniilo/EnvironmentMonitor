@@ -17,6 +17,8 @@ export interface SensorInfo extends Sensor {
   sensorId: number;
   sensors: VirtualSensor[];
   isVirtual: boolean;
+  created: Date;
+  updated?: Date;
 }
 
 export interface VirtualSensor {
