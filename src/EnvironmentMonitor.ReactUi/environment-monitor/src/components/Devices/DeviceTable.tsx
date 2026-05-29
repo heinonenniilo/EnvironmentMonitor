@@ -25,6 +25,7 @@ import {
   getCommunicationChannelDisplayName,
 } from "../../enums/communicationChannels";
 import type { LocationModel } from "../../models/location";
+import { isTimestampWarning } from "../../utilities/deviceWarningUtils";
 
 export interface DeviceTableProps {
   devices: DeviceInfo[];
@@ -288,10 +289,12 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
       },
       renderCell: (params) => {
         const row = params.row as DeviceInfo;
+        const showWarning =
+          row.showWarning ?? isTimestampWarning(row.lastMessage, row.isVirtual);
 
         const contentToRender = (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            {row.showWarning ? (
+            {showWarning ? (
               <WarningAmber color="warning" />
             ) : (
               <CheckCircle color="success" />
