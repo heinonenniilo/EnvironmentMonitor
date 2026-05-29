@@ -335,6 +335,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
             deviceToUpdate.DeviceIdentifier = string.IsNullOrEmpty(device.DeviceIdentifier) ? deviceToUpdate.DeviceIdentifier : device.DeviceIdentifier;
             deviceToUpdate.Visible = device.Visible;
             deviceToUpdate.CommunicationChannelId = device.CommunicationChannelId;
+            deviceToUpdate.IsVirtual = device.IsVirtual;
 
             if (deviceInDb == null && device.LocationId > 0)
             {

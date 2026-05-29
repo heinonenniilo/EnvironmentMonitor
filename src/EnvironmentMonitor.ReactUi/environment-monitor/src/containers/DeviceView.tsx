@@ -38,7 +38,7 @@ import type { SensorInfo } from "../models/sensor";
 import { SensorDialog } from "../components/Sensors/SensorDialog";
 import type { AddVirtualSensorRowDto } from "../models/updateVirtualSensorRows";
 import { EditDeviceDialog } from "../components/Devices/EditDeviceDialog";
-import type { UpdateDeviceDto } from "../models/updateDeviceDto";
+import type { AddOrUpdateDeviceDto } from "../models/addOrUpdateDeviceDto";
 import { DeviceInfoComponent } from "../components/Devices/DeviceInfo";
 
 const timeRangeDefaultDays = 7;
@@ -387,7 +387,7 @@ export const DeviceView: React.FC = () => {
       });
   };
 
-  const updateDevice = (model: UpdateDeviceDto) => {
+  const updateDevice = (model: AddOrUpdateDeviceDto) => {
     setIsLoading(true);
     deviceHook
       .updateDevice(model)
@@ -1270,12 +1270,14 @@ export const DeviceView: React.FC = () => {
         generatedKey={generatedApiKey}
         isLoading={isLoading}
       />
-      <EditDeviceDialog
-        open={editDeviceDialogOpen}
-        device={selectedDevice}
-        onClose={() => setEditDeviceDialogOpen(false)}
-        onSave={updateDevice}
-      />
+      {selectedDevice && (
+        <EditDeviceDialog
+          open={editDeviceDialogOpen}
+          device={selectedDevice}
+          onClose={() => setEditDeviceDialogOpen(false)}
+          onSave={updateDevice}
+        />
+      )}
       <SensorDialog
         open={sensorDialogOpen}
         device={selectedDevice}

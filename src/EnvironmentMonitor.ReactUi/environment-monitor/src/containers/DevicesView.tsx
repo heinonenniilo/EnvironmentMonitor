@@ -9,12 +9,22 @@ import {
   addNotification,
   setConfirmDialog,
 } from "../reducers/userInterfaceReducer";
-import { getDeviceInfos, setDeviceInfos } from "../reducers/measurementReducer";
+import {
+  getDeviceInfos,
+  getLocations,
+  setDeviceInfos,
+} from "../reducers/measurementReducer";
+import { Box, IconButton, Tooltip } from "@mui/material";
+import { Add } from "@mui/icons-material";
+import { EditDeviceDialog } from "../components/Devices/EditDeviceDialog";
+import type { AddOrUpdateDeviceDto } from "../models/addOrUpdateDeviceDto";
 
 export const DevicesView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [addDeviceDialogOpen, setAddDeviceDialogOpen] = useState(false);
   const dispatch = useDispatch();
   const deviceInfos = useSelector(getDeviceInfos);
+  const locations = useSelector(getLocations);
   const deviceHook = useApiHook().deviceHook;
 
   useEffect(() => {
@@ -83,11 +93,50 @@ export const DevicesView: React.FC = () => {
       });
   };
 
+  const addDevice = (model: AddOrUpdateDeviceDto) => {
+    setIsLoading(true);
+    deviceHook
+      .addDevice(model)
+      .then((res) => {
+        dispatch(
+          addNotification({
+            title: `Device added for ${res.device.name}`,
+            body: "",
+            severity: "success",
+          }),
+        );
+        getDevices();
+      })
+      .catch((er) => {
+        console.error(er);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
   const sorted = [...deviceInfos].sort((a, b) =>
     dateTimeSort(a.lastMessage ?? new Date(), b.lastMessage ?? new Date()),
   );
   return (
-    <AppContentWrapper title="Devices" isLoading={isLoading}>
+    <AppContentWrapper
+      title="Devices"
+      isLoading={isLoading}
+      titleComponent={
+        <Box display="flex" alignItems="center" gap={1}>
+          <Tooltip title="Add device">
+            <IconButton
+              onClick={() => setAddDeviceDialogOpen(true)}
+              sx={{ ml: 1, cursor: "pointer" }}
+              size="small"
+              title="Add device"
+            >
+              <Add />
+            </IconButton>
+          </Tooltip>
+        </Box>
+      }
+    >
       <DeviceTable
         devices={sorted}
         renderLink
@@ -104,6 +153,12 @@ export const DevicesView: React.FC = () => {
             }),
           );
         }}
+      />
+      <EditDeviceDialog
+        open={addDeviceDialogOpen}
+        locations={locations}
+        onClose={() => setAddDeviceDialogOpen(false)}
+        onSave={addDevice}
       />
     </AppContentWrapper>
   );
