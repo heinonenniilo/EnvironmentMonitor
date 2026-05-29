@@ -10,5 +10,6 @@ namespace EnvironmentMonitor.Domain.Models.ReturnModel
     public class SensorExtended : Sensor
     {
         public Guid DeviceIdentifier { get; set; }
+        public DateTime ?LastMeasurement { get; set; }
     }
 }

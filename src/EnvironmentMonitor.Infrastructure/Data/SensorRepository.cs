@@ -66,6 +66,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
             await _context.Sensors.AddAsync(sensor);
 
+
             if (saveChanges)
             {
                 await _context.SaveChangesAsync();

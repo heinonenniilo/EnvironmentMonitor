@@ -19,6 +19,7 @@ namespace EnvironmentMonitor.Application.DTOs
 
         public DateTime Created { get; set; }
         public DateTime? Updated { get; set; }
+        public DateTime? LastMeasurement { get; set; }
 
         public override void Mapping(Profile profile)
         {
@@ -26,6 +27,7 @@ namespace EnvironmentMonitor.Application.DTOs
                 .IncludeBase<Sensor, SensorDto>()
                 .ForMember(x => x.Sensors, opt => opt.MapFrom(x => x.VirtualSensorRows))
                 .ForMember(x => x.Active, opt => opt.MapFrom(x => x.Active))
+                .ForMember(x => x.LastMeasurement, opt => opt.MapFrom(x => x.LastMeasurement))
                 .ReverseMap();
 
             profile.CreateMap<SensorExtended, SensorInfoDto>()

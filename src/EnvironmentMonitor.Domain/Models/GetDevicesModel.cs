@@ -22,6 +22,7 @@ namespace EnvironmentMonitor.Domain.Models
         public bool GetContacts { get; set; }
         public bool GetSensors { get; set; }
         public bool? IsVirtual { get; set; }
+        public bool? GetLatestMeasurementBySensor { get; set; } = false;
 
     }
 
@@ -33,5 +34,6 @@ namespace EnvironmentMonitor.Domain.Models
         public List<int>? SensorIds { get; set; }
         public bool IncludeVirtualSensors { get; set; } = false;
         public bool? IsActive { get; set; }
+        public bool GetLatestMeasurement { get; set; } = false;
     }
 }
