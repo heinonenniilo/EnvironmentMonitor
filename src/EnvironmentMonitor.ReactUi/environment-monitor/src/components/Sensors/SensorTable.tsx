@@ -15,7 +15,7 @@ import {
 import { SensorsDialog } from "./SensorsDialog";
 import { useState } from "react";
 import { getAggregationTypeDisplayName } from "../../utilities/measurementUtils";
-import { Edit, Delete } from "@mui/icons-material";
+import { CheckCircle, Delete, Edit, WarningAmber } from "@mui/icons-material";
 import type { AddVirtualSensorRowDto } from "../../models/updateVirtualSensorRows";
 import type { DeviceInfo } from "../../models/deviceInfo";
 import { getFormattedDate } from "../../utilities/datetimeUtils";
@@ -54,6 +54,10 @@ export const SensorTable: React.FC<SensorTableProps> = ({
 
   const canClickRow = (sensor: SensorInfo) => {
     return isVirtual || sensor.isVirtual || sensor.sensors.length > 0;
+  };
+
+  const formatDate = (input: Date | undefined | null) => {
+    return input ? getFormattedDate(input, true) : "";
   };
 
   if (!device) {
@@ -103,6 +107,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
               <TableCell>Active</TableCell>
               <TableCell>Created</TableCell>
               <TableCell>Updated</TableCell>
+              <TableCell>Last Measurement</TableCell>
               {isVirtual && <TableCell>Aggregation Type</TableCell>}
               {(onEdit || onDelete) && <TableCell align="right"></TableCell>}
             </TableRow>
@@ -161,9 +166,19 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                         }}
                       />
                     </TableCell>
-                    <TableCell>{getFormattedDate(r.created, true)}</TableCell>
+                    <TableCell>{formatDate(r.created)}</TableCell>
+                    <TableCell>{formatDate(r.updated)}</TableCell>
                     <TableCell>
-                      {r.updated ? getFormattedDate(r.updated, true) : ""}
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        {r.showWarning ? (
+                          <WarningAmber color="warning" />
+                        ) : (
+                          <CheckCircle color="success" />
+                        )}
+                        <span>{formatDate(r.lastMeasurement)}</span>
+                      </Box>
                     </TableCell>
                     {isVirtual && (
                       <TableCell>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,5 +27,7 @@ namespace EnvironmentMonitor.Domain.Entities
         public bool IsVirtual { get; set; }
         public int? AggregationType { get; set; }
         public bool Active { get; set; } = true;
+        [NotMapped]
+        public DateTime? LastMeasurement { get; set; }
     }
 }

@@ -128,9 +128,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpGet(template: "{identifier}/info")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> GetDeviceInfo(Guid identifier)
+        public async Task<DeviceInfoDto> GetDeviceInfo(Guid identifier, [FromQuery] bool getLatestMeasurementBySensor = false)
         {
-            var result = await _deviceService.GetDeviceInfos(false, [identifier], true, true, true, true);
+            var result = await _deviceService.GetDeviceInfos(false, [identifier], true, true, true, true, getLatestMeasurementBySensor: getLatestMeasurementBySensor);
             return result.First();
         }
 

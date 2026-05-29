@@ -108,7 +108,7 @@ namespace EnvironmentMonitor.Application.Services
         }
 
         public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false, 
-            bool getContacts = false, bool? isVirtual = null, List<Guid>? locationIdentifiers = null)
+            bool getContacts = false, bool? isVirtual = null, List<Guid>? locationIdentifiers = null, bool getLatestMeasurementBySensor = false)
         {
             _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
             var infos = new List<DeviceInfo>();
@@ -132,7 +132,8 @@ namespace EnvironmentMonitor.Application.Services
                     GetAttributes = getAttributes,
                     GetContacts = getContacts,
                     IsVirtual = isVirtual,
-                    LocationIdentifiers = locationIdentifiers
+                    LocationIdentifiers = locationIdentifiers,
+                    GetLatestMeasurementBySensor = getLatestMeasurementBySensor
                 }))
                 .Where(d => _userService.HasAccessToDevice(d.Device.Identifier, AccessLevels.Read)).ToList();
             }
@@ -146,7 +147,8 @@ namespace EnvironmentMonitor.Application.Services
                     GetLocation = getLocation,
                     GetAttributes = getAttributes,
                     IsVirtual = isVirtual, 
-                    LocationIdentifiers = locationIdentifiers
+                    LocationIdentifiers = locationIdentifiers,
+                    GetLatestMeasurementBySensor = getLatestMeasurementBySensor
                 });
             }
             var listToReturn = _mapper.Map<List<DeviceInfoDto>>(infos);

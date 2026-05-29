@@ -65,7 +65,8 @@ namespace EnvironmentMonitor.Infrastructure.Data
             {
                 query = query.Where(x => x.Active == model.IsActive.Value);
             }
-            return await query.Select(x => new SensorExtended()
+
+            var list = await query.Select(x => new SensorExtended()
             {
                 Id = x.Id,
                 SensorId = x.SensorId,
@@ -81,6 +82,25 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 Created = x.Created,
                 Updated = x.Updated,
             }).ToListAsync();
+
+            if (model.GetLatestMeasurement)
+            {
+                var sensorIds = list.Select(s => s.Id).ToList();
+                var dateLimit = _dateService.CurrentTime().AddDays(-1);
+                var latestMeasurements = await _context.Measurements
+                    .Where(m => sensorIds.Contains(m.SensorId) && m.Timestamp >= dateLimit)
+                    .GroupBy(m => m.SensorId)
+                    .Select(g => new { SensorId = g.Key, Latest = g.Max(m => m.Timestamp) })
+                    .ToListAsync();
+
+                var latestLookup = latestMeasurements.ToDictionary(x => x.SensorId, x => x.Latest);
+                foreach (var sensor in list)
+                {
+                    sensor.LastMeasurement = latestLookup.TryGetValue(sensor.Id, out var ts) ? ts : null;
+                }
+            }
+
+            return list;
         }
 
         public async Task<DeviceEvent> AddEvent(int deviceId, DeviceEventTypes type, string message, bool saveChanges, DateTime? dateTimeUtc)
@@ -114,8 +134,34 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 .ThenInclude(s => s.VirtualSensorRows)
                     .ThenInclude(vsr => vsr.ValueSensor)
                         .ThenInclude(hh => hh.Device);
-            
-            return await GetDeviceInfos(query);
+
+            var result = await GetDeviceInfos(query);
+
+            if (model.GetLatestMeasurementBySensor == true)
+            {
+                var sensorIds = result
+                    .SelectMany(d => d.Device.Sensors ?? [])
+                    .Select(s => s.Id)
+                    .ToList();
+
+                var dateLimit = _dateService.CurrentTime().AddDays(-1);
+                var latestMeasurements = await _context.Measurements
+                    .Where(m => sensorIds.Contains(m.SensorId) && m.Timestamp >= dateLimit)
+                    .GroupBy(m => m.SensorId)
+                    .Select(g => new { SensorId = g.Key, Latest = g.Max(m => m.Timestamp) })
+                    .ToListAsync();
+
+                var latestLookup = latestMeasurements.ToDictionary(x => x.SensorId, x => x.Latest);
+                foreach (var deviceInfo in result)
+                {
+                    foreach (var sensor in deviceInfo.Device.Sensors ?? [])
+                    {
+                        sensor.LastMeasurement = latestLookup.TryGetValue(sensor.Id, out var ts) ? ts : null;
+                    }
+                }
+            }
+
+            return result;
         }
 
         public async Task<List<DeviceEvent>> GetDeviceEvents(int id)
