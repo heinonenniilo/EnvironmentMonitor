@@ -34,6 +34,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task SetStatus(SetDeviceStatusModel model, bool saveChanges);
 
         public Task<DeviceInfoDto> UpdateDevice(UpdateDeviceDto model);
+        public Task<DeviceInfoDto> AddDevice(AddDeviceDto model);
 
         public Task<DeviceContactDto> AddDeviceContact(AddOrUpdateDeviceContactDto model);
         public Task<DeviceContactDto> UpdateDeviceContact(AddOrUpdateDeviceContactDto model);

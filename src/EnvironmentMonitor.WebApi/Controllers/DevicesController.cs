@@ -41,6 +41,10 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpPut("update")]
         public async Task<DeviceInfoDto> Update([FromBody] UpdateDeviceDto model) => await _deviceService.UpdateDevice(model);
 
+        [HttpPost("add")]
+        [Authorize(Roles = "Admin")]
+        public async Task<DeviceInfoDto> Add([FromBody] AddDeviceDto model) => await _deviceService.AddDevice(model);
+
         [HttpPost("reboot")]
         [Authorize(Roles = "Admin")]
         public async Task Reboot([FromBody] MessageDeviceModel model) => await _deviceCommandService.Reboot(model.DeviceIdentifier);

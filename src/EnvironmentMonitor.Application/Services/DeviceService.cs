@@ -403,6 +403,31 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<DeviceInfoDto>(info);
         }
 
+        public async Task<DeviceInfoDto> AddDevice(AddDeviceDto model)
+        {
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            _logger.LogInformation($"Adding new device with identifier: '{model.DeviceIdentifier}' and name: '{model.Name}'");
+
+            var newDevice = new Device()
+            {
+                Name = model.Name,
+                DeviceIdentifier = model.DeviceIdentifier,
+                Visible = model.Visible,
+                CommunicationChannelId = model.CommunicationChannelId,
+                Created = _dateService.CurrentTime(),
+            };
+
+            var info = await _deviceRepository.AddOrUpdate(newDevice, true);
+
+            _logger.LogInformation($"Successfully added device with identifier: '{model.DeviceIdentifier}'");
+
+            return _mapper.Map<DeviceInfoDto>(info);
+        }
+
         public async Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model)
         {
             List<Guid>? deviceIdFilter = null;
