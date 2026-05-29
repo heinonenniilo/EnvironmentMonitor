@@ -26,6 +26,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILogger<DeviceService> _logger;
         private readonly IUserService _userService;
         private readonly IDeviceRepository _deviceRepository;
+        private readonly ILocationRepository _locationRepository;
         private readonly IDeviceEmailService _deviceEmailService;
         private readonly IStorageClient _storageClient;
         private readonly IMapper _mapper;
@@ -35,12 +36,13 @@ namespace EnvironmentMonitor.Application.Services
         private readonly DeviceSettings _deviceSettings;
 
         public DeviceService(ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IDeviceEmailService deviceEmailService, IMapper mapper, IStorageClient storageClient, IDateService dateService,
+            IDeviceRepository deviceRepository, ILocationRepository locationRepository, IDeviceEmailService deviceEmailService, IMapper mapper, IStorageClient storageClient, IDateService dateService,
             IImageService imageService, IKeyVaultClient keyVaultClient, DeviceSettings deviceSettings)
         {
             _logger = logger;
             _userService = userService;
             _deviceRepository = deviceRepository;
+            _locationRepository = locationRepository;
             _deviceEmailService = deviceEmailService;
             _mapper = mapper;
             _storageClient = storageClient;
@@ -402,6 +404,7 @@ namespace EnvironmentMonitor.Application.Services
                     Name = model.Name,
                     DeviceIdentifier = model.DeviceIdentifier,
                     Visible = model.Visible,
+                    IsVirtual = model.IsVirtual,
                     CommunicationChannelId = model.CommunicationChannelId,
                     Created = device.Created
                 };
@@ -419,13 +422,23 @@ namespace EnvironmentMonitor.Application.Services
 
                 _logger.LogInformation($"Adding new device with identifier: '{model.DeviceIdentifier}' and name: '{model.Name}'");
 
+                int locationId = 0;
+                if (model.LocationIdentifier.HasValue)
+                {
+                    var location = (await _locationRepository.GetLocations(new Domain.Models.GetModels.GetLocationsModel() { Identifiers = [model.LocationIdentifier.Value] })).FirstOrDefault()
+                        ?? throw new EntityNotFoundException($"Location with identifier: '{model.LocationIdentifier.Value}' not found.");
+                    locationId = location.Id;
+                }
+
                 var newDevice = new Device()
                 {
                     Name = model.Name,
                     DeviceIdentifier = model.DeviceIdentifier,
                     Visible = model.Visible,
+                    IsVirtual = model.IsVirtual,
                     CommunicationChannelId = model.CommunicationChannelId,
-                    Created = _dateService.CurrentTime()
+                    Created = _dateService.CurrentTime(),
+                    LocationId = locationId
                 };
 
                 var info = await _deviceRepository.AddOrUpdate(newDevice, true);

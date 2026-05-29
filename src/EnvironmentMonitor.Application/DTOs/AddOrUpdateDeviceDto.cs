@@ -15,6 +15,11 @@ namespace EnvironmentMonitor.Application.DTOs
         public required string Name { get; set; }
         public required string DeviceIdentifier { get; set; }
         public bool Visible { get; set; }
+        public bool IsVirtual { get; set; }
         public int? CommunicationChannelId { get; set; }
+        /// <summary>
+        /// Only applied when adding a new device.
+        /// </summary>
+        public Guid? LocationIdentifier { get; set; }
     }
 }
