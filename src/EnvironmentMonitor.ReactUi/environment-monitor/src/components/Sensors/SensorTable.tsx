@@ -19,7 +19,6 @@ import { CheckCircle, Delete, Edit, WarningAmber } from "@mui/icons-material";
 import type { AddVirtualSensorRowDto } from "../../models/updateVirtualSensorRows";
 import type { DeviceInfo } from "../../models/deviceInfo";
 import { getFormattedDate } from "../../utilities/datetimeUtils";
-import { isTimestampWarning } from "../../utilities/deviceWarningUtils";
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
@@ -173,10 +172,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
-                        {isTimestampWarning(
-                          r.lastMeasurement,
-                          isVirtual || r.isVirtual,
-                        ) ? (
+                        {r.showWarning ? (
                           <WarningAmber color="warning" />
                         ) : (
                           <CheckCircle color="success" />

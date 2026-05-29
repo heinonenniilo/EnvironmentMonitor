@@ -20,6 +20,7 @@ export interface SensorInfo extends Sensor {
   created: Date;
   updated?: Date;
   lastMeasurement?: Date;
+  showWarning: boolean;
 }
 
 export interface VirtualSensor {

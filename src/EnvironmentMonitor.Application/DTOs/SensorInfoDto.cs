@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EnvironmentMonitor.Application.Mappings;
+using EnvironmentMonitor.Application.ValueResolvers;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Models.ReturnModel;
 using System;
@@ -20,6 +21,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public DateTime Created { get; set; }
         public DateTime? Updated { get; set; }
         public DateTime? LastMeasurement { get; set; }
+        public bool ShowWarning { get; set; }
 
         public override void Mapping(Profile profile)
         {
@@ -28,6 +30,7 @@ namespace EnvironmentMonitor.Application.DTOs
                 .ForMember(x => x.Sensors, opt => opt.MapFrom(x => x.VirtualSensorRows))
                 .ForMember(x => x.Active, opt => opt.MapFrom(x => x.Active))
                 .ForMember(x => x.LastMeasurement, opt => opt.MapFrom(x => x.LastMeasurement))
+                .ForMember(x => x.ShowWarning, opt => opt.MapFrom<ShowSensorWarningResolver>())
                 .ReverseMap();
 
             profile.CreateMap<SensorExtended, SensorInfoDto>()
