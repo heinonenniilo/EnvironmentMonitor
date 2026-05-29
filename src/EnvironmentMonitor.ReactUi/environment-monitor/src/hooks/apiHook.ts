@@ -162,7 +162,10 @@ interface deviceHook {
   getDeviceInfos: (
     locationIdentifiers?: string[],
   ) => Promise<DeviceInfo[] | undefined>;
-  getDeviceInfo: (identifier: string) => Promise<DeviceInfo>;
+  getDeviceInfo: (
+    identifier: string,
+    getLatestMeasurementBySensor?: boolean,
+  ) => Promise<DeviceInfo>;
   setMotionControlState: (
     identifier: string,
     state: number,
@@ -675,10 +678,18 @@ export const useApiHook = (): ApiHook => {
           return undefined;
         }
       },
-      getDeviceInfo: async (identifier: string) => {
+      getDeviceInfo: async (
+        identifier: string,
+        getLatestMeasurementBySensor?: boolean,
+      ) => {
         try {
           const res = await apiClient.get<any, AxiosResponse<DeviceInfo>>(
             `/api/devices/${identifier}/info`,
+            {
+              params: {
+                getLatestMeasurementBySensor,
+              },
+            },
           );
           return res.data;
         } catch (ex) {

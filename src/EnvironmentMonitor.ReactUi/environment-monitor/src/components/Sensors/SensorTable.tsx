@@ -15,10 +15,13 @@ import {
 import { SensorsDialog } from "./SensorsDialog";
 import { useState } from "react";
 import { getAggregationTypeDisplayName } from "../../utilities/measurementUtils";
-import { Edit, Delete } from "@mui/icons-material";
+import { CheckCircle, Delete, Edit, WarningAmber } from "@mui/icons-material";
 import type { AddVirtualSensorRowDto } from "../../models/updateVirtualSensorRows";
 import type { DeviceInfo } from "../../models/deviceInfo";
 import { getFormattedDate } from "../../utilities/datetimeUtils";
+
+const DEVICE_WARNING_LIMIT_IN_MINUTES = 10;
+const VIRTUAL_DEVICE_WARNING_LIMIT_IN_MINUTES = 20;
 
 export interface SensorTableProps {
   sensors: SensorInfo[];
@@ -54,6 +57,31 @@ export const SensorTable: React.FC<SensorTableProps> = ({
 
   const canClickRow = (sensor: SensorInfo) => {
     return isVirtual || sensor.isVirtual || sensor.sensors.length > 0;
+  };
+
+  const formatDate = (input: Date | undefined | null) => {
+    return input ? getFormattedDate(input, true) : "";
+  };
+
+  const showMeasurementWarning = (sensor: SensorInfo) => {
+    if (!sensor.lastMeasurement) {
+      return true;
+    }
+
+    const lastMeasurement = new Date(sensor.lastMeasurement);
+    if (Number.isNaN(lastMeasurement.getTime())) {
+      return true;
+    }
+
+    const warningLimitInMinutes =
+      isVirtual || sensor.isVirtual
+        ? VIRTUAL_DEVICE_WARNING_LIMIT_IN_MINUTES
+        : DEVICE_WARNING_LIMIT_IN_MINUTES;
+
+    return (
+      Date.now() - lastMeasurement.getTime() >
+      warningLimitInMinutes * 60 * 1000
+    );
   };
 
   if (!device) {
@@ -103,6 +131,7 @@ export const SensorTable: React.FC<SensorTableProps> = ({
               <TableCell>Active</TableCell>
               <TableCell>Created</TableCell>
               <TableCell>Updated</TableCell>
+              <TableCell>Last Measurement</TableCell>
               {isVirtual && <TableCell>Aggregation Type</TableCell>}
               {(onEdit || onDelete) && <TableCell align="right"></TableCell>}
             </TableRow>
@@ -161,9 +190,17 @@ export const SensorTable: React.FC<SensorTableProps> = ({
                         }}
                       />
                     </TableCell>
-                    <TableCell>{getFormattedDate(r.created, true)}</TableCell>
+                    <TableCell>{formatDate(r.created)}</TableCell>
+                    <TableCell>{formatDate(r.updated)}</TableCell>
                     <TableCell>
-                      {r.updated ? getFormattedDate(r.updated, true) : ""}
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        {showMeasurementWarning(r) ? (
+                          <WarningAmber color="warning" />
+                        ) : (
+                          <CheckCircle color="success" />
+                        )}
+                        <span>{formatDate(r.lastMeasurement)}</span>
+                      </Box>
                     </TableCell>
                     {isVirtual && (
                       <TableCell>

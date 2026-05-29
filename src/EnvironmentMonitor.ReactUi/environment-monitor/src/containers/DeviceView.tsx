@@ -99,7 +99,7 @@ export const DeviceView: React.FC = () => {
   const loadDeviceData = (identifier: string) => {
     const promises = [
       deviceHook
-        .getDeviceInfo(identifier)
+        .getDeviceInfo(identifier, true)
         .then((res) => ({
           type: "deviceInfo",
           data: res,
@@ -680,7 +680,7 @@ export const DeviceView: React.FC = () => {
           }),
         );
         // Refresh device info to get updated contacts
-        return deviceHook.getDeviceInfo(deviceIdentifier);
+        return deviceHook.getDeviceInfo(deviceIdentifier, true);
       })
       .then((res) => {
         setSelectedDevice(res);
@@ -715,7 +715,7 @@ export const DeviceView: React.FC = () => {
           }),
         );
         // Refresh device info to get updated contacts
-        return deviceHook.getDeviceInfo(selectedDevice.device.identifier);
+        return deviceHook.getDeviceInfo(selectedDevice.device.identifier, true);
       })
       .then((res) => {
         setSelectedDevice(res);
@@ -740,7 +740,7 @@ export const DeviceView: React.FC = () => {
             severity: "success",
           }),
         );
-        return deviceHook.getDeviceInfo(model.deviceIdentifier);
+        return deviceHook.getDeviceInfo(model.deviceIdentifier, true);
       })
       .then((res) => {
         setSelectedDevice(res);
@@ -765,7 +765,7 @@ export const DeviceView: React.FC = () => {
             severity: "success",
           }),
         );
-        return deviceHook.getDeviceInfo(model.deviceIdentifier);
+        return deviceHook.getDeviceInfo(model.deviceIdentifier, true);
       })
       .then((res) => {
         setSelectedDevice(res);
@@ -794,7 +794,10 @@ export const DeviceView: React.FC = () => {
                   severity: "success",
                 }),
               );
-              return deviceHook.getDeviceInfo(selectedDevice.device.identifier);
+              return deviceHook.getDeviceInfo(
+                selectedDevice.device.identifier,
+                true,
+              );
             })
             .then((res) => {
               setSelectedDevice(res);
@@ -837,7 +840,7 @@ export const DeviceView: React.FC = () => {
             severity: "success",
           }),
         );
-        return deviceHook.getDeviceInfo(selectedDevice.device.identifier);
+        return deviceHook.getDeviceInfo(selectedDevice.device.identifier, true);
       })
       .then((res) => {
         setSelectedDevice(res);
