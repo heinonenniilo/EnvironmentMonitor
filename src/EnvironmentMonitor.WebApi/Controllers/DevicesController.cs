@@ -38,12 +38,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
             _fileUploadSettings = fileUploadSettings;
         }
 
-        [HttpPut("update")]
-        public async Task<DeviceInfoDto> Update([FromBody] UpdateDeviceDto model) => await _deviceService.UpdateDevice(model);
-
-        [HttpPost("add")]
+        [HttpPost("add-or-update")]
         [Authorize(Roles = "Admin")]
-        public async Task<DeviceInfoDto> Add([FromBody] AddDeviceDto model) => await _deviceService.AddDevice(model);
+        public async Task<DeviceInfoDto> AddOrUpdate([FromBody] AddOrUpdateDeviceDto model) => await _deviceService.AddOrUpdateDevice(model);
 
         [HttpPost("reboot")]
         [Authorize(Roles = "Admin")]

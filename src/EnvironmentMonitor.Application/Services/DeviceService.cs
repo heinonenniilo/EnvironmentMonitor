@@ -381,51 +381,59 @@ namespace EnvironmentMonitor.Application.Services
             };
         }
 
-        public async Task<DeviceInfoDto> UpdateDevice(UpdateDeviceDto model)
+        public async Task<DeviceInfoDto> AddOrUpdateDevice(AddOrUpdateDeviceDto model)
         {
-            if (!_userService.HasAccessToDevice(model.Device.Identifier, AccessLevels.Write))
+            if (model.Identifier.HasValue)
             {
-                throw new UnauthorizedAccessException();
+                // Update existing device
+                if (!_userService.HasAccessToDevice(model.Identifier.Value, AccessLevels.Write))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+
+                var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [model.Identifier.Value] })).FirstOrDefault()
+                    ?? throw new EntityNotFoundException($"Device with identifier: '{model.Identifier.Value}' not found.");
+
+                _logger.LogInformation($"Updating device '{device.Name}' ({model.Identifier.Value})");
+
+                var updateModel = new Device()
+                {
+                    Id = device.Id,
+                    Name = model.Name,
+                    DeviceIdentifier = model.DeviceIdentifier,
+                    Visible = model.Visible,
+                    CommunicationChannelId = model.CommunicationChannelId,
+                    Created = device.Created
+                };
+
+                var info = await _deviceRepository.AddOrUpdate(updateModel, true);
+                return _mapper.Map<DeviceInfoDto>(info);
             }
-
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [model.Device.Identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{model.Device.Identifier}' not found.");
-            var updateModel = _mapper.Map<Device>(model.Device);
-            updateModel.Id = device.Id;
-            updateModel.CommunicationChannelId = model.CommunicationChannelId;
-
-            if (!string.IsNullOrEmpty(model.DeviceIdentifier))
+            else
             {
-                _logger.LogInformation($"Updating device identifier for device '{device.Name}' to '{model.DeviceIdentifier}'");
-                updateModel.DeviceIdentifier = model.DeviceIdentifier;
-            }            
+                // Add new device
+                if (!_userService.IsAdmin)
+                {
+                    throw new UnauthorizedAccessException();
+                }
 
-            var info = await _deviceRepository.AddOrUpdate(updateModel, true);
-            return _mapper.Map<DeviceInfoDto>(info);
-        }
+                _logger.LogInformation($"Adding new device with identifier: '{model.DeviceIdentifier}' and name: '{model.Name}'");
 
-        public async Task<DeviceInfoDto> AddDevice(AddDeviceDto model)
-        {
-            if (!_userService.IsAdmin)
-            {
-                throw new UnauthorizedAccessException();
+                var newDevice = new Device()
+                {
+                    Name = model.Name,
+                    DeviceIdentifier = model.DeviceIdentifier,
+                    Visible = model.Visible,
+                    CommunicationChannelId = model.CommunicationChannelId,
+                    Created = _dateService.CurrentTime()
+                };
+
+                var info = await _deviceRepository.AddOrUpdate(newDevice, true);
+
+                _logger.LogInformation($"Successfully added device with identifier: '{model.DeviceIdentifier}'");
+
+                return _mapper.Map<DeviceInfoDto>(info);
             }
-
-            _logger.LogInformation($"Adding new device with identifier: '{model.DeviceIdentifier}' and name: '{model.Name}'");
-
-            var newDevice = new Device()
-            {
-                Name = model.Name,
-                DeviceIdentifier = model.DeviceIdentifier,
-                Visible = model.Visible,
-                CommunicationChannelId = model.CommunicationChannelId,
-                Created = _dateService.CurrentTime(),
-            };
-
-            var info = await _deviceRepository.AddOrUpdate(newDevice, true);
-
-            _logger.LogInformation($"Successfully added device with identifier: '{model.DeviceIdentifier}'");
-
-            return _mapper.Map<DeviceInfoDto>(info);
         }
 
         public async Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model)
