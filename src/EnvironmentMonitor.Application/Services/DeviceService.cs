@@ -26,6 +26,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly ILogger<DeviceService> _logger;
         private readonly IUserService _userService;
         private readonly IDeviceRepository _deviceRepository;
+        private readonly ILocationRepository _locationRepository;
         private readonly IDeviceEmailService _deviceEmailService;
         private readonly IStorageClient _storageClient;
         private readonly IMapper _mapper;
@@ -35,12 +36,13 @@ namespace EnvironmentMonitor.Application.Services
         private readonly DeviceSettings _deviceSettings;
 
         public DeviceService(ILogger<DeviceService> logger, IUserService userService,
-            IDeviceRepository deviceRepository, IDeviceEmailService deviceEmailService, IMapper mapper, IStorageClient storageClient, IDateService dateService,
+            IDeviceRepository deviceRepository, ILocationRepository locationRepository, IDeviceEmailService deviceEmailService, IMapper mapper, IStorageClient storageClient, IDateService dateService,
             IImageService imageService, IKeyVaultClient keyVaultClient, DeviceSettings deviceSettings)
         {
             _logger = logger;
             _userService = userService;
             _deviceRepository = deviceRepository;
+            _locationRepository = locationRepository;
             _deviceEmailService = deviceEmailService;
             _mapper = mapper;
             _storageClient = storageClient;
@@ -381,26 +383,70 @@ namespace EnvironmentMonitor.Application.Services
             };
         }
 
-        public async Task<DeviceInfoDto> UpdateDevice(UpdateDeviceDto model)
+        public async Task<DeviceInfoDto> AddOrUpdateDevice(AddOrUpdateDeviceDto model)
         {
-            if (!_userService.HasAccessToDevice(model.Device.Identifier, AccessLevels.Write))
+            if (model.Identifier.HasValue)
             {
-                throw new UnauthorizedAccessException();
+                // Update existing device
+                if (!_userService.HasAccessToDevice(model.Identifier.Value, AccessLevels.Write))
+                {
+                    throw new UnauthorizedAccessException();
+                }
+
+                var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [model.Identifier.Value] })).FirstOrDefault()
+                    ?? throw new EntityNotFoundException($"Device with identifier: '{model.Identifier.Value}' not found.");
+
+                _logger.LogInformation($"Updating device '{device.Name}' ({model.Identifier.Value})");
+
+                var updateModel = new Device()
+                {
+                    Id = device.Id,
+                    Name = model.Name,
+                    DeviceIdentifier = model.DeviceIdentifier,
+                    Visible = model.Visible,
+                    IsVirtual = model.IsVirtual,
+                    CommunicationChannelId = model.CommunicationChannelId,
+                    Created = device.Created
+                };
+
+                var info = await _deviceRepository.AddOrUpdate(updateModel, true);
+                return _mapper.Map<DeviceInfoDto>(info);
             }
-
-            var device = (await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = [model.Device.Identifier] })).FirstOrDefault() ?? throw new EntityNotFoundException($"Device with identifier: '{model.Device.Identifier}' not found.");
-            var updateModel = _mapper.Map<Device>(model.Device);
-            updateModel.Id = device.Id;
-            updateModel.CommunicationChannelId = model.CommunicationChannelId;
-
-            if (!string.IsNullOrEmpty(model.DeviceIdentifier))
+            else
             {
-                _logger.LogInformation($"Updating device identifier for device '{device.Name}' to '{model.DeviceIdentifier}'");
-                updateModel.DeviceIdentifier = model.DeviceIdentifier;
-            }            
+                // Add new device
+                if (!_userService.IsAdmin)
+                {
+                    throw new UnauthorizedAccessException();
+                }
 
-            var info = await _deviceRepository.AddOrUpdate(updateModel, true);
-            return _mapper.Map<DeviceInfoDto>(info);
+                _logger.LogInformation($"Adding new device with identifier: '{model.DeviceIdentifier}' and name: '{model.Name}'");
+
+                int locationId = 0;
+                if (model.LocationIdentifier.HasValue)
+                {
+                    var location = (await _locationRepository.GetLocations(new Domain.Models.GetModels.GetLocationsModel() { Identifiers = [model.LocationIdentifier.Value] })).FirstOrDefault()
+                        ?? throw new EntityNotFoundException($"Location with identifier: '{model.LocationIdentifier.Value}' not found.");
+                    locationId = location.Id;
+                }
+
+                var newDevice = new Device()
+                {
+                    Name = model.Name,
+                    DeviceIdentifier = model.DeviceIdentifier,
+                    Visible = model.Visible,
+                    IsVirtual = model.IsVirtual,
+                    CommunicationChannelId = model.CommunicationChannelId,
+                    Created = _dateService.CurrentTime(),
+                    LocationId = locationId
+                };
+
+                var info = await _deviceRepository.AddOrUpdate(newDevice, true);
+
+                _logger.LogInformation($"Successfully added device with identifier: '{model.DeviceIdentifier}'");
+
+                return _mapper.Map<DeviceInfoDto>(info);
+            }
         }
 
         public async Task<PaginatedResult<DeviceMessageDto>> GetDeviceMessages(GetDeviceMessagesModel model)

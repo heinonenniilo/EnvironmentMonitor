@@ -33,7 +33,7 @@ namespace EnvironmentMonitor.Application.Interfaces
         public Task<List<DeviceEventDto>> GetDeviceEvents(Guid identifier);
         public Task SetStatus(SetDeviceStatusModel model, bool saveChanges);
 
-        public Task<DeviceInfoDto> UpdateDevice(UpdateDeviceDto model);
+        public Task<DeviceInfoDto> AddOrUpdateDevice(AddOrUpdateDeviceDto model);
 
         public Task<DeviceContactDto> AddDeviceContact(AddOrUpdateDeviceContactDto model);
         public Task<DeviceContactDto> UpdateDeviceContact(AddOrUpdateDeviceContactDto model);

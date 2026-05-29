@@ -33,7 +33,7 @@ import type { UserInfoDto } from "../models/userInfoDto";
 import type { ManageUserRolesRequest } from "../models/manageUserRolesRequest";
 import type { ManageUserClaimsRequest } from "../models/manageUserClaimsRequest";
 import type { ApiKeyDto, UpdateApiKeyRequest } from "../models/apiKey";
-import type { UpdateDeviceDto } from "../models/updateDeviceDto";
+import type { AddOrUpdateDeviceDto } from "../models/addOrUpdateDeviceDto";
 import type { AddOrUpdateSensor } from "../models/addOrUpdateSensor";
 import type { SensorInfo } from "../models/sensor";
 import type { AddLocation } from "../models/addLocation";
@@ -194,7 +194,8 @@ interface deviceHook {
     from: moment.Moment,
     to?: moment.Moment,
   ) => Promise<DeviceStatusModel>;
-  updateDevice: (model: UpdateDeviceDto) => Promise<DeviceInfo>;
+  addDevice: (model: AddOrUpdateDeviceDto) => Promise<DeviceInfo>;
+  updateDevice: (model: AddOrUpdateDeviceDto) => Promise<DeviceInfo>;
   getDeviceMessage: (
     model: GetDeviceMessagesModel,
   ) => Promise<PaginatedResult<DeviceMessage>>;
@@ -618,9 +619,20 @@ export const useApiHook = (): ApiHook => {
       },
     },
     deviceHook: {
-      updateDevice: async (model: UpdateDeviceDto) => {
+      addDevice: async (model: AddOrUpdateDeviceDto) => {
         try {
-          const res = await apiClient.put("/api/devices/update", model);
+          const res = await apiClient.post("/api/devices/add-or-update", model);
+
+          return res.data;
+        } catch (ex: any) {
+          console.error(ex);
+          showError(ex, "Failed to add device");
+          throw ex;
+        }
+      },
+      updateDevice: async (model: AddOrUpdateDeviceDto) => {
+        try {
+          const res = await apiClient.post("/api/devices/add-or-update", model);
 
           return res.data;
         } catch (ex: any) {

@@ -17,74 +17,118 @@ import {
 import { Close } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import type { DeviceInfo } from "../../models/deviceInfo";
-import type { UpdateDeviceDto } from "../../models/updateDeviceDto";
+import type { AddOrUpdateDeviceDto } from "../../models/addOrUpdateDeviceDto";
+import type { LocationModel } from "../../models/location";
 import {
   CommunicationChannels,
   getCommunicationChannelDisplayName,
 } from "../../enums/communicationChannels";
 
-export interface EditDeviceDialogProps {
-  open: boolean;
-  device?: DeviceInfo;
-  onClose: () => void;
-  onSave: (model: UpdateDeviceDto) => void;
+interface DeviceDialogModel {
+  name: string;
+  deviceIdentifier: string;
+  visible: boolean;
+  isVirtual: boolean;
+  communicationChannelId: number;
+  locationIdentifier?: string;
 }
 
-export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
-  open,
-  device,
-  onClose,
-  onSave,
-}) => {
-  const [model, setModel] = useState<UpdateDeviceDto | undefined>(undefined);
+export interface EditDeviceDialogProps {
+  open: boolean;
+  onClose: () => void;
+  device?: DeviceInfo;
+  locations?: LocationModel[];
+  onSave: (model: AddOrUpdateDeviceDto) => void;
+}
 
-  const createModel = (device: DeviceInfo): UpdateDeviceDto => ({
-    device: { ...device.device },
+export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = (props) => {
+  const { open, device, locations, onClose } = props;
+  const [model, setModel] = useState<DeviceDialogModel | undefined>(undefined);
+
+  const createEditModel = (device: DeviceInfo): DeviceDialogModel => ({
+    name: device.device.name,
     communicationChannelId: device.communicationChannelId ?? 0,
     deviceIdentifier: device.deviceIdentifier,
+    visible: device.device.visible,
+    isVirtual: device.isVirtual,
+  });
+
+  const createAddModel = (): DeviceDialogModel => ({
+    name: "",
+    communicationChannelId: CommunicationChannels.IotHub,
+    deviceIdentifier: "",
+    visible: true,
+    isVirtual: false,
+    locationIdentifier: undefined,
   });
 
   useEffect(() => {
-    if (!open || !device) {
+    if (!open) {
       return;
     }
 
-    setModel(createModel(device));
+    setModel(device ? createEditModel(device) : createAddModel());
   }, [device, open]);
 
   const handleSave = () => {
-    if (!model || !model.device.name.trim() || !model.deviceIdentifier?.trim()) {
+    if (!model || !model.name.trim() || !model.deviceIdentifier.trim()) {
       return;
     }
 
-    onSave({
+    const trimmedModel = {
       ...model,
-      device: { ...model.device, name: model.device.name.trim() },
+      name: model.name.trim(),
       deviceIdentifier: model.deviceIdentifier.trim(),
-    });
+    };
+
+    if (device) {
+      props.onSave({
+        identifier: device.device.identifier,
+        name: trimmedModel.name,
+        visible: trimmedModel.visible,
+        isVirtual: trimmedModel.isVirtual,
+        communicationChannelId: trimmedModel.communicationChannelId,
+        deviceIdentifier: trimmedModel.deviceIdentifier,
+      });
+    } else {
+      props.onSave({
+        ...trimmedModel,
+        locationIdentifier: trimmedModel.locationIdentifier || undefined,
+      });
+    }
+
     onClose();
   };
 
-  const hasChanges =
+  const hasEditChanges =
     !!device &&
     !!model &&
-    (model.device.name.trim() !== device.device.name ||
-      model.deviceIdentifier?.trim() !== device.deviceIdentifier ||
-      model.device.visible !== device.device.visible ||
+    (model.name.trim() !== device.device.name ||
+      model.deviceIdentifier.trim() !== device.deviceIdentifier ||
+      model.visible !== device.device.visible ||
+      model.isVirtual !== device.isVirtual ||
       model.communicationChannelId !== (device.communicationChannelId ?? 0));
+
+  const hasAddChanges =
+    !device &&
+    !!model &&
+    (model.name.trim().length > 0 ||
+      model.deviceIdentifier.trim().length > 0 ||
+      model.visible !== true ||
+      model.isVirtual !== false ||
+      !!model.locationIdentifier ||
+      model.communicationChannelId !== CommunicationChannels.IotHub);
+
+  const hasChanges = hasEditChanges || hasAddChanges;
 
   const isSaveDisabled =
     !model ||
-    !model.device.name.trim() ||
-    !model.deviceIdentifier?.trim() ||
-    !hasChanges;
+    !model.name.trim() ||
+    !model.deviceIdentifier.trim() ||
+    (!!device && !hasEditChanges);
 
   const handleRevert = () => {
-    if (!device) {
-      return;
-    }
-
-    setModel(createModel(device));
+    setModel(device ? createEditModel(device) : createAddModel());
   };
 
   return (
@@ -96,7 +140,7 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
           alignItems: "center",
         }}
       >
-        <Box>Edit Device</Box>
+        <Box>{device ? "Edit Device" : "Add Device"}</Box>
         <IconButton onClick={onClose} size="small" aria-label="close">
           <Close />
         </IconButton>
@@ -106,13 +150,13 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
           <TextField
             autoFocus
             label="Name"
-            value={model?.device.name ?? ""}
+            value={model?.name ?? ""}
             onChange={(event) =>
               setModel((current) =>
                 current
                   ? {
                       ...current,
-                      device: { ...current.device, name: event.target.value },
+                      name: event.target.value,
                     }
                   : current,
               )
@@ -149,7 +193,7 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
                   current
                     ? {
                         ...current,
-                        communicationChannelId: event.target.value as number,
+                        communicationChannelId: Number(event.target.value),
                       }
                     : current,
                 )
@@ -169,16 +213,13 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
           <FormControlLabel
             control={
               <Checkbox
-                checked={model?.device.visible ?? false}
+                checked={model?.visible ?? false}
                 onChange={(event) =>
                   setModel((current) =>
                     current
                       ? {
                           ...current,
-                          device: {
-                            ...current.device,
-                            visible: event.target.checked,
-                          },
+                          visible: event.target.checked,
                         }
                       : current,
                   )
@@ -187,6 +228,54 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = ({
             }
             label="Visible"
           />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={model?.isVirtual ?? false}
+                onChange={(event) =>
+                  setModel((current) =>
+                    current
+                      ? {
+                          ...current,
+                          isVirtual: event.target.checked,
+                        }
+                      : current,
+                  )
+                }
+              />
+            }
+            label="Virtual"
+          />
+          {!device && (
+            <FormControl fullWidth>
+              <InputLabel id="device-location-label">Location</InputLabel>
+              <Select
+                labelId="device-location-label"
+                label="Location"
+                value={model?.locationIdentifier ?? ""}
+                onChange={(event) =>
+                  setModel((current) =>
+                    current
+                      ? {
+                          ...current,
+                          locationIdentifier:
+                            event.target.value === ""
+                              ? undefined
+                              : event.target.value,
+                        }
+                      : current,
+                  )
+                }
+              >
+                <MenuItem value="">None</MenuItem>
+                {(locations ?? []).map((location) => (
+                  <MenuItem key={location.identifier} value={location.identifier}>
+                    {location.displayName || location.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </Box>
       </DialogContent>
       <DialogActions>
