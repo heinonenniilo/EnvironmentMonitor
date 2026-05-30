@@ -66,22 +66,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => x.Active == model.IsActive.Value);
             }
 
-            var list = await query.Select(x => new SensorExtended()
-            {
-                Id = x.Id,
-                SensorId = x.SensorId,
-                Name = x.Name,
-                Identifier = x.Identifier,
-                DeviceId = x.DeviceId,
-                DeviceIdentifier = x.Device.Identifier,
-                ScaleMin = x.ScaleMin,
-                ScaleMax = x.ScaleMax,
-                TypeId = x.TypeId,
-                VirtualSensorRowValues = x.VirtualSensorRowValues,
-                VirtualSensorRows = x.VirtualSensorRows,
-                Created = x.Created,
-                Updated = x.Updated,
-            }).ToListAsync();
+            var list = await query.Select(x => x.ToSensorExtended()).ToListAsync();
 
             if (model.GetLatestMeasurement)
             {
