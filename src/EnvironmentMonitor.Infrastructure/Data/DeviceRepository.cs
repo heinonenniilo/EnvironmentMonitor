@@ -566,22 +566,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
                 LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest,
                 DefaultImageGuid = defaultImages.FirstOrDefault(x => x.DeviceId == device.Id)?.Guid,
-                Sensors = (device.Sensors ?? Array.Empty<Sensor>()).Select(s => new SensorExtended()
-                {
-                    Id = s.Id,
-                    SensorId = s.SensorId,
-                    Name = s.Name,
-                    Identifier = s.Identifier,
-                    DeviceId = s.DeviceId,
-                    DeviceIdentifier = s.Device.Identifier,
-                    ScaleMin = s.ScaleMin,
-                    ScaleMax = s.ScaleMax,
-                    TypeId = s.TypeId,
-                    VirtualSensorRowValues = s.VirtualSensorRowValues,
-                    VirtualSensorRows = s.VirtualSensorRows,
-                    Created = s.Created,
-                    Updated = s.Updated,
-                }).ToList()
+                Sensors = (device.Sensors ?? Array.Empty<Sensor>()).Select(s => s.ToSensorExtended()).ToList()
             }).ToList();
         }
 
