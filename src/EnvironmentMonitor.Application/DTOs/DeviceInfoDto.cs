@@ -24,7 +24,6 @@ namespace EnvironmentMonitor.Application.DTOs
         public List<DeviceContactDto> Contacts { get; set; } = [];
         public bool IsVirtual { get; set; }
         public bool ShowWarning { get; set; }
-
         public int? CommunicationChannelId { get; set; }
 
         public void Mapping(Profile profile)
@@ -33,7 +32,7 @@ namespace EnvironmentMonitor.Application.DTOs
                 .ForMember(x => x.ShowWarning, opt => opt.MapFrom<ShowDeviceWarningResolver>())
                 .ForMember(x => x.Attachments, opt => opt.MapFrom(x => x.Device.Attachments ?? new List<DeviceAttachment>()))
                 .ForMember(x => x.DeviceIdentifier, opt => opt.MapFrom(x => x.Device.DeviceIdentifier))
-                .ForMember(x => x.Sensors, opt => opt.MapFrom(x => x.Device.Sensors ?? new List<Sensor>()))
+                .ForMember(x => x.Sensors, opt => opt.MapFrom(x => x.Sensors))
                 .ForMember(x => x.IsVirtual, opt => opt.MapFrom(x => x.Device.IsVirtual))
                 .ForMember(x => x.Attributes, opt => opt.MapFrom(x => x.Device.DeviceAttributes ?? new List<DeviceAttribute>()))
                 .ForMember(x => x.Contacts, opt => opt.MapFrom(x => x.Device.Contacts ?? new List<DeviceContact>()))

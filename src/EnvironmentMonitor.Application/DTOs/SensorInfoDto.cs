@@ -29,14 +29,14 @@ namespace EnvironmentMonitor.Application.DTOs
                 .IncludeBase<Sensor, SensorDto>()
                 .ForMember(x => x.Sensors, opt => opt.MapFrom(x => x.VirtualSensorRows))
                 .ForMember(x => x.Active, opt => opt.MapFrom(x => x.Active))
-                .ForMember(x => x.LastMeasurement, opt => opt.MapFrom(x => x.LastMeasurement))
-                .ForMember(x => x.ShowWarning, opt => opt.MapFrom<ShowSensorWarningResolver>())
+                .ForMember(x => x.LastMeasurement, opt => opt.Ignore() )               
                 .ReverseMap();
 
             profile.CreateMap<SensorExtended, SensorInfoDto>()
                 .IncludeBase<SensorExtended, SensorDto>()
                 .ForMember(x => x.Sensors, opt => opt.MapFrom(x => x.VirtualSensorRows))
                 .ForMember(x => x.Active, opt => opt.MapFrom(x => x.Active))
+                .ForMember(x => x.ShowWarning, opt => opt.MapFrom<ShowSensorWarningResolver>())
                 .ReverseMap();
         }
     }

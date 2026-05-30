@@ -1,4 +1,5 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
+using EnvironmentMonitor.Domain.Models.ReturnModel;
 
 namespace EnvironmentMonitor.Domain.Models
 {
@@ -9,5 +10,7 @@ namespace EnvironmentMonitor.Domain.Models
         public DateTime? RebootedOn { get; set; }
         public DateTime? LastMessage { get; set; }
         public Guid? DefaultImageGuid { get; set; }
+
+        public List<SensorExtended> Sensors { get; set; } = [];
     }
 }
