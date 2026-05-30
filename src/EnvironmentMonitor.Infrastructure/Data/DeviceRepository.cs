@@ -66,7 +66,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => x.Active == model.IsActive.Value);
             }
 
-            var list = await query.Select(x => x.ToSensorExtended()).ToListAsync();
+            var list = await query.Select(SensorUtils.ToSensorExtendedExpression).ToListAsync();
 
             if (model.GetLatestMeasurement)
             {
