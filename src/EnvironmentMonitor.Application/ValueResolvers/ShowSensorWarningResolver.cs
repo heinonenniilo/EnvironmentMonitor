@@ -3,10 +3,11 @@ using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models.ReturnModel;
 
 namespace EnvironmentMonitor.Application.ValueResolvers
 {
-    public class ShowSensorWarningResolver : IValueResolver<Sensor, SensorInfoDto, bool>
+    public class ShowSensorWarningResolver : IValueResolver<SensorExtended, SensorInfoDto, bool>
     {
         private readonly IDateService _dateService;
 
@@ -15,7 +16,7 @@ namespace EnvironmentMonitor.Application.ValueResolvers
             _dateService = dateService;
         }
 
-        public bool Resolve(Sensor source, SensorInfoDto destination, bool destMember, ResolutionContext context)
+        public bool Resolve(SensorExtended source, SensorInfoDto destination, bool destMember, ResolutionContext context)
         {
             if (source.LastMeasurement == null)
             {
