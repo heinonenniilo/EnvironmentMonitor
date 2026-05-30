@@ -577,6 +577,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                     ScaleMin = s.ScaleMin,
                     ScaleMax = s.ScaleMax,
                     TypeId = s.TypeId,
+                    IsVirtual = s.IsVirtual,
                     VirtualSensorRowValues = s.VirtualSensorRowValues,
                     VirtualSensorRows = s.VirtualSensorRows,
                     Created = s.Created,
