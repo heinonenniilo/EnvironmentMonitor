@@ -66,22 +66,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => x.Active == model.IsActive.Value);
             }
 
-            var list = await query.Select(x => new SensorExtended()
-            {
-                Id = x.Id,
-                SensorId = x.SensorId,
-                Name = x.Name,
-                Identifier = x.Identifier,
-                DeviceId = x.DeviceId,
-                DeviceIdentifier = x.Device.Identifier,
-                ScaleMin = x.ScaleMin,
-                ScaleMax = x.ScaleMax,
-                TypeId = x.TypeId,
-                VirtualSensorRowValues = x.VirtualSensorRowValues,
-                VirtualSensorRows = x.VirtualSensorRows,
-                Created = x.Created,
-                Updated = x.Updated,
-            }).ToListAsync();
+            var list = await query.Select(SensorUtils.ToSensorExtendedExpression).ToListAsync();
 
             if (model.GetLatestMeasurement)
             {
@@ -566,22 +551,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 RebootedOn = query.FirstOrDefault(x => x.DeviceId == device.Id && x.TypeId == (int)DeviceEventTypes.RebootCommand)?.TimeStamp,
                 LastMessage = latestMessages.FirstOrDefault(x => x.DeviceId == device.Id)?.Latest,
                 DefaultImageGuid = defaultImages.FirstOrDefault(x => x.DeviceId == device.Id)?.Guid,
-                Sensors = (device.Sensors ?? Array.Empty<Sensor>()).Select(s => new SensorExtended()
-                {
-                    Id = s.Id,
-                    SensorId = s.SensorId,
-                    Name = s.Name,
-                    Identifier = s.Identifier,
-                    DeviceId = s.DeviceId,
-                    DeviceIdentifier = s.Device.Identifier,
-                    ScaleMin = s.ScaleMin,
-                    ScaleMax = s.ScaleMax,
-                    TypeId = s.TypeId,
-                    VirtualSensorRowValues = s.VirtualSensorRowValues,
-                    VirtualSensorRows = s.VirtualSensorRows,
-                    Created = s.Created,
-                    Updated = s.Updated,
-                }).ToList()
+                Sensors = (device.Sensors ?? Array.Empty<Sensor>()).Select(s => s.ToSensorExtended()).ToList()
             }).ToList();
         }
 
