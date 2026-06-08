@@ -1,6 +1,9 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Application.Services;
+using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Exceptions;
+using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,9 +16,12 @@ namespace EnvironmentMonitor.WebApi.Controllers
     public class LocationsController : ControllerBase
     {
         private readonly ILocationService _locationService;
-        public LocationsController(ILocationService locationService)
+        private readonly ILocationCommandService _locationCommandService;
+
+        public LocationsController(ILocationService locationService, ILocationCommandService locationCommandService)
         {
             _locationService = locationService;
+            _locationCommandService = locationCommandService;
         }
 
         [HttpGet]
@@ -83,5 +89,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
             await _locationService.MoveDevicesToLocation(model);
             return Ok();
         }
+
+        [HttpPost("{locationIdentifier}/motion-control-status")]
+        [Authorize(Roles = "Admin")]
+        public async Task SetLocationMotionControlStatus([FromRoute] Guid locationIdentifier, [FromBody] SetMotionControlStatusMessage model)
+            =>  await _locationCommandService.SetMotionControlStatus(locationIdentifier, (MotionControlStatus)model.Mode, model.ExecuteAt);
+
+        [HttpPost("{locationIdentifier}/motion-control-delay")]
+        [Authorize(Roles = "Admin")]
+        public async Task SetLocationMotionControlDelay([FromRoute] Guid locationIdentifier, [FromBody] SetMotionControlDelayMessag model)
+            => await _locationCommandService.SetMotionControlDelay(locationIdentifier, model.DelayMs, model.ExecuteAt);
     }
 }

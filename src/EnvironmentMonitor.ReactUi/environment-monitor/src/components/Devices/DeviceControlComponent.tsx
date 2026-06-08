@@ -15,15 +15,14 @@ import {
 } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import moment, { type Moment } from "moment";
-import { type DeviceInfo } from "../../models/deviceInfo";
 import { useState } from "react";
 
 export interface DeviceControlComponentProps {
-  reboot: () => void;
+  reboot?: () => void;
   onSetOutStatic: (on: boolean, executeAt?: Moment) => void;
   onSetOutOnMotionControl: (executeAt?: Moment) => void;
   onSetMotionControlDelay: (delay: number, executeAt?: Moment) => void;
-  device: DeviceInfo | undefined;
+  hasMotionSensor: boolean;
   title?: string;
 }
 
@@ -49,14 +48,12 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
   onSetOutStatic,
   onSetOutOnMotionControl,
   onSetMotionControlDelay,
-  device,
   reboot,
+  hasMotionSensor,
   title,
 }) => {
   const theme = useTheme();
   const drawDesktop = useMediaQuery(theme.breakpoints.up("lg"));
-
-  const hasMotionSensor = device?.device.hasMotionSensor ?? false;
 
   const [commandDialog, setCommandDialog] = useState<CommandDialogState>({
     open: false,
@@ -66,14 +63,14 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
   });
 
   const [selectedDateTime, setSelectedDateTime] = useState<Moment | null>(
-    moment()
+    moment(),
   );
   const [useScheduledTime, setUseScheduledTime] = useState(false);
 
   const openCommandDialog = (
     title: string,
     description: string,
-    onConfirm: (executeAt?: Moment) => void
+    onConfirm: (executeAt?: Moment) => void,
   ) => {
     setCommandDialog({ open: true, title, description, onConfirm });
     setSelectedDateTime(moment());
@@ -84,7 +81,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
 
   const handleDialogConfirm = () => {
     commandDialog.onConfirm(
-      useScheduledTime && selectedDateTime ? selectedDateTime : undefined
+      useScheduledTime && selectedDateTime ? selectedDateTime : undefined,
     );
     setCommandDialog({ ...commandDialog, open: false });
   };
@@ -99,7 +96,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
       `Motion control delay will be set to ${
         delay <= 60 ? `${delay} s` : `${delay / 60} min`
       }`,
-      (executeAt) => onSetMotionControlDelay(delay, executeAt)
+      (executeAt) => onSetMotionControlDelay(delay, executeAt),
     );
   };
 
@@ -107,7 +104,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
     useState<null | HTMLElement>(null);
 
   const [anchorOutputMode, setAnchorOutputMode] = useState<null | HTMLElement>(
-    null
+    null,
   );
 
   return (
@@ -124,9 +121,11 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
         marginTop={2}
         flexDirection={drawDesktop ? "row" : "column"}
       >
-        <Button variant="contained" color="primary" onClick={reboot}>
-          Reboot
-        </Button>
+        {reboot && (
+          <Button variant="contained" color="primary" onClick={reboot}>
+            Reboot
+          </Button>
+        )}
         {hasMotionSensor ? (
           <>
             <Button
@@ -150,7 +149,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
                   openCommandDialog(
                     "Set output ON",
                     "Output pins will be set as ON. Motion sensor trigger will be disabled",
-                    (executeAt) => onSetOutStatic(true, executeAt)
+                    (executeAt) => onSetOutStatic(true, executeAt),
                   );
                 }}
               >
@@ -161,7 +160,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
                   openCommandDialog(
                     "Set output OFF",
                     "Output pins will be set as OFF. Motion sensor trigger will be disabled",
-                    (executeAt) => onSetOutStatic(false, executeAt)
+                    (executeAt) => onSetOutStatic(false, executeAt),
                   );
                 }}
               >
@@ -172,7 +171,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
                   openCommandDialog(
                     "Enable motion control",
                     "Output pins will be controlled by motion sensor",
-                    (executeAt) => onSetOutOnMotionControl(executeAt)
+                    (executeAt) => onSetOutOnMotionControl(executeAt),
                   );
                 }}
               >

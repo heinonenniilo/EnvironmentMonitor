@@ -23,5 +23,6 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpGet("{deviceIdentifier}/attributes")]
         public async Task<Dictionary<int, string>> GetDeviceAttributes([FromRoute] string deviceIdentifier) => await _deviceCommandService.GetDeviceAttributes(deviceIdentifier);
+
     }
 }
