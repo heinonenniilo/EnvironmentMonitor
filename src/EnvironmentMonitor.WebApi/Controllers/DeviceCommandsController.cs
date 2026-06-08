@@ -1,7 +1,4 @@
 using EnvironmentMonitor.Application.Interfaces;
-using EnvironmentMonitor.Application.Interfaces;
-using EnvironmentMonitor.Domain.Enums;
-using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.WebApi.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
