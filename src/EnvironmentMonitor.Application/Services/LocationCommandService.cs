@@ -46,7 +46,11 @@ namespace EnvironmentMonitor.Application.Services
 
             _logger.LogInformation($"Setting motion control status for location '{locationIdentifier}' with {location.Devices.Count} device(s).");
 
-            foreach (var device in location.Devices)
+            var physicalDevices = location.Devices.Where(d => !d.IsVirtual).ToList();
+
+            _logger.LogInformation($"Setting motion control delay for {physicalDevices.Count} physical device(s) in location '{locationIdentifier}'.");
+
+            foreach (var device in physicalDevices)
             {
                 await _deviceCommandService.SetMotionControlStatus(device.Identifier, status, triggeringTime);
             }
@@ -64,8 +68,10 @@ namespace EnvironmentMonitor.Application.Services
                 ?? throw new EntityNotFoundException($"Location with identifier: '{locationIdentifier}' not found.");
 
             _logger.LogInformation($"Setting motion control delay for location '{locationIdentifier}' with {location.Devices.Count} device(s).");
+            var physicalDevices = location.Devices.Where(d => !d.IsVirtual).ToList();
+            _logger.LogInformation($"Setting motion control delay for {physicalDevices.Count} physical device(s) in location '{locationIdentifier}'.");
 
-            foreach (var device in location.Devices)
+            foreach (var device in physicalDevices)
             {
                 await _deviceCommandService.SetMotionControlDelay(device.Identifier, delayMs, triggeringTime);
             }

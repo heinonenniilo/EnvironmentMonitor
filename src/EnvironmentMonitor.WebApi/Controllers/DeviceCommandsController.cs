@@ -18,11 +18,9 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         public DeviceCommandsController(
             IDeviceCommandService deviceCommandService,
-            ILocationCommandService locationCommandService,
             ILogger<DeviceCommandsController> logger)
         {
             _deviceCommandService = deviceCommandService;
-            _locationCommandService = locationCommandService;
             _logger = logger;
         }
 

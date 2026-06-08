@@ -93,7 +93,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpPost("{locationIdentifier}/motion-control-status")]
         [Authorize(Roles = "Admin")]
         public async Task SetLocationMotionControlStatus([FromRoute] Guid locationIdentifier, [FromBody] SetMotionControlStatusMessage model)
-            => await _locationCommandService.SetMotionControlStatus(locationIdentifier, (MotionControlStatus)model.Mode, model.ExecuteAt);
+            =>  await _locationCommandService.SetMotionControlStatus(locationIdentifier, (MotionControlStatus)model.Mode, model.ExecuteAt);
 
         [HttpPost("{locationIdentifier}/motion-control-delay")]
         [Authorize(Roles = "Admin")]
