@@ -1169,7 +1169,7 @@ export const DeviceView: React.FC = () => {
         {selectedDevice && !selectedDevice.isVirtual && (
           <Collapsible isOpen={true} title="Commands">
             <DeviceControlComponent
-              device={selectedDevice}
+              hasMotionSensor={selectedDevice.device.hasMotionSensor}
               reboot={() => {
                 dispatch(
                   setConfirmDialog({

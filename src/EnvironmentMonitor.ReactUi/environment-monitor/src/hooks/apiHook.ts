@@ -87,6 +87,16 @@ interface userHook {
 interface locationHook {
   getLocations: (model?: GetLocationsModel) => Promise<LocationModel[]>;
   getLocation: (identifier: string) => Promise<LocationModel | undefined>;
+  setMotionControlState: (
+    identifier: string,
+    state: number,
+    executeAt?: moment.Moment,
+  ) => Promise<void>;
+  setMotionControlDelay: (
+    identifier: string,
+    delayMs: number,
+    executeAt?: moment.Moment,
+  ) => Promise<void>;
   addLocation: (model: AddLocation) => Promise<LocationModel>;
   updateLocation: (model: LocationModel) => Promise<LocationModel>;
   deleteLocation: (locationIdentifier: string) => Promise<void>;
@@ -298,7 +308,11 @@ export const useApiHook = (): ApiHook => {
     };
   };
 
-  const showError = (ex: unknown, fallbackTitle?: string, fallbackBody?: string) => {
+  const showError = (
+    ex: unknown,
+    fallbackTitle?: string,
+    fallbackBody?: string,
+  ) => {
     const { title, body } = getErrorDetails(ex, fallbackTitle, fallbackBody);
     notification.error(title, body);
   };
@@ -959,6 +973,50 @@ export const useApiHook = (): ApiHook => {
           return undefined;
         }
       },
+      setMotionControlState: async (
+        identifier: string,
+        state: number,
+        executeAt?: moment.Moment,
+      ) => {
+        try {
+          await apiClient.post(
+            `/api/locations/${identifier}/motion-control-status`,
+            {
+              mode: state,
+              deviceIdentifier: identifier, // TODO RENAME
+              executeAt: executeAt
+                ? executeAt.format("YYYY-MM-DDTHH:mm:ss")
+                : undefined,
+            },
+          );
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to send location command");
+          throw ex;
+        }
+      },
+      setMotionControlDelay: async (
+        identifier: string,
+        delayMs: number,
+        executeAt?: moment.Moment,
+      ) => {
+        try {
+          await apiClient.post(
+            `/api/locations/${identifier}/motion-control-delay`,
+            {
+              delayMs,
+              deviceIdentifier: identifier, // TODO RENAME
+              executeAt: executeAt
+                ? executeAt.format("YYYY-MM-DDTHH:mm:ss")
+                : undefined,
+            },
+          );
+        } catch (ex) {
+          console.error(ex);
+          showError(ex, "Failed to send location command");
+          throw ex;
+        }
+      },
       addLocation: async (model: AddLocation) => {
         try {
           const res = await apiClient.post<any, AxiosResponse<LocationModel>>(
@@ -1337,4 +1395,3 @@ export const useApiHook = (): ApiHook => {
     },
   };
 };
-

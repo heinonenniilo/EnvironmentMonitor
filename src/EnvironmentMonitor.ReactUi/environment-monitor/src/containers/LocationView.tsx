@@ -26,6 +26,7 @@ import { MoveDevicesDialog } from "../components/Locations/MoveDevicesDialog";
 import { EditLocationDialog } from "../components/Locations/EditLocationDialog";
 import { LocationInfo } from "../components/Locations/LocationInfo";
 import { DeviceTable } from "../components/Devices/DeviceTable";
+import { DeviceControlComponent } from "../components/Devices/DeviceControlComponent";
 import { MultiSensorGraph } from "../components/Measurements/MultiSensorGraph";
 import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRangeSelectorComponent";
 import { routes } from "../utilities/routes";
@@ -202,6 +203,10 @@ export const LocationView: React.FC = () => {
         ),
     [allDevices, location?.identifier],
   );
+  const hasMotionControlDevices =
+    locationDeviceInfos.some(
+      (deviceInfo) => deviceInfo.device.hasMotionSensor,
+    ) || (location?.devices ?? []).some((device) => device.hasMotionSensor);
 
   const handleLocationUpdate = (
     updatedLocation: LocationModel,
@@ -302,6 +307,66 @@ export const LocationView: React.FC = () => {
         loadLocation();
         loadLocationDeviceInfos();
         setMoveDevicesOpen(false);
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const setLocationMotionControlState = (
+    state: number,
+    message: string,
+    executeAt?: moment.Moment,
+  ) => {
+    if (!location) {
+      return;
+    }
+
+    setIsLoading(true);
+    locationHook
+      .setMotionControlState(location.identifier, state, executeAt)
+      .then(() => {
+        loadLocationDeviceInfos();
+        dispatch(
+          addNotification({
+            title: message,
+            body: "",
+            severity: "success",
+          }),
+        );
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const setLocationMotionControlDelay = (
+    delayMs: number,
+    message: string,
+    executeAt?: moment.Moment,
+  ) => {
+    if (!location) {
+      return;
+    }
+
+    setIsLoading(true);
+    locationHook
+      .setMotionControlDelay(location.identifier, delayMs, executeAt)
+      .then(() => {
+        loadLocationDeviceInfos();
+        dispatch(
+          addNotification({
+            title: message,
+            body: "",
+            severity: "success",
+          }),
+        );
       })
       .catch((error) => {
         console.error(error);
@@ -444,6 +509,42 @@ export const LocationView: React.FC = () => {
               showDeviceIdentifier
             />
           </Collapsible>
+
+          {hasMotionControlDevices && (
+            <Collapsible title="Commands" isOpen={true}>
+              <DeviceControlComponent
+                hasMotionSensor={hasMotionControlDevices}
+                title="Location commands"
+                onSetOutStatic={(
+                  mode: boolean,
+                  executeAt?: moment.Moment,
+                ) => {
+                  setLocationMotionControlState(
+                    mode ? 1 : 0,
+                    `Outputs set to ${mode} for ${location.name}`,
+                    executeAt,
+                  );
+                }}
+                onSetOutOnMotionControl={(executeAt?: moment.Moment) => {
+                  setLocationMotionControlState(
+                    2,
+                    `Motion control enabled for ${location.name}`,
+                    executeAt,
+                  );
+                }}
+                onSetMotionControlDelay={(
+                  delay: number,
+                  executeAt?: moment.Moment,
+                ) => {
+                  setLocationMotionControlDelay(
+                    delay * 1000,
+                    `Motion control delay set to ${delay} s for ${location.name}`,
+                    executeAt,
+                  );
+                }}
+              />
+            </Collapsible>
+          )}
 
           <Collapsible title="Measurements">
             <TimeRangeSelectorComponent
