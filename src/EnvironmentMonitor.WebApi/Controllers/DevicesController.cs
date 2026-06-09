@@ -44,15 +44,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("reboot")]
         [Authorize(Roles = "Admin")]
-        public async Task Reboot([FromBody] MessageDeviceModel model) => await _deviceCommandService.Reboot(model.DeviceIdentifier);
+        public async Task Reboot([FromBody] MessageDeviceModel model) => await _deviceCommandService.Reboot(model.DeviceIdentifiers.First());
 
         [HttpPost("motion-control-status")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceAttributeDto>> SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceCommandService.SetMotionControlStatus(model.DeviceIdentifier, (MotionControlStatus)model.Mode, model.ExecuteAt);
+        public async Task<Dictionary<Guid, List<DeviceAttributeDto>>> SetMotionControlStatus([FromBody] SetMotionControlStatusMessage model) => await _deviceCommandService.SetMotionControlStatus(model);
 
         [HttpPost("motion-control-delay")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceAttributeDto>> SetMotionControlDelay([FromBody] SetMotionControlDelayMessag model) => await _deviceCommandService.SetMotionControlDelay(model.DeviceIdentifier, model.DelayMs, model.ExecuteAt);
+        public async Task<Dictionary<Guid, List<DeviceAttributeDto>>> SetMotionControlDelay([FromBody] SetMotionControlDelayMessage model) => await _deviceCommandService.SetMotionControlDelay(model);
 
         [HttpPost("attachment")]
         [Authorize(Roles = "Admin")]
@@ -105,8 +105,8 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> SetDefaultImage([FromBody] SetDefaultImage model)
         {
-            await _deviceService.SetDefaultImage(model.DeviceIdentifier, model.AttachmentGuid);
-            var res = await _deviceService.GetDeviceInfos(false, [model.DeviceIdentifier], true);
+            await _deviceService.SetDefaultImage(model.DeviceIdentifiers.First(), model.AttachmentGuid);
+            var res = await _deviceService.GetDeviceInfos(false, [model.DeviceIdentifiers.First()], true);
             return res.FirstOrDefault();
         }
 

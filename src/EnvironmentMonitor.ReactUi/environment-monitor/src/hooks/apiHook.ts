@@ -177,15 +177,15 @@ interface deviceHook {
     getLatestMeasurementBySensor?: boolean,
   ) => Promise<DeviceInfo>;
   setMotionControlState: (
-    identifier: string,
+    identifiers: string | string[],
     state: number,
     executeAt?: moment.Moment,
-  ) => Promise<DeviceAttribute[]>;
+  ) => Promise<Record<string, DeviceAttribute[]>>;
   setMotionControlDelay: (
-    identifier: string,
+    identifiers: string | string[],
     delayMs: number,
     executeAt?: moment.Moment,
-  ) => Promise<DeviceAttribute[]>;
+  ) => Promise<Record<string, DeviceAttribute[]>>;
   getDeviceEvents: (identifier: string) => Promise<DeviceEvent[]>;
   uploadAttachment: (
     identifire: string,
@@ -713,16 +713,19 @@ export const useApiHook = (): ApiHook => {
         }
       },
       setMotionControlState: async (
-        identifier: string,
+        identifiers: string | string[],
         state: number,
         executeAt?: moment.Moment,
       ) => {
         try {
+          const deviceIdentifiers = Array.isArray(identifiers)
+            ? identifiers
+            : [identifiers];
           const res = await apiClient.post<
             any,
-            AxiosResponse<DeviceAttribute[]>
+            AxiosResponse<Record<string, DeviceAttribute[]>>
           >("/api/devices/motion-control-status", {
-            deviceIdentifier: identifier,
+            deviceIdentifiers,
             mode: state,
             executeAt: executeAt
               ? executeAt.format("YYYY-MM-DDTHH:mm:ss")
@@ -732,21 +735,24 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError(ex);
-          return [];
+          throw ex;
         }
       },
       setMotionControlDelay: async (
-        identifier: string,
+        identifiers: string | string[],
         delayMs: number,
         executeAt?: moment.Moment,
       ) => {
         try {
+          const deviceIdentifiers = Array.isArray(identifiers)
+            ? identifiers
+            : [identifiers];
           const res = await apiClient.post<
             any,
-            AxiosResponse<DeviceAttribute[]>
+            AxiosResponse<Record<string, DeviceAttribute[]>>
           >("/api/devices/motion-control-delay", {
-            deviceIdentifier: identifier,
-            DelayMs: delayMs,
+            deviceIdentifiers,
+            delayMs,
             executeAt: executeAt
               ? executeAt.format("YYYY-MM-DDTHH:mm:ss")
               : undefined,
@@ -755,7 +761,7 @@ export const useApiHook = (): ApiHook => {
         } catch (ex) {
           console.error(ex);
           showError(ex);
-          return [];
+          throw ex;
         }
       },
       getDeviceEvents: async (identifier: string) => {
@@ -819,7 +825,7 @@ export const useApiHook = (): ApiHook => {
             `/api/devices/default-image`,
             {
               attachmentGuid: attachmentIdentifier,
-              deviceIdentifier: deviceIdentifier,
+              deviceIdentifiers: [deviceIdentifier],
             },
           );
           return res.data;
@@ -983,7 +989,7 @@ export const useApiHook = (): ApiHook => {
             `/api/locations/${identifier}/motion-control-status`,
             {
               mode: state,
-              deviceIdentifier: identifier, // TODO RENAME
+              deviceIdentifiers: [identifier], // TODO RENAME
               executeAt: executeAt
                 ? executeAt.format("YYYY-MM-DDTHH:mm:ss")
                 : undefined,
@@ -1005,7 +1011,7 @@ export const useApiHook = (): ApiHook => {
             `/api/locations/${identifier}/motion-control-delay`,
             {
               delayMs,
-              deviceIdentifier: identifier, // TODO RENAME
+              deviceIdentifiers: [identifier], // TODO RENAME
               executeAt: executeAt
                 ? executeAt.format("YYYY-MM-DDTHH:mm:ss")
                 : undefined,

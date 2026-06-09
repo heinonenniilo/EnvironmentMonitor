@@ -64,6 +64,9 @@ export const LocationView: React.FC = () => {
   const [locationDeviceInfos, setLocationDeviceInfos] = useState<DeviceInfo[]>(
     [],
   );
+  const [selectedDeviceIdentifiers, setSelectedDeviceIdentifiers] = useState<
+    string[]
+  >([]);
 
   const sensors = useSelector(getSensors);
   const locations = useSelector(getLocations);
@@ -98,6 +101,12 @@ export const LocationView: React.FC = () => {
       .getDeviceInfos([locationId])
       .then((response) => {
         setLocationDeviceInfos(response ?? []);
+        const availableIdentifiers = new Set(
+          (response ?? []).map((deviceInfo) => deviceInfo.device.identifier),
+        );
+        setSelectedDeviceIdentifiers((current) =>
+          current.filter((identifier) => availableIdentifiers.has(identifier)),
+        );
       })
       .catch((error) => {
         console.error(error);
@@ -316,6 +325,24 @@ export const LocationView: React.FC = () => {
       });
   };
 
+  const updateSelectedDeviceAttributes = (
+    attributesByDeviceIdentifier: Record<string, DeviceInfo["attributes"]>,
+  ) => {
+    setLocationDeviceInfos((current) =>
+      current.map((deviceInfo) => {
+        const attributes =
+          attributesByDeviceIdentifier[deviceInfo.device.identifier];
+
+        return attributes
+          ? {
+              ...deviceInfo,
+              attributes,
+            }
+          : deviceInfo;
+      }),
+    );
+  };
+
   const setLocationMotionControlState = (
     state: number,
     message: string,
@@ -367,6 +394,84 @@ export const LocationView: React.FC = () => {
             severity: "success",
           }),
         );
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const setSelectedDevicesMotionControlState = (
+    state: number,
+    message: string,
+    executeAt?: moment.Moment,
+  ) => {
+    if (!location || selectedDeviceIdentifiers.length === 0) {
+      dispatch(
+        addNotification({
+          title: "Select at least one device",
+          body: "",
+          severity: "warning",
+        }),
+      );
+      return;
+    }
+
+    setIsLoading(true);
+    deviceHook
+      .setMotionControlState(selectedDeviceIdentifiers, state, executeAt)
+      .then((response) => {
+        updateSelectedDeviceAttributes(response);
+        loadLocationDeviceInfos();
+        dispatch(
+          addNotification({
+            title: message,
+            body: "",
+            severity: "success",
+          }),
+        );
+        setSelectedDeviceIdentifiers([]);
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const setSelectedDevicesMotionControlDelay = (
+    delayMs: number,
+    message: string,
+    executeAt?: moment.Moment,
+  ) => {
+    if (!location || selectedDeviceIdentifiers.length === 0) {
+      dispatch(
+        addNotification({
+          title: "Select at least one device",
+          body: "",
+          severity: "warning",
+        }),
+      );
+      return;
+    }
+
+    setIsLoading(true);
+    deviceHook
+      .setMotionControlDelay(selectedDeviceIdentifiers, delayMs, executeAt)
+      .then((response) => {
+        updateSelectedDeviceAttributes(response);
+        loadLocationDeviceInfos();
+        dispatch(
+          addNotification({
+            title: message,
+            body: "",
+            severity: "success",
+          }),
+        );
+        setSelectedDeviceIdentifiers([]);
       })
       .catch((error) => {
         console.error(error);
@@ -501,24 +606,54 @@ export const LocationView: React.FC = () => {
               </Box>
             }
           >
+            {hasMotionControlDevices && (
+              <DeviceControlComponent
+                hasMotionSensor={hasMotionControlDevices}
+                disabled={selectedDeviceIdentifiers.length === 0}
+                onSetOutStatic={(mode: boolean, executeAt?: moment.Moment) => {
+                  setSelectedDevicesMotionControlState(
+                    mode ? 1 : 0,
+                    `Outputs set to ${mode} for ${selectedDeviceIdentifiers.length} device(s)`,
+                    executeAt,
+                  );
+                }}
+                onSetOutOnMotionControl={(executeAt?: moment.Moment) => {
+                  setSelectedDevicesMotionControlState(
+                    2,
+                    `Motion control enabled for ${selectedDeviceIdentifiers.length} device(s)`,
+                    executeAt,
+                  );
+                }}
+                onSetMotionControlDelay={(
+                  delay: number,
+                  executeAt?: moment.Moment,
+                ) => {
+                  setSelectedDevicesMotionControlDelay(
+                    delay * 1000,
+                    `Motion control delay set to ${delay} s for ${selectedDeviceIdentifiers.length} device(s)`,
+                    executeAt,
+                  );
+                }}
+              />
+            )}
             <DeviceTable
               devices={locationDeviceInfos}
               renderLink
               renderLinkToDeviceMessages
               hideId
               showDeviceIdentifier
+              canSelectDevices
+              selectedDeviceIdentifiers={selectedDeviceIdentifiers}
+              onSelectedDeviceIdentifiersChange={setSelectedDeviceIdentifiers}
             />
           </Collapsible>
 
           {hasMotionControlDevices && (
-            <Collapsible title="Commands" isOpen={true}>
+            <Collapsible title="Location Commands" isOpen={true}>
               <DeviceControlComponent
                 hasMotionSensor={hasMotionControlDevices}
-                title="Location commands"
-                onSetOutStatic={(
-                  mode: boolean,
-                  executeAt?: moment.Moment,
-                ) => {
+                disabled={selectedDeviceIdentifiers.length > 0}
+                onSetOutStatic={(mode: boolean, executeAt?: moment.Moment) => {
                   setLocationMotionControlState(
                     mode ? 1 : 0,
                     `Outputs set to ${mode} for ${location.name}`,

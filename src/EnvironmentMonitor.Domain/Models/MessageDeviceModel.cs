@@ -8,7 +8,7 @@ namespace EnvironmentMonitor.Domain.Models
 {
     public class MessageDeviceModel
     {
-        public required Guid DeviceIdentifier { get; set; }
+        public required List<Guid> DeviceIdentifiers { get; set; }
         public DateTime? ExecuteAt { get; set; }
     }
 
@@ -17,12 +17,12 @@ namespace EnvironmentMonitor.Domain.Models
         public int Mode { get; set; }
     }
 
-    public class SetMotionControlDelayMessag : MessageDeviceModel
+    public class SetMotionControlDelayMessage : MessageDeviceModel
     {
         public long DelayMs { get; set; }
     }
 
-    public class SetDefaultImage: MessageDeviceModel
+    public class SetDefaultImage : MessageDeviceModel
     {
         public Guid AttachmentGuid { get; set; }
     }

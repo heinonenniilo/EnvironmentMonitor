@@ -432,11 +432,12 @@ export const DeviceView: React.FC = () => {
     deviceHook
       .setMotionControlState(selectedDevice.device.identifier, state, executeAt)
       .then((res) => {
-        if (res && res.length > 0) {
+        const attributes = res[selectedDevice.device.identifier];
+        if (attributes && attributes.length > 0) {
           // Update selectedDevice with new attributes
           setSelectedDevice({
             ...selectedDevice,
-            attributes: res,
+            attributes,
           });
           getDeviceEvents(selectedDevice.device.identifier);
           if (executeAt) {
@@ -484,11 +485,12 @@ export const DeviceView: React.FC = () => {
         executeAt,
       )
       .then((res) => {
-        if (res && res.length > 0) {
+        const attributes = res[selectedDevice.device.identifier];
+        if (attributes && attributes.length > 0) {
           // Update selectedDevice with new attributes
           setSelectedDevice({
             ...selectedDevice,
-            attributes: res,
+            attributes,
           });
           getDeviceEvents(selectedDevice.device.identifier);
           if (executeAt) {

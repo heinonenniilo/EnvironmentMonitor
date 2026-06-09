@@ -24,6 +24,7 @@ export interface DeviceControlComponentProps {
   onSetMotionControlDelay: (delay: number, executeAt?: Moment) => void;
   hasMotionSensor: boolean;
   title?: string;
+  disabled?: boolean;
 }
 
 interface CommandDialogState {
@@ -51,6 +52,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
   reboot,
   hasMotionSensor,
   title,
+  disabled,
 }) => {
   const theme = useTheme();
   const drawDesktop = useMediaQuery(theme.breakpoints.up("lg"));
@@ -122,7 +124,12 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
         flexDirection={drawDesktop ? "row" : "column"}
       >
         {reboot && (
-          <Button variant="contained" color="primary" onClick={reboot}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={reboot}
+            disabled={disabled}
+          >
             Reboot
           </Button>
         )}
@@ -131,6 +138,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
             <Button
               variant="contained"
               color="primary"
+              disabled={disabled}
               onClick={(event) => {
                 setAnchorOutputMode(event.currentTarget);
               }}
@@ -181,6 +189,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
             <Button
               variant="contained"
               color="primary"
+              disabled={disabled}
               onClick={(event) => {
                 setAnchorOutputDelay(event.currentTarget);
               }}
@@ -248,6 +257,7 @@ export const DeviceControlComponent: React.FC<DeviceControlComponentProps> = ({
             onClick={handleDialogConfirm}
             variant="contained"
             color="primary"
+            disabled={disabled}
           >
             Confirm
           </Button>
