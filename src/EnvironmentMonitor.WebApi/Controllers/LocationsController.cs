@@ -97,7 +97,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpPost("{locationIdentifier}/motion-control-delay")]
         [Authorize(Roles = "Admin")]
-        public async Task SetLocationMotionControlDelay([FromRoute] Guid locationIdentifier, [FromBody] SetMotionControlDelayMessag model)
+        public async Task SetLocationMotionControlDelay([FromRoute] Guid locationIdentifier, [FromBody] SetMotionControlDelayMessage model)
             => await _locationCommandService.SetMotionControlDelay(locationIdentifier, model.DelayMs, model.ExecuteAt);
     }
 }

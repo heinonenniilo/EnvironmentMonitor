@@ -212,6 +212,33 @@ namespace EnvironmentMonitor.Application.Services
             return _mapper.Map<List<DeviceAttributeDto>>(updatedAttributes);
         }
 
+        public async Task<Dictionary<Guid, List<DeviceAttributeDto>>> SetMotionControlStatus(SetMotionControlStatusMessage model)
+        {
+            var results = new Dictionary<Guid, List<DeviceAttributeDto>>();
+
+            var identifiers = await ValidateDeviceMessageModel(model);
+
+            foreach (var identifier in identifiers)
+            {
+                results[identifier] = await SetMotionControlStatus(identifier, (MotionControlStatus)model.Mode, model.ExecuteAt);
+            }
+
+            return results;
+        }
+
+        public async Task<Dictionary<Guid, List<DeviceAttributeDto>>> SetMotionControlDelay(SetMotionControlDelayMessage model)
+        {
+            var results = new Dictionary<Guid, List<DeviceAttributeDto>>();
+
+            var identifiers = await ValidateDeviceMessageModel(model);
+
+            foreach (var identifier in identifiers)
+            {
+                results[identifier] = await SetMotionControlDelay(identifier, model.DelayMs, model.ExecuteAt);
+            }
+            return results;
+        }
+
         public async Task SendAttributesToDevice(Guid identifier, string? message = null)
         {
             if (!_userService.IsAdmin)
@@ -513,6 +540,26 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new ArgumentException($"Invalid triggering time: {target}. Current date: {compareDate}");
             }
+        }
+
+        private async Task<List<Guid>> ValidateDeviceMessageModel (MessageDeviceModel model)
+        {
+            if (!_userService.HasAccessToDevices(model.DeviceIdentifiers, AccessLevels.Write))
+            {
+                throw new UnauthorizedAccessException();
+            }
+
+            var devices = await _deviceRepository.GetDevices(new GetDevicesModel() { Identifiers = model.DeviceIdentifiers });
+
+            if (devices.Any(d => d.IsVirtual))
+            {
+                var virtualDeviceIds = devices.Where(d => d.IsVirtual).Select(d => d.Id);
+                throw new InvalidOperationException($"Cannot send messages to virtual devices: {string.Join(", ", virtualDeviceIds)}");
+            }
+
+            var identifiers = devices.Select(x => x.Identifier).ToList();
+
+            return identifiers;
         }
     }
 }

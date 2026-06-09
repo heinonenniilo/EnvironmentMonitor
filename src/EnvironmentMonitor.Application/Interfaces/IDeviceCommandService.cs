@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,9 @@ namespace EnvironmentMonitor.Application.Interfaces
         // Device command methods moved from IDeviceService
         Task Reboot(Guid identifier);
         Task<List<DeviceAttributeDto>> SetMotionControlStatus(Guid identifier, MotionControlStatus status, DateTime? triggeringTime = null);
+        Task<Dictionary<Guid, List<DeviceAttributeDto>>> SetMotionControlStatus(SetMotionControlStatusMessage model);
         Task<List<DeviceAttributeDto>> SetMotionControlDelay(Guid identifier, long delayMs, DateTime? triggeringTime = null);
+        Task<Dictionary<Guid, List<DeviceAttributeDto>>> SetMotionControlDelay(SetMotionControlDelayMessage model);
         Task SendAttributesToDevice(Guid identifier, string? message = null);       
         Task<Dictionary<int, string>> GetDeviceAttributes(string deviceIdentifier);
     }
