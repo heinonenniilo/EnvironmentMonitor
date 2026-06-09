@@ -652,6 +652,7 @@ export const LocationView: React.FC = () => {
             <Collapsible title="Location Commands" isOpen={true}>
               <DeviceControlComponent
                 hasMotionSensor={hasMotionControlDevices}
+                disabled={selectedDeviceIdentifiers.length > 0}
                 onSetOutStatic={(mode: boolean, executeAt?: moment.Moment) => {
                   setLocationMotionControlState(
                     mode ? 1 : 0,
