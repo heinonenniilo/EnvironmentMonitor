@@ -11,7 +11,11 @@ import {
 import { routes } from "../../utilities/routes";
 import { Link } from "react-router";
 import { getFormattedDate } from "../../utilities/datetimeUtils";
-import { DataGrid, type GridColDef } from "@mui/x-data-grid";
+import {
+  DataGrid,
+  type GridColDef,
+  type GridRowSelectionModel,
+} from "@mui/x-data-grid";
 import { CheckCircle, Photo, WarningAmber } from "@mui/icons-material";
 import { useState } from "react";
 import { DeviceImageDialog } from "./DeviceImageDialog";
@@ -44,6 +48,9 @@ export interface DeviceTableProps {
   renderLink?: boolean;
   renderLinkToDeviceMessages?: boolean;
   showDeviceIdentifier?: boolean;
+  canSelectDevices?: boolean;
+  selectedDeviceIdentifiers?: string[];
+  onSelectedDeviceIdentifiersChange?: (deviceIdentifiers: string[]) => void;
 }
 
 export const DeviceTable: React.FC<DeviceTableProps> = ({
@@ -59,6 +66,9 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
   onCommunicationChannelChange,
   renderLinkToDeviceMessages,
   showDeviceIdentifier,
+  canSelectDevices,
+  selectedDeviceIdentifiers,
+  onSelectedDeviceIdentifiersChange,
 }) => {
   const formatDate = (input: Date | undefined | null) => {
     if (input) {
@@ -402,6 +412,13 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
     selectedDeviceIdentifier !== undefined
       ? devices.find((d) => d.device.identifier === selectedDeviceIdentifier)
       : undefined;
+  const rowSelectionModel: GridRowSelectionModel | undefined =
+    selectedDeviceIdentifiers !== undefined
+      ? {
+          type: "include",
+          ids: new Set(selectedDeviceIdentifiers),
+        }
+      : undefined;
 
   return (
     <Box marginTop={1} display={"flex"} flexDirection={"column"}>
@@ -439,6 +456,24 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
           pageSizeOptions={[]}
           disableColumnSorting={disableSort}
           hideFooter
+          checkboxSelection={canSelectDevices}
+          disableRowSelectionOnClick={!canSelectDevices}
+          rowSelection={canSelectDevices}
+          rowSelectionModel={rowSelectionModel}
+          onRowSelectionModelChange={(model) => {
+            if (!onSelectedDeviceIdentifiersChange) {
+              return;
+            }
+            const selectedIds =
+              model.type === "include"
+                ? Array.from(model.ids)
+                : devices
+                    .map((device) => device.device.identifier)
+                    .filter((identifier) => !model.ids.has(identifier));
+            onSelectedDeviceIdentifiersChange(
+              selectedIds.map((identifier) => String(identifier)),
+            );
+          }}
           initialState={{
             columns: {
               columnVisibilityModel:
