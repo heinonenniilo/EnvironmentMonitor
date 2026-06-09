@@ -553,8 +553,8 @@ namespace EnvironmentMonitor.Application.Services
 
             if (devices.Any(d => d.IsVirtual))
             {
-                var virtualDeviceIds = devices.Where(d => d.IsVirtual).Select(d => d.Id);
-                throw new InvalidOperationException($"Cannot send messages to virtual devices: {string.Join(", ", virtualDeviceIds)}");
+                var virtualDeviceIds = devices.Where(d => d.IsVirtual).Select(d => d.Identifier);
+                throw new ArgumentException($"Cannot send messages to virtual devices: {string.Join(", ", virtualDeviceIds)}");
             }
 
             var identifiers = devices.Select(x => x.Identifier).ToList();
