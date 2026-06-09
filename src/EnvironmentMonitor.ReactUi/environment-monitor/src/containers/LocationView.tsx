@@ -432,6 +432,7 @@ export const LocationView: React.FC = () => {
             severity: "success",
           }),
         );
+        setSelectedDeviceIdentifiers([]);
       })
       .catch((error) => {
         console.error(error);
@@ -470,6 +471,7 @@ export const LocationView: React.FC = () => {
             severity: "success",
           }),
         );
+        setSelectedDeviceIdentifiers([]);
       })
       .catch((error) => {
         console.error(error);
