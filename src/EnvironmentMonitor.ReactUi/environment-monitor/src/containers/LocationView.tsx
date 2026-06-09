@@ -604,16 +604,6 @@ export const LocationView: React.FC = () => {
               </Box>
             }
           >
-            <DeviceTable
-              devices={locationDeviceInfos}
-              renderLink
-              renderLinkToDeviceMessages
-              hideId
-              showDeviceIdentifier
-              canSelectDevices
-              selectedDeviceIdentifiers={selectedDeviceIdentifiers}
-              onSelectedDeviceIdentifiersChange={setSelectedDeviceIdentifiers}
-            />
             {hasMotionControlDevices && (
               <DeviceControlComponent
                 hasMotionSensor={hasMotionControlDevices}
@@ -644,6 +634,16 @@ export const LocationView: React.FC = () => {
                 }}
               />
             )}
+            <DeviceTable
+              devices={locationDeviceInfos}
+              renderLink
+              renderLinkToDeviceMessages
+              hideId
+              showDeviceIdentifier
+              canSelectDevices
+              selectedDeviceIdentifiers={selectedDeviceIdentifiers}
+              onSelectedDeviceIdentifiersChange={setSelectedDeviceIdentifiers}
+            />
           </Collapsible>
 
           {hasMotionControlDevices && (
