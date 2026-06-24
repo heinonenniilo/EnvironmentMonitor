@@ -661,7 +661,7 @@ export const useApiHook = (): ApiHook => {
       rebootDevice: async (deviceIdentifier: string) => {
         try {
           const res = await apiClient.post("/api/devices/reboot", {
-            deviceIdentifier: deviceIdentifier,
+            deviceIdentifiers: [deviceIdentifier],
           });
 
           if (res.status === 200) {
