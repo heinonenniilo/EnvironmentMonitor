@@ -86,7 +86,7 @@ class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<MeasurementDbCont
         // Configure the DbContext to use SQL Server
         builder.UseSqlServer(connectionString);
 
-        var dateService = new DateService(new Microsoft.Extensions.Logging.Abstractions.NullLogger<DateService>());
+        var dateService = new DateService(new Microsoft.Extensions.Logging.Abstractions.NullLogger<DateService>(), new EnvironmentMonitor.Domain.Models.ApplicationSettings());
         return new MeasurementDbContext(builder.Options, dateService);
     }
 }
@@ -117,7 +117,7 @@ class DesignTimeDbContextFactoryApplicationDb : IDesignTimeDbContextFactory<Appl
         builder.UseSqlServer(connectionString);
 
         var currentUser = new EmptyCurrentUser();
-        var dateService = new DateService(new Microsoft.Extensions.Logging.Abstractions.NullLogger<DateService>());
+        var dateService = new DateService(new Microsoft.Extensions.Logging.Abstractions.NullLogger<DateService>(), new EnvironmentMonitor.Domain.Models.ApplicationSettings());
 
         return new ApplicationDbContext(builder.Options, currentUser, dateService);
     }
