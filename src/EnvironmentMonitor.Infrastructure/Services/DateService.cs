@@ -30,7 +30,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
         {
             if (_localTimeZone == null)
             {
-                throw new InvalidOperationException($"No valid time zone found from configured options: [{string.Join(", ", _applicationSettings.TimeZones)}]");
+                _logger.LogError($"No valid time zone found or not inited. Zones: [{string.Join(", ", _applicationSettings.TimeZones)}]");
+                throw new InvalidOperationException($"No valid time zone found or not inited");
             }
             return _localTimeZone;
         }
