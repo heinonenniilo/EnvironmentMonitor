@@ -63,8 +63,6 @@ namespace EnvironmentMonitor.Tests
             }
             _factory = new CustomWebApplicationFactory<Program>();
 
-
-
             using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
             await connection.OpenAsync();
             _respawner = await Respawner.CreateAsync(connection, new RespawnerOptions
