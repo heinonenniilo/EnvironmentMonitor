@@ -51,17 +51,17 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 if (TimeZoneInfo.TryFindSystemTimeZoneById(timeZoneId, out TimeZoneInfo? timeZone))
                 {
-                    _logger.LogInformation("Time zone '{TimeZoneId}' found: {DisplayName}", timeZoneId, timeZone.DisplayName);
+                    _logger.LogInformation($"Time zone '{timeZoneId}' found: {timeZone.DisplayName}");
                     _localTimeZone = timeZone;
                     return;
                 }
                 else
                 {
-                    _logger.LogDebug("Time zone '{TimeZoneId}' not found, trying next", timeZoneId);
+                    _logger.LogInformation($"Time zone '{timeZoneId}' not found, trying next");
                 }
             }
 
-            _logger.LogError("No valid time zone found from configured options: [{TimeZones}]", string.Join(", ", _applicationSettings.TimeZones));
+            _logger.LogError($"No valid time zone found from configured options: [{string.Join(", ", _applicationSettings.TimeZones)}]");
             _localTimeZone = null;
         }
     }
