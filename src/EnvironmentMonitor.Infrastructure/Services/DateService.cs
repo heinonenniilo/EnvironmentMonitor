@@ -30,7 +30,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         {
             if (_localTimeZone == null)
             {
-                throw new InvalidOperationException($"Time zone '{_applicationSettings.TimeZone}' not found or not initialized.");
+                throw new InvalidOperationException($"No valid time zone found from configured options: [{string.Join(", ", _applicationSettings.TimeZones)}]");
             }
             return _localTimeZone;
         }
@@ -45,18 +45,24 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
         private void Init()
         {
-            _logger.LogInformation($"Initializing DateService with time zone '{_applicationSettings.TimeZone}'");
+            _logger.LogInformation("Initializing DateService with time zones: [{TimeZones}]", string.Join(", ", _applicationSettings.TimeZones));
 
-            if (TimeZoneInfo.TryFindSystemTimeZoneById(_applicationSettings.TimeZone, out TimeZoneInfo? timeZone))
+            foreach (var timeZoneId in _applicationSettings.TimeZones)
             {
-                _logger.LogInformation($"Time zone '{_applicationSettings.TimeZone}' found: {timeZone.DisplayName}");
-                _localTimeZone = timeZone;
+                if (TimeZoneInfo.TryFindSystemTimeZoneById(timeZoneId, out TimeZoneInfo? timeZone))
+                {
+                    _logger.LogInformation("Time zone '{TimeZoneId}' found: {DisplayName}", timeZoneId, timeZone.DisplayName);
+                    _localTimeZone = timeZone;
+                    return;
+                }
+                else
+                {
+                    _logger.LogDebug("Time zone '{TimeZoneId}' not found, trying next", timeZoneId);
+                }
             }
-            else
-            {
-                _logger.LogWarning($"Time zone '{_applicationSettings.TimeZone}' not found");
-                _localTimeZone = null;
-            }
+
+            _logger.LogError("No valid time zone found from configured options: [{TimeZones}]", string.Join(", ", _applicationSettings.TimeZones));
+            _localTimeZone = null;
         }
     }
 }
