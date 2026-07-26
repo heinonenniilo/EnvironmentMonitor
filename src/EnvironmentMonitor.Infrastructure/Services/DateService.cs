@@ -1,5 +1,6 @@
 ﻿using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -12,21 +13,19 @@ namespace EnvironmentMonitor.Infrastructure.Services
     public class DateService : IDateService
     {
         private readonly ILogger<DateService> _logger;
-        public DateService(ILogger<DateService> logger)
+        private readonly ApplicationSettings _applicationSettings;
+
+        public DateService(ILogger<DateService> logger, ApplicationSettings applicationSettings)
         {
             _logger = logger;
+            _applicationSettings = applicationSettings;
         }
+
         public DateTime CurrentTime() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, GetLocalTimeZone());
 
         public TimeZoneInfo GetLocalTimeZone()
         {
-            var targetTimeZone = TimeZoneInfo.FindSystemTimeZoneById(ApplicationConstants.TargetTimeZone);
-            if (targetTimeZone == null)
-            {
-                _logger.LogError($"Could not find time zone '{ApplicationConstants.TargetTimeZone}'");
-                throw new InvalidOperationException("Local time zone not found");
-            }
-            return targetTimeZone;
+            return TimeZoneInfo.FindSystemTimeZoneById(_applicationSettings.TimeZone);
         }
 
         public DateTime LocalToUtc(DateTime local) => TimeZoneInfo.ConvertTimeToUtc(local, GetLocalTimeZone());

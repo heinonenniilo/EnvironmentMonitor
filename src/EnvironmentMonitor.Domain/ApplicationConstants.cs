@@ -8,8 +8,6 @@ namespace EnvironmentMonitor.Domain
 {
     public static class ApplicationConstants
     {
-        public static string TargetTimeZone = "FLE Standard Time";
-
         public static int MeasurementGroupByLimitInDays = 7;
         public static int PublicMeasurementMaxLimitInDays = 5;
         public static int PublicMeasurementMaxLimitInDaysForRegistered = 14;

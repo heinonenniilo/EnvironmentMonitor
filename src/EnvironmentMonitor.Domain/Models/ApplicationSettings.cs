@@ -10,5 +10,11 @@ namespace EnvironmentMonitor.Domain.Models
     {
         public string BaseUrl { get; set; } = "";
         public bool IsProduction { get; set; } = true;
+
+        /// <summary>
+        /// Time zone ID. Default: "FLE Standard Time" (Windows). 
+        /// For Linux/macOS, use "Europe/Helsinki".
+        /// </summary>
+        public string TimeZone { get; set; } = "FLE Standard Time";
     }
 }
