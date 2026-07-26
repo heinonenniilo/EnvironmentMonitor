@@ -15,6 +15,8 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using Respawn;
 using Respawn.Graph;
+using System.Data.Common;
+using System.Data.SqlClient;
 using System.Text;
 using Device = EnvironmentMonitor.Domain.Entities.Device;
 
@@ -60,7 +62,9 @@ namespace EnvironmentMonitor.Tests
                 keysDbContext.Database.Migrate();
             }
             _factory = new CustomWebApplicationFactory<Program>();
-            _respawner = await Respawner.CreateAsync(_configuration.GetConnectionString("DefaultConnection"), new RespawnerOptions
+
+
+            _respawner = await Respawner.CreateAsync(new SqlConnection(_configuration.GetConnectionString("DefaultConnection")) , new RespawnerOptions
             {
                 TablesToIgnore =
                 [
@@ -89,7 +93,7 @@ namespace EnvironmentMonitor.Tests
         {
             if (_respawner != null)
             {
-                await _respawner.ResetAsync(_configuration.GetConnectionString("DefaultConnection"));
+                await _respawner.ResetAsync(new SqlConnection(_configuration.GetConnectionString("DefaultConnection")));
                 using (var scope = _factory.Services.CreateScope())
                 {
                     var measurementDbContext = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();

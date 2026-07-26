@@ -14,8 +14,7 @@ var host = new HostBuilder()
     .ConfigureServices((opt, services) =>
     {
         services.AddSingleton<ICurrentUser, CurrentUser>();
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.ConfigureFunctionsApplicationInsights();
+        // services.AddApplicationInsightsTelemetryWorkerService();        
 
         var hubDomain = opt.Configuration.GetValue<string>("HubDomain");
         IotHubSettings? hubSettings = null;
