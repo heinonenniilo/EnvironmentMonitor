@@ -45,7 +45,7 @@ namespace EnvironmentMonitor.Tests
                 .AddJsonFile("appsettings.testing.json")
                 .AddEnvironmentVariables()
                 .Build();
-            var services = new ServiceCollection(); 
+            var services = new ServiceCollection();
             services.AddSingleton<ICurrentUser, TestUser>();
             services.AddInfrastructureServices(_configuration);
             var serviceProvider = services.BuildServiceProvider();
@@ -64,7 +64,10 @@ namespace EnvironmentMonitor.Tests
             _factory = new CustomWebApplicationFactory<Program>();
 
 
-            _respawner = await Respawner.CreateAsync(new SqlConnection(_configuration.GetConnectionString("DefaultConnection")) , new RespawnerOptions
+
+            using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+            await connection.OpenAsync();
+            _respawner = await Respawner.CreateAsync(connection, new RespawnerOptions
             {
                 TablesToIgnore =
                 [
@@ -78,6 +81,7 @@ namespace EnvironmentMonitor.Tests
                     new Table("application", "AspNetRoles"),
                 ],
             });
+            await connection.CloseAsync();
             _client = _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
         }
 
@@ -93,7 +97,10 @@ namespace EnvironmentMonitor.Tests
         {
             if (_respawner != null)
             {
-                await _respawner.ResetAsync(new SqlConnection(_configuration.GetConnectionString("DefaultConnection")));
+                using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+                await connection.OpenAsync();
+                await _respawner.ResetAsync(connection);
+                await connection.CloseAsync();
                 using (var scope = _factory.Services.CreateScope())
                 {
                     var measurementDbContext = scope.ServiceProvider.GetRequiredService<MeasurementDbContext>();
