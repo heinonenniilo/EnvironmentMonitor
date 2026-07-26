@@ -10,7 +10,7 @@ namespace EnvironmentMonitor.Application.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration, DeviceSettings? deviceSettings = null)
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration, DeviceSettings? deviceSettings = null, ApiKeySettings? apiKeySettings = null)
         {
             services.AddScoped<IMeasurementService, MeasurementService>();
             services.AddScoped<IUserService, UserService>();
@@ -37,6 +37,17 @@ namespace EnvironmentMonitor.Application.Extensions
                 configuration.GetSection("DeviceSettings").Bind(bound);
                 services.AddSingleton(bound);
             }
+
+            if (apiKeySettings != null)
+            {
+                services.AddSingleton(apiKeySettings);
+            }
+            else
+            {
+                var bound = new ApiKeySettings();
+                configuration.GetSection("ApiKeySettings").Bind(bound);
+                services.AddSingleton(bound);
+            }   
 
             return services;
         }

@@ -1,3 +1,4 @@
+using Azure.Monitor.OpenTelemetry.Exporter;
 using EnvironmentMonitor.Application.Extensions;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
@@ -5,6 +6,7 @@ using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.HubObserver.Services;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Azure.Functions.Worker.OpenTelemetry;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,8 +16,15 @@ var host = new HostBuilder()
     .ConfigureServices((opt, services) =>
     {
         services.AddSingleton<ICurrentUser, CurrentUser>();
-        services.AddApplicationInsightsTelemetryWorkerService();
-        services.ConfigureFunctionsApplicationInsights();
+
+        var applicationInsightsConnectionString = opt.Configuration.GetValue<string>("APPLICATIONINSIGHTS_CONNECTION_STRING");
+        if (!string.IsNullOrEmpty(applicationInsightsConnectionString))
+        {
+            services.AddApplicationInsightsTelemetryWorkerService();
+            services.AddOpenTelemetry()
+                .UseFunctionsWorkerDefaults()
+                .UseAzureMonitorExporter();
+        }
 
         var hubDomain = opt.Configuration.GetValue<string>("HubDomain");
         IotHubSettings? hubSettings = null;

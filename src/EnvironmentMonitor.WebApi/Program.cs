@@ -46,11 +46,6 @@ var applicationSettings = new ApplicationSettings();
 builder.Configuration.GetSection("ApplicationSettings").Bind(applicationSettings);
 applicationSettings.IsProduction = builder.Environment.IsProduction();
 
-// Configure API Key settings
-var apiKeySettings = new ApiKeySettings();
-builder.Configuration.GetSection("ApiKeySettings").Bind(apiKeySettings);
-builder.Services.AddSingleton(apiKeySettings);
-
 builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
 builder.Services.AddApplicationServices(builder.Configuration);
 // Add API Key authentication scheme 

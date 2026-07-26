@@ -1,13 +1,14 @@
 using System;
 using System.Text.Json;
 using System.Text;
-using Azure.Messaging.EventHubs;
 using EnvironmentMonitor.Application.DTOs;
 using EnvironmentMonitor.Application.Interfaces;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Enums;
+using EnvironmentMonitor.HubObserver.Extensions;
+using Azure.Messaging.EventHubs;
 
 namespace EnvironmentMonitor.HubObserver.Functions
 {
@@ -42,7 +43,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
             }
             var processedMessaged = 0;
 
-            foreach (EventData message in events)
+            foreach (var message in events)
             {
                 var bodyString = Encoding.UTF8.GetString(message.EventBody);
                 if (bodyString == null)
@@ -71,13 +72,24 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     return;
                 }
 
-                foreach (var item in objectToInsert.Measurements)
+                var enqueuedDateTime = message.GetEnqueuedTimeUtc();
+
+                if (enqueuedDateTime == null)
                 {
-                    item.TimestampUtc = message.EnqueuedTime.UtcDateTime;
+                    _logger.LogWarning($"EnqueuedDateTime is null for message with sequence number {message.GetSequenceNumber()}");
+                    continue;
                 }
 
-                objectToInsert.EnqueuedUtc = message.EnqueuedTime.UtcDateTime;
-                objectToInsert.SequenceNumber = message.SequenceNumber;
+                if (objectToInsert.Measurements != null)
+                {
+                    foreach (var item in objectToInsert.Measurements)
+                    {
+                        item.TimestampUtc = enqueuedDateTime.Value;
+                    }
+                }
+
+                objectToInsert.EnqueuedUtc = enqueuedDateTime;
+                objectToInsert.SequenceNumber = message.GetSequenceNumber();
                 objectToInsert.Source = CommunicationChannels.IotHub;
                 try
                 {
