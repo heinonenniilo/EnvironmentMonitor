@@ -1,3 +1,4 @@
+using EnvironmentMonitor.Infrastructure.Extensions;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +17,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             modelBuilder.HasDefaultSchema("application");
             base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyPostgreSqlCompatibility(Database.ProviderName);
         }
     }
 }

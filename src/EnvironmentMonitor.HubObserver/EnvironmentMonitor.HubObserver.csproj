@@ -24,6 +24,7 @@
     <ProjectReference Include="..\EnvironmentMonitor.Application\EnvironmentMonitor.Application.csproj" />
     <ProjectReference Include="..\EnvironmentMonitor.Domain\EnvironmentMonitor.Domain.csproj" />
     <ProjectReference Include="..\EnvironmentMonitor.Infrastructure\EnvironmentMonitor.Infrastructure.csproj" />
+    <ProjectReference Include="..\EnvironmentMonitor.PostgreSqlMigrations\EnvironmentMonitor.PostgreSqlMigrations.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

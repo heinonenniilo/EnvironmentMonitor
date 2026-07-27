@@ -1,4 +1,5 @@
 ﻿using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Services;
@@ -12,6 +13,7 @@ if (!AppDomain.CurrentDomain.FriendlyName.Contains("ef"))
     var configuration = new ConfigurationBuilder()
           .AddJsonFile("appsettings.json")
           .AddUserSecrets<Program>()
+          .AddEnvironmentVariables()
           .Build();
 
     var services = new ServiceCollection();
@@ -40,6 +42,7 @@ static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider, int tim
             {
                 measureDbContext.Database.SetCommandTimeout(timeout);
                 applicationDbContext.Database.SetCommandTimeout(timeout);
+                keysDbContect.Database.SetCommandTimeout(timeout);
                 Console.WriteLine("Migrating measurements db context");
                 await measureDbContext.Database.MigrateAsync();
                 Console.WriteLine("Migrating ApplicationDbContex");
@@ -70,6 +73,7 @@ class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<MeasurementDbCont
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: true)
             .AddUserSecrets<Program>()
+            .AddEnvironmentVariables()
             .Build();
 
         // Create DbContextOptionsBuilder
@@ -83,8 +87,13 @@ class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<MeasurementDbCont
             throw new InvalidOperationException("Could not find a connection string named 'MeasurementDb'.");
         }
 
-        // Configure the DbContext to use SQL Server
-        builder.UseSqlServer(connectionString);
+        var databaseSettings = new DatabaseSettings();
+        configuration.GetSection("DatabaseSettings").Bind(databaseSettings);
+
+        ServiceCollectionExtensions.ConfigureDatabase(
+            builder,
+            databaseSettings.Provider,
+            connectionString);
 
         var dateService = new DateService(new Microsoft.Extensions.Logging.Abstractions.NullLogger<DateService>(), new EnvironmentMonitor.Domain.Models.ApplicationSettings());
         return new MeasurementDbContext(builder.Options, dateService);
@@ -100,6 +109,7 @@ class DesignTimeDbContextFactoryApplicationDb : IDesignTimeDbContextFactory<Appl
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: true)
             .AddUserSecrets<Program>()
+            .AddEnvironmentVariables()
             .Build();
 
         // Create DbContextOptionsBuilder
@@ -113,8 +123,13 @@ class DesignTimeDbContextFactoryApplicationDb : IDesignTimeDbContextFactory<Appl
             throw new InvalidOperationException("Could not find a connection string named 'MeasurementDb'.");
         }
 
-        // Configure the DbContext to use SQL Server
-        builder.UseSqlServer(connectionString);
+        var databaseSettings = new DatabaseSettings();
+        configuration.GetSection("DatabaseSettings").Bind(databaseSettings);
+
+        ServiceCollectionExtensions.ConfigureDatabase(
+            builder,
+            databaseSettings.Provider,
+            connectionString);
 
         var currentUser = new EmptyCurrentUser();
         var dateService = new DateService(new Microsoft.Extensions.Logging.Abstractions.NullLogger<DateService>(), new EnvironmentMonitor.Domain.Models.ApplicationSettings());
@@ -133,6 +148,7 @@ class DesignTimeDbContextFactorDataProtectionKeysDb : IDesignTimeDbContextFactor
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", optional: true)
             .AddUserSecrets<Program>()
+            .AddEnvironmentVariables()
             .Build();
 
         // Create DbContextOptionsBuilder
@@ -146,8 +162,13 @@ class DesignTimeDbContextFactorDataProtectionKeysDb : IDesignTimeDbContextFactor
             throw new InvalidOperationException("Could not find a connection string named 'MeasurementDb'.");
         }
 
-        // Configure the DbContext to use SQL Server
-        builder.UseSqlServer(connectionString);
+        var databaseSettings = new DatabaseSettings();
+        configuration.GetSection("DatabaseSettings").Bind(databaseSettings);
+
+        ServiceCollectionExtensions.ConfigureDatabase(
+            builder,
+            databaseSettings.Provider,
+            connectionString);
 
         return new DataProtectionKeysContext(builder.Options);
     }

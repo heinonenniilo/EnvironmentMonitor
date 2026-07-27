@@ -1,5 +1,6 @@
 ﻿using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -36,6 +37,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 type.Namespace == "EnvironmentMonitor.Infrastructure.Identity.Configurations"
             );
             base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyPostgreSqlCompatibility(Database.ProviderName);
         }
 
         public override int SaveChanges()

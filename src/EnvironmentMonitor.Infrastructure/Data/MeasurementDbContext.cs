@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Domain.Entities;
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -81,6 +82,28 @@ namespace EnvironmentMonitor.Infrastructure.Data
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(MeasurementDbContext).Assembly, type =>
                 type.Namespace == "EnvironmentMonitor.Infrastructure.Data.Configurations");
+
+            var measurementIndex = modelBuilder.Entity<Measurement>()
+                .HasIndex(x => new { x.SensorId, x.Timestamp });
+
+            if (Database.IsSqlServer())
+            {
+                SqlServerIndexBuilderExtensions.IncludeProperties(
+                    measurementIndex,
+                    "Value",
+                    "TypeId",
+                    "TimestampUtc");
+            }
+            else if (Database.IsNpgsql())
+            {
+                NpgsqlIndexBuilderExtensions.IncludeProperties(
+                    measurementIndex,
+                    "Value",
+                    "TypeId",
+                    "TimestampUtc");
+            }
+
             base.OnModelCreating(modelBuilder);
+            modelBuilder.ApplyPostgreSqlCompatibility(Database.ProviderName);
         }
     }}

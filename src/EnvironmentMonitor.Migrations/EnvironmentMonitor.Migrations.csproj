@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EnvironmentMonitor.Domain\EnvironmentMonitor.Domain.csproj" />
     <ProjectReference Include="..\EnvironmentMonitor.Infrastructure\EnvironmentMonitor.Infrastructure.csproj" />
+    <ProjectReference Include="..\EnvironmentMonitor.PostgreSqlMigrations\EnvironmentMonitor.PostgreSqlMigrations.csproj" />
   </ItemGroup>
 
   <ItemGroup>
