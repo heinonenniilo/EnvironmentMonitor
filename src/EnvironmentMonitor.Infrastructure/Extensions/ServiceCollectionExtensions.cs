@@ -17,6 +17,8 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
 {
     public static class ServiceCollectionExtensions
     {
+        private const string PostgreSqlMigrationsAssembly = "EnvironmentMonitor.PostgreSqlMigrations";
+
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services,
             IConfiguration configuration,
             string? connectionString = null,
@@ -24,30 +26,44 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             QueueSettings? queueSettings = null,
             EmailSettings? emailSettings = null,
             ApplicationSettings? applicationSettings = null,
-            DataProtectionKeysSettings? dataProtectionKeysSettings = null
+            DataProtectionKeysSettings? dataProtectionKeysSettings = null,
+            DatabaseSettings? databaseSettings = null
             )
         {
             var connectionStringToUse = connectionString ?? configuration.GetConnectionString("DefaultConnection");
+
+            DatabaseSettings databaseSettingsToUse;
+            if (databaseSettings != null)
+            {
+                databaseSettingsToUse = databaseSettings;
+            }
+            else
+            {
+                databaseSettingsToUse = new DatabaseSettings();
+                configuration.GetSection("DatabaseSettings").Bind(databaseSettingsToUse);
+            }
+
+            var databaseProvider = databaseSettingsToUse.Provider;
+
+            // Register DatabaseSettings as singleton
+            services.AddSingleton(databaseSettingsToUse);
 
             // Needed by WebApi's ICurrentUser implementation; harmless in non-web hosts.
             services.AddHttpContextAccessor();
 
             services.AddDbContext<MeasurementDbContext>(options =>
             {
-                options.UseSqlServer(connectionStringToUse,
-                    builder => builder.MigrationsAssembly(typeof(MeasurementDbContext).Assembly.FullName));
+                ConfigureDatabase(options, databaseProvider, connectionStringToUse);
             });
             services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseSqlServer(connectionStringToUse,
-                    builder => builder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName));
+                ConfigureDatabase(options, databaseProvider, connectionStringToUse);
             });
             services.AddDbContext<DataProtectionKeysContext>(options =>
             {
-                options.UseSqlServer(connectionStringToUse,
-                    builder => builder.MigrationsAssembly(typeof(DataProtectionKeysContext).Assembly.FullName));
+                ConfigureDatabase(options, databaseProvider, connectionStringToUse);
             });
-
+            
             DataProtectionKeysSettings? dataProtectionKeysSettingsToCheck;
             if (dataProtectionKeysSettings != null)
             {
@@ -192,6 +208,34 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             }
 
             return services;
+        }
+
+        public static void ConfigureDatabase(
+            DbContextOptionsBuilder options,
+            string databaseProvider,
+            string? connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("Connection string 'DefaultConnection' is not configured.");
+            }
+
+            if (databaseProvider.Equals(DatabaseSettings.PostgreSql, StringComparison.OrdinalIgnoreCase))
+            {
+                options.UseNpgsql(connectionString,
+                    builder => builder.MigrationsAssembly(PostgreSqlMigrationsAssembly));
+                return;
+            }
+
+            if (databaseProvider.Equals(DatabaseSettings.SqlServer, StringComparison.OrdinalIgnoreCase))
+            {
+                options.UseSqlServer(connectionString,
+                    builder => builder.MigrationsAssembly(typeof(MeasurementDbContext).Assembly.FullName));
+                return;
+            }
+
+            throw new InvalidOperationException(
+                $"Unsupported database provider '{databaseProvider}'. Use '{DatabaseSettings.SqlServer}' or '{DatabaseSettings.PostgreSql}'.");
         }
     }
 }

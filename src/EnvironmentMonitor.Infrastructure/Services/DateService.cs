@@ -24,7 +24,11 @@ namespace EnvironmentMonitor.Infrastructure.Services
             Init();
         }
 
-        public DateTime CurrentTime() => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, GetLocalTimeZone());
+        public DateTime CurrentTime()
+        {
+            var dateToReturn = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, GetLocalTimeZone());
+            return DateTime.SpecifyKind(dateToReturn, DateTimeKind.Unspecified);
+        }
 
         public TimeZoneInfo GetLocalTimeZone()
         {
@@ -36,8 +40,16 @@ namespace EnvironmentMonitor.Infrastructure.Services
             return _localTimeZone;
         }
 
-        public DateTime LocalToUtc(DateTime local) => TimeZoneInfo.ConvertTimeToUtc(local, GetLocalTimeZone());
-        public DateTime UtcToLocal(DateTime utc) => TimeZoneInfo.ConvertTimeFromUtc(utc, GetLocalTimeZone());
+        public DateTime LocalToUtc(DateTime local)
+        {
+            var toReturn = TimeZoneInfo.ConvertTimeToUtc(local, GetLocalTimeZone());
+            return DateTime.SpecifyKind(toReturn, DateTimeKind.Utc);
+        }
+        public DateTime UtcToLocal(DateTime utc)
+        {
+            var toReturn = TimeZoneInfo.ConvertTimeFromUtc(utc, GetLocalTimeZone());
+            return DateTime.SpecifyKind(toReturn, DateTimeKind.Unspecified);
+        }
 
         public string FormatDateTime(DateTime dateTime)
         {

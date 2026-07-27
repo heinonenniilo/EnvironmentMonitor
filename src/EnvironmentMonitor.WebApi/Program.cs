@@ -5,8 +5,10 @@ using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
-using EnvironmentMonitor.WebApi.Services;
 using EnvironmentMonitor.WebApi.Authentication;
+using EnvironmentMonitor.WebApi.Converters;
+using EnvironmentMonitor.WebApi.Filters;
+using EnvironmentMonitor.WebApi.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
@@ -159,8 +161,20 @@ var githubSettings = new GitHubSettings();
 builder.Configuration.GetSection("GitHub").Bind(githubSettings);
 builder.Services.AddSingleton(githubSettings);
 
+var databaseSettings = new DatabaseSettings();
+builder.Configuration.GetSection("DatabaseSettings").Bind(databaseSettings);
+
 builder.Services.AddAuthorization();
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    // Only add DateKindFilter for PostgreSQL
+    // Workaround for now due to timestamp columns which have no zone defined
+    if (databaseSettings.Provider.Equals(DatabaseSettings.PostgreSql, StringComparison.OrdinalIgnoreCase))
+    {
+        options.Filters.Add<DateKindFilter>();
+    }
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

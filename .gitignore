@@ -402,3 +402,4 @@ FodyWeavers.xsd
 /src/EnvironmentMonitor.HubObserver/Properties/serviceDependencies*
 /src/EnvironmentMonitor.WebApi/.config/dotnet-tools.json
 /.github/
+/docker/.env

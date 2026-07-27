@@ -17,7 +17,7 @@ namespace EnvironmentMonitor.Domain.Models
         /// </summary>
         public Dictionary<int, List<MeasurementTypes>?> ? SensorsByTypeFilter { get; set; }
         public List<string>? DeviceMessageIdentifiers { get; set; }
-        public DateTime From { get; set; } = DateTime.UtcNow.AddDays(-1);
+        public DateTime From { get; set; } = DateTime.Now.AddDays(-1);
         public DateTime? To { get; set; }
         public bool? LatestOnly { get; set; }
         /// <summary>
