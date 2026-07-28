@@ -56,7 +56,7 @@ namespace EnvironmentMonitor.Application.Services
             _transactionService = transactionService;
         }
 
-        public async Task AddMeasurements(SaveMeasurementsDto measurement)
+        public async Task AddMeasurements(SaveMeasurementsDto measurement, bool skipStatusCheck = false)
         {
             var deviceDto = await _deviceService.GetDevice(measurement.DeviceId, AccessLevels.Write);
             if (deviceDto == null)
@@ -77,7 +77,7 @@ namespace EnvironmentMonitor.Application.Services
                 deviceMessage = new DeviceMessage()
                 {
                     TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
-                    TimeStampUtc = measurement.EnqueuedUtc.Value,
+                    TimeStampUtc = DateTime.SpecifyKind(measurement.EnqueuedUtc.Value, DateTimeKind.Utc),
                     DeviceId = device.Id,
                     SequenceNumber = measurement.SequenceNumber,
                     FirstMessage = measurement.FirstMessage,
@@ -86,6 +86,7 @@ namespace EnvironmentMonitor.Application.Services
                     MessageCount = measurement.MessageCount,
                     Identifier = measurement.Identifier,
                     LoopCount = measurement.LoopCount,
+                    ExternalId = measurement.ExternalId,
                     SourceId = measurement.Source != null ? (int)measurement.Source : null,
                 };
             }
@@ -144,7 +145,7 @@ namespace EnvironmentMonitor.Application.Services
                         Timestamp = _dateService.UtcToLocal(row.TimestampUtc),
                         CreatedAt = createdAt,
                         CreatedAtUtc = _dateService.LocalToUtc(createdAt),
-                        TimestampUtc = row.TimestampUtc,
+                        TimestampUtc = DateTime.SpecifyKind(row.TimestampUtc, DateTimeKind.Utc),
                         TypeId = row.TypeId
                     };
                     measurementsToAdd.Add(measurementToAdd);
@@ -157,21 +158,24 @@ namespace EnvironmentMonitor.Application.Services
 
                 _logger.LogInformation($"Adding {measurementsToAdd.Count} measurements for Device ({device.Identifier}): '{device.Name}'");
 
-                if (measurement.FirstMessage)
+                if (!skipStatusCheck)
                 {
-                    await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", true, measurement.EnqueuedUtc);
-                }
-
-                if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < device.GetOfflineThresholdInMinutes())
-                {
-                    await _deviceService.SetStatus(new SetDeviceStatusModel()
+                    if (measurement.FirstMessage)
                     {
-                        Idenfifier = device.Identifier,
-                        Status = true,
-                        TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
-                        Message = "Device is online",
-                        DeviceMessage = deviceMessage
-                    }, true);
+                        await _deviceService.AddEvent(device.Id, DeviceEventTypes.Online, "First message after boot", true, measurement.EnqueuedUtc);
+                    }
+
+                    if (measurement.EnqueuedUtc != null && (_dateService.LocalToUtc(_dateService.CurrentTime()) - measurement.EnqueuedUtc).Value.TotalMinutes < device.GetOfflineThresholdInMinutes())
+                    {
+                        await _deviceService.SetStatus(new SetDeviceStatusModel()
+                        {
+                            Idenfifier = device.Identifier,
+                            Status = true,
+                            TimeStamp = _dateService.UtcToLocal(measurement.EnqueuedUtc.Value),
+                            Message = "Device is online",
+                            DeviceMessage = deviceMessage
+                        }, true);
+                    }
                 }
 
                 await _measurementRepository.AddMeasurements(measurementsToAdd, true, deviceMessage);

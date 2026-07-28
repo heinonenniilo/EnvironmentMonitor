@@ -21,9 +21,11 @@ var host = new HostBuilder()
         if (!string.IsNullOrEmpty(applicationInsightsConnectionString))
         {
             services.AddApplicationInsightsTelemetryWorkerService();
+            /*
             services.AddOpenTelemetry()
                 .UseFunctionsWorkerDefaults()
                 .UseAzureMonitorExporter();
+            */
         }
 
         var hubDomain = opt.Configuration.GetValue<string>("HubDomain");

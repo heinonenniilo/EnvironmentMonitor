@@ -15,11 +15,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
     {
         private readonly IMeasurementService _measurementService;
         private readonly IDateService _dateService;
+        private readonly ILogger<MeasurementsController> _logger;
+        private readonly ISyncService _syncService;
 
-        public MeasurementsController(IDateService dateService, IMeasurementService measurementService)
+        public MeasurementsController(IDateService dateService, IMeasurementService measurementService, ISyncService syncService, ILogger<MeasurementsController> logger)
         {           
             _dateService = dateService;
             _measurementService = measurementService;
+            _syncService = syncService;
+            _logger = logger;
         }
 
         [HttpGet()]
@@ -57,6 +61,31 @@ namespace EnvironmentMonitor.WebApi.Controllers
             }
             measurements.Source = CommunicationChannels.RestApi;
             await _measurementService.AddMeasurements(measurements);
+        }
+
+        [HttpPost("sync")]
+        [Authorize(AuthenticationSchemes = ApiKeyAuthenticationOptions.DefaultScheme, Roles = "Admin,ApiKeyUser")]
+        public async Task<IActionResult> SyncMeasurements([FromBody] SyncMeasurementsRequest request)
+        {
+            if (request == null || request.Measurements == null || !request.Measurements.Any())
+            {
+                _logger.LogWarning("SyncMeasurements called with no measurements provided.");
+                return BadRequest("No measurements provided");
+            }
+
+            try
+            {
+                var result = await _syncService.ProcessIncomingSync(request);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error processing sync: {ex.Message}");
+            }
         }
     }
 }

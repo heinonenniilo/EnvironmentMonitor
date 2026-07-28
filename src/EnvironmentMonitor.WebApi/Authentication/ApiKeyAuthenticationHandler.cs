@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using EnvironmentMonitor.Domain;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Models;
 using Microsoft.Extensions.Logging;
@@ -16,9 +17,9 @@ namespace EnvironmentMonitor.WebApi.Authentication
     {
         public const string DefaultScheme = "ApiKey";
         public string Scheme => DefaultScheme;
-        public string ApiKeyHeaderName { get; set; } = "X-API-KEY";
-        public string SecretIdHeaderName { get; set; } = "X-SECRET-ID";
-        public string SecretValueHeaderName { get; set; } = "X-SECRET-VALUE";
+        public string ApiKeyHeaderName { get; set; } = ApplicationConstants.ApiKeyHeaderName;
+        public string SecretIdHeaderName { get; set; } = ApplicationConstants.SecretIdHeaderName;
+        public string SecretValueHeaderName { get; set; } = ApplicationConstants.SecretValueHeaderName;
     }
 
     public class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>

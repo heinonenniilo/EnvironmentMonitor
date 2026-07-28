@@ -6,7 +6,6 @@ using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Extensions;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.WebApi.Authentication;
-using EnvironmentMonitor.WebApi.Converters;
 using EnvironmentMonitor.WebApi.Filters;
 using EnvironmentMonitor.WebApi.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -163,6 +162,9 @@ builder.Services.AddSingleton(githubSettings);
 
 var databaseSettings = new DatabaseSettings();
 builder.Configuration.GetSection("DatabaseSettings").Bind(databaseSettings);
+
+// Register HttpClient for SyncService
+builder.Services.AddHttpClient();
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers(options =>
