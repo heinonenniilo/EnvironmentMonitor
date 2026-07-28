@@ -14,6 +14,8 @@ namespace EnvironmentMonitor.Domain.Enums
         [Description("Rest API")]
         RestApi = 1,
         [Description("Ilmatieteenlaitos Open Api")]
-        IlmatieteenLaitos = 2
+        IlmatieteenLaitos = 2,
+        [Description("Sync")]
+        Sync = 3
     }
 }

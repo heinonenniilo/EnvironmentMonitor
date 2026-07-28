@@ -22,6 +22,7 @@ namespace EnvironmentMonitor.Application.DTOs
         public string? Identifier { get; set; }
         public long? LoopCount { get; set; }
         public int? MessageCount { get; set; }
+        public long? ExternalId { get; set; }
         public CommunicationChannels? Source { get; set; }
     }
 }

@@ -2,6 +2,7 @@ export enum CommunicationChannels {
   IotHub = 0,
   RestApi = 1,
   Ilmatieteenlaitos = 2,
+  Sync = 3,
 }
 
 export const getCommunicationChannelDisplayName = (
@@ -14,6 +15,8 @@ export const getCommunicationChannelDisplayName = (
       return "Rest API";
     case CommunicationChannels.Ilmatieteenlaitos:
       return "Ilmatieteenlaitos API";
+    case CommunicationChannels.Sync:
+      return "Sync";
     default:
       return "Unknown";
   }

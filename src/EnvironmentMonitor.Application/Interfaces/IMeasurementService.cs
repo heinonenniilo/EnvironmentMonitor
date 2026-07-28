@@ -10,7 +10,7 @@ namespace EnvironmentMonitor.Application.Interfaces
 {
     public interface IMeasurementService
     {
-        public Task AddMeasurements(SaveMeasurementsDto measurement);
+        public Task AddMeasurements(SaveMeasurementsDto measurement, bool skipStatusCheck = false);
         public Task<MeasurementsModel> GetMeasurements(GetMeasurementsModel model);
         public Task<MeasurementsBySensorModel> GetMeasurementsBySensor(GetMeasurementsModel model);
         public Task<MeasurementsByLocationModel> GetMeasurementsByLocation(GetMeasurementsModel model);

@@ -27,5 +27,13 @@ namespace EnvironmentMonitor.Domain
         public static string EmailTemplatePasswordResetLinkKey = "{ResetLink}";
         // Authentication claim types
         public static string ExternalLoginProviderClaim = "ExternalLoginProvider";
+
+        // API Key authentication header names
+        public static string ApiKeyHeaderName = "X-API-KEY";
+        public static string SecretIdHeaderName = "X-SECRET-ID";
+        public static string SecretValueHeaderName = "X-SECRET-VALUE";
+
+        // Sync service status variable keys
+        public static string SyncLastDeviceMessageIdKey = "Sync_LastDeviceMessageId";
     }
 }

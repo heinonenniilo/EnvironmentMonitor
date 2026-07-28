@@ -23,6 +23,8 @@ namespace EnvironmentMonitor.Domain.Entities
         public long? MessageCount { get; set; }
         public bool IsDuplicate { get; set; }
         public int? SourceId { get; set; }
+        public bool IsImported { get; set; }
+        public long? ExternalId { get; set; }
         public CommunicationChannel? CommunicationChannel { get; set; }
     }
 }

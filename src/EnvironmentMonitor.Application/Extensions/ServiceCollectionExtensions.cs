@@ -25,6 +25,7 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<IFmiMeasurementService, FmiMeasurementService>();
             services.AddScoped<IPublicSensorService, PublicSensorService>();
             services.AddScoped<IMeasurementAnalyzeService, MeasurementAnalyzeService>();
+            services.AddScoped<ISyncService, SyncService>();
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             if (deviceSettings != null)
@@ -47,7 +48,12 @@ namespace EnvironmentMonitor.Application.Extensions
                 var bound = new ApiKeySettings();
                 configuration.GetSection("ApiKeySettings").Bind(bound);
                 services.AddSingleton(bound);
-            }   
+            }
+
+            // Bind SyncSettings
+            var syncSettings = new SyncSettings();
+            configuration.GetSection("SyncSettings").Bind(syncSettings);
+            services.AddSingleton(syncSettings);
 
             return services;
         }
