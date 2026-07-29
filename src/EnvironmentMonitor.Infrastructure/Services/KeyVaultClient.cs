@@ -29,7 +29,24 @@ namespace EnvironmentMonitor.Infrastructure.Services
             if (!string.IsNullOrEmpty(settings.VaultUri))
             {
                 var keyVaultUrl = new Uri(settings.VaultUri);
-                _secretClient = new SecretClient(keyVaultUrl, new DefaultAzureCredential());
+
+                // Use ClientSecretCredential if all required properties are provided
+                if (!string.IsNullOrEmpty(settings.TenantId) && 
+                    !string.IsNullOrEmpty(settings.ClientId) && 
+                    !string.IsNullOrEmpty(settings.ClientSecret))
+                {
+                    _logger.LogInformation("Using ClientSecretCredential for KeyVault authentication");
+                    var credential = new ClientSecretCredential(
+                        settings.TenantId, 
+                        settings.ClientId, 
+                        settings.ClientSecret);
+                    _secretClient = new SecretClient(keyVaultUrl, credential);
+                }
+                else
+                {
+                    _logger.LogInformation("Using DefaultAzureCredential for KeyVault authentication");
+                    _secretClient = new SecretClient(keyVaultUrl, new DefaultAzureCredential());
+                }
             }
             else
             {

@@ -10,5 +10,8 @@ namespace EnvironmentMonitor.Domain.Models
     {
         public string VaultUri { get; set; } = string.Empty;
         public bool Base64EncodeSecrets { get; set; } = false;
+        public string? TenantId { get; set; }
+        public string? ClientId { get; set; }
+        public string? ClientSecret { get; set; }
     }
 }
