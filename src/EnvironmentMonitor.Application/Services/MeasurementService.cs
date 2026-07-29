@@ -56,7 +56,7 @@ namespace EnvironmentMonitor.Application.Services
             _transactionService = transactionService;
         }
 
-        public async Task AddMeasurements(SaveMeasurementsDto measurement, bool skipStatusCheck = false)
+        public async Task AddMeasurements(SaveMeasurementsDto measurement, bool skipStatusCheck = false, bool skipVirtualSensorProcessing = false)
         {
             var deviceDto = await _deviceService.GetDevice(measurement.DeviceId, AccessLevels.Write);
             if (deviceDto == null)
@@ -149,7 +149,7 @@ namespace EnvironmentMonitor.Application.Services
                         TypeId = row.TypeId
                     };
                     measurementsToAdd.Add(measurementToAdd);
-                    if (sensorInDb.VirtualSensorRowValues.Count != 0)
+                    if (!skipVirtualSensorProcessing && sensorInDb.VirtualSensorRowValues.Count != 0)
                     {
                         _logger.LogInformation($"Start processing virtual sensor measurements related to sensor ({sensorInDb.Id})");
                         await _measurementRepository.ProcessVirtualSensorMeasurement(measurementToAdd, sensorInDb.Id, true);
