@@ -87,9 +87,26 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 if (dataProtectionKeysSettingsToCheck.EncryptWithKeyVault && 
                     !string.IsNullOrEmpty(dataProtectionKeysSettingsToCheck.KeyVaultKeyIdentifier))
                 {
-                    dataProtectionBuilder.ProtectKeysWithAzureKeyVault(
-                        new Uri(dataProtectionKeysSettingsToCheck.KeyVaultKeyIdentifier),
-                        new DefaultAzureCredential());
+                    // Use ClientSecretCredential if all required properties are provided
+                    if (!string.IsNullOrEmpty(dataProtectionKeysSettingsToCheck.TenantId) &&
+                        !string.IsNullOrEmpty(dataProtectionKeysSettingsToCheck.ClientId) &&
+                        !string.IsNullOrEmpty(dataProtectionKeysSettingsToCheck.ClientSecret))
+                    {
+                        var credential = new ClientSecretCredential(
+                            dataProtectionKeysSettingsToCheck.TenantId,
+                            dataProtectionKeysSettingsToCheck.ClientId,
+                            dataProtectionKeysSettingsToCheck.ClientSecret);
+
+                        dataProtectionBuilder.ProtectKeysWithAzureKeyVault(
+                            new Uri(dataProtectionKeysSettingsToCheck.KeyVaultKeyIdentifier),
+                            credential);
+                    }
+                    else
+                    {
+                        dataProtectionBuilder.ProtectKeysWithAzureKeyVault(
+                            new Uri(dataProtectionKeysSettingsToCheck.KeyVaultKeyIdentifier),
+                            new DefaultAzureCredential());
+                    }
                 }
             }
 
