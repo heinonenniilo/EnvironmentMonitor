@@ -76,6 +76,10 @@ jobs:
           dotnet publish src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj -c Release -r win-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-function_x64"
           dotnet publish src/EnvironmentMonitor.HubObserver/EnvironmentMonitor.HubObserver.csproj -c Release -r linux-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-function_linux-x64"
 
+      - name: Publish Worker (LINUX-X64)
+        run: |
+          dotnet publish src/EnvironmentMonitor.Worker/EnvironmentMonitor.Worker.csproj -c Release -r linux-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-worker_linux-x64"
+
       - name: Upload web api artifact (win-x86)
         uses: actions/upload-artifact@v4
         with:
@@ -107,6 +111,12 @@ jobs:
           name: .env-monitor-function_x64
           path: ${{env.DOTNET_ROOT}}/env-monitor-function_x64
           include-hidden-files: true
+
+      - name: Upload worker artifact (linux-x64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: .env-monitor-worker_linux-x64
+          path: ${{env.DOTNET_ROOT}}/env-monitor-worker_linux-x64
   deploy:
     runs-on: windows-latest
     needs: build
