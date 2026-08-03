@@ -48,13 +48,22 @@ namespace EnvironmentMonitor.Infrastructure.Data
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<DeviceMessage>> GetUnsyncedDeviceMessages(long lastSyncedId, int batchSize)
+        public async Task<List<DeviceMessage>> GetUnsyncedDeviceMessages(long lastSyncedId, int batchSize, List<int>? excludedCommunicationChannels = null)
         {
-            return await _context.DeviceMessages
+            var query = _context.DeviceMessages
                 .Include(dm => dm.Device)
                 .Include(dm => dm.Measurements)
                     .ThenInclude(m => m.Sensor)
-                .Where(dm => dm.Id > lastSyncedId && !dm.IsDuplicate)
+                .Include(dm => dm.CommunicationChannel)
+                .Where(dm => dm.Id > lastSyncedId && !dm.IsDuplicate);
+
+            // Filter out excluded communication channels if specified
+            if (excludedCommunicationChannels != null && excludedCommunicationChannels.Any())
+            {
+                query = query.Where(dm => dm.SourceId == null || !excludedCommunicationChannels.Contains(dm.SourceId.Value));
+            }
+
+            return await query
                 .OrderBy(dm => dm.Id)
                 .Take(batchSize)
                 .ToListAsync();

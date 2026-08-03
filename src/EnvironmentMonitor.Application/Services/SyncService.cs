@@ -74,8 +74,11 @@ namespace EnvironmentMonitor.Application.Services
 
                 _logger.LogInformation($"Starting sync from DeviceMessage ID: {lastSyncedId}");
 
-                // Get unsynced device messages
-                var unsyncedMessages = await _statusVariableRepository.GetUnsyncedDeviceMessages(lastSyncedId, _syncSettings.BatchSize);
+                // Get unsynced device messages with optional filtering by communication channels
+                var unsyncedMessages = await _statusVariableRepository.GetUnsyncedDeviceMessages(
+                    lastSyncedId, 
+                    _syncSettings.BatchSize, 
+                    _syncSettings.ExcludedCommunicationChannels);
 
                 if (!unsyncedMessages.Any())
                 {

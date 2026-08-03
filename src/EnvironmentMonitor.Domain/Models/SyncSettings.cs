@@ -34,5 +34,10 @@ namespace EnvironmentMonitor.Domain.Models
         /// Maximum number of messages to sync in one batch (default: 40)
         /// </summary>
         public int BatchSize { get; set; } = 40;
+
+        /// <summary>
+        /// CommunicationChannel IDs to exclude from sync. If empty or null, all channels are included.
+        /// </summary>
+        public List<int> ExcludedCommunicationChannels { get; set; } = new List<int>();
     }
 }
