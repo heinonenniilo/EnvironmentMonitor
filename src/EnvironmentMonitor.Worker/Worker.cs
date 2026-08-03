@@ -11,15 +11,18 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("EnvironmentMonitor Worker starting at: {time}", DateTimeOffset.Now);
+        _logger.LogInformation("EnvironmentMonitor Worker started at: {time}", DateTimeOffset.UtcNow);
+        _logger.LogInformation("Hangfire server is processing background jobs");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            // Keep the service alive - Hangfire handles all job processing
+            await Task.Delay(Timeout.Infinite, stoppingToken);
         }
-
-        _logger.LogInformation("EnvironmentMonitor Worker stopping at: {time}", DateTimeOffset.Now);
+        catch (TaskCanceledException)
+        {
+            // Expected when service is stopping
+            _logger.LogInformation("EnvironmentMonitor Worker stopping at: {time}", DateTimeOffset.UtcNow);
+        }
     }
 }

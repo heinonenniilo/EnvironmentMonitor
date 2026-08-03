@@ -290,7 +290,6 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             if (databaseProvider.Equals(DatabaseSettings.PostgreSql, StringComparison.OrdinalIgnoreCase))
             {
                 services.AddHangfire(config => config
-                    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                     .UseSimpleAssemblyNameTypeSerializer()
                     .UseRecommendedSerializerSettings()
                     .UsePostgreSqlStorage(options =>
