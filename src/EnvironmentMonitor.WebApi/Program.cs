@@ -254,14 +254,15 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add Hangfire Dashboard (only accessible in Development for now)
-if (app.Environment.IsDevelopment())
+if (!string.IsNullOrEmpty(hangfireConnectionString))
 {
-    var hangfireConn = app.Configuration.GetConnectionString("HangfireConnection");
-    if (!string.IsNullOrEmpty(hangfireConn))
+    app.UseHangfireDashboard("/hangfire", new DashboardOptions
     {
-        app.UseHangfireDashboard("/hangfire");
-    }
+        Authorization = new[] { new HangfireAuthorizationFilter() },
+        DashboardTitle = "EnvironmentMonitor - Job Dashboard",
+        DisplayStorageConnectionString = app.Environment.IsDevelopment(),
+        StatsPollingInterval = 5000
+    });
 }
 
 app.MapControllers();
