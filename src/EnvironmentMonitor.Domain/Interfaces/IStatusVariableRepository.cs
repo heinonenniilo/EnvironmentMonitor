@@ -22,6 +22,6 @@ namespace EnvironmentMonitor.Domain.Interfaces
         /// <summary>
         /// Gets unsynced device messages with related data for sync operation
         /// </summary>
-        Task<List<DeviceMessage>> GetUnsyncedDeviceMessages(long lastSyncedId, int batchSize);
+        Task<List<DeviceMessage>> GetUnsyncedDeviceMessages(long lastSyncedId, int batchSize, List<int>? excludedCommunicationChannels = null);
     }
 }
