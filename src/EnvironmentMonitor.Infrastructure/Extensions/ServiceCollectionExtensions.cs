@@ -141,6 +141,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
 
             services.AddScoped<IRoleManager, RoleManager>();
             services.AddScoped<IUserAuthService, UserAuthService>();
+            services.AddScoped<IHangfireJobService, HangfireJobService>();
 
             if (iotHubSettings != null)
             {
