@@ -8,6 +8,7 @@ using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.WebApi.Authentication;
 using EnvironmentMonitor.WebApi.Filters;
 using EnvironmentMonitor.WebApi.Services;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
@@ -49,7 +50,18 @@ applicationSettings.IsProduction = builder.Environment.IsProduction();
 
 builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
 builder.Services.AddApplicationServices(builder.Configuration);
-// Add API Key authentication scheme 
+
+// Add Hangfire services (client only - server runs in Worker)
+var hangfireConnectionString = builder.Configuration.GetConnectionString("HangfireConnection");
+if (!string.IsNullOrEmpty(hangfireConnectionString))
+{
+    builder.Services.AddHangfireServices(
+        builder.Configuration, 
+        hangfireConnectionString: hangfireConnectionString, 
+        addServer: false);
+}
+
+// Add API Key authentication scheme
 builder.Services.AddAuthentication()
     .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(
         ApiKeyAuthenticationOptions.DefaultScheme, 
@@ -241,6 +253,16 @@ app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Add Hangfire Dashboard (only accessible in Development for now)
+if (app.Environment.IsDevelopment())
+{
+    var hangfireConn = app.Configuration.GetConnectionString("HangfireConnection");
+    if (!string.IsNullOrEmpty(hangfireConn))
+    {
+        app.UseHangfireDashboard("/hangfire");
+    }
+}
 
 app.MapControllers();
 

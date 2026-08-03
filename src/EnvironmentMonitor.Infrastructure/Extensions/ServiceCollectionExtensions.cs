@@ -6,6 +6,9 @@ using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
 using EnvironmentMonitor.Infrastructure.Services;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Hangfire.SqlServer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -254,6 +257,65 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
 
             throw new InvalidOperationException(
                 $"Unsupported database provider '{databaseProvider}'. Use '{DatabaseSettings.SqlServer}' or '{DatabaseSettings.PostgreSql}'.");
+        }
+
+        public static IServiceCollection AddHangfireServices(
+            this IServiceCollection services,
+            IConfiguration configuration,
+            string? hangfireConnectionString = null,
+            DatabaseSettings? databaseSettings = null,
+            bool addServer = true)
+        {
+            var hangfireConnectionStringToUse = hangfireConnectionString ?? configuration.GetConnectionString("HangfireConnection");
+
+            if (string.IsNullOrWhiteSpace(hangfireConnectionStringToUse))
+            {
+                throw new InvalidOperationException("Hangfire connection string 'HangfireConnection' is not configured.");
+            }
+
+            DatabaseSettings databaseSettingsToUse;
+            if (databaseSettings != null)
+            {
+                databaseSettingsToUse = databaseSettings;
+            }
+            else
+            {
+                databaseSettingsToUse = new DatabaseSettings();
+                configuration.GetSection("DatabaseSettings").Bind(databaseSettingsToUse);
+            }
+
+            var databaseProvider = databaseSettingsToUse.Provider;
+
+            // Configure Hangfire storage based on database provider
+            if (databaseProvider.Equals(DatabaseSettings.PostgreSql, StringComparison.OrdinalIgnoreCase))
+            {
+                services.AddHangfire(config => config
+                    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                    .UseSimpleAssemblyNameTypeSerializer()
+                    .UseRecommendedSerializerSettings()
+                    .UsePostgreSqlStorage(options =>
+                        options.UseNpgsqlConnection(hangfireConnectionStringToUse)));
+            }
+            else if (databaseProvider.Equals(DatabaseSettings.SqlServer, StringComparison.OrdinalIgnoreCase))
+            {
+                services.AddHangfire(config => config
+                    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                    .UseSimpleAssemblyNameTypeSerializer()
+                    .UseRecommendedSerializerSettings()
+                    .UseSqlServerStorage(hangfireConnectionStringToUse));
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"Unsupported database provider '{databaseProvider}' for Hangfire. Use '{DatabaseSettings.SqlServer}' or '{DatabaseSettings.PostgreSql}'.");
+            }
+
+            if (addServer)
+            {
+                services.AddHangfireServer();
+            }
+
+            return services;
         }
     }
 }

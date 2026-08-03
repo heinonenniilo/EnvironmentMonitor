@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvironmentMonitor.UnitTest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvironmentMonitor.PostgreSqlMigrations", "src\EnvironmentMonitor.PostgreSqlMigrations\EnvironmentMonitor.PostgreSqlMigrations.csproj", "{A55EF436-0B92-44D9-AFCE-2D87ED6BD938}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnvironmentMonitor.Worker", "src\EnvironmentMonitor.Worker\EnvironmentMonitor.Worker.csproj", "{CF6F91A3-876B-47F8-92C2-D77209831AF5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,6 +145,18 @@ Global
 		{A55EF436-0B92-44D9-AFCE-2D87ED6BD938}.Release|x64.Build.0 = Release|Any CPU
 		{A55EF436-0B92-44D9-AFCE-2D87ED6BD938}.Release|x86.ActiveCfg = Release|Any CPU
 		{A55EF436-0B92-44D9-AFCE-2D87ED6BD938}.Release|x86.Build.0 = Release|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Debug|x64.Build.0 = Debug|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Debug|x86.Build.0 = Debug|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Release|x64.ActiveCfg = Release|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Release|x64.Build.0 = Release|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Release|x86.ActiveCfg = Release|Any CPU
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -157,6 +171,7 @@ Global
 		{BEE69CC8-3087-45C8-A2CB-4D0D86BEC02D} = {95C17B13-0784-4421-BEEF-A135420C4FE5}
 		{C4C58D7E-DF86-47B5-8044-009FE1FB9A3B} = {95C17B13-0784-4421-BEEF-A135420C4FE5}
 		{A55EF436-0B92-44D9-AFCE-2D87ED6BD938} = {8EED74DA-71D0-4CA1-AB3B-1617DF063130}
+		{CF6F91A3-876B-47F8-92C2-D77209831AF5} = {8EED74DA-71D0-4CA1-AB3B-1617DF063130}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CAA34A12-E649-4C92-BEC9-EBA36852FA91}
