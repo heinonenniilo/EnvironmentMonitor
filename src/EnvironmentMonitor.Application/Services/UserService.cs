@@ -24,6 +24,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IQueueClient _queueClient;
         private readonly IMapper _mapper;
         private readonly IUserCookieService _userCookieService;
+        private readonly IHangfireJobService _hangfireJobService;
 
         public UserService(
             ICurrentUser currentUser,
@@ -31,7 +32,8 @@ namespace EnvironmentMonitor.Application.Services
             ApplicationSettings applicationSettings,
             IQueueClient queueClient,
             IMapper mapper,
-            IUserCookieService userCookieService)
+            IUserCookieService userCookieService,
+            IHangfireJobService hangfireJobService)
         {
             _currentUser = currentUser;
             _userAuthService = userAuthService;
@@ -39,6 +41,7 @@ namespace EnvironmentMonitor.Application.Services
             _queueClient = queueClient;
             _mapper = mapper;
             _userCookieService = userCookieService;
+            _hangfireJobService = hangfireJobService;
         }
 
         public bool HasAccessToDevice(Guid id, AccessLevels accessLevel) => HasAccessTo(EntityRoles.Device, id, accessLevel);
@@ -143,6 +146,17 @@ namespace EnvironmentMonitor.Application.Services
         {
             if (model.Enqueue)
             {
+                // Try to enqueue with Hangfire first if available
+                if (_hangfireJobService.IsAvailable)
+                {
+                    var baseUrl = string.IsNullOrEmpty(model.BaseUrl) ? _applicationSettings.BaseUrl : model.BaseUrl;
+                    model.BaseUrl = baseUrl;
+
+                    _hangfireJobService.Enqueue<IUserAuthService>(service => service.ForgotPassword(model));
+                    return;
+                }
+
+                // Fallback to queue client if Hangfire is not available
                 var attributesToAdd = new Dictionary<string, string>()
                 {
                         {ApplicationConstants.QueuedMessageDefaultKey, model.Email },
