@@ -7,5 +7,6 @@ namespace EnvironmentMonitor.Domain.Models
     public class HangfireJobSchedules
     {
         public string FmiSyncSchedule { get; set; } = "*/5 * * * *";
+        public string ConnectionStatusObserverSchedule { get; set; } = "*/5 * * * *";
     }
 }

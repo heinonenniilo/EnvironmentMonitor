@@ -12,6 +12,7 @@ namespace EnvironmentMonitor.Worker.Services
     {
         // Hangfire job identifiers
         private const string FmiMeasurementSyncJobId = "fmi-measurement-sync";
+        private const string ConnectionStatusObserverJobId = "connection-status-observer";
 
         /// <summary>
         /// Registers all recurring Hangfire jobs with their schedules.
@@ -29,6 +30,11 @@ namespace EnvironmentMonitor.Worker.Services
                 FmiMeasurementSyncJobId,
                 job => job.Execute(),
                 schedules.FmiSyncSchedule);
+
+            recurringJobManager.AddOrUpdate<ConnectionStatusObserverJob>(
+                ConnectionStatusObserverJobId,
+                job => job.Execute(),
+                schedules.ConnectionStatusObserverSchedule);
         }
     }
 }
