@@ -23,9 +23,26 @@ namespace EnvironmentMonitor.Infrastructure.Services
         }
         public async Task SendMessageToDevice(string deviceIdentifier, string message)
         {
-            var credential = new DefaultAzureCredential();
+            // Use ClientSecretCredential if all required properties are provided
+            Azure.Core.TokenCredential credential;
+            if (!string.IsNullOrEmpty(_iotHubSettings.TenantId) && 
+                !string.IsNullOrEmpty(_iotHubSettings.ClientId) && 
+                !string.IsNullOrEmpty(_iotHubSettings.ClientSecret))
+            {
+                _logger.LogInformation("Using ClientSecretCredential for IoT Hub authentication");
+                credential = new ClientSecretCredential(
+                    _iotHubSettings.TenantId, 
+                    _iotHubSettings.ClientId, 
+                    _iotHubSettings.ClientSecret);
+            }
+            else
+            {
+                _logger.LogInformation("Using DefaultAzureCredential for IoT Hub authentication");
+                credential = new DefaultAzureCredential();
+            }
+
             var serviceClient = ServiceClient.Create(_iotHubSettings.IotHubDomain, credential);
-            _logger.LogInformation($"Trying to create service client with domain: '{_iotHubSettings.IotHubDomain}' and default credential");
+            _logger.LogInformation($"Trying to create service client with domain: '{_iotHubSettings.IotHubDomain}'");
             var mes = new Message(Encoding.UTF8.GetBytes(message));
             mes.Properties.Add("Priority", "High");
             await serviceClient.SendAsync(deviceIdentifier, mes);

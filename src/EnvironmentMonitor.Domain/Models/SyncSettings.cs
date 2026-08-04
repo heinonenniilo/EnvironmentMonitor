@@ -39,5 +39,10 @@ namespace EnvironmentMonitor.Domain.Models
         /// CommunicationChannel IDs to exclude from sync. If empty or null, all channels are included.
         /// </summary>
         public List<int> ExcludedCommunicationChannels { get; set; } = new List<int>();
+
+        /// <summary>
+        /// Whether to skip status check when processing incoming sync measurements
+        /// </summary>
+        public bool SkipStatusCheck { get; set; } = true;
     }
 }
