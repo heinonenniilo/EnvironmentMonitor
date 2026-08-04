@@ -25,6 +25,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IQueueClient _queueClient;
         private readonly IDateService _dateService;
         private readonly ApplicationSettings _applicationSettings;
+        private readonly IHangfireJobService _hangfireJobService;
 
         public DeviceEmailService(
             IEmailRepository deviceEmailRepository,
@@ -33,10 +34,10 @@ namespace EnvironmentMonitor.Application.Services
             IEmailClient emailClient,
             IQueueClient queueClient,   
             IMapper mapper,
-
             ILogger<DeviceEmailService> logger,
             IDateService dateService,
-            ApplicationSettings applicationSettings)
+            ApplicationSettings applicationSettings,
+            IHangfireJobService hangfireJobService)
         {
             _deviceEmailRepository = deviceEmailRepository;
             _deviceRepository = deviceRepository;
@@ -47,6 +48,7 @@ namespace EnvironmentMonitor.Application.Services
             _queueClient = queueClient;
             _dateService = dateService;
             _applicationSettings = applicationSettings;
+            _hangfireJobService = hangfireJobService;
         }
 
         public async Task<DeviceEmailTemplateDto?> GetEmailTemplate(EmailTemplateTypes templateType)
@@ -197,16 +199,15 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogError($"Device with identifier '{model.Idenfifier}' not found for queuing email.");
                 return;
             }
-            var timeStamp = model.TimeStamp ?? _dateService.CurrentTime();
-            _logger.LogInformation($"Queuing device email for devie {device.Name} ({device.Id}). Type: {currentStatus.Status}");
+
+            _logger.LogInformation($"Queuing device email for device {device.Name} ({device.Id}). Type: {currentStatus.Status}");
             EmailTemplateTypes messageType = currentStatus.Status ? EmailTemplateTypes.ConnectionOk : EmailTemplateTypes.ConnectionLost;
 
             var attributesToAdd = new Dictionary<string, string>()
-                    {
-                        { ApplicationConstants.QueuedMessageDefaultKey, ((int)messageType).ToString() },
-                        { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(currentStatus.TimeStamp) },
-                        { ApplicationConstants.QueuedMessageTimesStampPreviousKey, previousStatus != null ? _dateService.FormatDateTime(previousStatus.TimeStamp) : string.Empty }
-                    };
+            {
+                { ApplicationConstants.QueuedMessageTimesStampKey, _dateService.FormatDateTime(currentStatus.TimeStamp) },
+                { ApplicationConstants.QueuedMessageTimesStampPreviousKey, previousStatus != null ? _dateService.FormatDateTime(previousStatus.TimeStamp) : string.Empty }
+            };
 
             var messageToQueue = new DeviceQueueMessage()
             {
@@ -214,21 +215,51 @@ namespace EnvironmentMonitor.Application.Services
                 DeviceIdentifier = model.Idenfifier,
                 MessageTypeId = (int)QueuedMessages.SendDeviceEmail,
             };
-            var messageJson = JsonSerializer.Serialize(messageToQueue);
-            var res = await _queueClient.SendMessage(messageJson);
 
-            await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+            if (_hangfireJobService.IsAvailable)
             {
-                Type = (int)QueuedMessages.SendDeviceEmail,
-                Message = messageJson,
-                MessageId = res.MessageId,
-                PopReceipt = res.PopReceipt,
-                Created = _dateService.CurrentTime(),
-                CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
-                Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
-                ScheduledUtc = res.ScheludedToExecuteUtc,
+                if (_hangfireJobService.IsAvailable)
+                {
+                    var addedJob = _hangfireJobService.Enqueue<IDeviceEmailService>(service => service.SendDeviceEmail(model.Idenfifier, messageType, attributesToAdd));
+                    var now = _dateService.CurrentTime();
+                    var utcNow = _dateService.LocalToUtc(now);
 
-            }, saveChanges);
+                    await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+                    {
+                        Type = (int)QueuedMessages.SendDeviceEmail,
+                        Message = JsonSerializer.Serialize(messageToQueue),
+                        MessageId = addedJob,
+                        PopReceipt = addedJob,
+                        Created = now,
+                        CreatedUtc = utcNow,
+                        Scheduled = now,
+                        ScheduledUtc = utcNow,
+                        // TODO: Check status from hangfire
+                        ExecutedAt = now,
+                        ExecutedAtUtc = utcNow
+                    }, saveChanges);
+                }
+            }
+            else
+            {
+                attributesToAdd.Add(ApplicationConstants.QueuedMessageApplicationBaseUrlKey, _applicationSettings.BaseUrl);
+                var messageJson = JsonSerializer.Serialize(messageToQueue);
+
+                var res = await _queueClient.SendMessage(messageJson);
+                await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+                {
+                    Type = (int)QueuedMessages.SendDeviceEmail,
+                    Message = messageJson,
+                    MessageId = res.MessageId,
+                    PopReceipt = res.PopReceipt,
+                    Created = _dateService.CurrentTime(),
+                    CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                    Scheduled = _dateService.UtcToLocal(res.ScheludedToExecuteUtc),
+                    ScheduledUtc = res.ScheludedToExecuteUtc,
+
+                }, saveChanges);
+            }
+
         }
 
         private string BuildDeviceUrl(Guid deviceIdentifier)
