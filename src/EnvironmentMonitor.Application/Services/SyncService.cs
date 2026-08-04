@@ -182,7 +182,7 @@ namespace EnvironmentMonitor.Application.Services
                 try
                 {
                     measurement.Source = CommunicationChannels.Sync;
-                    await _measurementService.AddMeasurements(measurement, skipStatusCheck: true);
+                    await _measurementService.AddMeasurements(measurement, skipStatusCheck: _syncSettings.SkipStatusCheck);
                     syncedCount++;
                 }
                 catch (UnauthorizedAccessException ex)
