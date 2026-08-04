@@ -10,5 +10,8 @@ namespace EnvironmentMonitor.Domain.Models
     {
         public string IotHubDomain { get; set; }     
         public string ConnectionString { get; set; } // TODO NOT USED YET
+        public string? TenantId { get; set; }
+        public string? ClientId { get; set; }
+        public string? ClientSecret { get; set; }
     }
 }
