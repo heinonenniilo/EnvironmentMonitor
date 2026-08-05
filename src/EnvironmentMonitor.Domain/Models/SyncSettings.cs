@@ -44,5 +44,7 @@ namespace EnvironmentMonitor.Domain.Models
         /// Whether to skip status check when processing incoming sync measurements
         /// </summary>
         public bool SkipStatusCheck { get; set; } = true;
+
+        public bool HandleFirstMessages { get; set; } = false;
     }
 }

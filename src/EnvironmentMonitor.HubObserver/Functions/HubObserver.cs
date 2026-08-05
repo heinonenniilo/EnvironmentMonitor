@@ -9,6 +9,7 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.HubObserver.Extensions;
 using Azure.Messaging.EventHubs;
+using EnvironmentMonitor.Domain;
 
 namespace EnvironmentMonitor.HubObserver.Functions
 {
@@ -19,7 +20,6 @@ namespace EnvironmentMonitor.HubObserver.Functions
         private readonly IQueueClient _queueClient;
         private readonly IDeviceService _deviceService;
 
-        private const int FirstMessageLimitInMinutes = 5;
 
         public HubObserver(ILogger<HubObserver> logger, IMeasurementService measurementService, IQueueClient queueClient, IDeviceService deviceService)
         {
@@ -103,7 +103,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
 
                 if (objectToInsert.FirstMessage)
                 {
-                    if (objectToInsert.EnqueuedUtc > DateTime.UtcNow.AddMinutes(-1 * FirstMessageLimitInMinutes))
+                    if (objectToInsert.EnqueuedUtc > DateTime.UtcNow.AddMinutes(-1 * ApplicationConstants.FirstMessageLimitInMinutes))
                     {
                         try
                         {
@@ -124,7 +124,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     }
                     else
                     {
-                        _logger.LogWarning($"First message received for device ({objectToInsert.DeviceId}). It was enqueued {objectToInsert.EnqueuedUtc} which was over {FirstMessageLimitInMinutes} mins ago");
+                        _logger.LogWarning($"First message received for device ({objectToInsert.DeviceId}). It was enqueued {objectToInsert.EnqueuedUtc} which was over {ApplicationConstants.FirstMessageLimitInMinutes} mins ago");
                     }
                 }
             }
