@@ -23,6 +23,10 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IStatusVariableRepository _statusVariableRepository;
         private readonly IMeasurementService _measurementService;
         private readonly IUserService _userService;
+        private readonly IDateService _dateService;
+        private readonly IDeviceService _deviceService;
+        private readonly IHangfireJobService _hangfireJobService;
+
 
         public SyncService(
             ILogger<SyncService> logger,
@@ -32,7 +36,10 @@ namespace EnvironmentMonitor.Application.Services
             IStatusVariableRepository statusVariableRepository,
             IDateService dateService,
             IUserService userService,
-            IMeasurementService measurementService)
+            IMeasurementService measurementService,
+            IDeviceService deviceService,
+            IHangfireJobService hangfireJobService,
+            IDeviceCommandService commandService)
         {
             _logger = logger;
             _syncSettings = syncSettings;
@@ -40,6 +47,9 @@ namespace EnvironmentMonitor.Application.Services
             _statusVariableRepository = statusVariableRepository;
             _measurementService = measurementService;
             _userService = userService;
+            _dateService = dateService;
+            _deviceService = deviceService;
+            _hangfireJobService = hangfireJobService;
         }
 
         public async Task<int> SyncMessages()
@@ -184,6 +194,24 @@ namespace EnvironmentMonitor.Application.Services
                     measurement.Source = CommunicationChannels.Sync;
                     await _measurementService.AddMeasurements(measurement, skipStatusCheck: _syncSettings.SkipStatusCheck);
                     syncedCount++;
+
+                    var compareTime = _dateService.LocalToUtc(_dateService.CurrentTime().AddMinutes(-ApplicationConstants.FirstMessageLimitInMinutes));
+
+                    if (
+                        _syncSettings.HandleFirstMessages
+                        && measurement.FirstMessage
+                        && measurement.EnqueuedUtc != null
+                        && measurement.EnqueuedUtc > compareTime)
+                    {
+                        var device = await _deviceService.GetDevice(measurement.DeviceId, AccessLevels.Write);
+                        if (_hangfireJobService.IsAvailable)
+                        {
+                            _logger.LogInformation($"Enqueuing job to send attributes to device {device.Identifier}");
+                            _hangfireJobService.Enqueue<IDeviceCommandService>(service => service.SendAttributesToDevice(
+                                device.Identifier,
+                                "Sent stored attributes to device. Triggered from sync."));
+                        }
+                    }
                 }
                 catch (UnauthorizedAccessException ex)
                 {

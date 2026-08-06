@@ -9,6 +9,8 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.HubObserver.Extensions;
 using Azure.Messaging.EventHubs;
+using EnvironmentMonitor.Domain;
+using Microsoft.Extensions.Configuration;
 
 namespace EnvironmentMonitor.HubObserver.Functions
 {
@@ -18,15 +20,16 @@ namespace EnvironmentMonitor.HubObserver.Functions
         private readonly IMeasurementService _measurementService;
         private readonly IQueueClient _queueClient;
         private readonly IDeviceService _deviceService;
+        private readonly bool _skipFirstMessageChecking;
 
-        private const int FirstMessageLimitInMinutes = 5;
 
-        public HubObserver(ILogger<HubObserver> logger, IMeasurementService measurementService, IQueueClient queueClient, IDeviceService deviceService)
+        public HubObserver(ILogger<HubObserver> logger, IMeasurementService measurementService, IQueueClient queueClient, IDeviceService deviceService, IConfiguration configuration)
         {
             _logger = logger;
             _measurementService = measurementService;
             _queueClient = queueClient;
             _deviceService = deviceService;
+            _skipFirstMessageChecking = configuration.GetValue<bool>("SkipFirstMessageChecking");
         }
 
         [Function(nameof(HubObserver))]
@@ -101,9 +104,9 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     _logger.LogError(ex, "Adding measurements failed");
                 }
 
-                if (objectToInsert.FirstMessage)
+                if (objectToInsert.FirstMessage && !_skipFirstMessageChecking)
                 {
-                    if (objectToInsert.EnqueuedUtc > DateTime.UtcNow.AddMinutes(-1 * FirstMessageLimitInMinutes))
+                    if (objectToInsert.EnqueuedUtc > DateTime.UtcNow.AddMinutes(-1 * ApplicationConstants.FirstMessageLimitInMinutes))
                     {
                         try
                         {
@@ -124,7 +127,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                     }
                     else
                     {
-                        _logger.LogWarning($"First message received for device ({objectToInsert.DeviceId}). It was enqueued {objectToInsert.EnqueuedUtc} which was over {FirstMessageLimitInMinutes} mins ago");
+                        _logger.LogWarning($"First message received for device ({objectToInsert.DeviceId}). It was enqueued {objectToInsert.EnqueuedUtc} which was over {ApplicationConstants.FirstMessageLimitInMinutes} mins ago");
                     }
                 }
             }

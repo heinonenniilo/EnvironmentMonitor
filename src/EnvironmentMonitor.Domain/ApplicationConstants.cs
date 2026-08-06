@@ -35,5 +35,7 @@ namespace EnvironmentMonitor.Domain
 
         // Sync service status variable keys
         public static string SyncLastDeviceMessageIdKey = "Sync_LastDeviceMessageId";
+
+        public static int FirstMessageLimitInMinutes = 5;
     }
 }
