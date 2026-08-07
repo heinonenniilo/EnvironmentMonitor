@@ -645,8 +645,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
         }
 
         /// <summary>
-        /// Get calculated claims. Each location gives a claim to devices in the location. Each device gives a claim to each sensor attached to the device.
+        /// Get calculated claims. Each location gives a claim to devices in the location. 
+        /// Each device gives a claim to each sensor attached to the device.
         /// Users with Viewer role get claims to all locations.
+        /// Returns consolidated claims (multiple identifiers in single claim separated by semicolon).
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
@@ -654,10 +656,10 @@ namespace EnvironmentMonitor.Infrastructure.Services
         {
             var claims = await _userManager.GetClaimsAsync(user);
             var userRoles = await _userManager.GetRolesAsync(user);
-            
+
             // Check if user has Viewer role
             var isViewer = userRoles.Any(r => r.Equals(GlobalRoles.Viewer.ToString(), StringComparison.OrdinalIgnoreCase));
-            
+
             List<Guid> locationIdentifiersAsClaims;
 
             // If user is a Viewer, grant access to all locations
@@ -698,13 +700,13 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 .Where(x => x.HasValue)
                 .Select(x => x.Value)
                 .ToList();
-                
+
             var deviceIdentifiersMatchingsLocations = (await _deviceRepository.GetDevices(new GetDevicesModel() { LocationIdentifiers = locationIdentifiersAsClaims })).Select(x => x.Identifier).ToList();
 
             var deviceIdentifiers = new List<Guid>(deviceIdentifiersAsClaims);
             deviceIdentifiers.AddRange(deviceIdentifiersMatchingsLocations);
 
-            var claimsToReturn = new List<Claim>();
+            var additionalClaims = new List<Claim>();
             var sensorIdentifiersMatchingDevices = (await _deviceRepository.GetSensors(new GetSensorsModel()
             {
                 DevicesModel = new GetDevicesModel()
@@ -713,22 +715,24 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 }
             })).Select(x => x.Identifier).ToList();
 
-            claimsToReturn.AddRange(sensorIdentifiersMatchingDevices
+            additionalClaims.AddRange(sensorIdentifiersMatchingDevices
                 .Where(x => !existingSensorIdsInClaims.Contains(x))
                 .Distinct()
                 .Select(x => new Claim(EntityRoles.Sensor.ToString(), x.ToString())));
-            claimsToReturn.AddRange(deviceIdentifiersMatchingsLocations
+            additionalClaims.AddRange(deviceIdentifiersMatchingsLocations
                 .Where(x => !deviceIdentifiersAsClaims.Contains(x))
                 .Distinct()
                 .Select(x => new Claim(EntityRoles.Device.ToString(), x.ToString())));
-            
+
             // Add location claims that aren't already in user's existing claims
-            claimsToReturn.AddRange(locationIdentifiersAsClaims
+            additionalClaims.AddRange(locationIdentifiersAsClaims
                 .Where(x => !existingLocationIdsInClaims.Contains(x))
                 .Distinct()
                 .Select(x => new Claim(EntityRoles.Location.ToString(), x.ToString())));
-            
-            return claimsToReturn;
+
+            var groupedClaims = ClaimsConsolidationHelper.ConsolidateClaimsList(additionalClaims);
+
+            return groupedClaims;
         }
     }
 }

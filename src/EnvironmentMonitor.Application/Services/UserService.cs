@@ -64,14 +64,23 @@ namespace EnvironmentMonitor.Application.Services
                 {
                     return true;
                 }
-                var hasDeviceWriterRole = _currentUser.Claims.Any(x => x.Type == EntityRoles.DeviceWriter.ToString() && Guid.TryParse(x.Value, out var res) && res == id);
+                // Handle consolidated claims - split values by semicolon
+                var hasDeviceWriterRole = _currentUser.Claims
+                    .Where(x => x.Type == EntityRoles.DeviceWriter.ToString())
+                    .Any(x => x.Value.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                        .Any(v => Guid.TryParse(v, out var res) && res == id));
                 if (hasDeviceWriterRole)
                 {
                     return true;
                 }
             }
 
-            var hasRole = HasGlobalRole(GlobalRoles.Viewer) || _currentUser.Claims.Any(x => x.Type == entity.ToString() && Guid.TryParse(x.Value, out var res) && res == id);
+            // Handle consolidated claims - split values by semicolon
+            var hasRole = HasGlobalRole(GlobalRoles.Viewer) || 
+                _currentUser.Claims
+                    .Where(x => x.Type == entity.ToString())
+                    .Any(x => x.Value.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                        .Any(v => Guid.TryParse(v, out var res) && res == id));
             switch (accessLevel)
             {
                 case AccessLevels.None:
@@ -184,12 +193,28 @@ namespace EnvironmentMonitor.Application.Services
 
         public List<Guid> GetDevices()
         {
-            return _currentUser.Claims.Where(x => x.Type == EntityRoles.Device.ToString()).Select(d => Guid.Parse(d.Value)).ToList();
+            // Handle consolidated claims - split values by semicolon
+            return _currentUser.Claims
+                .Where(x => x.Type == EntityRoles.Device.ToString())
+                .SelectMany(c => c.Value.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                .Select(v => Guid.TryParse(v, out var guid) ? guid : (Guid?)null)
+                .Where(g => g.HasValue)
+                .Select(g => g!.Value)
+                .Distinct()
+                .ToList();
         }
 
         public List<Guid> GetLocations()
         {
-            return _currentUser.Claims.Where(x => x.Type == EntityRoles.Location.ToString()).Select(d => Guid.Parse(d.Value)).ToList();
+            // Handle consolidated claims - split values by semicolon
+            return _currentUser.Claims
+                .Where(x => x.Type == EntityRoles.Location.ToString())
+                .SelectMany(c => c.Value.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                .Select(v => Guid.TryParse(v, out var guid) ? guid : (Guid?)null)
+                .Where(g => g.HasValue)
+                .Select(g => g!.Value)
+                .Distinct()
+                .ToList();
         }
 
         public bool HasAccessToLocations(List<Guid> ids, AccessLevels accessLevel) => ids.All(x => HasAccessTo(EntityRoles.Location, x, accessLevel));
