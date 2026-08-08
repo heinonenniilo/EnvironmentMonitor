@@ -137,7 +137,8 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders()
                 .AddRoles<ApplicationUserRole>()
-                .AddRoleManager<RoleManager<ApplicationUserRole>>();
+                .AddRoleManager<RoleManager<ApplicationUserRole>>()
+                .AddClaimsPrincipalFactory<ConsolidatedClaimsPrincipalFactory>();
 
             services.AddScoped<IRoleManager, RoleManager>();
             services.AddScoped<IUserAuthService, UserAuthService>();
