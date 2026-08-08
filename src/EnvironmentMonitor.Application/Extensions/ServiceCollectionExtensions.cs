@@ -19,6 +19,7 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<IDeviceEmailService, DeviceEmailService>();
             services.AddScoped<IDeviceCommandService, DeviceCommandService>();
+            services.AddScoped<IQueuedCommandAckService, QueuedCommandAckService>();
             services.AddScoped<ILocationCommandService, LocationCommandService>();
             services.AddScoped<IUserCookieService, UserCookieService>();
             services.AddScoped<IApiKeyService, ApiKeyService>();

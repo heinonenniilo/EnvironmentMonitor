@@ -5,6 +5,7 @@ using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
+using EnvironmentMonitor.Infrastructure.Jobs;
 using EnvironmentMonitor.Infrastructure.Services;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 
 namespace EnvironmentMonitor.Infrastructure.Extensions
@@ -291,18 +293,24 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             // Configure Hangfire storage based on database provider
             if (databaseProvider.Equals(DatabaseSettings.PostgreSql, StringComparison.OrdinalIgnoreCase))
             {
-                services.AddHangfire(config => config
+                services.AddHangfire((provider, config) => config
                     .UseSimpleAssemblyNameTypeSerializer()
                     .UseRecommendedSerializerSettings()
+                    .UseFilter(new QueuedCommandAckFilter(
+                        provider.GetRequiredService<IServiceScopeFactory>(),
+                        provider.GetRequiredService<ILogger<QueuedCommandAckFilter>>()))
                     .UsePostgreSqlStorage(options =>
                         options.UseNpgsqlConnection(hangfireConnectionStringToUse)));
             }
             else if (databaseProvider.Equals(DatabaseSettings.SqlServer, StringComparison.OrdinalIgnoreCase))
             {
-                services.AddHangfire(config => config
+                services.AddHangfire((provider, config) => config
                     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                     .UseSimpleAssemblyNameTypeSerializer()
                     .UseRecommendedSerializerSettings()
+                    .UseFilter(new QueuedCommandAckFilter(
+                        provider.GetRequiredService<IServiceScopeFactory>(),
+                        provider.GetRequiredService<ILogger<QueuedCommandAckFilter>>()))
                     .UseSqlServerStorage(hangfireConnectionStringToUse));
             }
             else
