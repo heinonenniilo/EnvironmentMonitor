@@ -37,14 +37,20 @@ namespace EnvironmentMonitor.Infrastructure.Hangfire
             var jobId = context.BackgroundJob.Id;
             var hasFailed = context.Exception != null && !context.ExceptionHandled;
 
+            if (hasFailed)
+            {
+                _logger.LogWarning("Queued command job failed: {JobId}. Exception: {Exception}", jobId, context.Exception);
+                return;
+            }
+
             try
             {
                 using var scope = _scopeFactory.CreateScope();
                 var ackService = scope.ServiceProvider.GetRequiredService<IQueuedCommandAckService>();
                 var dateService = scope.ServiceProvider.GetRequiredService<IDateService>();
 
-                // Null date indicates a failure
-                var executedAt = hasFailed ? (DateTime?)null : dateService.CurrentTime();
+                // TODO implement support for failed commands
+                var executedAt =  dateService.CurrentTime();
                 ackService.AckQueuedCommand(jobId, executedAt).GetAwaiter().GetResult();
 
                 _logger.LogInformation("Acknowledged queued command for job: {JobId}. ExecutedAt: {ExecutedAt}", jobId, executedAt);

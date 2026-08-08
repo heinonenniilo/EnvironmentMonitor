@@ -23,4 +23,8 @@
     <ProjectReference Include="..\EnvironmentMonitor.Infrastructure\EnvironmentMonitor.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Hangfire\" />
+  </ItemGroup>
+
 </Project>
