@@ -22,8 +22,9 @@ namespace EnvironmentMonitor.Domain.Interfaces
         /// <typeparam name="TService">The service type containing the method to execute</typeparam>
         /// <param name="methodCall">Expression pointing to the method to execute</param>
         /// <param name="delay">Time to wait before executing the job</param>
+        /// <param name="jobParameters">Optional job parameters stored with the job</param>
         /// <returns>Job ID</returns>
-        string Schedule<TService>(Expression<Func<TService, Task>> methodCall, TimeSpan delay);
+        string Schedule<TService>(Expression<Func<TService, Task>> methodCall, TimeSpan delay, IDictionary<string, string>? jobParameters = null);
 
         /// <summary>
         /// Enqueues a delayed job to be executed at a specific time.
@@ -31,8 +32,9 @@ namespace EnvironmentMonitor.Domain.Interfaces
         /// <typeparam name="TService">The service type containing the method to execute</typeparam>
         /// <param name="methodCall">Expression pointing to the method to execute</param>
         /// <param name="enqueueAt">DateTime when the job should be executed</param>
+        /// <param name="jobParameters">Optional job parameters stored with the job</param>
         /// <returns>Job ID</returns>
-        string Schedule<TService>(Expression<Func<TService, Task>> methodCall, DateTimeOffset enqueueAt);
+        string Schedule<TService>(Expression<Func<TService, Task>> methodCall, DateTimeOffset enqueueAt, IDictionary<string, string>? jobParameters = null);
 
         /// <summary>
         /// Checks if Hangfire is available and configured.

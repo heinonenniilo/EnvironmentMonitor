@@ -26,6 +26,12 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDateService _dateService;
         private readonly IQueueClient _queueClient;
         private readonly IHubMessageService _messageService;
+        private readonly IHangfireJobService _hangfireJobService;
+
+        private static readonly Dictionary<string, string> QueuedCommandJobParameters = new()
+        {
+            { ApplicationConstants.HangfireQueuedCommandParameter, bool.TrueString }
+        };
 
         public DeviceCommandService(
             ILogger<DeviceCommandService> logger,
@@ -34,7 +40,8 @@ namespace EnvironmentMonitor.Application.Services
             IMapper mapper,
             IDateService dateService,
             IQueueClient queueClient,
-            IHubMessageService messageService)
+            IHubMessageService messageService,
+            IHangfireJobService hangfireJobService)
         {
             _logger = logger;
             _userService = userService;
@@ -43,6 +50,7 @@ namespace EnvironmentMonitor.Application.Services
             _dateService = dateService;
             _queueClient = queueClient;
             _messageService = messageService;
+            _hangfireJobService = hangfireJobService;
         }
 
         public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(Guid deviceIdentifier) => await GetQueuedCommands(new GetQueuedCommandsModel()
@@ -112,6 +120,39 @@ namespace EnvironmentMonitor.Application.Services
                 ValidateTriggeringTime(triggeringTime.Value);
                 var delay = triggeringTime.Value - _dateService.CurrentTime();
                 _logger.LogInformation($"Setting 'SetMotionControlStatus' message to queue. Delay is: {delay}. Target date is: {triggeringTime}");
+
+                if (_hangfireJobService.IsAvailable)
+                {
+                    var deviceIdentifier = device.Identifier;
+                    _logger.LogInformation($"Scheduling 'SetMotionControlStatus' with Hangfire for device: {deviceIdentifier}");
+                    var jobId = _hangfireJobService.Schedule<IDeviceCommandService>(service => service.SetMotionControlStatus(deviceIdentifier, status, null), delay, QueuedCommandJobParameters);
+
+                    var hangfireMessage = JsonSerializer.Serialize(new DeviceQueueMessage()
+                    {
+                        Attributes = new Dictionary<string, string>()
+                        {
+                            { ApplicationConstants.QueuedMessageDefaultKey, ((int)status).ToString() },
+                        },
+                        DeviceIdentifier = device.Identifier,
+                        MessageTypeId = (int)QueuedMessages.SetMotionControlStatus,
+                    });
+
+                    await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+                    {
+                        Type = (int)QueuedMessages.SetMotionControlStatus,
+                        Message = hangfireMessage,
+                        MessageId = jobId,
+                        Created = _dateService.CurrentTime(),
+                        CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                        Scheduled = triggeringTime.Value,
+                        PopReceipt = jobId,
+                        ScheduledUtc = _dateService.LocalToUtc(triggeringTime.Value),
+                    }, true);
+
+                    var hangfireAttributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+                    return _mapper.Map<List<DeviceAttributeDto>>(hangfireAttributes);
+                }
+
                 var messageToQueue = new DeviceQueueMessage()
                 {
                     Attributes = new Dictionary<string, string>()
@@ -170,6 +211,38 @@ namespace EnvironmentMonitor.Application.Services
                 ValidateTriggeringTime(triggeringTime.Value);
                 var delay = triggeringTime.Value - _dateService.CurrentTime();
                 _logger.LogInformation($"Setting 'SetMotionControlDelay' message to queue. Delay is: {delay}. Target date is: {triggeringTime}");
+
+                if (_hangfireJobService.IsAvailable)
+                {
+                    var deviceIdentifier = device.Identifier;
+                    _logger.LogInformation($"Scheduling 'SetMotionControlDelay' with Hangfire for device: {deviceIdentifier}");
+                    var jobId = _hangfireJobService.Schedule<IDeviceCommandService>(service => service.SetMotionControlDelay(deviceIdentifier, delayMs, null), delay, QueuedCommandJobParameters);
+
+                    var hangfireMessage = JsonSerializer.Serialize(new DeviceQueueMessage()
+                    {
+                        Attributes = new Dictionary<string, string>()
+                        {
+                            { ApplicationConstants.QueuedMessageDefaultKey, delayMs.ToString() },
+                        },
+                        DeviceIdentifier = device.Identifier,
+                        MessageTypeId = (int)QueuedMessages.SetMotionControlOnDelay,
+                    });
+
+                    await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
+                    {
+                        Type = (int)QueuedMessages.SetMotionControlOnDelay,
+                        Message = hangfireMessage,
+                        MessageId = jobId,
+                        Created = _dateService.CurrentTime(),
+                        CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                        Scheduled = triggeringTime.Value,
+                        ScheduledUtc = _dateService.LocalToUtc(triggeringTime.Value),
+                    }, true);
+
+                    var hangfireAttributes = await _deviceRepository.GetDeviceAttributes(device.Id);
+                    return _mapper.Map<List<DeviceAttributeDto>>(hangfireAttributes);
+                }
+
                 var messageToQueue = new DeviceQueueMessage()
                 {
                     Attributes = new Dictionary<string, string>()

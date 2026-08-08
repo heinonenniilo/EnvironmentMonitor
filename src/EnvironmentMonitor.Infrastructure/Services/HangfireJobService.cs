@@ -1,5 +1,6 @@
 using EnvironmentMonitor.Domain.Interfaces;
 using Hangfire;
+using Hangfire.Common;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 
@@ -12,14 +13,17 @@ namespace EnvironmentMonitor.Infrastructure.Services
     public class HangfireJobService : IHangfireJobService
     {
         private readonly IBackgroundJobClient? _backgroundJobClient;
+        private readonly JobStorage? _jobStorage;
         private readonly ILogger<HangfireJobService> _logger;
 
         public HangfireJobService(
             ILogger<HangfireJobService> logger,
-            IBackgroundJobClient? backgroundJobClient = null)
+            IBackgroundJobClient? backgroundJobClient = null,
+            JobStorage? jobStorage = null)
         {
             _logger = logger;
             _backgroundJobClient = backgroundJobClient;
+            _jobStorage = jobStorage;
         }
 
         /// <summary>
@@ -67,7 +71,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         /// <example>
         /// jobService.Schedule&lt;IEmailService&gt;(service => service.SendEmail(email), TimeSpan.FromMinutes(5));
         /// </example>
-        public string Schedule<TService>(Expression<Func<TService, Task>> methodCall, TimeSpan delay)
+        public string Schedule<TService>(Expression<Func<TService, Task>> methodCall, TimeSpan delay, IDictionary<string, string>? jobParameters = null)
         {
             if (_backgroundJobClient == null)
             {
@@ -78,6 +82,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             try
             {
                 var jobId = _backgroundJobClient.Schedule(methodCall, delay);
+                SetJobParameters(jobId, jobParameters);
                 _logger.LogInformation("Job scheduled successfully for {Delay}. Job ID: {JobId}", delay, jobId);
                 return jobId;
             }
@@ -98,7 +103,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         /// <example>
         /// jobService.Schedule&lt;IReportService&gt;(service => service.GenerateReport(), DateTimeOffset.UtcNow.AddHours(2));
         /// </example>
-        public string Schedule<TService>(Expression<Func<TService, Task>> methodCall, DateTimeOffset enqueueAt)
+        public string Schedule<TService>(Expression<Func<TService, Task>> methodCall, DateTimeOffset enqueueAt, IDictionary<string, string>? jobParameters = null)
         {
             if (_backgroundJobClient == null)
             {
@@ -109,6 +114,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             try
             {
                 var jobId = _backgroundJobClient.Schedule(methodCall, enqueueAt);
+                SetJobParameters(jobId, jobParameters);
                 _logger.LogInformation("Job scheduled successfully for {EnqueueAt}. Job ID: {JobId}", enqueueAt, jobId);
                 return jobId;
             }
@@ -116,6 +122,27 @@ namespace EnvironmentMonitor.Infrastructure.Services
             {
                 _logger.LogError(ex, "Failed to schedule Hangfire job");
                 throw;
+            }
+        }
+
+        private void SetJobParameters(string jobId, IDictionary<string, string>? jobParameters)
+        {
+            if (jobParameters == null || jobParameters.Count == 0 || string.IsNullOrEmpty(jobId))
+            {
+                return;
+            }
+
+            var storage = _jobStorage ?? JobStorage.Current;
+            if (storage == null)
+            {
+                _logger.LogWarning("No Hangfire storage available. Job parameters were not set for job: {JobId}", jobId);
+                return;
+            }
+
+            using var connection = storage.GetConnection();
+            foreach (var parameter in jobParameters)
+            {
+                connection.SetJobParameter(jobId, parameter.Key, SerializationHelper.Serialize(parameter.Value, SerializationOption.User));
             }
         }
     }
