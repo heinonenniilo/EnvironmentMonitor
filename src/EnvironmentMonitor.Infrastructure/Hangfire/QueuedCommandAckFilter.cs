@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace EnvironmentMonitor.Infrastructure.Jobs
+namespace EnvironmentMonitor.Infrastructure.Hangfire
 {
     /// <summary>
     /// Acknowledges queued device commands after the corresponding Hangfire job has been executed.
