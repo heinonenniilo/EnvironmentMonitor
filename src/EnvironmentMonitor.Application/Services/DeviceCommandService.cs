@@ -123,11 +123,8 @@ namespace EnvironmentMonitor.Application.Services
 
                 if (_hangfireJobService.IsAvailable)
                 {
-                    var deviceIdentifier = device.Identifier;
-                    _logger.LogInformation($"Scheduling 'SetMotionControlStatus' with Hangfire for device: {deviceIdentifier}");
-                    var jobId = _hangfireJobService.Schedule<IDeviceCommandService>(service => service.SetMotionControlStatus(deviceIdentifier, status, null), delay, QueuedCommandJobParameters);
-
-                    var hangfireMessage = JsonSerializer.Serialize(new DeviceQueueMessage()
+                    _logger.LogInformation($"Scheduling 'SetMotionControlStatus' with Hangfire for device: {device.Identifier}");
+                    var messageToSchedule = new DeviceQueueMessage()
                     {
                         Attributes = new Dictionary<string, string>()
                         {
@@ -135,12 +132,13 @@ namespace EnvironmentMonitor.Application.Services
                         },
                         DeviceIdentifier = device.Identifier,
                         MessageTypeId = (int)QueuedMessages.SetMotionControlStatus,
-                    });
+                    };
+                    var jobId = ScheduleQueuedCommandJob(messageToSchedule, delay);
 
                     await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
                     {
                         Type = (int)QueuedMessages.SetMotionControlStatus,
-                        Message = hangfireMessage,
+                        Message = JsonSerializer.Serialize(messageToSchedule),
                         MessageId = jobId,
                         Created = _dateService.CurrentTime(),
                         CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
@@ -214,11 +212,8 @@ namespace EnvironmentMonitor.Application.Services
 
                 if (_hangfireJobService.IsAvailable)
                 {
-                    var deviceIdentifier = device.Identifier;
-                    _logger.LogInformation($"Scheduling 'SetMotionControlDelay' with Hangfire for device: {deviceIdentifier}");
-                    var jobId = _hangfireJobService.Schedule<IDeviceCommandService>(service => service.SetMotionControlDelay(deviceIdentifier, delayMs, null), delay, QueuedCommandJobParameters);
-
-                    var hangfireMessage = JsonSerializer.Serialize(new DeviceQueueMessage()
+                    _logger.LogInformation($"Scheduling 'SetMotionControlDelay' with Hangfire for device: {device.Identifier}");
+                    var messageToSchedule = new DeviceQueueMessage()
                     {
                         Attributes = new Dictionary<string, string>()
                         {
@@ -226,16 +221,18 @@ namespace EnvironmentMonitor.Application.Services
                         },
                         DeviceIdentifier = device.Identifier,
                         MessageTypeId = (int)QueuedMessages.SetMotionControlOnDelay,
-                    });
+                    };
+                    var jobId = ScheduleQueuedCommandJob(messageToSchedule, delay);
 
                     await _deviceRepository.SetQueuedCommand(device.Id, new DeviceQueuedCommand()
                     {
                         Type = (int)QueuedMessages.SetMotionControlOnDelay,
-                        Message = hangfireMessage,
+                        Message = JsonSerializer.Serialize(messageToSchedule),
                         MessageId = jobId,
                         Created = _dateService.CurrentTime(),
                         CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
                         Scheduled = triggeringTime.Value,
+                        PopReceipt = jobId,
                         ScheduledUtc = _dateService.LocalToUtc(triggeringTime.Value),
                     }, true);
 
@@ -414,11 +411,22 @@ namespace EnvironmentMonitor.Application.Services
             var currentTime = _dateService.CurrentTime();
             var delay = model.NewScheduledTime - currentTime;
 
-            var queueUpdateResult = await _queueClient.UpdateMessageVisibility(command.MessageId, command.PopReceipt, delay);
+            if (_hangfireJobService.IsAvailable)
+            {
+                _logger.LogInformation($"Rescheduling Hangfire job: {command.MessageId} to {model.NewScheduledTime}");
+                if (!_hangfireJobService.Reschedule(command.MessageId, delay))
+                {
+                    throw new InvalidOperationException($"Failed to reschedule Hangfire job with MessageId: '{model.MessageId}'");
+                }
+            }
+            else
+            {
+                var queueUpdateResult = await _queueClient.UpdateMessageVisibility(command.MessageId, command.PopReceipt, delay);
+                command.PopReceipt = queueUpdateResult.PopReceipt;
+            }
 
             command.Scheduled = model.NewScheduledTime;
             command.ScheduledUtc = _dateService.LocalToUtc(model.NewScheduledTime);
-            command.PopReceipt = queueUpdateResult.PopReceipt;
 
             await _deviceRepository.SetQueuedCommand(device.Id, command, true);
 
@@ -459,7 +467,15 @@ namespace EnvironmentMonitor.Application.Services
                 throw new InvalidOperationException($"PopReceipt is missing for MessageId: '{messageId}'");
             }
 
-            await _queueClient.DeleteMessage(command.MessageId, command.PopReceipt);
+            if (_hangfireJobService.IsAvailable)
+            {
+                _logger.LogInformation($"Deleting Hangfire job: {command.MessageId}");
+                _hangfireJobService.Delete(command.MessageId);
+            }
+            else
+            {
+                await _queueClient.DeleteMessage(command.MessageId, command.PopReceipt);
+            }
 
             command.IsRemoved = true;
             await _deviceRepository.SetQueuedCommand(command.DeviceId, command, true);
@@ -511,26 +527,52 @@ namespace EnvironmentMonitor.Application.Services
                 ? model.ScheduledTime.Value - currentTime 
                 : TimeSpan.Zero;
 
-            // Send the message to the queue with the new schedule
-            var queueResult = await _queueClient.SendMessage(originalCommand.Message, delay);
+            DeviceQueuedCommand newCommand;
 
-            // Create new database entry with the new MessageId from the queue and link to original command
-            var newCommand = new DeviceQueuedCommand()
+            if (_hangfireJobService.IsAvailable)
             {
-                Type = originalCommand.Type,
-                Message = originalCommand.Message,
-                MessageId = queueResult.MessageId,
-                PopReceipt = queueResult.PopReceipt,
-                Created = _dateService.CurrentTime(),
-                CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
-                Scheduled = _dateService.UtcToLocal(queueResult.ScheludedToExecuteUtc),
-                ScheduledUtc = queueResult.ScheludedToExecuteUtc,
-                OriginalId = originalCommand.Id
-            };
+                var messageToSchedule = DeserializeQueuedMessage(originalCommand.Message)
+                    ?? throw new InvalidOperationException($"Failed to deserialize message of queued command with MessageId: '{model.MessageId}'");
+
+                var scheduledTime = model.ScheduledTime ?? currentTime;
+                var jobId = ScheduleQueuedCommandJob(messageToSchedule, delay);
+
+                newCommand = new DeviceQueuedCommand()
+                {
+                    Type = originalCommand.Type,
+                    Message = originalCommand.Message,
+                    MessageId = jobId,
+                    PopReceipt = jobId,
+                    Created = _dateService.CurrentTime(),
+                    CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                    Scheduled = scheduledTime,
+                    ScheduledUtc = _dateService.LocalToUtc(scheduledTime),
+                    OriginalId = originalCommand.Id
+                };
+            }
+            else
+            {
+                // Send the message to the queue with the new schedule
+                var queueResult = await _queueClient.SendMessage(originalCommand.Message, delay);
+
+                // Create new database entry with the new MessageId from the queue and link to original command
+                newCommand = new DeviceQueuedCommand()
+                {
+                    Type = originalCommand.Type,
+                    Message = originalCommand.Message,
+                    MessageId = queueResult.MessageId,
+                    PopReceipt = queueResult.PopReceipt,
+                    Created = _dateService.CurrentTime(),
+                    CreatedUtc = _dateService.LocalToUtc(_dateService.CurrentTime()),
+                    Scheduled = _dateService.UtcToLocal(queueResult.ScheludedToExecuteUtc),
+                    ScheduledUtc = queueResult.ScheludedToExecuteUtc,
+                    OriginalId = originalCommand.Id
+                };
+            }
 
             await _deviceRepository.SetQueuedCommand(device.Id, newCommand, true);
 
-            _logger.LogInformation($"Successfully copied queued command. Original MessageId: {model.MessageId}, New MessageId: {queueResult.MessageId} for device: {model.DeviceIdentifier}");
+            _logger.LogInformation($"Successfully copied queued command. Original MessageId: {model.MessageId}, New MessageId: {newCommand.MessageId} for device: {model.DeviceIdentifier}");
 
             return _mapper.Map<DeviceQueuedCommandDto>(newCommand);
         }
@@ -604,6 +646,54 @@ namespace EnvironmentMonitor.Application.Services
 
             _logger.LogInformation($"Found {result.Count} attributes for device: {deviceIdentifier}");
             return result;
+        }
+
+        private static DeviceQueueMessage? DeserializeQueuedMessage(string message) =>
+            JsonSerializer.Deserialize<DeviceQueueMessage>(message, new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+        /// <summary>
+        /// Schedules a queued device command as a Hangfire job. Returns the Hangfire job id.
+        /// </summary>
+        private string ScheduleQueuedCommandJob(DeviceQueueMessage message, TimeSpan delay)
+        {
+            var deviceIdentifier = message.DeviceIdentifier;
+            var messageType = (QueuedMessages)message.MessageTypeId;
+
+            if (messageType == QueuedMessages.SendDeviceAttributes)
+            {
+                return _hangfireJobService.Schedule<IDeviceCommandService>(
+                    service => service.SendAttributesToDevice(deviceIdentifier, "Sent stored attributes to device. Triggered from Hangfire."),
+                    delay,
+                    QueuedCommandJobParameters);
+            }
+
+            if (message.Attributes?.ContainsKey(ApplicationConstants.QueuedMessageDefaultKey) != true)
+            {
+                throw new InvalidOperationException($"Message of type '{messageType}' is missing the '{ApplicationConstants.QueuedMessageDefaultKey}' attribute.");
+            }
+
+            var value = message.Attributes[ApplicationConstants.QueuedMessageDefaultKey];
+
+            switch (messageType)
+            {
+                case QueuedMessages.SetMotionControlStatus:
+                    var status = (MotionControlStatus)int.Parse(value);
+                    return _hangfireJobService.Schedule<IDeviceCommandService>(
+                        service => service.SetMotionControlStatus(deviceIdentifier, status, null),
+                        delay,
+                        QueuedCommandJobParameters);
+                case QueuedMessages.SetMotionControlOnDelay:
+                    var delayMs = long.Parse(value);
+                    return _hangfireJobService.Schedule<IDeviceCommandService>(
+                        service => service.SetMotionControlDelay(deviceIdentifier, delayMs, null),
+                        delay,
+                        QueuedCommandJobParameters);
+                default:
+                    throw new InvalidOperationException($"Message type '{messageType}' cannot be scheduled with Hangfire.");
+            }
         }
 
         private void ValidateTriggeringTime(DateTime target)

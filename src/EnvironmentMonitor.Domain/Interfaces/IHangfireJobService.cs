@@ -40,5 +40,20 @@ namespace EnvironmentMonitor.Domain.Interfaces
         /// Checks if Hangfire is available and configured.
         /// </summary>
         bool IsAvailable { get; }
+
+        /// <summary>
+        /// Deletes a scheduled job.
+        /// </summary>
+        /// <param name="jobId">Job ID</param>
+        /// <returns>True if the job was deleted</returns>
+        bool Delete(string jobId);
+
+        /// <summary>
+        /// Reschedules an existing job to be executed after a new delay. The job ID stays the same.
+        /// </summary>
+        /// <param name="jobId">Job ID</param>
+        /// <param name="delay">New delay counted from now</param>
+        /// <returns>True if the job was rescheduled</returns>
+        bool Reschedule(string jobId, TimeSpan delay);
     }
 }

@@ -125,6 +125,54 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
         }
 
+        /// <summary>
+        /// Deletes a scheduled job.
+        /// </summary>
+        public bool Delete(string jobId)
+        {
+            if (_backgroundJobClient == null)
+            {
+                _logger.LogWarning("Hangfire is not configured. Job cannot be deleted: {JobId}", jobId);
+                return false;
+            }
+
+            try
+            {
+                var deleted = _backgroundJobClient.Delete(jobId);
+                _logger.LogInformation("Job delete requested. Job ID: {JobId}. Deleted: {Deleted}", jobId, deleted);
+                return deleted;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete Hangfire job: {JobId}", jobId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Reschedules an existing job. The job ID stays the same.
+        /// </summary>
+        public bool Reschedule(string jobId, TimeSpan delay)
+        {
+            if (_backgroundJobClient == null)
+            {
+                _logger.LogWarning("Hangfire is not configured. Job cannot be rescheduled: {JobId}", jobId);
+                return false;
+            }
+
+            try
+            {
+                var rescheduled = _backgroundJobClient.Reschedule(jobId, delay);
+                _logger.LogInformation("Job reschedule requested for {Delay}. Job ID: {JobId}. Rescheduled: {Rescheduled}", delay, jobId, rescheduled);
+                return rescheduled;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to reschedule Hangfire job: {JobId}", jobId);
+                throw;
+            }
+        }
+
         private void SetJobParameters(string jobId, IDictionary<string, string>? jobParameters)
         {
             if (jobParameters == null || jobParameters.Count == 0 || string.IsNullOrEmpty(jobId))
