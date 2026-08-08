@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.Services
 {
-    public class DeviceCommandService : IDeviceCommandService
+    public class DeviceCommandService : IDeviceCommandService, IQueuedCommandAckService
     {
         private readonly ILogger<DeviceCommandService> _logger;
         private readonly IUserService _userService;
@@ -618,6 +618,36 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.SetQueuedCommand(device.Device.Id, command, true);
 
             _logger.LogInformation($"Successfully acknowledged queued command with MessageId: {messageId} for device: {device.Device.Id}. ExecutedAt: {date}");
+        }
+
+        public async Task AckQueuedCommand(string messageId, DateTime? date)
+        {
+            _logger.LogInformation($"Acknowledging queued command with MessageId: {messageId}. ExecutedAt: {date}");
+
+            var command = (await _deviceRepository.GetQueuedCommands(new GetQueuedCommandsModel()
+            {
+                MessageIds = [messageId]
+            })).FirstOrDefault();
+
+            if (command == null)
+            {
+                _logger.LogWarning($"Queued command with MessageId: {messageId} not found");
+                return;
+            }
+
+            if (date != null)
+            {
+                command.ExecutedAt = date.Value;
+                command.ExecutedAtUtc = _dateService.LocalToUtc(date.Value);
+            }
+            else
+            {
+                command.IsRemoved = true; // Indicates error
+            }
+
+            await _deviceRepository.SetQueuedCommand(command.DeviceId, command, true);
+
+            _logger.LogInformation($"Successfully acknowledged queued command with MessageId: {messageId} for device: {command.DeviceId}");
         }
 
         public async Task<Dictionary<int, string>> GetDeviceAttributes(string deviceIdentifier)
