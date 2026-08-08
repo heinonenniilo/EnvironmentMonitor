@@ -606,7 +606,6 @@ namespace EnvironmentMonitor.Application.Services
 
             if (date != null)
             {
-
                 command.ExecutedAt = date.Value;
                 command.ExecutedAtUtc = _dateService.LocalToUtc(date.Value);
             }
@@ -622,7 +621,12 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task AckQueuedCommand(string messageId, DateTime? date)
         {
-            _logger.LogInformation($"Acknowledging queued command with MessageId: {messageId}. ExecutedAt: {date}");
+            if (!_userService.IsAdmin)
+            {
+                throw new UnauthorizedAccessException("Insufficient access rights");
+            }
+
+            _logger.LogInformation($"Acknowledging queued command with MessageId: {messageId}. ExecutedAt: {date}. Finding the command.");
 
             var command = (await _deviceRepository.GetQueuedCommands(new GetQueuedCommandsModel()
             {
@@ -635,19 +639,10 @@ namespace EnvironmentMonitor.Application.Services
                 return;
             }
 
-            if (date != null)
-            {
-                command.ExecutedAt = date.Value;
-                command.ExecutedAtUtc = _dateService.LocalToUtc(date.Value);
-            }
-            else
-            {
-                command.IsRemoved = true; // Indicates error
-            }
+            _logger.LogInformation($"Found queued command with MessageId: {messageId} for device: {command.Device.Identifier}. Acknowledging ...");
 
-            await _deviceRepository.SetQueuedCommand(command.DeviceId, command, true);
+            await AckQueuedCommand(command.Device.Identifier, messageId, date);
 
-            _logger.LogInformation($"Successfully acknowledged queued command with MessageId: {messageId} for device: {command.DeviceId}");
         }
 
         public async Task<Dictionary<int, string>> GetDeviceAttributes(string deviceIdentifier)
