@@ -1,4 +1,5 @@
 using EnvironmentMonitor.Application.DTOs;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace EnvironmentMonitor.Application.Interfaces
@@ -22,5 +23,19 @@ namespace EnvironmentMonitor.Application.Interfaces
         /// <param name="request">The sync request containing measurements and secret</param>
         /// <returns>Sync result with counts</returns>
         Task<SyncResultDto> ProcessIncomingSync(SyncMeasurementsRequest request);
+
+        /// <summary>
+        /// Sends a single measurement message to the configured target instance.
+        /// </summary>
+        /// <param name="measurements">Measurements to send</param>
+        /// <returns>True if the request succeeded</returns>
+        Task<bool> SendMeasurements(SaveMeasurementsDto measurements);
+
+        /// <summary>
+        /// Sends measurement messages to the configured target instance.
+        /// </summary>
+        /// <param name="measurements">Measurements to send</param>
+        /// <returns>True if the request succeeded</returns>
+        Task<bool> SendMeasurements(List<SaveMeasurementsDto> measurements);
     }
 }

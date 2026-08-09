@@ -20,16 +20,20 @@ namespace EnvironmentMonitor.HubObserver.Functions
         private readonly IMeasurementService _measurementService;
         private readonly IQueueClient _queueClient;
         private readonly IDeviceService _deviceService;
+        private readonly ISyncService _syncService;
         private readonly bool _skipFirstMessageChecking;
+        private readonly bool _syncHubMessages;
 
 
-        public HubObserver(ILogger<HubObserver> logger, IMeasurementService measurementService, IQueueClient queueClient, IDeviceService deviceService, IConfiguration configuration)
+        public HubObserver(ILogger<HubObserver> logger, IMeasurementService measurementService, IQueueClient queueClient, IDeviceService deviceService, ISyncService syncService, IConfiguration configuration)
         {
             _logger = logger;
             _measurementService = measurementService;
             _queueClient = queueClient;
             _deviceService = deviceService;
+            _syncService = syncService;
             _skipFirstMessageChecking = configuration.GetValue<bool>("SkipFirstMessageChecking");
+            _syncHubMessages = configuration.GetValue<bool>("SyncHubMessages");
         }
 
         [Function(nameof(HubObserver))]
@@ -96,8 +100,22 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 objectToInsert.Source = CommunicationChannels.IotHub;
                 try
                 {
-                    await _measurementService.AddMeasurements(objectToInsert);
-                    processedMessaged++;
+                    if (_syncHubMessages)
+                    {
+                        if (await _syncService.SendMeasurements(objectToInsert))
+                        {
+                            processedMessaged++;
+                        }
+                        else
+                        {
+                            _logger.LogError($"Syncing measurements failed for device {objectToInsert.DeviceId}");
+                        }
+                    }
+                    else
+                    {
+                        await _measurementService.AddMeasurements(objectToInsert);
+                        processedMessaged++;
+                    }
                 }
                 catch (Exception ex)
                 {
