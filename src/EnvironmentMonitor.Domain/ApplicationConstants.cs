@@ -36,6 +36,9 @@ namespace EnvironmentMonitor.Domain
         // Sync service status variable keys
         public static string SyncLastDeviceMessageIdKey = "Sync_LastDeviceMessageId";
 
+        // Hangfire job parameter used to mark jobs which have a matching queued command row to acknowledge
+        public static string HangfireQueuedCommandParameter = "QueuedCommand";
+
         public static int FirstMessageLimitInMinutes = 5;
     }
 }
