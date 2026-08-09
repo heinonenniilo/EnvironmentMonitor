@@ -133,17 +133,8 @@ namespace EnvironmentMonitor.Application.Services
                 };
 
                 // Send to remote instance with proper authentication headers
-                using var httpClient = _httpClientFactory.CreateClient();
-                httpClient.DefaultRequestHeaders.Add(ApplicationConstants.ApiKeyHeaderName, _syncSettings.ApiKey);
-                httpClient.DefaultRequestHeaders.Add(ApplicationConstants.SecretIdHeaderName, _syncSettings.SecretId);
-                httpClient.DefaultRequestHeaders.Add(ApplicationConstants.SecretValueHeaderName, _syncSettings.SecretValue);
-
-                var response = await httpClient.PostAsJsonAsync(_syncSettings.Url, syncRequest);
-
-                if (!response.IsSuccessStatusCode)
+                if (!await SendSyncRequest(syncRequest))
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError($"Sync failed with status {response.StatusCode}: {errorContent}");
                     return 0;
                 }
 
@@ -162,6 +153,31 @@ namespace EnvironmentMonitor.Application.Services
                 _logger.LogError(ex, "Error during sync operation");
                 return 0;
             }
+        }
+
+        public Task<bool> SendMeasurements(SaveMeasurementsDto measurements) =>
+            SendMeasurements([measurements]);
+
+        public async Task<bool> SendMeasurements(List<SaveMeasurementsDto> measurements)
+        {
+            if (measurements == null || !measurements.Any())
+            {
+                _logger.LogWarning("No measurements to send");
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(_syncSettings.Url))
+            {
+                _logger.LogWarning("Sync URL is not configured");
+                return false;
+            }
+
+            var syncRequest = new SyncMeasurementsRequest
+            {
+                Measurements = measurements
+            };
+
+            return await SendSyncRequest(syncRequest);
         }
 
         public async Task<SyncResultDto> ProcessIncomingSync(SyncMeasurementsRequest request)
@@ -232,6 +248,30 @@ namespace EnvironmentMonitor.Application.Services
                 SyncedCount = syncedCount, 
                 TotalReceived = totalReceived 
             };
+        }
+
+        private HttpClient CreateSyncHttpClient()
+        {
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.Add(ApplicationConstants.ApiKeyHeaderName, _syncSettings.ApiKey);
+            httpClient.DefaultRequestHeaders.Add(ApplicationConstants.SecretIdHeaderName, _syncSettings.SecretId);
+            httpClient.DefaultRequestHeaders.Add(ApplicationConstants.SecretValueHeaderName, _syncSettings.SecretValue);
+            return httpClient;
+        }
+
+        private async Task<bool> SendSyncRequest(SyncMeasurementsRequest syncRequest)
+        {
+            using var httpClient = CreateSyncHttpClient();
+            var response = await httpClient.PostAsJsonAsync(_syncSettings.Url, syncRequest);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError($"Sync failed with status {response.StatusCode}: {errorContent}");
+                return false;
+            }
+
+            return true;
         }
 
     }
