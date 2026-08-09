@@ -19,7 +19,7 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<ILocationService, LocationService>();
             services.AddScoped<IDeviceEmailService, DeviceEmailService>();
             services.AddScoped<IDeviceCommandService, DeviceCommandService>();
-            services.AddScoped<IQueuedCommandAckService, DeviceCommandService>();
+            services.AddScoped<IQueuedCommandAckService, DeviceCommandService>(); // Needed for Hangfire / ServerFilter. Redundan if Hangfire not used.
             services.AddScoped<ILocationCommandService, LocationCommandService>();
             services.AddScoped<IUserCookieService, UserCookieService>();
             services.AddScoped<IApiKeyService, ApiKeyService>();
