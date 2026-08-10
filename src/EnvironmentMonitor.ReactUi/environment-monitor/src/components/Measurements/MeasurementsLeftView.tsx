@@ -24,6 +24,8 @@ import {
 } from "../../utilities/measurementUtils";
 import { MeasurementTypes } from "../../enums/measurementTypes";
 import { Clear } from "@mui/icons-material";
+import { type LocationModel } from "../../models/location";
+import { type Device } from "../../models/device";
 
 export interface MeasurementsLeftViewProps {
   onSearch: (
@@ -45,6 +47,7 @@ export interface MeasurementsLeftViewProps {
   hideMeasurementTypeSelector?: boolean;
   selectedMeasurementTypes: number[];
   onMeasurementTypesChange: (measurementTypes: number[]) => void;
+  locations?: LocationModel[];
 }
 
 export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
@@ -62,11 +65,14 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   hideMeasurementTypeSelector,
   selectedMeasurementTypes,
   onMeasurementTypesChange,
+  locations,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
     moment().utc(true).add(-2, "day").startOf("day"),
   );
   const [toDate, setToDate] = useState<moment.Moment | undefined>(undefined);
+  const [selectedLocationIdentifiers, setSelectedLocationIdentifiers] =
+    useState<string[]>([]);
 
   const availableMeasurementTypes = getAvailableMeasurementTypes();
 
@@ -83,6 +89,25 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   const handleClearMeasurementTypes = () => {
     onMeasurementTypesChange([]);
   };
+
+  const handleToggleLocation = (locationIdentifier: string) => {
+    setSelectedLocationIdentifiers((current) =>
+      current.includes(locationIdentifier)
+        ? current.filter((identifier) => identifier !== locationIdentifier)
+        : [...current, locationIdentifier],
+    );
+  };
+
+  const visibleEntities =
+    locations && selectedLocationIdentifiers.length > 0
+      ? entities.filter((entity) => {
+          const locationIdentifier = (entity as Device).locationIdentifier;
+          return (
+            locationIdentifier !== undefined &&
+            selectedLocationIdentifiers.includes(locationIdentifier)
+          );
+        })
+      : entities;
 
   useEffect(() => {
     if (timeFrom) {
@@ -155,6 +180,51 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
         />
       </Box>
       {!hideEntitySelector && (
+        locations && (
+          <Box mt={2}>
+            <FormControl fullWidth>
+              <InputLabel id="location-filter-select-label">Location</InputLabel>
+              <Select
+                labelId="location-filter-select-label"
+                id="location-filter-select"
+                value={selectedLocationIdentifiers}
+                label="Location"
+                multiple
+                endAdornment={
+                  selectedLocationIdentifiers.length > 0 ? (
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setSelectedLocationIdentifiers([]);
+                      }}
+                      sx={{ marginRight: 3 }}
+                    >
+                      <Clear fontSize="small" />
+                    </IconButton>
+                  ) : null
+                }
+              >
+                {[...locations]
+                  .sort((a, b) =>
+                    stringSort(getEntityTitle(a), getEntityTitle(b)),
+                  )
+                  .map((location) => (
+                    <MenuItem
+                      value={location.identifier}
+                      key={`location-${location.identifier}`}
+                      onClick={() => {
+                        handleToggleLocation(location.identifier);
+                      }}
+                    >
+                      {getEntityTitle(location)}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+          </Box>
+        )
+      )}
+      {!hideEntitySelector && (
         <Box mt={2}>
           <FormControl fullWidth>
             <InputLabel id="device-select-label">
@@ -173,7 +243,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
               label={entityName ?? "Device"}
               multiple
             >
-              {[...entities]
+              {[...visibleEntities]
                 .sort((a, b) =>
                   stringSort(getEntityTitle(a), getEntityTitle(b)),
                 )

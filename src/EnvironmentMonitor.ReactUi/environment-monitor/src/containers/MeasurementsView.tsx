@@ -7,6 +7,7 @@ import {
   getDashboardTimeRange,
   getDeviceAutoScale,
   getDevices,
+  getLocations,
   getSensors,
   getSelectedMeasurementTypes,
   setSelectedMeasurementTypes,
@@ -39,6 +40,7 @@ export const MeasurementsView: React.FC = () => {
   );
   const [timeTo, setTimeTo] = useState<moment.Moment | undefined>(undefined);
   const devices = useSelector(getDevices);
+  const locations = useSelector(getLocations);
   const sensors = useSelector(getSensors);
   const dashboardTimeRange = useSelector(getDashboardTimeRange);
   const selectedMeasurementTypes = useSelector(getSelectedMeasurementTypes);
@@ -183,6 +185,7 @@ export const MeasurementsView: React.FC = () => {
           selectedEntities={selectedDevices}
           selectedSensors={selectedSensors.map((s) => s.identifier)}
           entities={devices}
+          locations={locations}
           sensors={
             selectedDevices
               ? sensors.filter(
