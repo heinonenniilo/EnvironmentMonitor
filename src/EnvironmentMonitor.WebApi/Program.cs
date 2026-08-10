@@ -20,6 +20,7 @@ using System;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddKeyVaultAppSettings(args);
 var isDevelopment = builder.Environment.IsDevelopment();
 
 var googleClientId = builder.Configuration["Google:ClientId"];

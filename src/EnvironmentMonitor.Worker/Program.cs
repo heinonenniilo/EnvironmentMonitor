@@ -7,6 +7,7 @@ using EnvironmentMonitor.Worker.Services;
 using Hangfire;
 
 var builder = Host.CreateApplicationBuilder(args);
+builder.Configuration.AddKeyVaultAppSettings(args);
 
 // Register CurrentUser service for background job context
 builder.Services.AddSingleton<ICurrentUser, CurrentUser>();
