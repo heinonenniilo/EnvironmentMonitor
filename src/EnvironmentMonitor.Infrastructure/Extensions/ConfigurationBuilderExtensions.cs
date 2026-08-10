@@ -19,23 +19,21 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             var dataProtectionKeysSettings = new DataProtectionKeysSettings();
             configuration.GetSection("DataProtectionKeysSettings").Bind(dataProtectionKeysSettings);
 
-            var settings = new KeyVaultSettings();
-            configuration.GetSection("KeyVaultSettings").Bind(settings);
 
-            if (!dataProtectionKeysSettings.GetAppSettings || string.IsNullOrEmpty(settings.VaultUri))
+            if (!dataProtectionKeysSettings.GetAppSettings)
             {
                 return configuration;
             }
 
-            var vaultUri = new Uri(settings.VaultUri);
+            var vaultUri = new Uri(dataProtectionKeysSettings.KeyVaultKeyIdentifier);
 
             SecretClient secretClient;
-            if (!string.IsNullOrEmpty(settings.TenantId) &&
-                !string.IsNullOrEmpty(settings.ClientId) &&
-                !string.IsNullOrEmpty(settings.ClientSecret))
+            if (!string.IsNullOrEmpty(dataProtectionKeysSettings.TenantId) &&
+                !string.IsNullOrEmpty(dataProtectionKeysSettings.ClientId) &&
+                !string.IsNullOrEmpty(dataProtectionKeysSettings.ClientSecret))
             {
                 secretClient = new SecretClient(vaultUri,
-                    new ClientSecretCredential(settings.TenantId, settings.ClientId, settings.ClientSecret));
+                    new ClientSecretCredential(dataProtectionKeysSettings.TenantId, dataProtectionKeysSettings.ClientId, dataProtectionKeysSettings.ClientSecret));
             }
             else
             {
