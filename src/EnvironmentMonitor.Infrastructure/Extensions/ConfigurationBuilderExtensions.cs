@@ -10,16 +10,19 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
     public static class ConfigurationBuilderExtensions
     {
         /// <summary>
-        /// Adds Azure Key Vault as a configuration source when KeyVaultSettings:GetAppSettings is true.
+        /// Adds Azure Key Vault as a configuration source when DataProtectionKeysSettings:GetAppSettings is true.
         /// Locally defined configuration (environment variables, user secrets, command line) keeps
         /// priority over Key Vault, since those sources are re-added after the Key Vault provider.
         /// </summary>
         public static IConfigurationBuilder AddKeyVaultAppSettings(this IConfigurationManager configuration, string[]? args = null)
         {
+            var dataProtectionKeysSettings = new DataProtectionKeysSettings();
+            configuration.GetSection("DataProtectionKeysSettings").Bind(dataProtectionKeysSettings);
+
             var settings = new KeyVaultSettings();
             configuration.GetSection("KeyVaultSettings").Bind(settings);
 
-            if (!settings.GetAppSettings || string.IsNullOrEmpty(settings.VaultUri))
+            if (!dataProtectionKeysSettings.GetAppSettings || string.IsNullOrEmpty(settings.VaultUri))
             {
                 return configuration;
             }
