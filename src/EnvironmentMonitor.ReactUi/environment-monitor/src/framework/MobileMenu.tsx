@@ -22,6 +22,8 @@ import { getLocations } from "../reducers/measurementReducer";
 import type { User } from "../models/user";
 import logo from "../assets/logo.png";
 
+const showHangfireLink = import.meta.env.VITE_SHOW_HANGFIRE_LINK === "true";
+
 export interface MobileMenuProps {
   onNavigate: (route: string) => void;
   onLogin: () => void;
@@ -259,6 +261,17 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({
             >
               Email templates
             </MenuItem>
+            {showHangfireLink ? (
+              <MenuItem
+                onClick={() => {
+                  setManageAnchor(null);
+                  setAnchorEl(null);
+                  window.location.assign("/hangfire");
+                }}
+              >
+                Hangfire
+              </MenuItem>
+            ) : null}
             <MenuItem
               onClick={(event) => {
                 setManageAnchor(null);
