@@ -23,6 +23,8 @@ import { getLocations } from "../reducers/measurementReducer";
 import type { User } from "../models/user";
 import logo from "../assets/logo.png";
 
+const showHangfireLink = import.meta.env.VITE_SHOW_HANGFIRE_LINK === "true";
+
 export interface DesktopMenuProps {
   onNavigate: (route: string) => void;
   onLogin: () => void;
@@ -301,6 +303,16 @@ export const DesktopMenu: React.FC<DesktopMenuProps> = ({
               >
                 Email templates
               </MenuItem>
+              {showHangfireLink ? (
+                <MenuItem
+                  onClick={() => {
+                    setAnchorE2(null);
+                    window.location.assign("/hangfire");
+                  }}
+                >
+                  Hangfire
+                </MenuItem>
+              ) : null}
               <MenuItem
                 onClick={() => {
                   handleMenuClose();
