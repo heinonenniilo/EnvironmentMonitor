@@ -158,7 +158,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             }
 
             var storageAccountSettings = new StorageAccountSettings();
-            configuration.GetSection("StorageSettings").Bind(storageAccountSettings);           
+            configuration.GetSection(nameof(StorageAccountSettings)).Bind(storageAccountSettings);           
             services.AddSingleton(storageAccountSettings);
 
             if (applicationSettings != null)
