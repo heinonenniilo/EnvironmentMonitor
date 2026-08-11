@@ -10,9 +10,12 @@ namespace EnvironmentMonitor.Domain.Models
     {
         public bool StoreInDatabase { get; set; }
         public bool EncryptWithKeyVault { get; set; }
+        public bool GetAppSettings { get; set; }
         public string KeyVaultKeyIdentifier { get; set; } = string.Empty;
         public string? TenantId { get; set; }
         public string? ClientId { get; set; }
         public string? ClientSecret { get; set; }
+
+        public string? KeyVaulUri { get; set; }
     }
 }

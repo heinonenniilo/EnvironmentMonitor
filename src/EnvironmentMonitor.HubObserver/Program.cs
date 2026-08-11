@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
+    .ConfigureAppConfiguration(config => config.AddKeyVaultAppSettings())
     .ConfigureServices((opt, services) =>
     {
         services.AddSingleton<ICurrentUser, CurrentUser>();
