@@ -46,5 +46,7 @@ namespace EnvironmentMonitor.Domain.Models
         public bool SkipStatusCheck { get; set; } = true;
 
         public bool HandleFirstMessages { get; set; } = false;
+
+        public bool SkipDuplicates { get; set; }
     }
 }

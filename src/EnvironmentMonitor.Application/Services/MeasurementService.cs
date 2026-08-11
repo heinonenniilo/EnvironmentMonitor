@@ -56,7 +56,7 @@ namespace EnvironmentMonitor.Application.Services
             _transactionService = transactionService;
         }
 
-        public async Task AddMeasurements(SaveMeasurementsDto measurement, bool skipStatusCheck = false, bool skipVirtualSensorProcessing = false)
+        public async Task AddMeasurements(SaveMeasurementsDto measurement, bool skipStatusCheck = false, bool skipVirtualSensorProcessing = false, bool skipDuplicates = false)
         {
             var deviceDto = await _deviceService.GetDevice(measurement.DeviceId, AccessLevels.Write);
             if (deviceDto == null)
@@ -99,6 +99,14 @@ namespace EnvironmentMonitor.Application.Services
                     var existingMessage = await _measurementRepository.GetDeviceMessage(measurement.Identifier, device.Id);
                     isDuplicate = existingMessage != null;
                     deviceMessage.IsDuplicate = isDuplicate;
+
+                    if (skipDuplicates)
+                    {
+                        _logger.LogInformation($"Skipping duplicate message with identifier '{measurement.Identifier}' for device '{device.Identifier}'");
+                        await transaction.CommitAsync();
+                        return;
+                    }
+
                     await _measurementRepository.AddDeviceMessage(deviceMessage, true);
                 }
 
