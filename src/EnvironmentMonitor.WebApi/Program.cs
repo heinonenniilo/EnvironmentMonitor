@@ -20,17 +20,8 @@ using System;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddKeyVaultAppSettings(args);
 var isDevelopment = builder.Environment.IsDevelopment();
-
-var googleClientId = builder.Configuration["Google:ClientId"];
-var googleClientSecret = builder.Configuration["Google:ClientSecret"];
-
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders =
-        ForwardedHeaders.XForwardedProto |
-        ForwardedHeaders.XForwardedHost;
-});
 
 builder.Services.AddCors(options =>
 {
@@ -50,6 +41,17 @@ applicationSettings.IsProduction = builder.Environment.IsProduction();
 
 builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
 builder.Services.AddApplicationServices(builder.Configuration);
+
+// Google Auth
+var googleClientId = builder.Configuration["Google:ClientId"];
+var googleClientSecret = builder.Configuration["Google:ClientSecret"];
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedProto |
+        ForwardedHeaders.XForwardedHost;
+});
 
 // Add Hangfire services (client only - server runs in Worker)
 var hangfireConnectionString = builder.Configuration.GetConnectionString("HangfireConnection");

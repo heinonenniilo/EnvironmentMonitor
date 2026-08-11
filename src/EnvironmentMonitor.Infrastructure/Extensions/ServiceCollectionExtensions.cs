@@ -35,8 +35,6 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             DatabaseSettings? databaseSettings = null
             )
         {
-            configuration.AddKeyVaultAppSettings();
-
             var connectionStringToUse = connectionString ?? configuration.GetConnectionString("DefaultConnection");
 
             DatabaseSettings databaseSettingsToUse;

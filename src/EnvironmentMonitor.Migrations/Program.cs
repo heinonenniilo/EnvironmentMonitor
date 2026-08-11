@@ -14,6 +14,7 @@ if (!AppDomain.CurrentDomain.FriendlyName.Contains("ef"))
           .AddJsonFile("appsettings.json")
           .AddUserSecrets<Program>()
           .AddEnvironmentVariables()
+          .AddKeyVaultAppSettings()
           .Build();
 
     var services = new ServiceCollection();

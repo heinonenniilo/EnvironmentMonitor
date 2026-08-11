@@ -11,37 +11,23 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
     {
         /// <summary>
         /// Adds Azure Key Vault as a configuration source when DataProtectionKeysSettings:GetAppSettings is true.
-        /// No-op if the configuration instance does not support adding sources.
-        /// </summary>
-        public static IConfiguration AddKeyVaultAppSettings(this IConfiguration configuration, string[]? args = null)
-        {
-            if (configuration is IConfigurationManager manager)
-            {
-                manager.AddKeyVaultAppSettings(args);
-            }
-
-            return configuration;
-        }
-
-        /// <summary>
-        /// Adds Azure Key Vault as a configuration source when DataProtectionKeysSettings:GetAppSettings is true.
         /// Locally defined configuration (environment variables, user secrets, command line) keeps
         /// priority over Key Vault, since those sources are re-added after the Key Vault provider.
         /// </summary>
-        public static IConfigurationBuilder AddKeyVaultAppSettings(this IConfigurationManager configuration, string[]? args = null)
+        public static IConfigurationBuilder AddKeyVaultAppSettings(this IConfigurationBuilder configuration, string[]? args = null)
         {
             var dataProtectionKeysSettings = new DataProtectionKeysSettings();
-            configuration.GetSection("DataProtectionKeysSettings").Bind(dataProtectionKeysSettings);
+            var currentConfiguration = configuration as IConfiguration ?? configuration.Build();
+            currentConfiguration.GetSection(nameof(DataProtectionKeysSettings)).Bind(dataProtectionKeysSettings);
 
             if (!dataProtectionKeysSettings.GetAppSettings ||
-                string.IsNullOrEmpty(dataProtectionKeysSettings.KeyVaultKeyIdentifier))
+                (string.IsNullOrEmpty(dataProtectionKeysSettings.KeyVaultKeyIdentifier) && string.IsNullOrEmpty(dataProtectionKeysSettings.KeyVaulUri)))
             {
                 return configuration;
             }
 
-            var uriString = dataProtectionKeysSettings.KeyVaulUri;
             Uri? vaultUri;
-            if (string.IsNullOrEmpty(uriString))
+            if (string.IsNullOrEmpty(dataProtectionKeysSettings.KeyVaulUri))
             {
                 // KeyVaultKeyIdentifier points to a key, e.g. https://my-vault.vault.azure.net/keys/my-key/version.
                 if (!Uri.TryCreate(dataProtectionKeysSettings.KeyVaultKeyIdentifier, UriKind.Absolute, out var keyIdentifierUri))
@@ -52,7 +38,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             }
             else
             {
-                vaultUri = new Uri(uriString);
+                vaultUri = new Uri(dataProtectionKeysSettings.KeyVaulUri);
             }
 
             SecretClient secretClient;
