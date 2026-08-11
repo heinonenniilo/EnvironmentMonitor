@@ -33,21 +33,27 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             var dataProtectionKeysSettings = new DataProtectionKeysSettings();
             configuration.GetSection("DataProtectionKeysSettings").Bind(dataProtectionKeysSettings);
 
-
             if (!dataProtectionKeysSettings.GetAppSettings ||
                 string.IsNullOrEmpty(dataProtectionKeysSettings.KeyVaultKeyIdentifier))
             {
                 return configuration;
             }
 
-            // KeyVaultKeyIdentifier points to a key, e.g. https://my-vault.vault.azure.net/keys/my-key/version.
-            // Only the vault base uri is needed for reading secrets.
-            if (!Uri.TryCreate(dataProtectionKeysSettings.KeyVaultKeyIdentifier, UriKind.Absolute, out var keyIdentifierUri))
+            var uriString = dataProtectionKeysSettings.KeyVaulUri;
+            Uri? vaultUri;
+            if (string.IsNullOrEmpty(uriString))
             {
-                return configuration;
+                // KeyVaultKeyIdentifier points to a key, e.g. https://my-vault.vault.azure.net/keys/my-key/version.
+                if (!Uri.TryCreate(dataProtectionKeysSettings.KeyVaultKeyIdentifier, UriKind.Absolute, out var keyIdentifierUri))
+                {
+                    return configuration;
+                }
+                vaultUri = new Uri(keyIdentifierUri.GetLeftPart(UriPartial.Authority));
             }
-
-            var vaultUri = new Uri(keyIdentifierUri.GetLeftPart(UriPartial.Authority));
+            else
+            {
+                vaultUri = new Uri(uriString);
+            }
 
             SecretClient secretClient;
             if (!string.IsNullOrEmpty(dataProtectionKeysSettings.TenantId) &&
