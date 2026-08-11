@@ -208,7 +208,7 @@ namespace EnvironmentMonitor.Application.Services
                 try
                 {
                     measurement.Source = CommunicationChannels.Sync;
-                    await _measurementService.AddMeasurements(measurement, skipStatusCheck: _syncSettings.SkipStatusCheck);
+                    await _measurementService.AddMeasurements(measurement, skipStatusCheck: _syncSettings.SkipStatusCheck, skipDuplicates: _syncSettings.SkipDuplicates);
                     syncedCount++;
 
                     var compareTime = _dateService.LocalToUtc(_dateService.CurrentTime().AddMinutes(-ApplicationConstants.FirstMessageLimitInMinutes));
