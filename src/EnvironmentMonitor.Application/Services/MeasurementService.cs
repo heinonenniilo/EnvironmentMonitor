@@ -100,14 +100,25 @@ namespace EnvironmentMonitor.Application.Services
                     isDuplicate = existingMessage != null;
                     deviceMessage.IsDuplicate = isDuplicate;
 
-                    if (skipDuplicates)
+                    bool shouldSave;
+                    if (!deviceMessage.IsDuplicate)
                     {
-                        _logger.LogInformation($"Skipping duplicate message with identifier '{measurement.Identifier}' for device '{device.Identifier}'");
-                        await transaction.CommitAsync();
-                        return;
+                        shouldSave = true;
+                    }
+                    else if (deviceMessage.IsDuplicate && !skipDuplicates)
+                    {
+                        shouldSave = true;
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"Duplicate message. Identifier: '{measurement.Identifier}'. SkipDuplicates: {skipDuplicates}. Skipping adding to database.");
+                        shouldSave = false;
                     }
 
-                    await _measurementRepository.AddDeviceMessage(deviceMessage, true);
+                    if (shouldSave)
+                    {
+                        await _measurementRepository.AddDeviceMessage(deviceMessage, true);
+                    }
                 }
 
                 if (isDuplicate)
