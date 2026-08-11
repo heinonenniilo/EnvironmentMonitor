@@ -45,8 +45,14 @@ namespace EnvironmentMonitor.Domain.Models
         /// </summary>
         public bool SkipStatusCheck { get; set; } = true;
 
+        /// <summary>
+        /// Whether to handle first messages when processing incoming sync measurements
+        /// </summary>
         public bool HandleFirstMessages { get; set; } = false;
 
+        /// <summary>
+        /// Whether to skip virtual sensor processing when processing incoming sync measurements
+        /// </summary>
         public bool SkipDuplicates { get; set; }
     }
 }
