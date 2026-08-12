@@ -48,6 +48,7 @@ export interface MeasurementsLeftViewProps {
   selectedMeasurementTypes: number[];
   onMeasurementTypesChange: (measurementTypes: number[]) => void;
   locations?: LocationModel[];
+  onLocationSelectionChange?: (selectedLocations: LocationModel[]) => void;
 }
 
 export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
@@ -66,6 +67,7 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   selectedMeasurementTypes,
   onMeasurementTypesChange,
   locations,
+  onLocationSelectionChange,
 }) => {
   const [fromDate, setFromDate] = useState<moment.Moment>(
     moment().utc(true).add(-2, "day").startOf("day"),
@@ -91,11 +93,15 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
   };
 
   const handleToggleLocation = (locationIdentifier: string) => {
-    setSelectedLocationIdentifiers((current) =>
-      current.includes(locationIdentifier)
-        ? current.filter((identifier) => identifier !== locationIdentifier)
-        : [...current, locationIdentifier],
-    );
+    const locationIdentifiersToSelect = selectedLocationIdentifiers.includes(
+      locationIdentifier,
+    )
+      ? selectedLocationIdentifiers.filter(
+          (identifier) => identifier !== locationIdentifier,
+        )
+      : [...selectedLocationIdentifiers, locationIdentifier];
+
+    setSelectedLocationIdentifiers(locationIdentifiersToSelect);
   };
 
   const visibleEntities =
@@ -114,6 +120,16 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
       setFromDate(timeFrom);
     }
   }, [timeFrom]);
+
+  useEffect(() => {
+    if (onLocationSelectionChange && locations) {
+      const selectedLocations = locations.filter((location) =>
+        selectedLocationIdentifiers.includes(location.identifier),
+      );
+      onLocationSelectionChange(selectedLocations);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLocationIdentifiers]);
 
   useEffect(() => {
     setToDate(timeTo);
@@ -179,50 +195,48 @@ export const MeasurementsLeftView: React.FC<MeasurementsLeftViewProps> = ({
           }}
         />
       </Box>
-      {!hideEntitySelector && (
-        locations && (
-          <Box mt={2}>
-            <FormControl fullWidth>
-              <InputLabel id="location-filter-select-label">Location</InputLabel>
-              <Select
-                labelId="location-filter-select-label"
-                id="location-filter-select"
-                value={selectedLocationIdentifiers}
-                label="Location"
-                multiple
-                endAdornment={
-                  selectedLocationIdentifiers.length > 0 ? (
-                    <IconButton
-                      size="small"
-                      onClick={() => {
-                        setSelectedLocationIdentifiers([]);
-                      }}
-                      sx={{ marginRight: 3 }}
-                    >
-                      <Clear fontSize="small" />
-                    </IconButton>
-                  ) : null
-                }
-              >
-                {[...locations]
-                  .sort((a, b) =>
-                    stringSort(getEntityTitle(a), getEntityTitle(b)),
-                  )
-                  .map((location) => (
-                    <MenuItem
-                      value={location.identifier}
-                      key={`location-${location.identifier}`}
-                      onClick={() => {
-                        handleToggleLocation(location.identifier);
-                      }}
-                    >
-                      {getEntityTitle(location)}
-                    </MenuItem>
-                  ))}
-              </Select>
-            </FormControl>
-          </Box>
-        )
+      {!hideEntitySelector && locations && (
+        <Box mt={2}>
+          <FormControl fullWidth>
+            <InputLabel id="location-filter-select-label">Location</InputLabel>
+            <Select
+              labelId="location-filter-select-label"
+              id="location-filter-select"
+              value={selectedLocationIdentifiers}
+              label="Location"
+              multiple
+              endAdornment={
+                selectedLocationIdentifiers.length > 0 ? (
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setSelectedLocationIdentifiers([]);
+                    }}
+                    sx={{ marginRight: 3 }}
+                  >
+                    <Clear fontSize="small" />
+                  </IconButton>
+                ) : null
+              }
+            >
+              {[...locations]
+                .sort((a, b) =>
+                  stringSort(getEntityTitle(a), getEntityTitle(b)),
+                )
+                .map((location) => (
+                  <MenuItem
+                    value={location.identifier}
+                    key={`location-${location.identifier}`}
+                    onClick={() => {
+                      handleToggleLocation(location.identifier);
+                    }}
+                  >
+                    {getEntityTitle(location)}
+                  </MenuItem>
+                ))}
+            </Select>
+          </FormControl>
+        </Box>
       )}
       {!hideEntitySelector && (
         <Box mt={2}>

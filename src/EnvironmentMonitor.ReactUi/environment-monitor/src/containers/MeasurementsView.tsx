@@ -21,6 +21,7 @@ import { type Sensor } from "../models/sensor";
 import { useParams } from "react-router";
 import moment from "moment";
 import { getGraphTitle } from "../utilities/graphUtils";
+import type { LocationModel } from "../models/location";
 
 export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
@@ -50,6 +51,24 @@ export const MeasurementsView: React.FC = () => {
     ),
   );
   const [selectedSensors, setSelectedSensors] = useState<Sensor[]>([]);
+
+  const handleLocationChanged = (selectedLocations: LocationModel[]) => {
+    const devicesToSet = selectedDevices.filter((device) =>
+      selectedLocations.some(
+        (location) => location.identifier === device.locationIdentifier,
+      ),
+    );
+
+    setSelectedDevices(devicesToSet);
+
+    setSelectedSensors(
+      selectedSensors.filter((sensor) => {
+        return devicesToSet.some(
+          (d) => sensor.parentIdentifier === d.identifier,
+        );
+      }),
+    );
+  };
 
   const toggleSensorSelection = (sensorId: string) => {
     if (selectedSensors.some((s) => s.identifier === sensorId)) {
@@ -202,6 +221,7 @@ export const MeasurementsView: React.FC = () => {
           onMeasurementTypesChange={(types) =>
             dispatch(setSelectedMeasurementTypes(types))
           }
+          onLocationSelectionChange={handleLocationChanged}
         />
       }
     >
