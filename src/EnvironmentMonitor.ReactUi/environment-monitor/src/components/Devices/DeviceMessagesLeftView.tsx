@@ -142,6 +142,25 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
             value={innerModel?.locationIdentifiers ?? []}
             label="Location"
             multiple
+            endAdornment={
+              (innerModel?.locationIdentifiers?.length ?? 0) > 0 ? (
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    if (innerModel) {
+                      setModel({
+                        ...innerModel,
+                        locationIdentifiers: [],
+                        deviceIdentifiers: [],
+                      });
+                    }
+                  }}
+                  sx={{ marginRight: 3 }}
+                >
+                  <Clear fontSize="small" />
+                </IconButton>
+              ) : null
+            }
           >
             {[...locations]
               .sort((a, b) => stringSort(a.name, b.name))
@@ -175,6 +194,21 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
               }
             }}
             multiple
+            endAdornment={
+              (innerModel?.deviceIdentifiers?.length ?? 0) > 0 ? (
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    if (innerModel) {
+                      setModel({ ...innerModel, deviceIdentifiers: [] });
+                    }
+                  }}
+                  sx={{ marginRight: 3 }}
+                >
+                  <Clear fontSize="small" />
+                </IconButton>
+              ) : null
+            }
           >
             {[
               ...devices.filter((d) =>
