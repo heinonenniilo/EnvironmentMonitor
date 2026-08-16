@@ -2,10 +2,12 @@ import {
   Box,
   Button,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
 } from "@mui/material";
+import Clear from "@mui/icons-material/Clear";
 import React, { useEffect, useState } from "react";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import type { GetDeviceMessagesModel } from "../../models/getDeviceMessagesModel";
@@ -14,6 +16,14 @@ import { stringSort } from "../../utilities/stringUtils";
 import { getEntityTitle } from "../../utilities/entityUtils";
 import type { LocationModel } from "../../models/location";
 import type { DeviceInfo } from "../../models/deviceInfo";
+import {
+  CommunicationChannels,
+  getCommunicationChannelDisplayName,
+} from "../../enums/communicationChannels";
+
+const communicationChannelOptions = Object.values(CommunicationChannels).filter(
+  (value): value is CommunicationChannels => typeof value === "number",
+);
 
 export interface DeviceMessagesLeftViewProps {
   onSearch: (model: GetDeviceMessagesModel) => void;
@@ -184,6 +194,49 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
                   {getEntityTitle(y.device)}
                 </MenuItem>
               ))}
+          </Select>
+        </FormControl>
+      </Box>
+
+      <Box mt={2}>
+        <FormControl fullWidth>
+          <InputLabel id="source-select-label">Source</InputLabel>
+          <Select
+            labelId="source-select-label"
+            id="source-select"
+            value={innerModel?.sourceIds ?? []}
+            label="Source"
+            multiple
+            onChange={(event) => {
+              if (innerModel) {
+                const sourceIds = event.target.value as number[];
+                setModel({
+                  ...innerModel,
+                  sourceIds: sourceIds.length > 0 ? sourceIds : undefined,
+                });
+              }
+            }}
+            endAdornment={
+              (innerModel?.sourceIds?.length ?? 0) > 0 ? (
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    if (innerModel) {
+                      setModel({ ...innerModel, sourceIds: undefined });
+                    }
+                  }}
+                  sx={{ marginRight: 3 }}
+                >
+                  <Clear fontSize="small" />
+                </IconButton>
+              ) : null
+            }
+          >
+            {communicationChannelOptions.map((sourceId) => (
+              <MenuItem value={sourceId} key={`source-${sourceId}`}>
+                {getCommunicationChannelDisplayName(sourceId)}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
       </Box>
