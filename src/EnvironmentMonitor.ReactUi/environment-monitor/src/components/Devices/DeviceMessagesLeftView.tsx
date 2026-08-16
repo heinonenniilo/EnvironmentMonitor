@@ -7,7 +7,7 @@ import {
   MenuItem,
   Select,
 } from "@mui/material";
-import Clear from "@mui/icons-material/Clear";
+import { Clear } from "@mui/icons-material";
 import React, { useEffect, useState } from "react";
 import { DesktopDatePicker } from "@mui/x-date-pickers/DesktopDatePicker";
 import type { GetDeviceMessagesModel } from "../../models/getDeviceMessagesModel";
