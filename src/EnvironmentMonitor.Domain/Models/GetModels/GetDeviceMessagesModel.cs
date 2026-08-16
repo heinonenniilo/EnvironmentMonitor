@@ -10,6 +10,8 @@ namespace EnvironmentMonitor.Domain.Models.GetModels
     {
         public List<Guid>? DeviceIdentifiers { get; set; }
         public List<Guid>? LocationIdentifiers { get; set; }
+
+        public List<int>? SourceIds { get; set; }
         public bool? IsDuplicate { get; set; }
         public bool? IsFirstMessage { get; set; }
         public DateTime? From { get; set; }

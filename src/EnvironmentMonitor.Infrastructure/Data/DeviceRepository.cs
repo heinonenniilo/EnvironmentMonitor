@@ -433,6 +433,11 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 query = query.Where(x => x.TimeStamp < model.To);
             }
 
+            if (model.SourceIds != null && model.SourceIds.Count > 0)
+            {
+                query = query.Where(x => x.SourceId != null && model.SourceIds.Contains(x.SourceId.Value));
+            }
+
             var extendedQuery = query.Select(x => new DeviceMessageExtended()
             {
                 Id = x.Id,
