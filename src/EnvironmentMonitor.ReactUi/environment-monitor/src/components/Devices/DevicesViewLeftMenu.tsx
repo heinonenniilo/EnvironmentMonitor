@@ -3,10 +3,13 @@ import {
   Box,
   Button,
   FormControl,
+  FormLabel,
   IconButton,
   InputLabel,
   MenuItem,
   Select,
+  ToggleButton,
+  ToggleButtonGroup,
   type SelectChangeEvent,
 } from "@mui/material";
 import {
@@ -160,29 +163,31 @@ export const DevicesViewLeftMenu: React.FC<DevicesViewLeftMenuProps> = ({
 
       <Box mt={2}>
         <FormControl fullWidth>
-          <InputLabel id="devices-is-virtual-select-label">
-            Virtual device
-          </InputLabel>
-          <Select
-            labelId="devices-is-virtual-select-label"
-            id="devices-is-virtual-select"
-            label="Virtual device"
+          <FormLabel id="devices-device-type-label">Device type</FormLabel>
+          <ToggleButtonGroup
+            aria-labelledby="devices-device-type-label"
+            exclusive
+            fullWidth
+            size="small"
             value={
               selectedIsVirtual === undefined
                 ? "all"
                 : selectedIsVirtual
-                  ? "true"
-                  : "false"
+                  ? "virtual"
+                  : "physical"
             }
-            onChange={(event) => {
-              const value = event.target.value;
-              onIsVirtualChange(value === "all" ? undefined : value === "true");
+            onChange={(_, value: "all" | "physical" | "virtual" | null) => {
+              if (value === null) return;
+              onIsVirtualChange(
+                value === "all" ? undefined : value === "virtual",
+              );
             }}
+            sx={{ mt: 1 }}
           >
-            <MenuItem value="all">All</MenuItem>
-            <MenuItem value="true">Yes</MenuItem>
-            <MenuItem value="false">No</MenuItem>
-          </Select>
+            <ToggleButton value="all">All</ToggleButton>
+            <ToggleButton value="physical">Physical</ToggleButton>
+            <ToggleButton value="virtual">Virtual</ToggleButton>
+          </ToggleButtonGroup>
         </FormControl>
       </Box>
 
