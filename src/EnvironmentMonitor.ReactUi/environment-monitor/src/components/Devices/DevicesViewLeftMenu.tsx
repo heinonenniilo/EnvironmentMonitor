@@ -20,8 +20,10 @@ export interface DevicesViewLeftMenuProps {
   locations: LocationModel[];
   selectedLocationIdentifiers: string[];
   selectedCommunicationChannelIds: number[];
+  selectedIsVirtual?: boolean;
   onLocationIdentifiersChange: (identifiers: string[]) => void;
   onCommunicationChannelIdsChange: (ids: number[]) => void;
+  onIsVirtualChange: (isVirtual: boolean | undefined) => void;
   onSearch: () => void;
 }
 
@@ -37,8 +39,10 @@ export const DevicesViewLeftMenu: React.FC<DevicesViewLeftMenuProps> = ({
   locations,
   selectedLocationIdentifiers,
   selectedCommunicationChannelIds,
+  selectedIsVirtual,
   onLocationIdentifiersChange,
   onCommunicationChannelIdsChange,
+  onIsVirtualChange,
   onSearch,
 }) => {
   const locationOptions = [...locations]
@@ -150,6 +154,34 @@ export const DevicesViewLeftMenu: React.FC<DevicesViewLeftMenuProps> = ({
                 {option.label}
               </MenuItem>
             ))}
+          </Select>
+        </FormControl>
+      </Box>
+
+      <Box mt={2}>
+        <FormControl fullWidth>
+          <InputLabel id="devices-is-virtual-select-label">
+            Virtual device
+          </InputLabel>
+          <Select
+            labelId="devices-is-virtual-select-label"
+            id="devices-is-virtual-select"
+            label="Virtual device"
+            value={
+              selectedIsVirtual === undefined
+                ? "all"
+                : selectedIsVirtual
+                  ? "true"
+                  : "false"
+            }
+            onChange={(event) => {
+              const value = event.target.value;
+              onIsVirtualChange(value === "all" ? undefined : value === "true");
+            }}
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="true">Yes</MenuItem>
+            <MenuItem value="false">No</MenuItem>
           </Select>
         </FormControl>
       </Box>

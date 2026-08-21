@@ -28,6 +28,9 @@ export const DevicesView: React.FC = () => {
     useState<string[]>([]);
   const [selectedCommunicationChannelIds, setSelectedCommunicationChannelIds] =
     useState<number[]>([]);
+  const [selectedIsVirtual, setSelectedIsVirtual] = useState<
+    boolean | undefined
+  >(undefined);
   const dispatch = useDispatch();
   const deviceInfos = useSelector(getDeviceInfos);
   const locations = useSelector(getLocations);
@@ -54,6 +57,7 @@ export const DevicesView: React.FC = () => {
           selectedCommunicationChannelIds.length > 0
             ? selectedCommunicationChannelIds
             : undefined,
+        isVirtual: selectedIsVirtual,
         onlyVisible: false,
         getAttachments: false,
         getLocation: true,
@@ -166,8 +170,10 @@ export const DevicesView: React.FC = () => {
           locations={locations}
           selectedLocationIdentifiers={selectedLocationIdentifiers}
           selectedCommunicationChannelIds={selectedCommunicationChannelIds}
+          selectedIsVirtual={selectedIsVirtual}
           onLocationIdentifiersChange={setSelectedLocationIdentifiers}
           onCommunicationChannelIdsChange={setSelectedCommunicationChannelIds}
+          onIsVirtualChange={setSelectedIsVirtual}
           onSearch={getDevices}
         />
       }
