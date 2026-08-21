@@ -47,14 +47,23 @@ export const DeviceMessagesView: React.FC = () => {
     ?.deviceIdentifier;
 
   useEffect(() => {
-    apiHook.deviceHook.getDeviceInfos({
-      onlyVisible: false,
-      getAttachments: false,
-      getLocation: true,
-      getAttributes: false,
-      getContacts: false,
-      getLatestMeasurementBySensor: false,
-    });
+    apiHook.deviceHook
+      .getDeviceInfos({
+        onlyVisible: false,
+        getAttachments: false,
+        getLocation: true,
+        getAttributes: false,
+        getContacts: false,
+        getLatestMeasurementBySensor: false,
+      })
+      .then((res) => {
+        if (res) {
+          dispatch(setDeviceInfos(res));
+        }
+      })
+      .catch((er) => {
+        console.error(er);
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
