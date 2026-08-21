@@ -2,6 +2,7 @@
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.GetModels;
 
 namespace EnvironmentMonitor.HubObserver.Functions
 {
@@ -20,7 +21,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
         public async Task Run([TimerTrigger("%ConnectionStatusSchedule%")] TimerInfo timerInfo,
             FunctionContext context)
         {
-            var devices = await _deviceService.GetDeviceInfos(false, null, false);
+            var devices = await _deviceService.GetDeviceInfos(new GetDeviceInfosModel());
             foreach (var device in devices)
             {
                 _logger.LogInformation($"Checking connection status for device: {device.Device.Name} ({device.Device.Identifier})");

@@ -79,7 +79,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 IsDeviceImage = isDeviceImage,
                 IsSecret = isSecret
             });
-            var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId], true);
+            var deviceInfos = await _deviceService.GetDeviceInfos(new GetDeviceInfosModel() { Identifiers = [deviceId], GetAttachments = true });
             return deviceInfos.First();
         }
 
@@ -106,7 +106,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public async Task<DeviceInfoDto> SetDefaultImage([FromBody] SetDefaultImage model)
         {
             await _deviceService.SetDefaultImage(model.DeviceIdentifiers.First(), model.AttachmentGuid);
-            var res = await _deviceService.GetDeviceInfos(false, [model.DeviceIdentifiers.First()], true);
+            var res = await _deviceService.GetDeviceInfos(new GetDeviceInfosModel() { Identifiers = [model.DeviceIdentifiers.First()], GetAttachments = true });
             return res.FirstOrDefault();
         }
 
@@ -115,7 +115,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         public async Task<DeviceInfoDto> DeleteAttachment([FromRoute] Guid deviceId, [FromRoute] Guid attachmentIdentifier)
         {
             await _deviceService.DeleteAttachment(deviceId, attachmentIdentifier);
-            var deviceInfos = await _deviceService.GetDeviceInfos(false, [deviceId], true);
+            var deviceInfos = await _deviceService.GetDeviceInfos(new GetDeviceInfosModel() { Identifiers = [deviceId], GetAttachments = true });
             return deviceInfos.First();
         }
 
@@ -124,13 +124,25 @@ namespace EnvironmentMonitor.WebApi.Controllers
 
         [HttpGet(template: "info")]
         [Authorize(Roles = "Admin")]
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos([FromQuery]List<Guid>? locationIdentifiers = null) => await _deviceService.GetDeviceInfos(false, null, false, true, false, locationIdentifiers: locationIdentifiers);
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos([FromQuery] GetDeviceInfosModel model)
+        {
+            model.GetLocation = true;
+            return await _deviceService.GetDeviceInfos(model);
+        }
 
         [HttpGet(template: "{identifier}/info")]
         [Authorize(Roles = "Admin")]
         public async Task<DeviceInfoDto> GetDeviceInfo(Guid identifier, [FromQuery] bool getLatestMeasurementBySensor = false)
         {
-            var result = await _deviceService.GetDeviceInfos(false, [identifier], true, true, true, true, getLatestMeasurementBySensor: getLatestMeasurementBySensor);
+            var result = await _deviceService.GetDeviceInfos(new GetDeviceInfosModel()
+            {
+                Identifiers = [identifier],
+                GetAttachments = true,
+                GetLocation = true,
+                GetAttributes = true,
+                GetContacts = true,
+                GetLatestMeasurementBySensor = getLatestMeasurementBySensor
+            });
             return result.First();
         }
 
