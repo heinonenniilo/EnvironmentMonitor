@@ -36,7 +36,7 @@ export const DevicesView: React.FC = () => {
   useEffect(() => {
     getDevices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedLocationIdentifiers, selectedCommunicationChannelIds]);
+  }, []);
 
   useEffect(() => {
     dispatch(toggleLeftMenuOpen(false));
@@ -168,6 +168,7 @@ export const DevicesView: React.FC = () => {
           selectedCommunicationChannelIds={selectedCommunicationChannelIds}
           onLocationIdentifiersChange={setSelectedLocationIdentifiers}
           onCommunicationChannelIdsChange={setSelectedCommunicationChannelIds}
+          onSearch={getDevices}
         />
       }
     >

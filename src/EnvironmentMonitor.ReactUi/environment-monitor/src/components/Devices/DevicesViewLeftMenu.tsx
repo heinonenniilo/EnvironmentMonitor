@@ -1,6 +1,7 @@
 import { Clear } from "@mui/icons-material";
 import {
   Box,
+  Button,
   FormControl,
   IconButton,
   InputLabel,
@@ -21,6 +22,7 @@ export interface DevicesViewLeftMenuProps {
   selectedCommunicationChannelIds: number[];
   onLocationIdentifiersChange: (identifiers: string[]) => void;
   onCommunicationChannelIdsChange: (ids: number[]) => void;
+  onSearch: () => void;
 }
 
 const communicationChannelOptions = Object.values(CommunicationChannels)
@@ -37,6 +39,7 @@ export const DevicesViewLeftMenu: React.FC<DevicesViewLeftMenuProps> = ({
   selectedCommunicationChannelIds,
   onLocationIdentifiersChange,
   onCommunicationChannelIdsChange,
+  onSearch,
 }) => {
   const locationOptions = [...locations]
     .sort((a, b) =>
@@ -149,6 +152,12 @@ export const DevicesViewLeftMenu: React.FC<DevicesViewLeftMenuProps> = ({
             ))}
           </Select>
         </FormControl>
+      </Box>
+
+      <Box mt={2}>
+        <Button variant="outlined" onClick={onSearch}>
+          Search
+        </Button>
       </Box>
     </Box>
   );
