@@ -18,10 +18,16 @@ import { Box, IconButton, Tooltip } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { EditDeviceDialog } from "../components/Devices/EditDeviceDialog";
 import type { AddOrUpdateDeviceDto } from "../models/addOrUpdateDeviceDto";
+import { DevicesViewLeftMenu } from "../components/Devices/DevicesViewLeftMenu";
+import { toggleLeftMenuOpen } from "../reducers/userInterfaceReducer";
 
 export const DevicesView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [addDeviceDialogOpen, setAddDeviceDialogOpen] = useState(false);
+  const [selectedLocationIdentifiers, setSelectedLocationIdentifiers] =
+    useState<string[]>([]);
+  const [selectedCommunicationChannelIds, setSelectedCommunicationChannelIds] =
+    useState<number[]>([]);
   const dispatch = useDispatch();
   const deviceInfos = useSelector(getDeviceInfos);
   const locations = useSelector(getLocations);
@@ -30,12 +36,31 @@ export const DevicesView: React.FC = () => {
   useEffect(() => {
     getDevices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedLocationIdentifiers, selectedCommunicationChannelIds]);
+
+  useEffect(() => {
+    dispatch(toggleLeftMenuOpen(false));
+  }, [dispatch]);
 
   const getDevices = () => {
     setIsLoading(true);
     deviceHook
-      .getDeviceInfos()
+      .getDeviceInfos({
+        locationIdentifiers:
+          selectedLocationIdentifiers.length > 0
+            ? selectedLocationIdentifiers
+            : undefined,
+        communicationChannelIds:
+          selectedCommunicationChannelIds.length > 0
+            ? selectedCommunicationChannelIds
+            : undefined,
+        onlyVisible: false,
+        getAttachments: false,
+        getLocation: true,
+        getAttributes: false,
+        getContacts: false,
+        getLatestMeasurementBySensor: false,
+      })
       .then((res) => {
         if (res) {
           dispatch(setDeviceInfos(res));
@@ -135,6 +160,15 @@ export const DevicesView: React.FC = () => {
             </IconButton>
           </Tooltip>
         </Box>
+      }
+      leftMenu={
+        <DevicesViewLeftMenu
+          locations={locations}
+          selectedLocationIdentifiers={selectedLocationIdentifiers}
+          selectedCommunicationChannelIds={selectedCommunicationChannelIds}
+          onLocationIdentifiersChange={setSelectedLocationIdentifiers}
+          onCommunicationChannelIdsChange={setSelectedCommunicationChannelIds}
+        />
       }
     >
       <DeviceTable

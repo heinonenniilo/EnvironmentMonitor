@@ -53,7 +53,14 @@ export const DeviceMessagesView: React.FC = () => {
 
     if (apiHook.deviceHook) {
       apiHook.deviceHook
-        .getDeviceInfos()
+        .getDeviceInfos({
+          onlyVisible: false,
+          getAttachments: false,
+          getLocation: true,
+          getAttributes: false,
+          getContacts: false,
+          getLatestMeasurementBySensor: false,
+        })
         .then((res) => {
           if (res) {
             dispatch(setDeviceInfos(res));

@@ -98,7 +98,15 @@ export const LocationView: React.FC = () => {
 
     setIsLoadingDeviceInformation(true);
     deviceHook
-      .getDeviceInfos([locationId])
+      .getDeviceInfos({
+        locationIdentifiers: [locationId],
+        onlyVisible: false,
+        getAttachments: false,
+        getLocation: true,
+        getAttributes: false,
+        getContacts: false,
+        getLatestMeasurementBySensor: false,
+      })
       .then((response) => {
         setLocationDeviceInfos(response ?? []);
         const availableIdentifiers = new Set(
@@ -129,7 +137,14 @@ export const LocationView: React.FC = () => {
 
   const refreshDevices = () => {
     deviceHook
-      .getDeviceInfos()
+      .getDeviceInfos({
+        onlyVisible: false,
+        getAttachments: false,
+        getLocation: true,
+        getAttributes: false,
+        getContacts: false,
+        getLatestMeasurementBySensor: false,
+      })
       .then((response) => {
         const nextDevices = response ?? [];
         setAllDevices(nextDevices);

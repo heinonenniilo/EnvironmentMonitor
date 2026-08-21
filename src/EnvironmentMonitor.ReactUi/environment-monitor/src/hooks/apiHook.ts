@@ -47,6 +47,7 @@ import type {
 import type { ProblemDetails } from "../models/problemDetails";
 import type { UpdateVirtualSensorRowsDto } from "../models/updateVirtualSensorRows";
 import { useNotification } from "./useNotification";
+import type { GetDeviceInfosModel } from "../models/getDeviceInfosModel";
 
 interface ApiHook {
   userHook: userHook;
@@ -170,7 +171,7 @@ interface CreateApiKeyResponse {
 interface deviceHook {
   rebootDevice: (deviceIdentifier: string) => Promise<boolean>;
   getDeviceInfos: (
-    locationIdentifiers?: string[],
+    model: GetDeviceInfosModel,
   ) => Promise<DeviceInfo[] | undefined>;
   getDeviceInfo: (
     identifier: string,
@@ -675,14 +676,12 @@ export const useApiHook = (): ApiHook => {
           return false;
         }
       },
-      getDeviceInfos: async (locationIdentifiers?: string[]) => {
+      getDeviceInfos: async (model: GetDeviceInfosModel) => {
         try {
           const res = await apiClient.get<any, AxiosResponse<DeviceInfo[]>>(
             "/api/devices/info",
             {
-              params: {
-                locationIdentifiers,
-              },
+              params: model,
             },
           );
           return res.data;
