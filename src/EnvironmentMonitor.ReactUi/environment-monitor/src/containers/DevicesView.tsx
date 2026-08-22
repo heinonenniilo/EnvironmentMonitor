@@ -20,20 +20,20 @@ import { EditDeviceDialog } from "../components/Devices/EditDeviceDialog";
 import type { AddOrUpdateDeviceDto } from "../models/addOrUpdateDeviceDto";
 import { DevicesViewLeftMenu } from "../components/Devices/DevicesViewLeftMenu";
 import { toggleLeftMenuOpen } from "../reducers/userInterfaceReducer";
+import {
+  getDeviceFilters,
+  setDeviceCommunicationChannelIds,
+  setDeviceIsVirtual,
+  setDeviceLocationIdentifiers,
+} from "../reducers/deviceReducer";
 
 export const DevicesView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [addDeviceDialogOpen, setAddDeviceDialogOpen] = useState(false);
-  const [selectedLocationIdentifiers, setSelectedLocationIdentifiers] =
-    useState<string[]>([]);
-  const [selectedCommunicationChannelIds, setSelectedCommunicationChannelIds] =
-    useState<number[]>([]);
-  const [selectedIsVirtual, setSelectedIsVirtual] = useState<
-    boolean | undefined
-  >(undefined);
   const dispatch = useDispatch();
   const deviceInfos = useSelector(getDeviceInfos);
   const locations = useSelector(getLocations);
+  const filters = useSelector(getDeviceFilters);
   const deviceHook = useApiHook().deviceHook;
 
   useEffect(() => {
@@ -50,14 +50,14 @@ export const DevicesView: React.FC = () => {
     deviceHook
       .getDeviceInfos({
         locationIdentifiers:
-          selectedLocationIdentifiers.length > 0
-            ? selectedLocationIdentifiers
+          filters.locationIdentifiers.length > 0
+            ? filters.locationIdentifiers
             : undefined,
         communicationChannelIds:
-          selectedCommunicationChannelIds.length > 0
-            ? selectedCommunicationChannelIds
+          filters.communicationChannelIds.length > 0
+            ? filters.communicationChannelIds
             : undefined,
-        isVirtual: selectedIsVirtual,
+        isVirtual: filters.isVirtual,
         onlyVisible: false,
         getLatestMeasurementBySensor: false,
       })
@@ -164,12 +164,18 @@ export const DevicesView: React.FC = () => {
       leftMenu={
         <DevicesViewLeftMenu
           locations={locations}
-          selectedLocationIdentifiers={selectedLocationIdentifiers}
-          selectedCommunicationChannelIds={selectedCommunicationChannelIds}
-          selectedIsVirtual={selectedIsVirtual}
-          onLocationIdentifiersChange={setSelectedLocationIdentifiers}
-          onCommunicationChannelIdsChange={setSelectedCommunicationChannelIds}
-          onIsVirtualChange={setSelectedIsVirtual}
+          selectedLocationIdentifiers={filters.locationIdentifiers}
+          selectedCommunicationChannelIds={filters.communicationChannelIds}
+          selectedIsVirtual={filters.isVirtual}
+          onLocationIdentifiersChange={(identifiers) =>
+            dispatch(setDeviceLocationIdentifiers(identifiers))
+          }
+          onCommunicationChannelIdsChange={(ids) =>
+            dispatch(setDeviceCommunicationChannelIds(ids))
+          }
+          onIsVirtualChange={(isVirtual) =>
+            dispatch(setDeviceIsVirtual(isVirtual))
+          }
           onSearch={getDevices}
         />
       }
