@@ -107,33 +107,33 @@ namespace EnvironmentMonitor.Application.Services
             await _deviceRepository.AddEvent(deviceId, type, message, saveChanges, datetimeUtc);
         }
 
-        public async Task<List<DeviceInfoDto>> GetDeviceInfos(bool onlyVisible, List<Guid>? identifiers, bool getAttachments = false, bool getLocation = false, bool getAttributes = false, 
-            bool getContacts = false, bool? isVirtual = null, List<Guid>? locationIdentifiers = null, bool getLatestMeasurementBySensor = false)
+        public async Task<List<DeviceInfoDto>> GetDeviceInfos(GetDeviceInfosModel model)
         {
-            _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", identifiers ?? [])}");
+            _logger.LogInformation($"Fetching device infos. Identifiers: {string.Join(",", model.Identifiers ?? [])}");
             var infos = new List<DeviceInfo>();
 
-            if (locationIdentifiers != null)
+            if (model.LocationIdentifiers != null)
             {
-                if (!_userService.HasAccessToLocations(locationIdentifiers, AccessLevels.Read))
+                if (!_userService.HasAccessToLocations(model.LocationIdentifiers, AccessLevels.Read))
                 {
                     throw new UnauthorizedAccessException();
                 }
             }
 
-            if (identifiers?.Any() == true)
+            if (model.Identifiers?.Any() == true)
             {
                 infos = (await _deviceRepository.GetDeviceInfo(new GetDevicesModel()
                 {
-                    Identifiers = identifiers,
-                    OnlyVisible = onlyVisible,
-                    GetAttachments = getAttachments,
-                    GetLocation = getLocation,
-                    GetAttributes = getAttributes,
-                    GetContacts = getContacts,
-                    IsVirtual = isVirtual,
-                    LocationIdentifiers = locationIdentifiers,
-                    GetLatestMeasurementBySensor = getLatestMeasurementBySensor
+                    Identifiers = model.Identifiers,
+                    OnlyVisible = model.OnlyVisible,
+                    GetAttachments = model.GetAttachments,
+                    GetLocation = model.GetLocation,
+                    GetAttributes = model.GetAttributes,
+                    GetContacts = model.GetContacts,
+                    IsVirtual = model.IsVirtual,
+                    LocationIdentifiers = model.LocationIdentifiers,
+                    CommunicationChannelIds = model.CommunicationChannelIds,
+                    GetLatestMeasurementBySensor = model.GetLatestMeasurementBySensor
                 }))
                 .Where(d => _userService.HasAccessToDevice(d.Device.Identifier, AccessLevels.Read)).ToList();
             }
@@ -142,13 +142,15 @@ namespace EnvironmentMonitor.Application.Services
                 infos = await _deviceRepository.GetDeviceInfo(new GetDevicesModel()
                 {
                     Identifiers = _userService.IsAdmin ? null : _userService.GetDevices(),
-                    OnlyVisible = onlyVisible,
-                    GetAttachments = getAttachments,
-                    GetLocation = getLocation,
-                    GetAttributes = getAttributes,
-                    IsVirtual = isVirtual, 
-                    LocationIdentifiers = locationIdentifiers,
-                    GetLatestMeasurementBySensor = getLatestMeasurementBySensor
+                    OnlyVisible = model.OnlyVisible,
+                    GetAttachments = model.GetAttachments,
+                    GetLocation = model.GetLocation,
+                    GetAttributes = model.GetAttributes,
+                    GetContacts = model.GetContacts,
+                    IsVirtual = model.IsVirtual,
+                    LocationIdentifiers = model.LocationIdentifiers,
+                    CommunicationChannelIds = model.CommunicationChannelIds,
+                    GetLatestMeasurementBySensor = model.GetLatestMeasurementBySensor
                 });
             }
             var listToReturn = _mapper.Map<List<DeviceInfoDto>>(infos);

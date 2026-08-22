@@ -18,6 +18,14 @@ import { Box, IconButton, Tooltip } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import { EditDeviceDialog } from "../components/Devices/EditDeviceDialog";
 import type { AddOrUpdateDeviceDto } from "../models/addOrUpdateDeviceDto";
+import { DevicesViewLeftMenu } from "../components/Devices/DevicesViewLeftMenu";
+import { toggleLeftMenuOpen } from "../reducers/userInterfaceReducer";
+import {
+  getDeviceFilters,
+  setDeviceCommunicationChannelIds,
+  setDeviceIsVirtual,
+  setDeviceLocationIdentifiers,
+} from "../reducers/deviceReducer";
 
 export const DevicesView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -25,6 +33,7 @@ export const DevicesView: React.FC = () => {
   const dispatch = useDispatch();
   const deviceInfos = useSelector(getDeviceInfos);
   const locations = useSelector(getLocations);
+  const filters = useSelector(getDeviceFilters);
   const deviceHook = useApiHook().deviceHook;
 
   useEffect(() => {
@@ -32,10 +41,26 @@ export const DevicesView: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    dispatch(toggleLeftMenuOpen(false));
+  }, [dispatch]);
+
   const getDevices = () => {
     setIsLoading(true);
     deviceHook
-      .getDeviceInfos()
+      .getDeviceInfos({
+        locationIdentifiers:
+          filters.locationIdentifiers.length > 0
+            ? filters.locationIdentifiers
+            : undefined,
+        communicationChannelIds:
+          filters.communicationChannelIds.length > 0
+            ? filters.communicationChannelIds
+            : undefined,
+        isVirtual: filters.isVirtual,
+        onlyVisible: false,
+        getLatestMeasurementBySensor: false,
+      })
       .then((res) => {
         if (res) {
           dispatch(setDeviceInfos(res));
@@ -135,6 +160,24 @@ export const DevicesView: React.FC = () => {
             </IconButton>
           </Tooltip>
         </Box>
+      }
+      leftMenu={
+        <DevicesViewLeftMenu
+          locations={locations}
+          selectedLocationIdentifiers={filters.locationIdentifiers}
+          selectedCommunicationChannelIds={filters.communicationChannelIds}
+          selectedIsVirtual={filters.isVirtual}
+          onLocationIdentifiersChange={(identifiers) =>
+            dispatch(setDeviceLocationIdentifiers(identifiers))
+          }
+          onCommunicationChannelIdsChange={(ids) =>
+            dispatch(setDeviceCommunicationChannelIds(ids))
+          }
+          onIsVirtualChange={(isVirtual) =>
+            dispatch(setDeviceIsVirtual(isVirtual))
+          }
+          onSearch={getDevices}
+        />
       }
     >
       <DeviceTable

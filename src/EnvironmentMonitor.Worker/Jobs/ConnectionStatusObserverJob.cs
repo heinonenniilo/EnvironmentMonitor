@@ -1,6 +1,7 @@
 ﻿using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
+using EnvironmentMonitor.Domain.Models.GetModels;
 using Hangfire;
 using System;
 using System.Collections.Generic;
@@ -28,7 +29,7 @@ namespace EnvironmentMonitor.Worker.Jobs
         public async Task Execute()
         {
             _logger.LogInformation($"Starting connection status observer job at: {_dateService.CurrentTime()}");
-            var devices = await _deviceService.GetDeviceInfos(false, null, false);
+            var devices = await _deviceService.GetDeviceInfos(new GetDeviceInfosModel());
             foreach (var device in devices)
             {
                 _logger.LogInformation($"Checking connection status for device: {device.Device.Name} ({device.Device.Identifier})");
