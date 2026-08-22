@@ -59,10 +59,6 @@ export const DevicesView: React.FC = () => {
             : undefined,
         isVirtual: selectedIsVirtual,
         onlyVisible: false,
-        getAttachments: false,
-        getLocation: true,
-        getAttributes: false,
-        getContacts: false,
         getLatestMeasurementBySensor: false,
       })
       .then((res) => {

@@ -50,10 +50,6 @@ export const DeviceMessagesView: React.FC = () => {
     apiHook.deviceHook
       .getDeviceInfos({
         onlyVisible: false,
-        getAttachments: false,
-        getLocation: true,
-        getAttributes: false,
-        getContacts: false,
         getLatestMeasurementBySensor: false,
       })
       .then((res) => {
@@ -76,10 +72,6 @@ export const DeviceMessagesView: React.FC = () => {
       apiHook.deviceHook
         .getDeviceInfos({
           onlyVisible: false,
-          getAttachments: false,
-          getLocation: true,
-          getAttributes: false,
-          getContacts: false,
           getLatestMeasurementBySensor: false,
         })
         .then((res) => {

@@ -101,10 +101,6 @@ export const LocationView: React.FC = () => {
       .getDeviceInfos({
         locationIdentifiers: [locationId],
         onlyVisible: false,
-        getAttachments: false,
-        getLocation: true,
-        getAttributes: false,
-        getContacts: false,
         getLatestMeasurementBySensor: false,
       })
       .then((response) => {
@@ -139,10 +135,6 @@ export const LocationView: React.FC = () => {
     deviceHook
       .getDeviceInfos({
         onlyVisible: false,
-        getAttachments: false,
-        getLocation: true,
-        getAttributes: false,
-        getContacts: false,
         getLatestMeasurementBySensor: false,
       })
       .then((response) => {

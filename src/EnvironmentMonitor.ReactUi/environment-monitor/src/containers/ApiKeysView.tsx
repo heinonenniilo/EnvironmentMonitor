@@ -58,10 +58,6 @@ export const ApiKeysView: React.FC = () => {
   const loadDevices = () => {
     deviceHook.getDeviceInfos({
       onlyVisible: false,
-      getAttachments: false,
-      getLocation: true,
-      getAttributes: false,
-      getContacts: false,
       getLatestMeasurementBySensor: false,
     }).then((res) => {
       if (res) {

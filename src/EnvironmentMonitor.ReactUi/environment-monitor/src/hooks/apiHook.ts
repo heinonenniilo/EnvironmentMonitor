@@ -175,7 +175,7 @@ interface deviceHook {
   ) => Promise<DeviceInfo[] | undefined>;
   getDeviceInfo: (
     identifier: string,
-    getLatestMeasurementBySensor?: boolean,
+    model: GetDeviceInfosModel,
   ) => Promise<DeviceInfo>;
   setMotionControlState: (
     identifiers: string | string[],
@@ -693,15 +693,13 @@ export const useApiHook = (): ApiHook => {
       },
       getDeviceInfo: async (
         identifier: string,
-        getLatestMeasurementBySensor?: boolean,
+        model: GetDeviceInfosModel,
       ) => {
         try {
           const res = await apiClient.get<any, AxiosResponse<DeviceInfo>>(
             `/api/devices/${identifier}/info`,
             {
-              params: {
-                getLatestMeasurementBySensor,
-              },
+              params: model,
             },
           );
           return res.data;
