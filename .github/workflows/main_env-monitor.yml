@@ -19,7 +19,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    environment: Production
     permissions:
+      id-token: write
       contents: read #This is required for actions/checkout
 
     steps:
@@ -95,6 +97,26 @@ jobs:
             $source = Join-Path $env:DOTNET_ROOT $application
             $destination = Join-Path $PWD "packages/$application.zip"
             [System.IO.Compression.ZipFile]::CreateFromDirectory($source, $destination)
+            $archive = [System.IO.Compression.ZipFile]::OpenRead($destination)
+            try {
+              Write-Output "::group::Contents of $application.zip"
+              $files = @($archive.Entries | Where-Object { $_.Name -ne '' })
+              if ($files.Count -eq 0) {
+                throw "Archive $application.zip contains no files."
+              }
+              foreach ($file in $files) {
+                Write-Output ("{0} ({1:N0} bytes)" -f $file.FullName, $file.Length)
+              }
+              $totalBytes = ($files | Measure-Object -Property Length -Sum).Sum
+              $zipBytes = (Get-Item -LiteralPath $destination).Length
+              $summary = "${application}.zip: $($files.Count) files, $totalBytes uncompressed bytes, $zipBytes ZIP bytes"
+              Write-Output $summary
+              Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Value "- $summary"
+            }
+            finally {
+              $archive.Dispose()
+              Write-Output '::endgroup::'
+            }
           }
 
       - name: Upload x64 ZIP artifacts
@@ -141,28 +163,6 @@ jobs:
         with:
           name: .env-monitor-worker_linux-x64
           path: ${{env.DOTNET_ROOT}}/env-monitor-worker_linux-x64
-  deploy:
-    runs-on: windows-latest
-    needs: build
-    if: github.event_name == 'push' || inputs.deploy == 'true'
-    environment:
-      name: "Production"
-    permissions:
-      id-token: write
-      contents: read
-
-    steps:
-      - name: Download x64 ZIP artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: env-monitor-x64-packages
-          path: packages
-
-      - name: Download Function artifacts (WIN-X64)
-        uses: actions/download-artifact@v4
-        with:
-          name: .env-monitor-function_x64
-          path: "./env-monitor-function"
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -214,6 +214,30 @@ jobs:
             echo "$blob_url"
             printf -- '- [%s](%s)\n' "$(basename "$package")" "$blob_url" >> "$GITHUB_STEP_SUMMARY"
           done
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    if: github.event_name == 'push' || inputs.deploy == 'true'
+    environment:
+      name: "Production"
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download Function artifacts (WIN-X64)
+        uses: actions/download-artifact@v4
+        with:
+          name: .env-monitor-function_x64
+          path: "./env-monitor-function"
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4C8625311A7E41DF94B1F493E439AE3D }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A9F03B52F6CA485B82924F1970E00D80 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E4CE7A1599994A388FDDA5640CED3ECE }}
 
       - name: "Deploy HubObserver (Azure function)"
         uses: Azure/functions-action@v1
