@@ -175,6 +175,7 @@ jobs:
             --pattern "*.zip" \
             --auth-mode login \
             --overwrite true \
+            --no-progress \
             --only-show-errors \
             --output none
 
