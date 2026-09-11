@@ -20,6 +20,8 @@ jobs:
   build:
     runs-on: windows-latest
     environment: Production
+    env:
+      AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
     permissions:
       id-token: write
       contents: read #This is required for actions/checkout
@@ -146,6 +148,7 @@ jobs:
           path: ${{env.DOTNET_ROOT}}/env-monitor-worker_linux-x64
 
       - name: Login to Azure
+        if: env.AZURE_STORAGE_ACCOUNT != ''
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_4C8625311A7E41DF94B1F493E439AE3D }}
@@ -153,25 +156,20 @@ jobs:
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E4CE7A1599994A388FDDA5640CED3ECE }}
 
       - name: Upload applications to Azure Blob Storage
+        if: env.AZURE_STORAGE_ACCOUNT != ''
         shell: bash
-        env:
-          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
         run: |
           set -euo pipefail
           source_branch="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
           if [[ "$source_branch" == "main" ]]; then
-            destination_path="$source_branch/$GITHUB_RUN_ID"
+            destination_path="environment-monitor/$source_branch/$GITHUB_RUN_ID"
           else
-            destination_path="branches/$source_branch/$GITHUB_RUN_ID"
+            destination_path="environment-monitor/branches/$source_branch/$GITHUB_RUN_ID"
           fi
-          echo "Container: environment-monitor"
-          echo "Destination path: $destination_path"
-          echo "ZIP files to upload:"
-          ls -lh packages/*.zip
 
           az storage blob upload-batch \
             --account-name "$AZURE_STORAGE_ACCOUNT" \
-            --destination environment-monitor \
+            --destination artifacts \
             --destination-path "$destination_path" \
             --source packages \
             --pattern "*.zip" \
@@ -180,13 +178,7 @@ jobs:
             --only-show-errors \
             --output none
 
-          echo "Upload completed. Uploaded blob paths:"
-          printf '### Uploaded application ZIPs\n\nContainer: `environment-monitor`\n\nDestination: `%s`\n\n' "$destination_path" >> "$GITHUB_STEP_SUMMARY"
-          for package in packages/*.zip; do
-            blob_name="$destination_path/$(basename "$package")"
-            echo "environment-monitor/$blob_name"
-            printf -- '- `environment-monitor/%s`\n' "$blob_name" >> "$GITHUB_STEP_SUMMARY"
-          done
+          echo "Upload completed."
 
   deploy:
     runs-on: windows-latest
