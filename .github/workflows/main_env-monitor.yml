@@ -119,25 +119,6 @@ jobs:
             }
           }
 
-      - name: Upload x64 ZIP artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: env-monitor-x64-packages
-          path: packages/*.zip
-          if-no-files-found: error
-
-      - name: Upload web api artifact (win-x86)
-        uses: actions/upload-artifact@v4
-        with:
-          name: .env-monitor-web-api_x86
-          path: ${{env.DOTNET_ROOT}}/env-monitor-web-api_x86
-
-      - name: Upload web api artifact (win-x64)
-        uses: actions/upload-artifact@v4
-        with:
-          name: .env-monitor-web-api_x64
-          path: ${{env.DOTNET_ROOT}}/env-monitor-web-api_x64
-
       - name: Upload web api artifact (linux-x64)
         uses: actions/upload-artifact@v4
         with:
@@ -183,7 +164,6 @@ jobs:
           else
             destination_path="branches/$source_branch/$GITHUB_RUN_ID"
           fi
-          echo "Storage account: $AZURE_STORAGE_ACCOUNT"
           echo "Container: environment-monitor"
           echo "Destination path: $destination_path"
           echo "ZIP files to upload:"
@@ -198,21 +178,14 @@ jobs:
             --auth-mode login \
             --overwrite true \
             --only-show-errors \
-            --output table
+            --output none
 
-          echo "Upload completed. Uploaded blob URLs:"
+          echo "Upload completed. Uploaded blob paths:"
           printf '### Uploaded application ZIPs\n\nContainer: `environment-monitor`\n\nDestination: `%s`\n\n' "$destination_path" >> "$GITHUB_STEP_SUMMARY"
           for package in packages/*.zip; do
             blob_name="$destination_path/$(basename "$package")"
-            blob_url=$(az storage blob url \
-              --account-name "$AZURE_STORAGE_ACCOUNT" \
-              --container-name environment-monitor \
-              --name "$blob_name" \
-              --auth-mode login \
-              --only-show-errors \
-              --output tsv)
-            echo "$blob_url"
-            printf -- '- [%s](%s)\n' "$(basename "$package")" "$blob_url" >> "$GITHUB_STEP_SUMMARY"
+            echo "environment-monitor/$blob_name"
+            printf -- '- `environment-monitor/%s`\n' "$blob_name" >> "$GITHUB_STEP_SUMMARY"
           done
 
   deploy:
