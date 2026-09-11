@@ -158,18 +158,6 @@ jobs:
           name: env-monitor-x64-packages
           path: packages
 
-      # - name: Download WEB API artifacts (WIN-X86)
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: .env-monitor-web-api_x86
-      #     path: "./env-monitor-web-api"
-
-      # - name: Download WEB API artifacts (LINUX-X64)
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: .env-monitor-web-api_linux-x64
-      #     path: "./env-monitor-web-api_linux-x64"
-
       - name: Download Function artifacts (WIN-X64)
         uses: actions/download-artifact@v4
         with:
@@ -204,22 +192,6 @@ jobs:
             --auth-mode login \
             --overwrite true \
             --only-show-errors
-
-      # - name: Deploy Environment Monitor Web API
-      #   id: deploy-to-webapp
-      #   uses: azure/webapps-deploy@v3
-      #   with:
-      #     app-name: "env-monitor"
-      #     slot-name: "Production"
-      #     package: "./env-monitor-web-api"
-
-      # - name: Deploy Environment Monitoring Web API (LINUX)
-      #   id: deploy-to-webapp-linux
-      #   uses: azure/webapps-deploy@v3
-      #   with:
-      #     app-name: "environment-monitoring"
-      #     slot-name: "Production"
-      #     package: "./env-monitor-web-api_linux-x64"
 
       - name: "Deploy HubObserver (Azure function)"
         uses: Azure/functions-action@v1
