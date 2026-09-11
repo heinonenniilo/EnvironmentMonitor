@@ -80,6 +80,30 @@ jobs:
         run: |
           dotnet publish src/EnvironmentMonitor.Worker/EnvironmentMonitor.Worker.csproj -c Release -r linux-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-worker_linux-x64"
 
+      - name: Zip x64 applications
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path packages -Force | Out-Null
+          $applications = @(
+            'env-monitor-web-api_x64',
+            'env-monitor-web-api_linux-x64',
+            'env-monitor-function_x64',
+            'env-monitor-function_linux-x64',
+            'env-monitor-worker_linux-x64'
+          )
+          foreach ($application in $applications) {
+            $source = Join-Path $env:DOTNET_ROOT $application
+            $destination = Join-Path $PWD "packages/$application.zip"
+            [System.IO.Compression.ZipFile]::CreateFromDirectory($source, $destination)
+          }
+
+      - name: Upload x64 ZIP artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: env-monitor-x64-packages
+          path: packages/*.zip
+          if-no-files-found: error
+
       - name: Upload web api artifact (win-x86)
         uses: actions/upload-artifact@v4
         with:
@@ -123,23 +147,28 @@ jobs:
     if: github.event_name == 'push' || inputs.deploy == 'true'
     environment:
       name: "Production"
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
       id-token: write
       contents: read
 
     steps:
-      - name: Download WEB API artifacts (WIN-X86)
+      - name: Download x64 ZIP artifacts
         uses: actions/download-artifact@v4
         with:
-          name: .env-monitor-web-api_x86
-          path: "./env-monitor-web-api"
+          name: env-monitor-x64-packages
+          path: packages
 
-      - name: Download WEB API artifacts (LINUX-X64)
-        uses: actions/download-artifact@v4
-        with:
-          name: .env-monitor-web-api_linux-x64
-          path: "./env-monitor-web-api_linux-x64"
+      # - name: Download WEB API artifacts (WIN-X86)
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: .env-monitor-web-api_x86
+      #     path: "./env-monitor-web-api"
+
+      # - name: Download WEB API artifacts (LINUX-X64)
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: .env-monitor-web-api_linux-x64
+      #     path: "./env-monitor-web-api_linux-x64"
 
       - name: Download Function artifacts (WIN-X64)
         uses: actions/download-artifact@v4
@@ -154,21 +183,43 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A9F03B52F6CA485B82924F1970E00D80 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E4CE7A1599994A388FDDA5640CED3ECE }}
 
-      - name: Deploy Environment Monitor Web API
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: "env-monitor"
-          slot-name: "Production"
-          package: "./env-monitor-web-api"
+      - name: Upload applications to Azure Blob Storage
+        shell: bash
+        env:
+          AZURE_STORAGE_ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          source_branch="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          if [[ "$source_branch" == "main" ]]; then
+            destination_path="environment-monitor/$source_branch/$GITHUB_RUN_ID"
+          else
+            destination_path="environment-monitor/branches/$source_branch/$GITHUB_RUN_ID"
+          fi
+          az storage blob upload-batch \
+            --account-name "$AZURE_STORAGE_ACCOUNT" \
+            --destination environment-monitor \
+            --destination-path "$destination_path" \
+            --source packages \
+            --pattern "*.zip" \
+            --auth-mode login \
+            --overwrite true \
+            --only-show-errors
 
-      - name: Deploy Environment Monitoring Web API (LINUX)
-        id: deploy-to-webapp-linux
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: "environment-monitoring"
-          slot-name: "Production"
-          package: "./env-monitor-web-api_linux-x64"
+      # - name: Deploy Environment Monitor Web API
+      #   id: deploy-to-webapp
+      #   uses: azure/webapps-deploy@v3
+      #   with:
+      #     app-name: "env-monitor"
+      #     slot-name: "Production"
+      #     package: "./env-monitor-web-api"
+
+      # - name: Deploy Environment Monitoring Web API (LINUX)
+      #   id: deploy-to-webapp-linux
+      #   uses: azure/webapps-deploy@v3
+      #   with:
+      #     app-name: "environment-monitoring"
+      #     slot-name: "Production"
+      #     package: "./env-monitor-web-api_linux-x64"
 
       - name: "Deploy HubObserver (Azure function)"
         uses: Azure/functions-action@v1
