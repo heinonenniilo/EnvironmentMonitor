@@ -179,10 +179,16 @@ jobs:
           set -euo pipefail
           source_branch="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
           if [[ "$source_branch" == "main" ]]; then
-            destination_path="environment-monitor/$source_branch/$GITHUB_RUN_ID"
+            destination_path="$source_branch/$GITHUB_RUN_ID"
           else
-            destination_path="environment-monitor/branches/$source_branch/$GITHUB_RUN_ID"
+            destination_path="branches/$source_branch/$GITHUB_RUN_ID"
           fi
+          echo "Storage account: $AZURE_STORAGE_ACCOUNT"
+          echo "Container: environment-monitor"
+          echo "Destination path: $destination_path"
+          echo "ZIP files to upload:"
+          ls -lh packages/*.zip
+
           az storage blob upload-batch \
             --account-name "$AZURE_STORAGE_ACCOUNT" \
             --destination environment-monitor \
@@ -191,7 +197,23 @@ jobs:
             --pattern "*.zip" \
             --auth-mode login \
             --overwrite true \
-            --only-show-errors
+            --only-show-errors \
+            --output table
+
+          echo "Upload completed. Uploaded blob URLs:"
+          printf '### Uploaded application ZIPs\n\nContainer: `environment-monitor`\n\nDestination: `%s`\n\n' "$destination_path" >> "$GITHUB_STEP_SUMMARY"
+          for package in packages/*.zip; do
+            blob_name="$destination_path/$(basename "$package")"
+            blob_url=$(az storage blob url \
+              --account-name "$AZURE_STORAGE_ACCOUNT" \
+              --container-name environment-monitor \
+              --name "$blob_name" \
+              --auth-mode login \
+              --only-show-errors \
+              --output tsv)
+            echo "$blob_url"
+            printf -- '- [%s](%s)\n' "$(basename "$package")" "$blob_url" >> "$GITHUB_STEP_SUMMARY"
+          done
 
       - name: "Deploy HubObserver (Azure function)"
         uses: Azure/functions-action@v1
