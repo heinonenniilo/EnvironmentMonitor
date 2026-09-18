@@ -3,8 +3,8 @@ export interface GetDeviceMessagesModel extends PaginationParams {
   deviceIdentifiers?: string[];
   locationIdentifiers?: string[];
   sourceIds?: number[];
-  isDuplicate?: boolean;
-  isFirstMessage?: boolean;
+  isDuplicate?: boolean | null;
+  isFirstMessage?: boolean | null;
   from: moment.Moment;
   to?: moment.Moment;
 }

@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   getDashboardTimeRange,
   getDevices,
@@ -12,7 +12,8 @@ import {
   setSelectedMeasurementTypes,
   setSelectedDashboardLocationIdentifiers,
 } from "../reducers/measurementReducer";
-import { Box } from "@mui/material";
+import { Box, IconButton, Tooltip } from "@mui/material";
+import { Refresh } from "@mui/icons-material";
 import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRangeSelectorComponent";
 import { DashboardDeviceGraph } from "../components/Dashboard/DashboardDeviceGraph";
 import { type Sensor } from "../models/sensor";
@@ -38,11 +39,16 @@ export const DashboardView: React.FC = () => {
   );
 
   const timeRange = useSelector(getDashboardTimeRange);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleTimeRangeChange = (selection: number) => {
     setTimeout(() => {
       dispatch(setDashboardTimeRange(selection));
     }, 10);
+  };
+
+  const handleRefresh = () => {
+    setRefreshTrigger((previous) => previous + 1);
   };
 
   const measurementsModel: DeviceDashboardModel[] = useMemo(() => {
@@ -73,6 +79,7 @@ export const DashboardView: React.FC = () => {
         model={undefined}
         sensors={sensors}
         key={device.identifier}
+        refreshTrigger={refreshTrigger}
         timeRange={timeRange}
         autoFetch
         measurementTypes={
@@ -93,10 +100,17 @@ export const DashboardView: React.FC = () => {
     <AppContentWrapper
       title="Dashboard - Devices"
       titleComponent={
-        <TimeRangeSelectorComponent
-          timeRange={timeRange}
-          onSelectTimeRange={handleTimeRangeChange}
-        />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <TimeRangeSelectorComponent
+            timeRange={timeRange}
+            onSelectTimeRange={handleTimeRangeChange}
+          />
+          <Tooltip title="Refresh">
+            <IconButton onClick={handleRefresh} size="medium">
+              <Refresh />
+            </IconButton>
+          </Tooltip>
+        </Box>
       }
       leftMenu={
         <DashboardLeftMenu

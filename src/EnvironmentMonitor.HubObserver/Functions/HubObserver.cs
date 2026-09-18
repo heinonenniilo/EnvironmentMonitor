@@ -102,6 +102,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 {
                     if (_syncHubMessages)
                     {
+                        _logger.LogInformation($"Syncing IoT hub message");
                         if (await _syncService.SendMeasurements(objectToInsert))
                         {
                             processedMessaged++;

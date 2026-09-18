@@ -5,7 +5,7 @@ import type { Sensor } from "../models/sensor";
 import type { LocationModel } from "../models/location";
 import type { RootState } from "../setup/appStore";
 import type { DeviceInfo } from "../models/deviceInfo";
-import { getAvailableMeasurementTypes } from "../utilities/measurementUtils";
+import { MeasurementTypes } from "../enums/measurementTypes";
 
 export interface MeasurementState {
   devices: Device[];
@@ -31,7 +31,11 @@ const initialState: MeasurementState = {
   autoScaleSensorIds: [],
   timeRange: 24,
   locations: [],
-  selectedMeasurementTypes: getAvailableMeasurementTypes(),
+  selectedMeasurementTypes: [
+    MeasurementTypes.Motion,
+    MeasurementTypes.Temperature,
+    MeasurementTypes.Light,
+  ],
   selectedDashboardLocationIdentifiers: null,
 };
 

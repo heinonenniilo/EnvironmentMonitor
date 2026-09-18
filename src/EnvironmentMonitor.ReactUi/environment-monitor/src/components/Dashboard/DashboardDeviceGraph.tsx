@@ -20,7 +20,16 @@ export const DashboardDeviceGraph: React.FC<{
   timeRange: number;
   autoFetch: boolean;
   measurementTypes?: number[];
-}> = ({ device, sensors, model, timeRange, autoFetch, measurementTypes }) => {
+  refreshTrigger?: number;
+}> = ({
+  device,
+  sensors,
+  model,
+  timeRange,
+  autoFetch,
+  measurementTypes,
+  refreshTrigger = 0,
+}) => {
   const useAutoScale = useSelector(getDeviceAutoScale(device.identifier));
   const measurementApiHook = useApiHook().measureHook;
 
@@ -100,6 +109,14 @@ export const DashboardDeviceGraph: React.FC<{
         setIsLoading(false);
       });
   };
+
+  useEffect(() => {
+    if (refreshTrigger > 0 && inView) {
+      fetchMeasurements();
+    }
+    // Only refresh graphs visible when Update is clicked, not when scrolling later.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
 
   return (
     <Box
