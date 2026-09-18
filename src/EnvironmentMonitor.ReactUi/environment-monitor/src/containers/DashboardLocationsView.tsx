@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   getDashboardTimeRange,
   getLocations,
@@ -8,7 +8,8 @@ import {
   setDashboardTimeRange,
   setSelectedMeasurementTypes,
 } from "../reducers/measurementReducer";
-import { Box } from "@mui/material";
+import { Box, IconButton, Tooltip } from "@mui/material";
+import { Refresh } from "@mui/icons-material";
 import { TimeRangeSelectorComponent } from "../components/Measurements/TimeRangeSelectorComponent";
 import { DashboardLocationGraph } from "../components/Dashboard/DashboardLocationGraph";
 import { DashboardLeftMenu } from "../components/Dashboard/DashboardLeftMenu";
@@ -21,9 +22,14 @@ export const DashbordLocationsView: React.FC = () => {
   const locations = useSelector(getLocations);
 
   const timeRange = useSelector(getDashboardTimeRange);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleTimeRangeChange = (selection: number) => {
     dispatch(setDashboardTimeRange(selection));
+  };
+
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
   };
 
   const visibleLocations = locations.filter((l) => l.visible);
@@ -37,10 +43,17 @@ export const DashbordLocationsView: React.FC = () => {
     <AppContentWrapper
       title="Dashboard - Locations"
       titleComponent={
-        <TimeRangeSelectorComponent
-          timeRange={timeRange}
-          onSelectTimeRange={handleTimeRangeChange}
-        />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <TimeRangeSelectorComponent
+            timeRange={timeRange}
+            onSelectTimeRange={handleTimeRangeChange}
+          />
+          <Tooltip title="Refresh">
+            <IconButton onClick={handleRefresh} size="medium">
+              <Refresh />
+            </IconButton>
+          </Tooltip>
+        </Box>
       }
       leftMenu={
         <DashboardLeftMenu
@@ -74,7 +87,7 @@ export const DashbordLocationsView: React.FC = () => {
               location={location!}
               timeRange={timeRange}
               model={undefined}
-              key={m.identifier}
+              key={`${m.identifier}-${refreshKey}`}
               autoFetch
               measurementTypes={
                 selectedMeasurementTypes.length > 0
