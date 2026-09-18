@@ -111,9 +111,10 @@ export const DashboardDeviceGraph: React.FC<{
   };
 
   useEffect(() => {
-    if (refreshTrigger > 0) {
+    if (refreshTrigger > 0 && inView) {
       fetchMeasurements();
     }
+    // Only refresh graphs visible when Update is clicked, not when scrolling later.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshTrigger]);
 
