@@ -102,14 +102,15 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 {
                     if (_syncHubMessages)
                     {
-                        _logger.LogInformation($"Syncing IoT hub message");
+                        _logger.LogInformation($"Syncing IoT hub message for device {objectToInsert.DeviceId}. Id: {objectToInsert.ExternalId}. Processed: {processedMessaged}");
                         if (await _syncService.SendMeasurements(objectToInsert))
                         {
                             processedMessaged++;
+                            _logger.LogInformation($"Message processed. ID: {objectToInsert.ExternalId}. Device: {objectToInsert.DeviceId}. Processed: {processedMessaged}");
                         }
                         else
                         {
-                            _logger.LogError($"Syncing measurements failed for device {objectToInsert.DeviceId}");
+                            _logger.LogError($"Syncing measurements failed for device {objectToInsert.DeviceId}. Id: {objectToInsert.ExternalId}. Processed: {processedMessaged}");
                         }
                     }
                     else
