@@ -1,4 +1,4 @@
-import { Box, Drawer, Typography } from "@mui/material";
+import { Box, Drawer, IconButton, Typography } from "@mui/material";
 import React, { useEffect, useRef, useState, type JSX } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
@@ -35,21 +35,27 @@ export const LeftMenu: React.FC<LeftMenuProps> = ({
   }, [menuWidth]);
 
   return (
-    <Drawer anchor="left" open={isOpen} variant="persistent">
+    <Drawer
+      anchor="left"
+      open={isOpen}
+      variant="persistent"
+      sx={{ "& .MuiDrawer-paper": { overflow: "hidden" } }}
+    >
       <Box
         sx={{
-          mt: 10,
+          pt: 10,
           pr: 1,
           pl: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "space-between",
           height: "100%",
+          minHeight: 0,
+          boxSizing: "border-box",
           maxWidth: "400px",
         }}
         ref={ref}
       >
-        <Box>
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
           <Box sx={{ mb: 2 }}>
             <Typography variant="button" display="block" gutterBottom>
               {title}
@@ -57,8 +63,10 @@ export const LeftMenu: React.FC<LeftMenuProps> = ({
           </Box>
           {children}
         </Box>
-        <Box sx={{ cursor: "pointer", mb: 2 }} onClick={onClose}>
-          <ArrowBackIcon />
+        <Box sx={{ flexShrink: 0, py: 1 }}>
+          <IconButton aria-label="Close filters" onClick={onClose}>
+            <ArrowBackIcon />
+          </IconButton>
         </Box>
       </Box>
     </Drawer>
