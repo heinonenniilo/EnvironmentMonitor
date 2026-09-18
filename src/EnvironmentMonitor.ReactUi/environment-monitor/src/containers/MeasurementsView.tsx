@@ -14,7 +14,7 @@ import {
   setSelectedMeasurementTypes,
   toggleAutoScale,
 } from "../reducers/measurementReducer";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import { type Device } from "../models/device";
 import { type MeasurementsViewModel } from "../models/measurementsBySensor";
 import { MultiSensorGraph } from "../components/Measurements/MultiSensorGraph";
@@ -27,6 +27,8 @@ import type { LocationModel } from "../models/location";
 export const MeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
   const [isLoading, setIsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const { deviceId } = useParams<{ deviceId?: string }>();
@@ -189,7 +191,9 @@ export const MeasurementsView: React.FC = () => {
             sensorIds: string[],
             measurementTypes?: number[],
           ) => {
-            dispatch(toggleLeftMenuOpen(false));
+            if (isMobile) {
+              dispatch(toggleLeftMenuOpen(false));
+            }
             setTimeFrom(from);
 
             if (selectedDevices.length > 0) {
