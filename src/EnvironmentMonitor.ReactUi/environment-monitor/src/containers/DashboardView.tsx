@@ -39,7 +39,7 @@ export const DashboardView: React.FC = () => {
   );
 
   const timeRange = useSelector(getDashboardTimeRange);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleTimeRangeChange = (selection: number) => {
     setTimeout(() => {
@@ -48,7 +48,7 @@ export const DashboardView: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1);
+    setRefreshTrigger((previous) => previous + 1);
   };
 
   const measurementsModel: DeviceDashboardModel[] = useMemo(() => {
@@ -78,7 +78,8 @@ export const DashboardView: React.FC = () => {
         device={device}
         model={undefined}
         sensors={sensors}
-        key={`${device.identifier}-${refreshKey}`}
+        key={device.identifier}
+        refreshTrigger={refreshTrigger}
         timeRange={timeRange}
         autoFetch
         measurementTypes={

@@ -22,14 +22,14 @@ export const DashbordLocationsView: React.FC = () => {
   const locations = useSelector(getLocations);
 
   const timeRange = useSelector(getDashboardTimeRange);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleTimeRangeChange = (selection: number) => {
     dispatch(setDashboardTimeRange(selection));
   };
 
   const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1);
+    setRefreshTrigger((previous) => previous + 1);
   };
 
   const visibleLocations = locations.filter((l) => l.visible);
@@ -87,7 +87,8 @@ export const DashbordLocationsView: React.FC = () => {
               location={location!}
               timeRange={timeRange}
               model={undefined}
-              key={`${m.identifier}-${refreshKey}`}
+              key={m.identifier}
+              refreshTrigger={refreshTrigger}
               autoFetch
               measurementTypes={
                 selectedMeasurementTypes.length > 0

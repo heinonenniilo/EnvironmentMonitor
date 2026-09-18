@@ -15,7 +15,15 @@ export const DashboardLocationGraph: React.FC<{
   timeRange: number;
   autoFetch: boolean;
   measurementTypes?: number[];
-}> = ({ location, model, timeRange, autoFetch, measurementTypes }) => {
+  refreshTrigger?: number;
+}> = ({
+  location,
+  model,
+  timeRange,
+  autoFetch,
+  measurementTypes,
+  refreshTrigger = 0,
+}) => {
   const measurementApiHook = useApiHook().measureHook;
 
   const [isLoading, setIsLoading] = useState(false);
@@ -82,6 +90,13 @@ export const DashboardLocationGraph: React.FC<{
         setIsLoading(false);
       });
   };
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      fetchMeasurements();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshTrigger]);
+
   return (
     <Box
       sx={{
