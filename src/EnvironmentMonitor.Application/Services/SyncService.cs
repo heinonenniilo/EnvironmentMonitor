@@ -96,7 +96,7 @@ namespace EnvironmentMonitor.Application.Services
                     return 0;
                 }
 
-                _logger.LogInformation($"Found {unsyncedMessages.Count} unsynced messages");
+                _logger.LogInformation($"Found {unsyncedMessages.Count} unsynced messages, containing {unsyncedMessages.Sum(m => m.Measurements.Count)} measurements");
 
                 // Transform DeviceMessages to SaveMeasurementsDto
                 var measurementDtos = new List<SaveMeasurementsDto>();
@@ -135,6 +135,7 @@ namespace EnvironmentMonitor.Application.Services
                 // Send to remote instance with proper authentication headers
                 if (!await SendSyncRequest(syncRequest))
                 {
+                    _logger.LogInformation($"Sync request failed, {unsyncedMessages.Count} messages were not synced. Last synced ID remains {lastSyncedId}");
                     return 0;
                 }
 
@@ -142,6 +143,7 @@ namespace EnvironmentMonitor.Application.Services
 
                 // Update last synced ID
                 var highestSyncedId = unsyncedMessages.Max(m => m.Id);
+                _logger.LogInformation($"Updating last synced DeviceMessage ID from {lastSyncedId} to {highestSyncedId}");
                 await _statusVariableRepository.SetValue(
                     ApplicationConstants.SyncLastDeviceMessageIdKey,
                     highestSyncedId.ToString());
@@ -160,6 +162,8 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<bool> SendMeasurements(List<SaveMeasurementsDto> measurements)
         {
+            _logger.LogInformation($"Preparing to send {measurements?.Count ?? 0} measurements to sync endpoint");
+
             if (measurements == null || !measurements.Any())
             {
                 _logger.LogWarning("No measurements to send");
@@ -177,7 +181,9 @@ namespace EnvironmentMonitor.Application.Services
                 Measurements = measurements
             };
 
-            return await SendSyncRequest(syncRequest);
+            var result = await SendSyncRequest(syncRequest);
+            _logger.LogInformation($"Sending {measurements.Count} measurements to sync endpoint {(result ? "succeeded" : "failed")}");
+            return result;
         }
 
         public async Task<SyncResultDto> ProcessIncomingSync(SyncMeasurementsRequest request)
@@ -261,8 +267,12 @@ namespace EnvironmentMonitor.Application.Services
 
         private async Task<bool> SendSyncRequest(SyncMeasurementsRequest syncRequest)
         {
+            _logger.LogInformation($"Posting {syncRequest.Measurements?.Count ?? 0} measurements to sync URL '{_syncSettings.Url}'");
+
             using var httpClient = CreateSyncHttpClient();
             var response = await httpClient.PostAsJsonAsync(_syncSettings.Url, syncRequest);
+
+            _logger.LogInformation($"Sync endpoint responded with status {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
