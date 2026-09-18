@@ -39,7 +39,12 @@ export const LeftMenu: React.FC<LeftMenuProps> = ({
       anchor="left"
       open={isOpen}
       variant="persistent"
-      sx={{ "& .MuiDrawer-paper": { overflow: "hidden" } }}
+      sx={{
+        "& .MuiDrawer-paper": {
+          overflow: "hidden",
+          height: "100dvh",
+        },
+      }}
     >
       <Box
         sx={{
@@ -55,18 +60,24 @@ export const LeftMenu: React.FC<LeftMenuProps> = ({
         }}
         ref={ref}
       >
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="button" display="block" gutterBottom>
-              {title}
-            </Typography>
-          </Box>
-          {children}
-        </Box>
-        <Box sx={{ flexShrink: 0, py: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            flexShrink: 0,
+            pb: 1,
+          }}
+        >
           <IconButton aria-label="Close filters" onClick={onClose}>
             <ArrowBackIcon />
           </IconButton>
+          <Typography variant="button" display="block">
+            {title}
+          </Typography>
+        </Box>
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+          {children}
         </Box>
       </Box>
     </Drawer>
