@@ -102,7 +102,7 @@ namespace EnvironmentMonitor.HubObserver.Functions
                 {
                     if (_syncHubMessages)
                     {
-                        _logger.LogInformation($"Syncing IoT hub message for device {objectToInsert.DeviceId}. Id: {objectToInsert.ExternalId}");
+                        _logger.LogInformation($"Syncing IoT hub message for device {objectToInsert.DeviceId}. Id: {objectToInsert.ExternalId}. Processed: {processedMessaged}");
                         if (await _syncService.SendMeasurements(objectToInsert))
                         {
                             processedMessaged++;
