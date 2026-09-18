@@ -1,19 +1,10 @@
-name: Build and deploy environment-monitor
+name: Build environment-monitor
 
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-    inputs:
-      deploy:
-        description: "Run Deploy Job?"
-        required: true
-        default: "true"
-        type: choice
-        options:
-          - "true"
-          - "false"
   pull_request:
 
 jobs:
