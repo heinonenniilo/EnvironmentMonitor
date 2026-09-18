@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
+import { toggleLeftMenuOpen } from "../reducers/userInterfaceReducer";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
@@ -9,7 +10,7 @@ import {
   getSelectedMeasurementTypes,
   setSelectedMeasurementTypes,
 } from "../reducers/measurementReducer";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import { type LocationModel } from "../models/location";
 import { type MeasurementsByLocationModel } from "../models/measurementsBySensor";
 import { MultiSensorGraph } from "../components/Measurements/MultiSensorGraph";
@@ -21,6 +22,8 @@ import { getGraphTitle } from "../utilities/graphUtils";
 export const LocationMeasurementsView: React.FC = () => {
   const measurementApiHook = useApiHook().measureHook;
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
   const [isLoading, setIsLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const { locationId } = useParams<{ locationId?: string }>();
@@ -181,6 +184,9 @@ export const LocationMeasurementsView: React.FC = () => {
             sensorIds: string[],
             measurementTypes?: number[],
           ) => {
+            if (isMobile) {
+              dispatch(toggleLeftMenuOpen(false));
+            }
             setTimeFrom(from);
             setTimeTo(to);
             if (sensorIds.length > 0) {
