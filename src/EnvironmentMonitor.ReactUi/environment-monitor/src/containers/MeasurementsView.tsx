@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
+import { toggleLeftMenuOpen } from "../reducers/userInterfaceReducer";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import React, { useEffect, useState } from "react";
 import { useApiHook } from "../hooks/apiHook";
@@ -188,6 +189,7 @@ export const MeasurementsView: React.FC = () => {
             sensorIds: string[],
             measurementTypes?: number[],
           ) => {
+            dispatch(toggleLeftMenuOpen(false));
             setTimeFrom(from);
 
             if (selectedDevices.length > 0) {
