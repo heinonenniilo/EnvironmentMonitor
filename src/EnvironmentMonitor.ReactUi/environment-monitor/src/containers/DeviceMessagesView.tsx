@@ -83,6 +83,8 @@ export const DeviceMessagesView: React.FC = () => {
       pageNumber: 0,
       pageSize: 50,
       isDescending: true,
+      isDuplicate: null,
+      isFirstMessage: null,
       from: defaultStart,
     });
   }, [deviceInfos, locations, deviceId]);

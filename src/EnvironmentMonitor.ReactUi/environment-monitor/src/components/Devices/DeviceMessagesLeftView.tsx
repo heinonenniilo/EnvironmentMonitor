@@ -275,68 +275,57 @@ export const DeviceMessagesLeftView: React.FC<DeviceMessagesLeftViewProps> = ({
         </FormControl>
       </Box>
 
-      <Box mt={2}>
-        <FormControl fullWidth size="small">
-          <InputLabel id="is-duplicate-label">Is duplicate</InputLabel>
-          <Select
-            labelId="is-duplicate-label"
-            value={
-              innerModel === undefined || innerModel.isDuplicate === undefined
-                ? "-1"
-                : innerModel.isDuplicate
-                ? "1"
-                : "0"
-            }
-            label="Is duplicate"
-            onChange={(event) => {
-              if (!innerModel) {
-                return;
+      {([
+        { field: "isDuplicate", label: "Is duplicate" },
+        { field: "isFirstMessage", label: "First Message" },
+      ] as const).map(({ field, label }) => (
+        <Box mt={2} key={field}>
+          <FormControl fullWidth>
+            <InputLabel id={field + "-label"}>{label}</InputLabel>
+            <Select<string[]>
+              labelId={field + "-label"}
+              id={field + "-select"}
+              value={innerModel?.[field] == null ? [] : [String(innerModel[field])]}
+              label={label}
+              multiple
+              onChange={(event) => {
+                if (!innerModel) {
+                  return;
+                }
+                const selected = typeof event.target.value === "string"
+                  ? event.target.value.split(",")
+                  : event.target.value;
+                setModel({
+                  ...innerModel,
+                  [field]: selected.includes("null") || selected.length !== 1
+                    ? null
+                    : selected[0] === "true",
+                });
+              }}
+              endAdornment={
+                innerModel?.[field] != null ? (
+                  <IconButton
+                    size="small"
+                    aria-label={"Clear " + label + " filter"}
+                    onClick={() => {
+                      if (innerModel) {
+                        setModel({ ...innerModel, [field]: null });
+                      }
+                    }}
+                    sx={{ marginRight: 3 }}
+                  >
+                    <Clear fontSize="small" />
+                  </IconButton>
+                ) : null
               }
-              const val = event.target.value;
-              setModel({
-                ...innerModel,
-                isDuplicate: val === "-1" ? undefined : val === "1",
-              });
-            }}
-          >
-            <MenuItem value={"-1"}>No filter</MenuItem>
-            <MenuItem value={"1"}>True</MenuItem>
-            <MenuItem value={"0"}>False</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
-
-      <Box mt={2}>
-        <FormControl fullWidth size="small">
-          <InputLabel id="is-first-label">First Message</InputLabel>
-          <Select
-            labelId="is-first-label"
-            value={
-              innerModel === undefined ||
-              innerModel.isFirstMessage === undefined
-                ? "-1"
-                : innerModel.isFirstMessage
-                ? "1"
-                : "0"
-            }
-            label="First Message"
-            onChange={(event) => {
-              if (!innerModel) {
-                return;
-              }
-              const val = event.target.value;
-              setModel({
-                ...innerModel,
-                isFirstMessage: val === "-1" ? undefined : val === "1",
-              });
-            }}
-          >
-            <MenuItem value={"-1"}>No filter</MenuItem>
-            <MenuItem value={"1"}>True</MenuItem>
-            <MenuItem value={"0"}>False</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
+            >
+              <MenuItem value="null">No filter</MenuItem>
+              <MenuItem value="true">True</MenuItem>
+              <MenuItem value="false">False</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+      ))}
       <Box mt={2}>
         <Button
           variant="outlined"

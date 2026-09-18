@@ -861,6 +861,8 @@ export const useApiHook = (): ApiHook => {
           >(`/api/devices/device-messages`, {
             params: {
               ...model,
+              isDuplicate: model.isDuplicate ?? undefined,
+              isFirstMessage: model.isFirstMessage ?? undefined,
               from: model.from.toISOString(),
               to: model.to ? model.to.toISOString() : undefined,
             },
