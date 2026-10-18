@@ -13,7 +13,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { QRCodeSVG } from "qrcode.react";
 import { useApiHook } from "../../hooks/apiHook";
 import { MfaMethod, type MfaStatus } from "../../models/user";
 import type { MfaSetupDto } from "../../models/mfa";
@@ -21,6 +20,7 @@ import { storeMfaStatus, storeUserInfo } from "../../reducers/userReducer";
 import { mfaErrorMessage, mfaMethodLabel } from "../../utilities/mfaUtils";
 import { EmailConfirmationCode } from "./EmailConfirmationCode";
 import { EmailCodeDialog } from "./EmailCodeDialog";
+import { AuthenticatorAppSetup } from "./AuthenticatorAppSetup";
 
 interface MfaSettingsProps {
   status?: MfaStatus;
@@ -200,7 +200,23 @@ export const MfaSettings = ({ status, emailConfirmed }: MfaSettingsProps) => {
           }
         }}
       />
-      <Dialog open={dialogOpen} onClose={close} fullWidth maxWidth="sm">
+      {emailConfirmed === true && setup && (
+        <AuthenticatorAppSetup
+          setup={setup}
+          code={code}
+          busy={busy}
+          error={error}
+          onCodeChange={setCode}
+          onConfirm={() => void save()}
+          onClose={close}
+        />
+      )}
+      <Dialog
+        open={disabling !== undefined}
+        onClose={close}
+        fullWidth
+        maxWidth="sm"
+      >
         <Box
           component="form"
           onSubmit={(event) => {
@@ -209,56 +225,20 @@ export const MfaSettings = ({ status, emailConfirmed }: MfaSettingsProps) => {
           }}
         >
           <DialogTitle>
-            {disabling !== undefined ? "Disable" : "Enable"}{" "}
-            {mfaMethodLabel(disabling ?? setup?.method ?? MfaMethod.Email)}
+            Disable {mfaMethodLabel(disabling ?? MfaMethod.Email)}
           </DialogTitle>
           <DialogContent>
             <Stack spacing={2} sx={{ pt: 1 }}>
               {error && <Alert severity="error">{error}</Alert>}
-              {disabling !== undefined ? (
-                <Typography>
-                  Disable this verification method? You can optionally enter a
-                  current code for verification.
-                </Typography>
-              ) : setup ? (
-                <>
-                  <Typography>
-                    Scan this QR code with your authenticator app, then enter a
-                    code to confirm setup.
-                  </Typography>
-                  {setup.authenticatorUri && (
-                    <Box sx={{ bgcolor: "white", p: 2, alignSelf: "center" }}>
-                      <QRCodeSVG
-                        value={setup.authenticatorUri}
-                        size={200}
-                        marginSize={4}
-                        title="Authenticator setup QR code"
-                      />
-                    </Box>
-                  )}
-                  {setup.sharedKey && (
-                    <>
-                      <Typography>Manual setup key:</Typography>
-                      <Typography
-                        component="code"
-                        sx={{ overflowWrap: "anywhere", userSelect: "all" }}
-                      >
-                        {setup.sharedKey}
-                      </Typography>
-                    </>
-                  )}
-                </>
-              ) : null}
+              <Typography>
+                Disable this verification method? You can optionally enter a
+                current code for verification.
+              </Typography>
               <TextField
                 autoFocus
-                label={
-                  disabling !== undefined
-                    ? "Verification code (optional)"
-                    : "Verification code"
-                }
+                label="Verification code (optional)"
                 value={code}
                 onChange={(event) => setCode(event.target.value)}
-                required={disabling === undefined}
                 disabled={busy}
                 autoComplete="one-time-code"
                 slotProps={{ htmlInput: { inputMode: "numeric" } }}
@@ -273,13 +253,10 @@ export const MfaSettings = ({ status, emailConfirmed }: MfaSettingsProps) => {
             <Button
               type="submit"
               variant="contained"
-              color={disabling !== undefined ? "error" : "primary"}
+              color="error"
               loading={busy}
-              disabled={disabling === undefined && !code.trim()}
             >
-              {disabling !== undefined
-                ? "Disable method"
-                : "Confirm and enable"}
+              Disable method
             </Button>
           </DialogActions>
         </Box>

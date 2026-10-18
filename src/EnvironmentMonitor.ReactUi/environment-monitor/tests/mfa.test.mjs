@@ -164,6 +164,7 @@ function settingsFixture(api) {
     "../../reducers/userReducer": { storeUserInfo: (payload) => ({ type: "user", payload }), storeMfaStatus: (payload) => ({ type: "mfa", payload }) },
     "./EmailConfirmationCode": { EmailConfirmationCode: "EmailConfirmationCode" },
     "./EmailCodeDialog": { EmailCodeDialog: "EmailCodeDialog" },
+    "./AuthenticatorAppSetup": { AuthenticatorAppSetup: "AuthenticatorAppSetup" },
   });
   return {
     actions,
