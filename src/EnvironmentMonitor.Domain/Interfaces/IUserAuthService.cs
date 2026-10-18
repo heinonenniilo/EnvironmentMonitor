@@ -34,5 +34,12 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task<MfaChallengeModel> GetPendingMfaChallenge();
         public Task SendPendingMfaEmailCode();
         public Task<LoginResultModel> CompleteTwoFactorLogin(MfaLoginModel model);
+
+        /// <summary>
+        /// Generates and sends an MFA code to the user's email address.
+        /// Public so that it can be executed as a background job. The code is generated
+        /// when the method runs, never passed in, so that it is not persisted in the job store.
+        /// </summary>
+        public Task SendMfaEmailCode(string userId);
     }
 }
