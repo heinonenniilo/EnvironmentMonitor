@@ -45,6 +45,11 @@ namespace EnvironmentMonitor.Application.Interfaces
         Task<MfaStatusDto> ConfirmMfaSetup(MfaConfirmRequest request);
         Task<MfaStatusDto> DisableMfaMethod(MfaDisableRequest request);
 
+        // Email confirmation with a code for the authenticated user
+        Task<bool> IsEmailConfirmed();
+        Task SendEmailConfirmationCode();
+        Task<bool> ConfirmEmailWithCode(ConfirmEmailCodeRequest request);
+
         // Pending two factor challenge (no authenticated user yet)
         Task<MfaChallengeDto> GetPendingMfaChallenge();
         Task SendPendingMfaEmailCode();

@@ -394,6 +394,31 @@ namespace EnvironmentMonitor.Application.Services
             return new LoginResultDto { Success = result.Success, Message = "Login successful!" };
         }
 
+        public async Task<bool> IsEmailConfirmed()
+        {
+            return await _userAuthService.IsEmailConfirmed(GetCurrentUserId());
+        }
+
+        public async Task SendEmailConfirmationCode()
+        {
+            var userId = GetCurrentUserId();
+            if (await _userAuthService.IsEmailConfirmed(userId))
+            {
+                throw new InvalidOperationException("Email address is already confirmed.");
+            }
+            if (_hangfireJobService.IsAvailable)
+            {
+                _hangfireJobService.Enqueue<IUserAuthService>(service => service.SendEmailConfirmationCode(userId));
+                return;
+            }
+            await _userAuthService.SendEmailConfirmationCode(userId);
+        }
+
+        public async Task<bool> ConfirmEmailWithCode(ConfirmEmailCodeRequest request)
+        {
+            return await _userAuthService.ConfirmEmailWithCode(GetCurrentUserId(), request.Code);
+        }
+
         private string GetCurrentUserId()
         {
             var userId = _currentUser.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;

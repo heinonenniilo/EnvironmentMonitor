@@ -721,6 +721,77 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
         #region Multi factor authentication
 
+        private void EnsureEmailConfirmedForMfa(ApplicationUser user)
+        {
+            if (!user.EmailConfirmed)
+            {
+                _logger.LogWarning($"MFA setup attempted with unconfirmed email for user {user.Id}");
+                throw new InvalidOperationException("Email address must be confirmed before multi factor authentication can be enabled.");
+            }
+        }
+
+        public async Task<bool> IsEmailConfirmed(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                throw new InvalidOperationException("User not found");
+            }
+            return user.EmailConfirmed;
+        }
+
+        public async Task SendEmailConfirmationCode(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found when sending email confirmation code: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+            if (user.EmailConfirmed)
+            {
+                throw new InvalidOperationException("Email address is already confirmed.");
+            }
+            if (string.IsNullOrEmpty(user.Email))
+            {
+                throw new InvalidOperationException("User does not have an email address");
+            }
+
+            var code = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultEmailProvider, ApplicationConstants.EmailConfirmationCodePurpose);
+            await SendCodeEmail(user.Email, code);
+            _logger.LogInformation($"Email confirmation code sent to user {user.Id}");
+        }
+
+        public async Task<bool> ConfirmEmailWithCode(string userId, string code)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found when confirming email with code: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+            if (user.EmailConfirmed)
+            {
+                return true;
+            }
+
+            var isValid = await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultEmailProvider, ApplicationConstants.EmailConfirmationCodePurpose, NormalizeCode(code));
+            if (!isValid)
+            {
+                _logger.LogWarning($"Invalid email confirmation code for user {userId}");
+                return false;
+            }
+
+            user.EmailConfirmed = true;
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+            {
+                throw new InvalidOperationException($"Failed to confirm email: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+            }
+            _logger.LogInformation($"Email confirmed with code for user {userId}");
+            return true;
+        }
+
         public async Task<MfaStatusModel> GetMfaStatus(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
@@ -740,6 +811,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 _logger.LogWarning($"User not found when starting MFA setup: {userId}");
                 throw new InvalidOperationException("User not found");
             }
+            EnsureEmailConfirmedForMfa(user);
 
             if (method == MfaMethods.Authenticator)
             {
@@ -781,6 +853,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 _logger.LogWarning($"User not found when confirming MFA setup: {userId}");
                 throw new InvalidOperationException("User not found");
             }
+            EnsureEmailConfirmedForMfa(user);
 
             var provider = GetTokenProvider(model.Method);
             var isValid = await _userManager.VerifyTwoFactorTokenAsync(user, provider, NormalizeCode(model.Code));
@@ -987,6 +1060,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
 
             var code = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider);
+            await SendCodeEmail(user.Email, code);
+            _logger.LogInformation($"MFA code email sent to user {user.Id}");
+        }
+
+        private async Task SendCodeEmail(string email, string code)
+        {
             var emailTemplate = await _emailRepository.GetEmailTemplate(EmailTemplateTypes.MfaCode);
 
             var subject = string.IsNullOrEmpty(emailTemplate?.Title) ? "Your verification code" : emailTemplate.Title;
@@ -997,7 +1076,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             await _emailClient.SendEmailAsync(new SendEmailOptions
             {
-                ToAddresses = new List<string> { user.Email },
+                ToAddresses = new List<string> { email },
                 Subject = subject,
                 HtmlContent = htmlContent,
                 ReplaceTokens = new Dictionary<string, string>
@@ -1006,7 +1085,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, _applicationSettings.BaseUrl ?? string.Empty },
                 }
             });
-            _logger.LogInformation($"MFA code email sent to user {user.Id}");
         }
 
         /// <summary>

@@ -41,5 +41,10 @@ namespace EnvironmentMonitor.Domain.Interfaces
         /// when the method runs, never passed in, so that it is not persisted in the job store.
         /// </summary>
         public Task SendMfaEmailCode(string userId);
+
+        // Email confirmation with a code for a signed in user (mainly for users created through external login)
+        public Task<bool> IsEmailConfirmed(string userId);
+        public Task SendEmailConfirmationCode(string userId);
+        public Task<bool> ConfirmEmailWithCode(string userId, string code);
     }
 }

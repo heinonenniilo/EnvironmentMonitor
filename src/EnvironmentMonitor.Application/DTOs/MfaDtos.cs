@@ -20,6 +20,11 @@ namespace EnvironmentMonitor.Application.DTOs
         public MfaMethods Method { get; set; }
     }
 
+    public class ConfirmEmailCodeRequest
+    {
+        public string Code { get; set; } = string.Empty;
+    }
+
     public class MfaSetupDto
     {
         public MfaMethods Method { get; set; }

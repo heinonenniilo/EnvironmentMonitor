@@ -175,6 +175,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 Email = User.FindFirstValue(ClaimTypes.Email),
                 Id = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Roles = roles.ToList(),
+                EmailConfirmed = await _userService.IsEmailConfirmed(),
                 AuthenticationProvider = authProvider,
                 UpnExternal = upn,
                 Mfa = await _userService.GetMfaStatus()
@@ -294,6 +295,33 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         #region Multi factor authentication
+
+        /// <summary>
+        /// Sends an email confirmation code to the authenticated user's email address.
+        /// Mainly for users created through an external login, whose email is not confirmed.
+        /// </summary>
+        [HttpPost("email/send-confirmation-code")]
+        [Authorize]
+        public async Task<IActionResult> SendEmailConfirmationCode()
+        {
+            await _userService.SendEmailConfirmationCode();
+            return Ok(new { Message = "Confirmation code sent." });
+        }
+
+        /// <summary>
+        /// Confirms the authenticated user's email address with a code sent by send-confirmation-code.
+        /// </summary>
+        [HttpPost("email/confirm-code")]
+        [Authorize]
+        public async Task<IActionResult> ConfirmEmailWithCode([FromBody] ConfirmEmailCodeRequest request)
+        {
+            var result = await _userService.ConfirmEmailWithCode(request);
+            if (!result)
+            {
+                return BadRequest(new { Message = "The provided code is invalid or has expired." });
+            }
+            return Ok(new { Message = "Email confirmed.", EmailConfirmed = true });
+        }
 
         /// <summary>
         /// Returns the MFA methods the authenticated user has enabled.

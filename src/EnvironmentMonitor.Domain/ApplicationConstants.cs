@@ -35,6 +35,8 @@ namespace EnvironmentMonitor.Domain
         public static string MfaPendingUpnTokenName = "PendingUpn";
         public static string MfaIssuer = "EnvironmentMonitor";
         public static int MfaCodeValidityInMinutes = 5;
+        // Token purpose used for confirming the email address of a signed in user with a code.
+        public static string EmailConfirmationCodePurpose = "EmailConfirmationCode";
 
         // API Key authentication header names
         public static string ApiKeyHeaderName = "X-API-KEY";
