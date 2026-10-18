@@ -815,6 +815,13 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations
                             Message = "You have requested to reset your password. Please click the link below to set a new password:\n\n{ResetLink}\n\nIf you did not request a password reset, please ignore this email.",
                             Name = "User Password Reset",
                             Title = "Reset Your Password"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedUtc = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Identifier = new Guid("00000000-0000-0000-0000-000000000000"),
+                            Name = "Multi factor authentication code"
                         });
                 });
 

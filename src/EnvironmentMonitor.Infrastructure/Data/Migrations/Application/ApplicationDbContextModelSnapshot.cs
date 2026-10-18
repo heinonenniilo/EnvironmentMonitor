@@ -18,7 +18,7 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations.Application
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("application")
-                .HasAnnotation("ProductVersion", "8.0.11")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -258,6 +258,59 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations.Application
                     b.ToTable("AspNetRoles", "application");
                 });
 
+            modelBuilder.Entity("EnvironmentMonitor.Infrastructure.Identity.UserMfaMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ConfirmedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CreatedUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<DateTime?>("DisabledUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("Updated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedById")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("UpdatedUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedById");
+
+                    b.HasIndex("UserId", "Method")
+                        .IsUnique();
+
+                    b.ToTable("UserMfaMethods", "application");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -376,6 +429,24 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations.Application
                     b.Navigation("UpdatedBy");
                 });
 
+            modelBuilder.Entity("EnvironmentMonitor.Infrastructure.Identity.UserMfaMethod", b =>
+                {
+                    b.HasOne("EnvironmentMonitor.Infrastructure.Identity.ApplicationUser", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("EnvironmentMonitor.Infrastructure.Identity.ApplicationUser", "User")
+                        .WithMany("MfaMethods")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UpdatedBy");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("EnvironmentMonitor.Infrastructure.Identity.ApplicationUserRole", null)
@@ -421,6 +492,11 @@ namespace EnvironmentMonitor.Infrastructure.Data.Migrations.Application
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.ApiSecret", b =>
                 {
                     b.Navigation("Claims");
+                });
+
+            modelBuilder.Entity("EnvironmentMonitor.Infrastructure.Identity.ApplicationUser", b =>
+                {
+                    b.Navigation("MfaMethods");
                 });
 #pragma warning restore 612, 618
         }
