@@ -8,6 +8,7 @@ using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Utils;
 using EnvironmentMonitor.Infrastructure.Data;
 using EnvironmentMonitor.Infrastructure.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -32,6 +33,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly MeasurementDbContext _measurementDbContext;
         private readonly ApplicationDbContext _applicationDbContext;
         private readonly ApplicationSettings _applicationSettings;
+        private readonly IDateService _dateService;
 
         public UserAuthService(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
@@ -41,7 +43,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
             IEmailRepository emailRepository,
             MeasurementDbContext measurementDbContext,
             ApplicationDbContext applicationDbContext,
-            ApplicationSettings applicationSettings)
+            ApplicationSettings applicationSettings,
+            IDateService dateService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -52,29 +55,51 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _measurementDbContext = measurementDbContext;
             _applicationDbContext = applicationDbContext;
             _applicationSettings = applicationSettings;
+            _dateService = dateService;
         }
 
-        public async Task Login(LoginModel model)
+        public async Task<LoginResultModel> Login(LoginModel model)
         {
             var user = await _userManager.FindByNameAsync(model.UserName);
             if (user == null)
             {
                 throw new UnauthorizedAccessException();
             }
-            
+
             // Check if email is confirmed
             if (!await _userManager.IsEmailConfirmedAsync(user))
             {
                 throw new InvalidOperationException("Email not confirmed. Please check your email and confirm your account before logging in.");
             }
-    
+
             var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: false);
             if (!result.Succeeded)
             {
                 throw new UnauthorizedAccessException();
             }
+
+            var mfaStatus = await BuildMfaStatus(user);
+            if (mfaStatus.TwoFactorEnabled)
+            {
+                // Let Identity create the two factor cookie which holds the pending user.
+                var twoFactorResult = await _signInManager.PasswordSignInAsync(user, model.Password, model.Persistent, lockoutOnFailure: false);
+                if (!twoFactorResult.RequiresTwoFactor)
+                {
+                    _logger.LogError($"Two factor was expected for user {user.Id} but Identity did not require it.");
+                    throw new UnauthorizedAccessException();
+                }
+                await SendMfaEmailCodeIfOnlyMethod(user, mfaStatus);
+                return new LoginResultModel
+                {
+                    Success = false,
+                    RequiresTwoFactor = true,
+                    AvailableMethods = mfaStatus.EnabledMethods
+                };
+            }
+
             var calculatedClaims = await GetCalculatedClaims(user);
             await _signInManager.SignInWithClaimsAsync(user, model.Persistent, calculatedClaims);
+            return new LoginResultModel { Success = true };
         }
 
         public Task Logout()
@@ -130,7 +155,40 @@ namespace EnvironmentMonitor.Infrastructure.Services
 
             var user = await _userManager.FindByLoginAsync(loginProvider, providerKey);
             if (user != null)
-            {                
+            {
+                var mfaStatus = await BuildMfaStatus(user);
+                if (mfaStatus.TwoFactorEnabled)
+                {
+                    // Store the upn so that it can be added to the claims once the challenge is completed.
+                    await _userManager.SetAuthenticationTokenAsync(
+                        user,
+                        ApplicationConstants.MfaTokenProviderName,
+                        ApplicationConstants.MfaPendingUpnTokenName,
+                        upn ?? string.Empty);
+
+                    // Let Identity create the two factor cookie which holds the pending user and the login provider.
+                    var externalResult = await _signInManager.ExternalLoginSignInAsync(loginProvider, providerKey, model.Persistent, bypassTwoFactor: false);
+                    if (!externalResult.RequiresTwoFactor)
+                    {
+                        _logger.LogError($"Two factor was expected for user {user.Id} but Identity did not require it.");
+                        return new ExternalLoginResult
+                        {
+                            Success = false,
+                            Errors = new List<string> { "Failed to start two factor authentication" },
+                            ErrorCode = "TWO_FACTOR_START_FAILED",
+                            LoginProvider = loginProvider
+                        };
+                    }
+                    await SendMfaEmailCodeIfOnlyMethod(user, mfaStatus);
+                    return new ExternalLoginResult
+                    {
+                        Success = false,
+                        RequiresTwoFactor = true,
+                        AvailableMethods = mfaStatus.EnabledMethods,
+                        LoginProvider = loginProvider
+                    };
+                }
+
                 var additionalClaims = await GetCalculatedClaims(user);
                 additionalClaims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
                 additionalClaims.Add(new Claim(ClaimTypes.Upn, upn ?? string.Empty));
@@ -422,11 +480,20 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var users = _userManager.Users.ToList();
             var userInfoList = new List<UserInfoModel>();
 
+            // Fetch the enabled MFA methods for all users with a single query.
+            var mfaMethodsByUser = (await _applicationDbContext.UserMfaMethods
+                .Where(x => x.Enabled)
+                .Select(x => new { x.UserId, x.Method })
+                .ToListAsync())
+                .GroupBy(x => x.UserId)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Method).OrderBy(x => x).ToList());
+
             foreach (var user in users)
             {
                 var roles = await _userManager.GetRolesAsync(user);
                 var claims = await _userManager.GetClaimsAsync(user);
                 var logins = await _userManager.GetLoginsAsync(user);
+                var mfaMethods = mfaMethodsByUser.TryGetValue(user.Id, out var methods) ? methods : new List<MfaMethods>();
 
                 userInfoList.Add(new UserInfoModel
                 {
@@ -445,6 +512,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     LockoutEnd = user.LockoutEnd?.UtcDateTime,
                     LockoutEnabled = user.LockoutEnabled,
                     AccessFailedCount = user.AccessFailedCount,
+                    TwoFactorEnabled = mfaMethods.Any(),
+                    MfaMethods = mfaMethods,
                     Updated = user.Updated,
                     UpdatedById = user.UpdatedById
                 });
@@ -468,6 +537,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             var roles = await _userManager.GetRolesAsync(user);
             var claims = await _userManager.GetClaimsAsync(user);
             var logins = await _userManager.GetLoginsAsync(user);
+            var mfaMethods = await GetEnabledMfaMethods(user.Id);
 
             return new UserInfoModel
             {
@@ -486,6 +556,8 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 LockoutEnd = user.LockoutEnd?.UtcDateTime,
                 LockoutEnabled = user.LockoutEnabled,
                 AccessFailedCount = user.AccessFailedCount,
+                TwoFactorEnabled = mfaMethods.Any(),
+                MfaMethods = mfaMethods,
                 Updated = user.Updated,
                 UpdatedById = user.UpdatedById
             };
@@ -644,7 +716,376 @@ namespace EnvironmentMonitor.Infrastructure.Services
             _logger.LogInformation($"Successfully managed roles for user: {userId}");
         }
 
+        #region Multi factor authentication
+
+        public async Task<MfaStatusModel> GetMfaStatus(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found when fetching MFA status: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+            return await BuildMfaStatus(user);
+        }
+
+        public async Task<MfaSetupResult> StartMfaSetup(string userId, MfaMethods method)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found when starting MFA setup: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+
+            if (method == MfaMethods.Authenticator)
+            {
+                var key = await _userManager.GetAuthenticatorKeyAsync(user);
+                if (string.IsNullOrEmpty(key))
+                {
+                    await _userManager.ResetAuthenticatorKeyAsync(user);
+                    key = await _userManager.GetAuthenticatorKeyAsync(user);
+                }
+                if (string.IsNullOrEmpty(key))
+                {
+                    throw new InvalidOperationException("Failed to generate an authenticator key");
+                }
+                return new MfaSetupResult
+                {
+                    Method = MfaMethods.Authenticator,
+                    SharedKey = key,
+                    AuthenticatorUri = BuildAuthenticatorUri(user.Email ?? user.UserName ?? string.Empty, key)
+                };
+            }
+
+            if (string.IsNullOrEmpty(user.Email))
+            {
+                throw new InvalidOperationException("User does not have an email address");
+            }
+            await SendMfaEmailCode(user);
+            return new MfaSetupResult
+            {
+                Method = MfaMethods.Email,
+                CodeSent = true
+            };
+        }
+
+        public async Task<MfaStatusModel> ConfirmMfaSetup(string userId, MfaConfirmModel model)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found when confirming MFA setup: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+
+            var provider = GetTokenProvider(model.Method);
+            var isValid = await _userManager.VerifyTwoFactorTokenAsync(user, provider, NormalizeCode(model.Code));
+            if (!isValid)
+            {
+                _logger.LogWarning($"Invalid MFA code when confirming method {model.Method} for user {userId}");
+                throw new InvalidOperationException("The provided code is invalid or has expired.");
+            }
+
+            var setResult = await SetMfaMethodEnabled(user, model.Method, true);
+            if (!setResult)
+            {
+                throw new InvalidOperationException("Failed to enable MFA method");
+            }
+
+            await SyncTwoFactorEnabledFlag(user);
+            _logger.LogInformation($"MFA method {model.Method} enabled for user {userId}");
+            return await BuildMfaStatus(user);
+        }
+
+        public async Task<MfaStatusModel> DisableMfaMethod(string userId, MfaDisableModel model)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User not found when disabling MFA method: {userId}");
+                throw new InvalidOperationException("User not found");
+            }
+
+            if (!await IsMfaMethodEnabled(user, model.Method))
+            {
+                return await BuildMfaStatus(user);
+            }
+
+            // If a code is supplied, verify it. This allows the UI to require a confirmation code before disabling.
+            if (!string.IsNullOrEmpty(model.Code))
+            {
+                var isValid = await _userManager.VerifyTwoFactorTokenAsync(user, GetTokenProvider(model.Method), NormalizeCode(model.Code));
+                if (!isValid)
+                {
+                    throw new InvalidOperationException("The provided code is invalid or has expired.");
+                }
+            }
+
+            var removeResult = await SetMfaMethodEnabled(user, model.Method, false);
+            if (!removeResult)
+            {
+                throw new InvalidOperationException("Failed to disable MFA method");
+            }
+
+            if (model.Method == MfaMethods.Authenticator)
+            {
+                // Invalidate the shared key so that a new one is generated on the next setup.
+                await _userManager.ResetAuthenticatorKeyAsync(user);
+            }
+
+            await SyncTwoFactorEnabledFlag(user);
+            _logger.LogInformation($"MFA method {model.Method} disabled for user {userId}");
+            return await BuildMfaStatus(user);
+        }
+
+        private static string GetTokenProvider(MfaMethods method) => method switch
+        {
+            MfaMethods.Email => TokenOptions.DefaultEmailProvider,
+            MfaMethods.Authenticator => TokenOptions.DefaultAuthenticatorProvider,
+            _ => throw new ArgumentOutOfRangeException(nameof(method))
+        };
+
+        private static string NormalizeCode(string code) => (code ?? string.Empty).Replace(" ", string.Empty).Replace("-", string.Empty);
+
         /// <summary>
+        /// Enables or disables a single MFA method for the user. The row is kept when the method is
+        /// disabled so that the setup history stays visible.
+        /// </summary>
+        private async Task<bool> SetMfaMethodEnabled(ApplicationUser user, MfaMethods method, bool enabled)
+        {
+            var utcNow = _dateService.LocalToUtc(_dateService.CurrentTime());
+            var existing = await _applicationDbContext.UserMfaMethods
+                .FirstOrDefaultAsync(x => x.UserId == user.Id && x.Method == method);
+
+            if (existing == null)
+            {
+                if (!enabled)
+                {
+                    return true;
+                }
+                _applicationDbContext.UserMfaMethods.Add(new UserMfaMethod
+                {
+                    UserId = user.Id,
+                    Method = method,
+                    Enabled = true,
+                    ConfirmedUtc = utcNow
+                });
+            }
+            else
+            {
+                existing.Enabled = enabled;
+                if (enabled)
+                {
+                    existing.ConfirmedUtc = utcNow;
+                }
+                else
+                {
+                    existing.DisabledUtc = utcNow;
+                }
+            }
+
+            await _applicationDbContext.SaveChangesAsync();
+            return true;
+        }
+
+        private async Task<List<MfaMethods>> GetEnabledMfaMethods(string userId)
+        {
+            return await _applicationDbContext.UserMfaMethods
+                .Where(x => x.UserId == userId && x.Enabled)
+                .OrderBy(x => x.Method)
+                .Select(x => x.Method)
+                .ToListAsync();
+        }
+
+        private async Task<bool> IsMfaMethodEnabled(ApplicationUser user, MfaMethods method)
+        {
+            return await _applicationDbContext.UserMfaMethods
+                .AnyAsync(x => x.UserId == user.Id && x.Method == method && x.Enabled);
+        }
+
+        private async Task<MfaStatusModel> BuildMfaStatus(ApplicationUser user)
+        {
+            var enabledMethods = await GetEnabledMfaMethods(user.Id);
+            return new MfaStatusModel
+            {
+                EmailEnabled = enabledMethods.Contains(MfaMethods.Email),
+                AuthenticatorEnabled = enabledMethods.Contains(MfaMethods.Authenticator),
+                EnabledMethods = enabledMethods,
+                TwoFactorEnabled = enabledMethods.Any()
+            };
+        }
+
+        private async Task SyncTwoFactorEnabledFlag(ApplicationUser user)
+        {
+            var status = await BuildMfaStatus(user);
+            if (user.TwoFactorEnabled != status.TwoFactorEnabled)
+            {
+                var result = await _userManager.SetTwoFactorEnabledAsync(user, status.TwoFactorEnabled);
+                if (!result.Succeeded)
+                {
+                    throw new InvalidOperationException($"Failed to update two factor state: {string.Join(", ", result.Errors.Select(e => e.Description))}");
+                }
+            }
+        }
+
+        private static string BuildAuthenticatorUri(string account, string sharedKey)
+        {
+            var issuer = Uri.EscapeDataString(ApplicationConstants.MfaIssuer);
+            return $"otpauth://totp/{issuer}:{Uri.EscapeDataString(account)}?secret={sharedKey}&issuer={issuer}&digits=6";
+        }
+
+        private async Task SendMfaEmailCode(ApplicationUser user)
+        {
+            if (string.IsNullOrEmpty(user.Email))
+            {
+                throw new InvalidOperationException("User does not have an email address");
+            }
+
+            var code = await _userManager.GenerateTwoFactorTokenAsync(user, TokenOptions.DefaultEmailProvider);
+            var emailTemplate = await _emailRepository.GetEmailTemplate(EmailTemplateTypes.MfaCode);
+
+            var subject = string.IsNullOrEmpty(emailTemplate?.Title) ? "Your verification code" : emailTemplate.Title;
+            var htmlContent = string.IsNullOrEmpty(emailTemplate?.Message)
+                ? $"<p>Your verification code is <strong>{ApplicationConstants.EmailTemplateMfaCodeKey}</strong>.</p>" +
+                  $"<p>The code is valid for a few minutes. If you did not request this code, you can ignore this message.</p>"
+                : emailTemplate.Message;
+
+            await _emailClient.SendEmailAsync(new SendEmailOptions
+            {
+                ToAddresses = new List<string> { user.Email },
+                Subject = subject,
+                HtmlContent = htmlContent,
+                ReplaceTokens = new Dictionary<string, string>
+                {
+                    { ApplicationConstants.EmailTemplateMfaCodeKey, code },
+                    { ApplicationConstants.QueuedMessageApplicationBaseUrlKey, _applicationSettings.BaseUrl ?? string.Empty },
+                }
+            });
+            _logger.LogInformation($"MFA code email sent to user {user.Id}");
+        }
+
+        /// <summary>
+        /// Sends the email code automatically when email is the only enabled method,
+        /// so that the user does not have to request it separately.
+        /// </summary>
+        private async Task SendMfaEmailCodeIfOnlyMethod(ApplicationUser user, MfaStatusModel status)
+        {
+            if (status.EmailEnabled && !status.AuthenticatorEnabled)
+            {
+                try
+                {
+                    await SendMfaEmailCode(user);
+                }
+                catch (Exception ex)
+                {
+                    // The user can request the code again from the challenge endpoint.
+                    _logger.LogError(ex, $"Failed to send MFA code email to user {user.Id}");
+                }
+            }
+        }
+
+        public async Task<MfaChallengeModel> GetPendingMfaChallenge()
+        {
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                return new MfaChallengeModel { ChallengePending = false };
+            }
+            var status = await BuildMfaStatus(user);
+            return new MfaChallengeModel
+            {
+                ChallengePending = status.TwoFactorEnabled,
+                AvailableMethods = status.EnabledMethods,
+                LoginProvider = await GetPendingLoginProvider(),
+                MaskedEmail = MaskEmail(user.Email)
+            };
+        }
+
+        public async Task SendPendingMfaEmailCode()
+        {
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("No pending two factor authentication challenge");
+            }
+            if (!await IsMfaMethodEnabled(user, MfaMethods.Email))
+            {
+                throw new InvalidOperationException("Email is not enabled as a two factor authentication method for this user.");
+            }
+            await SendMfaEmailCode(user);
+        }
+
+        public async Task<LoginResultModel> CompleteTwoFactorLogin(MfaLoginModel model)
+        {
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("No pending two factor authentication challenge");
+            }
+
+            if (!await IsMfaMethodEnabled(user, model.Method))
+            {
+                throw new InvalidOperationException($"Method {model.Method} is not enabled for this user.");
+            }
+
+            var isValid = await _userManager.VerifyTwoFactorTokenAsync(user, GetTokenProvider(model.Method), NormalizeCode(model.Code));
+            if (!isValid)
+            {
+                _logger.LogWarning($"Invalid two factor code supplied for user {user.Id} using method {model.Method}");
+                throw new UnauthorizedAccessException("The provided code is invalid or has expired.");
+            }
+
+            var claims = await GetCalculatedClaims(user);
+            var loginProvider = await GetPendingLoginProvider();
+            if (!string.IsNullOrEmpty(loginProvider))
+            {
+                var upn = await _userManager.GetAuthenticationTokenAsync(
+                    user,
+                    ApplicationConstants.MfaTokenProviderName,
+                    ApplicationConstants.MfaPendingUpnTokenName);
+                claims.Add(new Claim(ApplicationConstants.ExternalLoginProviderClaim, loginProvider));
+                claims.Add(new Claim(ClaimTypes.Upn, upn ?? string.Empty));
+                await _userManager.RemoveAuthenticationTokenAsync(
+                    user,
+                    ApplicationConstants.MfaTokenProviderName,
+                    ApplicationConstants.MfaPendingUpnTokenName);
+            }
+
+            await _signInManager.SignInWithClaimsAsync(user, model.Persistent, claims);
+            await _signInManager.Context.SignOutAsync(IdentityConstants.TwoFactorUserIdScheme);
+            _logger.LogInformation($"Two factor login completed for user {user.Id} using method {model.Method}");
+            return new LoginResultModel { Success = true };
+        }
+
+        private async Task<string?> GetPendingLoginProvider()
+        {
+            var authenticateResult = await _signInManager.Context.AuthenticateAsync(IdentityConstants.TwoFactorUserIdScheme);
+            var provider = authenticateResult?.Principal?.FindFirstValue(ClaimTypes.AuthenticationMethod);
+            return string.IsNullOrEmpty(provider) ? null : provider;
+        }
+
+        private static string? MaskEmail(string? email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return null;
+            }
+            var atIndex = email.IndexOf('@');
+            if (atIndex <= 0)
+            {
+                return null;
+            }
+            var name = email.Substring(0, atIndex);
+            var domain = email.Substring(atIndex);
+            var visible = name.Length <= 2 ? name.Substring(0, 1) : name.Substring(0, 2);
+            return $"{visible}{new string('*', Math.Max(1, name.Length - visible.Length))}{domain}";
+        }
+
+        #endregion
+
+        /// <summary>
+
         /// Get calculated claims. Each location gives a claim to devices in the location. 
         /// Each device gives a claim to each sensor attached to the device.
         /// Users with Viewer role get claims to all locations.

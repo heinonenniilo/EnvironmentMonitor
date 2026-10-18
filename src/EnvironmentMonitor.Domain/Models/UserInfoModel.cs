@@ -21,6 +21,8 @@ namespace EnvironmentMonitor.Domain.Models
         public DateTime? LockoutEnd { get; set; }
         public bool LockoutEnabled { get; set; }
         public int AccessFailedCount { get; set; }
+        public bool TwoFactorEnabled { get; set; }
+        public List<Enums.MfaMethods> MfaMethods { get; set; } = new();
     }
 
     public class ExternalLoginInfoModel

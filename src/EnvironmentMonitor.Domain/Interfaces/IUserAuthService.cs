@@ -10,7 +10,7 @@ namespace EnvironmentMonitor.Domain.Interfaces
 {
     public interface IUserAuthService
     {
-        public Task Login(LoginModel model);
+        public Task<LoginResultModel> Login(LoginModel model);
         public Task Logout();
         public Task<ExternalLoginResult> LoginWithExternalProvider(ExternalLoginModel model);
         public Task RegisterUser(RegisterUserModel model);
@@ -23,5 +23,16 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public Task<UserInfoModel?> GetUser(string userId);
         public Task ManageUserClaims(string userId, List<Claim>? claimsToAdd, List<Claim>? claimsToRemove);
         public Task ManageUserRoles(string userId, List<string>? rolesToAdd, List<string>? rolesToRemove);
+
+        // Multi factor authentication
+        public Task<MfaStatusModel> GetMfaStatus(string userId);
+        public Task<MfaSetupResult> StartMfaSetup(string userId, Domain.Enums.MfaMethods method);
+        public Task<MfaStatusModel> ConfirmMfaSetup(string userId, MfaConfirmModel model);
+        public Task<MfaStatusModel> DisableMfaMethod(string userId, MfaDisableModel model);
+
+        // Pending two factor challenge (after the first login step)
+        public Task<MfaChallengeModel> GetPendingMfaChallenge();
+        public Task SendPendingMfaEmailCode();
+        public Task<LoginResultModel> CompleteTwoFactorLogin(MfaLoginModel model);
     }
 }

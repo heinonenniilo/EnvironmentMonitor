@@ -25,8 +25,16 @@ namespace EnvironmentMonitor.Domain
         public static string QueuedMessageLocation = "{LOCATION}";
         public static string EmailTemplateConfirmationLinkKey = "{ConfirmationLink}";
         public static string EmailTemplatePasswordResetLinkKey = "{ResetLink}";
+        public static string EmailTemplateMfaCodeKey = "{MfaCode}";
         // Authentication claim types
         public static string ExternalLoginProviderClaim = "ExternalLoginProvider";
+
+        // Multi factor authentication
+        // Used as the "login provider" key for the pending UPN entry stored in AspNetUserTokens.
+        public static string MfaTokenProviderName = "[EnvironmentMonitorMfa]";
+        public static string MfaPendingUpnTokenName = "PendingUpn";
+        public static string MfaIssuer = "EnvironmentMonitor";
+        public static int MfaCodeValidityInMinutes = 5;
 
         // API Key authentication header names
         public static string ApiKeyHeaderName = "X-API-KEY";

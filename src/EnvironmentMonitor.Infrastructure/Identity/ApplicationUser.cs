@@ -16,5 +16,7 @@ namespace EnvironmentMonitor.Infrastructure.Identity
         public DateTime? CreatedUtc { get; set; }
         public string? UpdatedById { get; set; }
         public ApplicationUser? UpdatedBy { get; set; }
+        public IList<UserMfaMethod> MfaMethods { get; set; } = [];
+
     }
 }
