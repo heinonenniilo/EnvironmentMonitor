@@ -21,6 +21,7 @@ import { baseTheme } from "./utilities/baseTheme";
 import { PublicMeasurementsView } from "./containers/PublicMeasurementsView";
 import { PublicSensorMeasurementsView } from "./containers/PublicSensorMeasurementsView";
 import { LoginView } from "./containers/LoginView";
+import { MfaLoginView } from "./containers/MfaLoginView";
 import { LoginInfoView } from "./containers/LoginInfoView";
 import { RegisterView } from "./containers/RegisterView";
 import { EmailConfirmationView } from "./containers/EmailConfirmationView";
@@ -69,6 +70,7 @@ createRoot(document.getElementById("root")!).render(
                 }
               />
               <Route path={routes.login} element={<LoginView />} />
+              <Route path={routes.mfaLogin} element={<MfaLoginView />} />
               <Route path={routes.loginInfo} element={<LoginInfoView />} />
               <Route path={routes.register} element={<RegisterView />} />
               <Route

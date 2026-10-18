@@ -1,6 +1,7 @@
 import qs from "qs";
 import moment from "moment";
-import type { User } from "../models/user";
+import type { User, MfaMethod, MfaStatus } from "../models/user";
+import type { LoginResultDto, MfaSetupDto, MfaChallengeDto } from "../models/mfa";
 import type { AuthInfoCookie } from "../models/authInfoCookie";
 import type { LocationModel } from "../models/location";
 import type { AxiosResponse } from "axios";
@@ -69,7 +70,14 @@ interface userHook {
     userId: string,
     password: string,
     persistent: boolean,
-  ) => Promise<boolean>;
+  ) => Promise<LoginResultDto>;
+  getMfaStatus: () => Promise<MfaStatus>;
+  setupMfa: (method: MfaMethod) => Promise<MfaSetupDto>;
+  confirmMfa: (method: MfaMethod, code: string) => Promise<MfaStatus>;
+  disableMfa: (method: MfaMethod, code?: string) => Promise<MfaStatus>;
+  getMfaChallenge: () => Promise<MfaChallengeDto>;
+  sendMfaEmailCode: () => Promise<{ message: string }>;
+  completeMfaLogin: (method: MfaMethod, code: string, persistent: boolean) => Promise<LoginResultDto>;
   logOut: () => Promise<boolean>;
   register: (email: string, password: string) => Promise<string | undefined>;
   resetPassword: (
@@ -348,22 +356,30 @@ export const useApiHook = (): ApiHook => {
         }
       },
       logIn: async (userId, password, persistent) => {
-        try {
-          const response = await apiClient.post<any, AxiosResponse<boolean>>(
-            "/api/authentication/login",
-            {
-              userName: userId,
-              password: password,
-              persistent: persistent,
-            },
-          );
-          return response.data;
-        } catch (ex: any) {
-          console.error(ex);
-          showError(ex, "Login failed");
-          return false;
-        }
+        const response = await apiClient.post<LoginResultDto>(
+          "/api/authentication/login",
+          {
+            userName: userId,
+            password: password,
+            persistent: persistent,
+          },
+        );
+        return response.data;
       },
+      getMfaStatus: async () =>
+        (await apiClient.get<MfaStatus>("/api/authentication/mfa")).data,
+      setupMfa: async (method) =>
+        (await apiClient.post<MfaSetupDto>("/api/authentication/mfa/setup", { method })).data,
+      confirmMfa: async (method, code) =>
+        (await apiClient.post<MfaStatus>("/api/authentication/mfa/confirm", { method, code })).data,
+      disableMfa: async (method, code) =>
+        (await apiClient.post<MfaStatus>("/api/authentication/mfa/disable", { method, code })).data,
+      getMfaChallenge: async () =>
+        (await apiClient.get<MfaChallengeDto>("/api/authentication/mfa/challenge")).data,
+      sendMfaEmailCode: async () =>
+        (await apiClient.post<{ message: string }>("/api/authentication/mfa/challenge/send-email-code")).data,
+      completeMfaLogin: async (method, code, persistent) =>
+        (await apiClient.post<LoginResultDto>("/api/authentication/mfa/login", { method, code, persistent })).data,
       logOut: async () => {
         try {
           await apiClient.post<any, AxiosResponse<User>>(

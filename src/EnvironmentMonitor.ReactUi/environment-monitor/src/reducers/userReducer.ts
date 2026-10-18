@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { RoleNames } from "../enums/roleNames";
-import type { User } from "../models/user";
+import type { User, MfaStatus } from "../models/user";
 import type { RootState } from "../setup/appStore";
 
 export interface UserState {
@@ -19,6 +19,9 @@ export const userSlice = createSlice({
   name: "measurement",
   initialState,
   reducers: {
+    storeMfaStatus: (state, action: PayloadAction<MfaStatus>) => {
+      if (state.user) state.user.mfa = action.payload;
+    },
     storeUserInfo: (state, action: PayloadAction<User | undefined>) => {
       state.user = action.payload;
       if (!action.payload) {
@@ -31,7 +34,7 @@ export const userSlice = createSlice({
   },
 });
 
-export const { storeUserInfo, setIsLoggingIn } = userSlice.actions;
+export const { storeUserInfo, storeMfaStatus, setIsLoggingIn } = userSlice.actions;
 
 export const getUserInfo = (state: RootState): User | undefined =>
   state.userInfo.user;

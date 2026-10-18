@@ -5,6 +5,7 @@ import { Link } from "react-router";
 import { routes } from "../../utilities/routes";
 import type { UserInfoDto } from "../../models/userInfoDto";
 import { getFormattedDate } from "../../utilities/datetimeUtils";
+import { mfaMethodLabel } from "../../utilities/mfaUtils";
 
 export interface UserTableProps {
   users: UserInfoDto[];
@@ -18,6 +19,14 @@ export const UserTable: React.FC<UserTableProps> = ({
   renderLink = true,
 }) => {
   const columns: GridColDef[] = [
+    {
+      field: "mfaMethods",
+      headerName: "MFA",
+      minWidth: 200,
+      flex: 1,
+      valueGetter: (_value, row: UserInfoDto) =>
+        row.twoFactorEnabled ? row.mfaMethods?.map(mfaMethodLabel).join(", ") || "Enabled" : "Disabled",
+    },
     {
       field: "email",
       headerName: "Email",

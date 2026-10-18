@@ -33,6 +33,7 @@ import { UserActionsComponent } from "../components/UserManagement/UserActionsCo
 import { getDevices, getLocations } from "../reducers/measurementReducer";
 import { getFormattedDate } from "../utilities/datetimeUtils";
 import { sortClaims, getClaimDisplayValue } from "../utilities/claimUtils";
+import { mfaMethodLabel } from "../utilities/mfaUtils";
 
 const getProviderIcon = (provider: string) => {
   const providerLower = provider.toLowerCase();
@@ -314,6 +315,14 @@ export const UserView: React.FC = () => {
                     size="small"
                     sx={{ padding: 0, mt: 0.5 }}
                   />
+                </Box>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Multi-factor Authentication
+                  </Typography>
+                  <Typography variant="body1">
+                    {user.twoFactorEnabled ? user.mfaMethods?.map(mfaMethodLabel).join(", ") || "Enabled" : "Disabled"}
+                  </Typography>
                 </Box>
                 <Box>
                   <Typography variant="body2" color="text.secondary">
