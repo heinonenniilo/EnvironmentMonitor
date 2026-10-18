@@ -932,9 +932,12 @@ namespace EnvironmentMonitor.Infrastructure.Services
             }
         }
 
-        private static string BuildAuthenticatorUri(string account, string sharedKey)
+        private string BuildAuthenticatorUri(string account, string sharedKey)
         {
-            var issuer = Uri.EscapeDataString(ApplicationConstants.MfaIssuer);
+            var issuerName = string.IsNullOrWhiteSpace(_applicationSettings.MfaIssuer)
+                ? ApplicationConstants.MfaIssuer
+                : _applicationSettings.MfaIssuer.Trim();
+            var issuer = Uri.EscapeDataString(issuerName);
             return $"otpauth://totp/{issuer}:{Uri.EscapeDataString(account)}?secret={sharedKey}&issuer={issuer}&digits=6";
         }
 
