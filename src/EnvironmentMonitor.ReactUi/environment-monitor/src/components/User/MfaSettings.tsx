@@ -3,20 +3,19 @@ import { useDispatch } from "react-redux";
 import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField, Typography } from "@mui/material";
 import { QRCodeSVG } from "qrcode.react";
 import { useApiHook } from "../../hooks/apiHook";
-import { useCooldown } from "../../hooks/useCooldown";
 import { MfaMethod, type MfaStatus } from "../../models/user";
 import type { MfaSetupDto } from "../../models/mfa";
 import { storeMfaStatus, storeUserInfo } from "../../reducers/userReducer";
 import { mfaErrorMessage, mfaMethodLabel } from "../../utilities/mfaUtils";
 import { EmailConfirmationCode } from "./EmailConfirmationCode";
+import { EmailCodeDialog } from "./EmailCodeDialog";
 
 interface MfaSettingsProps {
   status?: MfaStatus;
-  email: string;
   emailConfirmed: boolean;
 }
 
-export const MfaSettings = ({ status, email, emailConfirmed }: MfaSettingsProps) => {
+export const MfaSettings = ({ status, emailConfirmed }: MfaSettingsProps) => {
   const api = useApiHook().userHook;
   const dispatch = useDispatch();
   const [setup, setSetup] = useState<MfaSetupDto>();
@@ -25,13 +24,14 @@ export const MfaSettings = ({ status, email, emailConfirmed }: MfaSettingsProps)
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const cooldown = useCooldown();
+  const [emailSetupOpen, setEmailSetupOpen] = useState(false);
 
   const refreshUser = async () => {
     const user = await api.getUserInfo();
     if (!user) throw new Error("Could not refresh your profile. Please try again.");
     dispatch(storeUserInfo(user));
     if (user.emailConfirmed !== true) {
+      setEmailSetupOpen(false);
       setSetup(undefined);
       setCode("");
     }
@@ -51,7 +51,6 @@ export const MfaSettings = ({ status, email, emailConfirmed }: MfaSettingsProps)
     try {
       const result = await api.setupMfa(method);
       setSetup(result);
-      if (result.codeSent) cooldown.start();
     } catch (ex) {
       setError(mfaErrorMessage(ex, "Something went wrong."));
       await refreshAfterEnrollmentError();
@@ -86,13 +85,19 @@ export const MfaSettings = ({ status, email, emailConfirmed }: MfaSettingsProps)
   };
   const dialogOpen = (emailConfirmed === true && setup !== undefined) || disabling !== undefined;
 
+  const handleEmailEnrollmentError = async (error: unknown) => {
+    setError(mfaErrorMessage(error, "Something went wrong."));
+    await refreshAfterEnrollmentError();
+    throw error;
+  };
+
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
       <Typography>Require a verification code after signing in. You can enable both methods.</Typography>
       <Typography color="text.secondary">MFA {status?.twoFactorEnabled ? "enabled" : "disabled"}</Typography>
       {message && <Alert severity="success">{message}</Alert>}
       {error && !dialogOpen && <Alert severity="error">{error}</Alert>}
-      {emailConfirmed !== true && <EmailConfirmationCode email={email} onConfirmed={refreshUser} />}
+      {emailConfirmed !== true && <EmailConfirmationCode onConfirmed={refreshUser} />}
       {[MfaMethod.Authenticator, MfaMethod.Email].map((method) => {
         const enabled = status?.enabledMethods.includes(method) ?? false;
         return (
@@ -105,11 +110,38 @@ export const MfaSettings = ({ status, email, emailConfirmed }: MfaSettingsProps)
                 setCode("");
                 setError("");
                 setMessage("");
+              } else if (method === MfaMethod.Email) {
+                setError("");
+                setMessage("");
+                setEmailSetupOpen(true);
               } else { void beginSetup(method); }
             }}>{enabled ? "Disable" : "Enable"}</Button>
           </Stack>
         );
       })}
+      <EmailCodeDialog
+        open={emailSetupOpen && emailConfirmed === true}
+        title="Enable Email MFA"
+        confirmLabel="Confirm and enable"
+        resendCooldown={60}
+        onClose={() => setEmailSetupOpen(false)}
+        onSend={async () => {
+          if (emailConfirmed !== true) throw new Error("Confirm your email address first.");
+          try {
+            await api.setupMfa(MfaMethod.Email);
+            setError("");
+          } catch (error) { await handleEmailEnrollmentError(error); }
+        }}
+        onConfirm={async (emailCode) => {
+          if (emailConfirmed !== true) throw new Error("Confirm your email address first.");
+          try {
+            const result = await api.confirmMfa(MfaMethod.Email, emailCode);
+            dispatch(storeMfaStatus(result));
+            setError("");
+            setMessage("MFA method enabled.");
+          } catch (error) { await handleEmailEnrollmentError(error); }
+        }}
+      />
       <Dialog open={dialogOpen} onClose={close} fullWidth maxWidth="sm">
         <Box component="form" onSubmit={(event) => { event.preventDefault(); void save(); }}>
           <DialogTitle>{disabling !== undefined ? "Disable" : "Enable"} {mfaMethodLabel(disabling ?? setup?.method ?? MfaMethod.Email)}</DialogTitle>
@@ -118,20 +150,13 @@ export const MfaSettings = ({ status, email, emailConfirmed }: MfaSettingsProps)
               {error && <Alert severity="error">{error}</Alert>}
               {disabling !== undefined ? (
                 <Typography>Disable this verification method? You can optionally enter a current code for verification.</Typography>
-              ) : setup?.method === MfaMethod.Authenticator ? (
+              ) : setup ? (
                 <>
                   <Typography>Scan this QR code with your authenticator app, then enter a code to confirm setup.</Typography>
                   {setup.authenticatorUri && <Box sx={{ bgcolor: "white", p: 2, alignSelf: "center" }}><QRCodeSVG value={setup.authenticatorUri} size={200} marginSize={4} title="Authenticator setup QR code" /></Box>}
                   {setup.sharedKey && <><Typography>Manual setup key:</Typography><Typography component="code" sx={{ overflowWrap: "anywhere", userSelect: "all" }}>{setup.sharedKey}</Typography></>}
                 </>
-              ) : (
-                <>
-                  <Typography>{setup?.codeSent ? "A verification code was sent to your email." : "Request an email verification code."} Email codes expire after 5 minutes.</Typography>
-                  <Button disabled={busy || cooldown.seconds > 0} onClick={() => void beginSetup(MfaMethod.Email)}>
-                    {cooldown.seconds > 0 ? `Resend in ${cooldown.seconds}s` : "Resend code"}
-                  </Button>
-                </>
-              )}
+              ) : null}
               <TextField autoFocus label={disabling !== undefined ? "Verification code (optional)" : "Verification code"} value={code} onChange={(event) => setCode(event.target.value)} required={disabling === undefined} disabled={busy} autoComplete="one-time-code" slotProps={{ htmlInput: { inputMode: "numeric" } }} fullWidth />
             </Stack>
           </DialogContent>

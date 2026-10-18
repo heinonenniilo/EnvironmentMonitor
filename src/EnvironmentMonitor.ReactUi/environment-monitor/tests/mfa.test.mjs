@@ -163,6 +163,7 @@ function settingsFixture(api) {
     "../../hooks/useCooldown": { useCooldown: () => ({ seconds: 0, start() {} }) },
     "../../reducers/userReducer": { storeUserInfo: (payload) => ({ type: "user", payload }), storeMfaStatus: (payload) => ({ type: "mfa", payload }) },
     "./EmailConfirmationCode": { EmailConfirmationCode: "EmailConfirmationCode" },
+    "./EmailCodeDialog": { EmailCodeDialog: "EmailCodeDialog" },
   });
   return {
     actions,
@@ -213,4 +214,46 @@ test("confirmed email exposes setup and stale enrollment errors refresh the user
   const refreshedTree = fixture.render({ emailConfirmed: false });
   assert.equal(elements(refreshedTree, "EmailConfirmationCode").length, 1);
   assert.ok(elements(refreshedTree, "Alert").some((alert) => alert.props.children === failure.response.data.title));
+});
+
+test("email MFA uses the shared dialog with setup and confirmation callbacks", async () => {
+  const calls = [];
+  const status = { twoFactorEnabled: true, emailEnabled: true, authenticatorEnabled: false, enabledMethods: [0] };
+  const fixture = settingsFixture({
+    setupMfa: async (method) => { calls.push(["setup", method]); },
+    confirmMfa: async (method, code) => { calls.push(["confirm", method, code]); return status; },
+  });
+  const initial = fixture.render({ emailConfirmed: true });
+  const enableButtons = elements(initial, "Button").filter((button) => button.props.children === "Enable");
+  enableButtons[1].props.onClick();
+  const dialog = elements(fixture.render({ emailConfirmed: true }), "EmailCodeDialog")[0];
+  assert.equal(dialog.props.open, true);
+  assert.equal(dialog.props.resendCooldown, 60);
+  await dialog.props.onSend();
+  await dialog.props.onConfirm("012345");
+  assert.deepEqual(calls, [["setup", 0], ["confirm", 0, "012345"]]);
+  assert.equal(fixture.actions[0].payload, status);
+  dialog.props.onClose();
+  assert.equal(elements(fixture.render({ emailConfirmed: true }), "EmailCodeDialog")[0].props.open, false);
+});
+
+test("email confirmation uses the same dialog without an email address prop", async () => {
+  const calls = [];
+  const { EmailConfirmationCode } = loadModule("src/components/User/EmailConfirmationCode.tsx", {
+    react: { useState: () => [false, () => {}] },
+    "@mui/material": { Alert: "Alert", Button: "Button", Stack: "Stack" },
+    "../../hooks/apiHook": { useApiHook: () => ({ userHook: {
+      sendEmailConfirmationCode: async () => { calls.push("send"); },
+      confirmEmailCode: async ({ code }) => { calls.push(code); },
+    } }) },
+    "../../hooks/useNotification": { useNotification: () => ({ success() {} }) },
+    "./EmailCodeDialog": { EmailCodeDialog: "EmailCodeDialog" },
+  });
+  const tree = EmailConfirmationCode({ onConfirmed: async () => { calls.push("refresh"); } });
+  const dialog = elements(tree, "EmailCodeDialog")[0];
+  assert.equal(dialog.props.title, "Confirm email");
+  assert.equal(Object.hasOwn(dialog.props, "email"), false);
+  await dialog.props.onSend();
+  await dialog.props.onConfirm("012345");
+  assert.deepEqual(calls, ["send", "012345", "refresh"]);
 });
