@@ -6,10 +6,17 @@ import { useApiHook } from "../../hooks/apiHook";
 import { useCooldown } from "../../hooks/useCooldown";
 import { MfaMethod, type MfaStatus } from "../../models/user";
 import type { MfaSetupDto } from "../../models/mfa";
-import { storeMfaStatus } from "../../reducers/userReducer";
+import { storeMfaStatus, storeUserInfo } from "../../reducers/userReducer";
 import { mfaErrorMessage, mfaMethodLabel } from "../../utilities/mfaUtils";
+import { EmailConfirmationCode } from "./EmailConfirmationCode";
 
-export const MfaSettings = ({ status }: { status?: MfaStatus }) => {
+interface MfaSettingsProps {
+  status?: MfaStatus;
+  email: string;
+  emailConfirmed: boolean;
+}
+
+export const MfaSettings = ({ status, email, emailConfirmed }: MfaSettingsProps) => {
   const api = useApiHook().userHook;
   const dispatch = useDispatch();
   const [setup, setSetup] = useState<MfaSetupDto>();
@@ -20,7 +27,23 @@ export const MfaSettings = ({ status }: { status?: MfaStatus }) => {
   const [message, setMessage] = useState("");
   const cooldown = useCooldown();
 
+  const refreshUser = async () => {
+    const user = await api.getUserInfo();
+    if (!user) throw new Error("Could not refresh your profile. Please try again.");
+    dispatch(storeUserInfo(user));
+    if (user.emailConfirmed !== true) {
+      setSetup(undefined);
+      setCode("");
+    }
+  };
+
+  const refreshAfterEnrollmentError = async () => {
+    // Preserve the original enrollment error even if the refresh fails.
+    try { await refreshUser(); } catch { /* The existing error remains visible. */ }
+  };
+
   const beginSetup = async (method: MfaMethod) => {
+    if (emailConfirmed !== true) return;
     setBusy(true);
     setError("");
     setMessage("");
@@ -30,11 +53,13 @@ export const MfaSettings = ({ status }: { status?: MfaStatus }) => {
       setSetup(result);
       if (result.codeSent) cooldown.start();
     } catch (ex) {
-      setError(mfaErrorMessage(ex, "Could not begin MFA setup."));
+      setError(mfaErrorMessage(ex, "Something went wrong."));
+      await refreshAfterEnrollmentError();
     } finally { setBusy(false); }
   };
 
   const save = async () => {
+    if (disabling === undefined && (emailConfirmed !== true || !setup)) return;
     setBusy(true);
     setError("");
     try {
@@ -47,7 +72,8 @@ export const MfaSettings = ({ status }: { status?: MfaStatus }) => {
       setDisabling(undefined);
       setCode("");
     } catch (ex) {
-      setError(mfaErrorMessage(ex, "Could not update MFA. Check the code and try again."));
+      setError(mfaErrorMessage(ex, "Something went wrong."));
+      if (disabling === undefined) await refreshAfterEnrollmentError();
     } finally { setBusy(false); }
   };
 
@@ -58,7 +84,7 @@ export const MfaSettings = ({ status }: { status?: MfaStatus }) => {
     setCode("");
     setError("");
   };
-  const dialogOpen = setup !== undefined || disabling !== undefined;
+  const dialogOpen = (emailConfirmed === true && setup !== undefined) || disabling !== undefined;
 
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
@@ -66,13 +92,14 @@ export const MfaSettings = ({ status }: { status?: MfaStatus }) => {
       <Typography color="text.secondary">MFA {status?.twoFactorEnabled ? "enabled" : "disabled"}</Typography>
       {message && <Alert severity="success">{message}</Alert>}
       {error && !dialogOpen && <Alert severity="error">{error}</Alert>}
+      {emailConfirmed !== true && <EmailConfirmationCode email={email} onConfirmed={refreshUser} />}
       {[MfaMethod.Authenticator, MfaMethod.Email].map((method) => {
         const enabled = status?.enabledMethods.includes(method) ?? false;
         return (
           <Stack key={method} direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
             <Typography>{mfaMethodLabel(method)}</Typography>
             <Chip size="small" label={enabled ? "Enabled" : "Disabled"} color={enabled ? "success" : "default"} />
-            <Button disabled={busy} onClick={() => {
+            <Button disabled={busy || (!enabled && emailConfirmed !== true)} onClick={() => {
               if (enabled) {
                 setDisabling(method);
                 setCode("");

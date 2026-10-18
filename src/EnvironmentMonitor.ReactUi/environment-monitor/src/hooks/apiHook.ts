@@ -1,6 +1,6 @@
 import qs from "qs";
 import moment from "moment";
-import type { User, MfaMethod, MfaStatus } from "../models/user";
+import type { User, MfaMethod, MfaStatus, ConfirmEmailCodeRequest, ConfirmEmailCodeResult } from "../models/user";
 import type { LoginResultDto, MfaSetupDto, MfaChallengeDto } from "../models/mfa";
 import type { AuthInfoCookie } from "../models/authInfoCookie";
 import type { LocationModel } from "../models/location";
@@ -72,6 +72,8 @@ interface userHook {
     persistent: boolean,
   ) => Promise<LoginResultDto>;
   getMfaStatus: () => Promise<MfaStatus>;
+  sendEmailConfirmationCode: () => Promise<{ message: string }>;
+  confirmEmailCode: (request: ConfirmEmailCodeRequest) => Promise<ConfirmEmailCodeResult>;
   setupMfa: (method: MfaMethod) => Promise<MfaSetupDto>;
   confirmMfa: (method: MfaMethod, code: string) => Promise<MfaStatus>;
   disableMfa: (method: MfaMethod, code?: string) => Promise<MfaStatus>;
@@ -368,6 +370,10 @@ export const useApiHook = (): ApiHook => {
       },
       getMfaStatus: async () =>
         (await apiClient.get<MfaStatus>("/api/authentication/mfa")).data,
+      sendEmailConfirmationCode: async () =>
+        (await apiClient.post<{ message: string }>("/api/authentication/email/send-confirmation-code")).data,
+      confirmEmailCode: async (request) =>
+        (await apiClient.post<ConfirmEmailCodeResult>("/api/authentication/email/confirm-code", request)).data,
       setupMfa: async (method) =>
         (await apiClient.post<MfaSetupDto>("/api/authentication/mfa/setup", { method })).data,
       confirmMfa: async (method, code) =>

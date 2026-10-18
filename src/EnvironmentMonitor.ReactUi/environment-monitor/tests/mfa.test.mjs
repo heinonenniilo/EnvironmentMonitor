@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, resolve } from "node:path";
 import test from "node:test";
@@ -13,12 +13,15 @@ const root = resolve(import.meta.dirname, "..");
 function loadModule(path, overrides = {}, globals = {}) {
   const filename = resolve(root, path);
   const source = ts.transpileModule(readFileSync(filename, "utf8"), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const module = { exports: {} };
   const localRequire = (name) => {
     if (Object.hasOwn(overrides, name)) return overrides[name];
-    if (name.startsWith(".")) return loadModule(resolve(dirname(filename), `${name}.ts`), overrides, globals);
+    if (name.startsWith(".")) {
+      const base = resolve(dirname(filename), name);
+      return loadModule(existsSync(`${base}.ts`) ? `${base}.ts` : `${base}.tsx`, overrides, globals);
+    }
     return require(name);
   };
   vm.runInNewContext(source, { module, exports: module.exports, require: localRequire, console, ...globals }, { filename });
@@ -114,4 +117,100 @@ test("remember-me survives a new page instance, clears after login, and tolerate
   const unavailable = loadModule("src/utilities/mfaUtils.ts");
   assert.doesNotThrow(() => unavailable.rememberLoginPersistence(true));
   assert.equal(unavailable.readLoginPersistence(), false);
+});
+
+test("email confirmation uses cookie-auth endpoints and preserves formatted codes", async () => {
+  const result = { message: "Email confirmed.", emailConfirmed: true };
+  const { api, calls } = apiFixture(result);
+  await api.sendEmailConfirmationCode();
+  assert.equal(await api.confirmEmailCode({ code: "012-345" }), result);
+  assert.equal(calls[0].url, "/api/authentication/email/send-confirmation-code");
+  assert.equal(calls[0].body, undefined);
+  assert.equal(calls[1].url, "/api/authentication/email/confirm-code");
+  assert.equal(JSON.stringify(calls[1].body), '{"code":"012-345"}');
+});
+
+test("email confirmation propagates both invalid-code errors and HTTP 500 ProblemDetails", async () => {
+  const { mfaErrorMessage } = loadModule("src/utilities/mfaUtils.ts");
+  for (const [status, data, expected] of [
+    [400, { message: "The provided code is invalid or has expired." }, "The provided code is invalid or has expired."],
+    [500, { title: "Email address must be confirmed before multi factor authentication can be enabled." }, "Email address must be confirmed before multi factor authentication can be enabled."],
+    [500, { detail: "Email is already confirmed." }, "Email is already confirmed."],
+    [500, {}, "Something went wrong."],
+  ]) {
+    const failure = { isAxiosError: true, response: { status, data } };
+    const { api } = apiFixture(undefined, failure);
+    await assert.rejects(api.confirmEmailCode({ code: "012345" }), (error) => error === failure);
+    await assert.rejects(api.sendEmailConfirmationCode(), (error) => error === failure);
+    assert.equal(mfaErrorMessage(failure, "Something went wrong."), expected);
+  }
+});
+
+function settingsFixture(api) {
+  const state = [];
+  let cursor = 0;
+  const actions = [];
+  const { MfaSettings } = loadModule("src/components/User/MfaSettings.tsx", {
+    react: { useState: (initial) => {
+      const index = cursor++;
+      if (!(index in state)) state[index] = initial;
+      return [state[index], (value) => { state[index] = value; }];
+    } },
+    "react-redux": { useDispatch: () => (action) => actions.push(action) },
+    "@mui/material": Object.fromEntries(["Alert", "Box", "Button", "Chip", "Dialog", "DialogActions", "DialogContent", "DialogTitle", "Stack", "TextField", "Typography"].map((name) => [name, name])),
+    "qrcode.react": { QRCodeSVG: "QRCodeSVG" },
+    "../../hooks/apiHook": { useApiHook: () => ({ userHook: api }) },
+    "../../hooks/useCooldown": { useCooldown: () => ({ seconds: 0, start() {} }) },
+    "../../reducers/userReducer": { storeUserInfo: (payload) => ({ type: "user", payload }), storeMfaStatus: (payload) => ({ type: "mfa", payload }) },
+    "./EmailConfirmationCode": { EmailConfirmationCode: "EmailConfirmationCode" },
+  });
+  return {
+    actions,
+    render: (props) => { cursor = 0; return MfaSettings({ email: "user@example.com", ...props }); },
+  };
+}
+
+function elements(tree, type) {
+  if (Array.isArray(tree)) return tree.flatMap((child) => elements(child, type));
+  if (!tree || typeof tree !== "object") return [];
+  return [...(tree.type === type ? [tree] : []), ...elements(tree.props?.children, type)];
+}
+
+test("unconfirmed email blocks both setup methods while existing methods can still be disabled", async () => {
+  let setups = 0;
+  const fixture = settingsFixture({ setupMfa: async () => { setups++; } });
+  for (const emailConfirmed of [false, undefined]) {
+    const tree = fixture.render({ emailConfirmed });
+    assert.equal(elements(tree, "EmailConfirmationCode").length, 1);
+    const enables = elements(tree, "Button").filter((button) => button.props.children === "Enable");
+    assert.equal(enables.length, 2);
+    assert.ok(enables.every((button) => button.props.disabled));
+    // Even a programmatic click cannot bypass the enrollment guard.
+    enables.forEach((button) => button.props.onClick());
+  }
+  assert.equal(setups, 0);
+  const tree = fixture.render({ emailConfirmed: false, status: { twoFactorEnabled: true, enabledMethods: [0] } });
+  const disable = elements(tree, "Button").find((button) => button.props.children === "Disable");
+  assert.equal(disable.props.disabled, false);
+});
+
+test("confirmed email exposes setup and stale enrollment errors refresh the user profile", async () => {
+  const failure = { isAxiosError: true, response: { status: 500, data: { title: "Email address must be confirmed before multi factor authentication can be enabled." } } };
+  const user = { email: "user@example.com", emailConfirmed: false };
+  let refreshed = 0;
+  const fixture = settingsFixture({
+    setupMfa: async () => { throw failure; },
+    getUserInfo: async () => { refreshed++; return user; },
+  });
+  const tree = fixture.render({ emailConfirmed: true });
+  assert.equal(elements(tree, "EmailConfirmationCode").length, 0);
+  const enable = elements(tree, "Button").find((button) => button.props.children === "Enable");
+  assert.equal(enable.props.disabled, false);
+  enable.props.onClick();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(refreshed, 1);
+  assert.equal(fixture.actions[0].payload, user);
+  const refreshedTree = fixture.render({ emailConfirmed: false });
+  assert.equal(elements(refreshedTree, "EmailConfirmationCode").length, 1);
+  assert.ok(elements(refreshedTree, "Alert").some((alert) => alert.props.children === failure.response.data.title));
 });

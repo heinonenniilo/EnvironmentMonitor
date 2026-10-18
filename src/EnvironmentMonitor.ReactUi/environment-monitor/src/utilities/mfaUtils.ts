@@ -5,8 +5,9 @@ export const mfaMethodLabel = (method: MfaMethod): string =>
   method === MfaMethod.Email ? "Email" : "Authenticator app";
 
 export const mfaErrorMessage = (error: unknown, fallback: string): string => {
-  if (isAxiosError<{ message?: string }>(error)) {
-    return error.response?.data?.message || fallback;
+  if (isAxiosError<{ message?: string; title?: string; detail?: string }>(error)) {
+    const data = error.response?.data;
+    return data?.title || data?.detail || data?.message || fallback;
   }
   return error instanceof Error ? error.message : fallback;
 };

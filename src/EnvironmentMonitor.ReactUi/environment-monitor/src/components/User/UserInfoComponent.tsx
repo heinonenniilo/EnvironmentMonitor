@@ -206,7 +206,7 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
         )}
 
       <Collapsible title="Multi-factor Authentication" isOpen={true}>
-        <MfaSettings status={user.mfa} />
+        <MfaSettings status={user.mfa} email={user.email} emailConfirmed={user.emailConfirmed} />
       </Collapsible>
 
       {canChangePassword && (
