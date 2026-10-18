@@ -155,14 +155,14 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet("info")]
-        public ActionResult<UserDto?> UserInfo()
+        public async Task<ActionResult<UserDto?>> UserInfo()
         {
             if (User == null || User.Identity == null || !User.Identity.IsAuthenticated)
             {
                 return Ok(null);
             }
             var roles = User.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value);
-            
+
             // Check for external login provider claim
             var externalProviderClaim = User.Claims.FirstOrDefault(c => c.Type == ApplicationConstants.ExternalLoginProviderClaim);
             string? authProvider = externalProviderClaim?.Value;
@@ -176,7 +176,8 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 Id = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Roles = roles.ToList(),
                 AuthenticationProvider = authProvider,
-                UpnExternal = upn
+                UpnExternal = upn,
+                Mfa = await _userService.GetMfaStatus()
             });
         }
 

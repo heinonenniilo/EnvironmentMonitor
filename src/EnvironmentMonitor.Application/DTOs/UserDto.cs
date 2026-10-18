@@ -18,5 +18,8 @@ namespace EnvironmentMonitor.Application.DTOs
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? UpnExternal { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public MfaStatusDto? Mfa { get; set; }
     }
 }
