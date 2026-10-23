@@ -239,6 +239,17 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     };
                 }
 
+
+                var orphanLogins = await _applicationDbContext.UserLogins
+                    .Where(l => l.LoginProvider == loginProvider && l.ProviderKey == providerKey && l.UserId != user.Id)
+                    .ToListAsync();
+                if (orphanLogins.Any())
+                {
+                    _logger.LogWarning($"Removing {orphanLogins.Count} orphan external login(s) for provider {loginProvider}");
+                    _applicationDbContext.UserLogins.RemoveRange(orphanLogins);
+                    await _applicationDbContext.SaveChangesAsync();
+                }
+
                 var addLoginResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(
                     loginProvider,
                     providerKey, providerKey
@@ -462,6 +473,44 @@ namespace EnvironmentMonitor.Infrastructure.Services
                 foreach (var affectedClaim in userClaimsUpdatedByThisUser)
                 {
                     affectedClaim.UpdatedById = null;
+                }
+            }
+
+            // Remove the user's external logins and tokens
+            var userLogins = await _applicationDbContext.UserLogins.Where(l => l.UserId == userId).ToListAsync();
+            if (userLogins.Any())
+            {
+                _logger.LogInformation($"Removing {userLogins.Count} external logins of user {userId}");
+                _applicationDbContext.UserLogins.RemoveRange(userLogins);
+            }
+            var userTokens = await _applicationDbContext.UserTokens.Where(t => t.UserId == userId).ToListAsync();
+            if (userTokens.Any())
+            {
+                _applicationDbContext.UserTokens.RemoveRange(userTokens);
+            }
+
+            // Remove the user's own MFA methods
+            var userMfaMethods = await _applicationDbContext.UserMfaMethods
+                .Where(m => m.UserId == userId)
+                .ToListAsync();
+
+            if (userMfaMethods.Any())
+            {
+                _logger.LogInformation($"Removing {userMfaMethods.Count} MFA methods of user {userId}");
+                _applicationDbContext.UserMfaMethods.RemoveRange(userMfaMethods);
+            }
+
+            // Clear UpdatedById references for MFA methods of other users that were updated by this user
+            var mfaMethodsUpdatedByThisUser = await _applicationDbContext.UserMfaMethods
+                .Where(m => m.UpdatedById == userId && m.UserId != userId)
+                .ToListAsync();
+
+            if (mfaMethodsUpdatedByThisUser.Any())
+            {
+                _logger.LogInformation($"Clearing UpdatedById reference for {mfaMethodsUpdatedByThisUser.Count} MFA methods");
+                foreach (var affectedMethod in mfaMethodsUpdatedByThisUser)
+                {
+                    affectedMethod.UpdatedById = null;
                 }
             }
 
