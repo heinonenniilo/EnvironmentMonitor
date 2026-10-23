@@ -10,9 +10,17 @@ import {
   DialogContent,
   DialogTitle,
   Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   TextField,
   Typography,
 } from "@mui/material";
+import EmailOutlined from "@mui/icons-material/EmailOutlined";
+import SmartphoneOutlined from "@mui/icons-material/SmartphoneOutlined";
 import { useApiHook } from "../../hooks/apiHook";
 import { MfaMethod, type MfaStatus } from "../../models/user";
 import type { MfaSetupDto } from "../../models/mfa";
@@ -124,53 +132,83 @@ export const MfaSettings = ({ status, emailConfirmed }: MfaSettingsProps) => {
         Require a verification code after signing in. You can enable both
         methods.
       </Typography>
-      <Typography color="text.secondary">
-        MFA {status?.twoFactorEnabled ? "enabled" : "disabled"}
-      </Typography>
+      <Chip
+        label={status?.twoFactorEnabled ? "MFA enabled" : "MFA disabled"}
+        color={status?.twoFactorEnabled ? "success" : "default"}
+        variant="outlined"
+        size="small"
+        sx={{ alignSelf: "flex-start" }}
+      />
       {message && <Alert severity="success">{message}</Alert>}
       {error && !dialogOpen && <Alert severity="error">{error}</Alert>}
       {emailConfirmed !== true && (
         <EmailConfirmationCode onConfirmed={refreshUser} />
       )}
-      {[MfaMethod.Authenticator, MfaMethod.Email].map((method) => {
-        const enabled = status?.enabledMethods.includes(method) ?? false;
-        return (
-          <Stack
-            key={method}
-            direction="row"
-            spacing={2}
-            alignItems="center"
-            flexWrap="wrap"
-            useFlexGap
-          >
-            <Typography>{mfaMethodLabel(method)}</Typography>
-            <Chip
-              size="small"
-              label={enabled ? "Enabled" : "Disabled"}
-              color={enabled ? "success" : "default"}
-            />
-            <Button
-              disabled={busy || (!enabled && emailConfirmed !== true)}
-              onClick={() => {
-                if (enabled) {
-                  setDisabling(method);
-                  setCode("");
-                  setError("");
-                  setMessage("");
-                } else if (method === MfaMethod.Email) {
-                  setError("");
-                  setMessage("");
-                  setEmailSetupOpen(true);
-                } else {
-                  void beginSetup(method);
-                }
-              }}
-            >
-              {enabled ? "Disable" : "Enable"}
-            </Button>
-          </Stack>
-        );
-      })}
+      <TableContainer sx={{ border: 1, borderColor: "divider", borderRadius: 2 }}>
+        <Table aria-label="MFA verification methods" sx={{ minWidth: 420 }}>
+          <TableHead sx={{ bgcolor: "action.hover" }}>
+            <TableRow>
+              <TableCell>Verification method</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell align="right">Action</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {[MfaMethod.Authenticator, MfaMethod.Email].map((method) => {
+              const enabled = status?.enabledMethods.includes(method) ?? false;
+              return (
+                <TableRow key={method} sx={{ "&:last-child td": { borderBottom: 0 } }}>
+                  <TableCell>
+                    <Stack direction="row" spacing={1.5} alignItems="center">
+                      {method === MfaMethod.Email ? <EmailOutlined color="action" /> : <SmartphoneOutlined color="action" />}
+                      <Box>
+                        <Typography variant="body2" fontWeight={600}>{mfaMethodLabel(method)}</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                          {method === MfaMethod.Email ? "Receive a sign-in code by email." : "Generate sign-in codes in your authenticator app."}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      size="small"
+                      label={enabled ? "Enabled" : "Disabled"}
+                      color={enabled ? "success" : "default"}
+                      variant="outlined"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Button
+                      variant={enabled ? "outlined" : "contained"}
+                      color={enabled ? "inherit" : "primary"}
+                      size="small"
+                      aria-label={`${enabled ? "Disable" : "Enable"} ${mfaMethodLabel(method)}`}
+                      sx={{ minWidth: 80 }}
+                      disabled={busy || (!enabled && emailConfirmed !== true)}
+                      onClick={() => {
+                        if (enabled) {
+                          setDisabling(method);
+                          setCode("");
+                          setError("");
+                          setMessage("");
+                        } else if (method === MfaMethod.Email) {
+                          setError("");
+                          setMessage("");
+                          setEmailSetupOpen(true);
+                        } else {
+                          void beginSetup(method);
+                        }
+                      }}
+                    >
+                      {enabled ? "Disable" : "Enable"}
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <EmailCodeDialog
         open={emailSetupOpen && emailConfirmed === true}
         title="Enable Email MFA"

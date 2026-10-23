@@ -157,7 +157,7 @@ function settingsFixture(api) {
       return [state[index], (value) => { state[index] = value; }];
     } },
     "react-redux": { useDispatch: () => (action) => actions.push(action) },
-    "@mui/material": Object.fromEntries(["Alert", "Box", "Button", "Chip", "Dialog", "DialogActions", "DialogContent", "DialogTitle", "Stack", "TextField", "Typography"].map((name) => [name, name])),
+    "@mui/material": Object.fromEntries(["Alert", "Box", "Button", "Chip", "Dialog", "DialogActions", "DialogContent", "DialogTitle", "Stack", "Table", "TableBody", "TableCell", "TableContainer", "TableHead", "TableRow", "TextField", "Typography"].map((name) => [name, name])),
     "qrcode.react": { QRCodeSVG: "QRCodeSVG" },
     "../../hooks/apiHook": { useApiHook: () => ({ userHook: api }) },
     "../../hooks/useCooldown": { useCooldown: () => ({ seconds: 0, start() {} }) },

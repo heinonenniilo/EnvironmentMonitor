@@ -6,6 +6,7 @@ import { routes } from "../../utilities/routes";
 import type { UserInfoDto } from "../../models/userInfoDto";
 import { getFormattedDate } from "../../utilities/datetimeUtils";
 import { mfaMethodLabel } from "../../utilities/mfaUtils";
+import { MfaMethodsDisplay } from "../User/MfaMethodsDisplay";
 
 export interface UserTableProps {
   users: UserInfoDto[];
@@ -25,7 +26,10 @@ export const UserTable: React.FC<UserTableProps> = ({
       minWidth: 200,
       flex: 1,
       valueGetter: (_value, row: UserInfoDto) =>
-        row.twoFactorEnabled ? row.mfaMethods?.map(mfaMethodLabel).join(", ") || "Enabled" : "Disabled",
+        row.mfaMethods?.map(mfaMethodLabel).join(", ") || "Disabled",
+      renderCell: (params) => (
+        <MfaMethodsDisplay methods={params.row.mfaMethods} />
+      ),
     },
     {
       field: "email",
@@ -121,6 +125,7 @@ export const UserTable: React.FC<UserTableProps> = ({
         pageSizeOptions={[10, 25, 50, 100]}
         disableRowSelectionOnClick
         getRowId={(row) => row.id}
+        getRowHeight={() => "auto"}
         autoHeight
         sx={{
           "& .MuiDataGrid-cell": {
