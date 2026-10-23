@@ -23,7 +23,6 @@ namespace EnvironmentMonitor.Application.DTOs
         public DateTime? LockoutEnd { get; set; }
         public bool LockoutEnabled { get; set; }
         public int AccessFailedCount { get; set; }
-        public bool TwoFactorEnabled { get; set; }
         public List<Domain.Enums.MfaMethods> MfaMethods { get; set; } = new();
         public DateTime? Updated { get; set; }
         public string? UpdatedById { get; set; }

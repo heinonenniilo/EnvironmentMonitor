@@ -9,9 +9,6 @@ namespace EnvironmentMonitor.Application.DTOs
 {
     public class MfaStatusDto
     {
-        public bool TwoFactorEnabled { get; set; }
-        public bool EmailEnabled { get; set; }
-        public bool AuthenticatorEnabled { get; set; }
         public List<MfaMethods> EnabledMethods { get; set; } = new List<MfaMethods>();
     }
 

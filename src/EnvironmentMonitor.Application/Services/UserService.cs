@@ -431,9 +431,6 @@ namespace EnvironmentMonitor.Application.Services
 
         private static MfaStatusDto ToDto(MfaStatusModel model) => new MfaStatusDto
         {
-            TwoFactorEnabled = model.TwoFactorEnabled,
-            EmailEnabled = model.EmailEnabled,
-            AuthenticatorEnabled = model.AuthenticatorEnabled,
             EnabledMethods = model.EnabledMethods
         };
 
