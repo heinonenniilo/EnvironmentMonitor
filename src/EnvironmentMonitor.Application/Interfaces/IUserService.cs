@@ -12,7 +12,7 @@ namespace EnvironmentMonitor.Application.Interfaces
 {
     public interface IUserService
     {
-        public Task Login(LoginModel model);
+        public Task<LoginResultDto> Login(LoginModel model);
         public Task<ExternalLoginResult> ExternalLogin(ExternalLoginModel model);
         public Task RegisterUser(RegisterUserModel model);
         public Task<bool> ConfirmEmail(string userId, string token);
@@ -38,5 +38,21 @@ namespace EnvironmentMonitor.Application.Interfaces
         AuthInfoCookie? GetAuthInfo();
         void ClearAuthInfo();
         List<string> Roles { get; }
+
+        // Multi factor authentication (requires an authenticated user)
+        Task<MfaStatusDto> GetMfaStatus();
+        Task<MfaSetupDto> StartMfaSetup(MfaSetupRequest request);
+        Task<MfaStatusDto> ConfirmMfaSetup(MfaConfirmRequest request);
+        Task<MfaStatusDto> DisableMfaMethod(MfaDisableRequest request);
+
+        // Email confirmation with a code for the authenticated user
+        Task<bool> IsEmailConfirmed();
+        Task SendEmailConfirmationCode();
+        Task<bool> ConfirmEmailWithCode(ConfirmEmailCodeRequest request);
+
+        // Pending two factor challenge (no authenticated user yet)
+        Task<MfaChallengeDto> GetPendingMfaChallenge();
+        Task SendPendingMfaEmailCode();
+        Task<LoginResultDto> CompleteTwoFactorLogin(MfaLoginRequest request);
     }
 }

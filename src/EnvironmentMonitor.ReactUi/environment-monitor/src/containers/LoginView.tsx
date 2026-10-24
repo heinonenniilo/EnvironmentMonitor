@@ -6,6 +6,7 @@ import { useState } from "react";
 import { AppContentWrapper } from "../framework/AppContentWrapper";
 import { useDispatch } from "react-redux";
 import { storeUserInfo } from "../reducers/userReducer";
+import { rememberLoginPersistence } from "../utilities/mfaUtils";
 
 export const LoginView: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export const LoginView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const loginWithGoogleAuthCode = (persistent: boolean) => {
+    rememberLoginPersistence(persistent);
     if (process.env.NODE_ENV === "production") {
       window.location.href = `api/authentication/google?persistent=${persistent}`;
     } else {
@@ -22,6 +24,7 @@ export const LoginView: React.FC = () => {
   };
 
   const loginWithMicrosoftAuthCode = (persistent: boolean) => {
+    rememberLoginPersistence(persistent);
     if (process.env.NODE_ENV === "production") {
       window.location.href = `api/authentication/microsoft?persistent=${persistent}`;
     } else {
@@ -30,6 +33,7 @@ export const LoginView: React.FC = () => {
   };
 
   const loginWithGitHubAuthCode = (persistent: boolean) => {
+    rememberLoginPersistence(persistent);
     if (process.env.NODE_ENV === "production") {
       window.location.href = `api/authentication/github?persistent=${persistent}`;
     } else {

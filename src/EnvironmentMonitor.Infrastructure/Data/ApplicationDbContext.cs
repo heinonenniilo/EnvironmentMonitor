@@ -29,6 +29,7 @@ namespace EnvironmentMonitor.Infrastructure.Data
 
         public DbSet<ApiSecret> ApiSecrets { get; set; }
         public DbSet<SecretClaim> SecretClaims { get; set; }
+        public DbSet<UserMfaMethod> UserMfaMethods { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -68,6 +69,22 @@ namespace EnvironmentMonitor.Infrastructure.Data
                 }
             }
             foreach (var entry in ChangeTracker.Entries<ApplicationUserClaim>())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entry.Entity.Created = now;
+                        entry.Entity.CreatedUtc = utcNow;
+                        entry.Entity.UpdatedById = updatedById;
+                        break;
+                    case EntityState.Modified:
+                        entry.Entity.Updated = now;
+                        entry.Entity.UpdatedUtc = utcNow;
+                        entry.Entity.UpdatedById = updatedById;
+                        break;
+                }
+            }
+            foreach (var entry in ChangeTracker.Entries<UserMfaMethod>())
             {
                 switch (entry.State)
                 {
