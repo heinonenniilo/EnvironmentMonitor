@@ -239,17 +239,6 @@ namespace EnvironmentMonitor.Infrastructure.Services
                     };
                 }
 
-
-                var orphanLogins = await _applicationDbContext.UserLogins
-                    .Where(l => l.LoginProvider == loginProvider && l.ProviderKey == providerKey && l.UserId != user.Id)
-                    .ToListAsync();
-                if (orphanLogins.Any())
-                {
-                    _logger.LogWarning($"Removing {orphanLogins.Count} orphan external login(s) for provider {loginProvider}");
-                    _applicationDbContext.UserLogins.RemoveRange(orphanLogins);
-                    await _applicationDbContext.SaveChangesAsync();
-                }
-
                 var addLoginResult = await _userManager.AddLoginAsync(user, new UserLoginInfo(
                     loginProvider,
                     providerKey, providerKey
