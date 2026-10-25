@@ -75,13 +75,15 @@ jobs:
         run: |
           dotnet publish src/EnvironmentMonitor.Worker/EnvironmentMonitor.Worker.csproj -c Release -r linux-x64 -o "${{env.DOTNET_ROOT}}/env-monitor-worker_linux-x64"
 
-      - name: Zip x64 applications
+      - name: Zip applications for Azure Blob Storage
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path packages -Force | Out-Null
           $applications = @(
+            'env-monitor-web-api_x86',
             'env-monitor-web-api_x64',
             'env-monitor-web-api_linux-x64',
+            'env-monitor-function_x86',
             'env-monitor-function_x64',
             'env-monitor-function_linux-x64',
             'env-monitor-worker_linux-x64'
@@ -111,32 +113,6 @@ jobs:
               Write-Output '::endgroup::'
             }
           }
-
-      - name: Upload web api artifact (linux-x64)
-        uses: actions/upload-artifact@v4
-        with:
-          name: .env-monitor-web-api_linux-x64
-          path: ${{env.DOTNET_ROOT}}/env-monitor-web-api_linux-x64
-
-      - name: Upload function artifact (win-x86)
-        uses: actions/upload-artifact@v4
-        with:
-          name: .env-monitor-function_x86
-          path: ${{env.DOTNET_ROOT}}/env-monitor-function_x86
-          include-hidden-files: true
-
-      - name: Upload function artifact (win-x64)
-        uses: actions/upload-artifact@v4
-        with:
-          name: .env-monitor-function_x64
-          path: ${{env.DOTNET_ROOT}}/env-monitor-function_x64
-          include-hidden-files: true
-
-      - name: Upload worker artifact (linux-x64)
-        uses: actions/upload-artifact@v4
-        with:
-          name: .env-monitor-worker_linux-x64
-          path: ${{env.DOTNET_ROOT}}/env-monitor-worker_linux-x64
 
       - name: Login to Azure
         if: env.AZURE_STORAGE_ACCOUNT != ''
