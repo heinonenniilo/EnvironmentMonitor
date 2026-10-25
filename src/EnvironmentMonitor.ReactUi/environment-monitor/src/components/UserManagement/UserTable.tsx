@@ -5,8 +5,6 @@ import { Link } from "react-router";
 import { routes } from "../../utilities/routes";
 import type { UserInfoDto } from "../../models/userInfoDto";
 import { getFormattedDate } from "../../utilities/datetimeUtils";
-import { mfaMethodLabel } from "../../utilities/mfaUtils";
-import { MfaMethodsDisplay } from "../User/MfaMethodsDisplay";
 
 export interface UserTableProps {
   users: UserInfoDto[];
@@ -20,17 +18,6 @@ export const UserTable: React.FC<UserTableProps> = ({
   renderLink = true,
 }) => {
   const columns: GridColDef[] = [
-    {
-      field: "mfaMethods",
-      headerName: "MFA",
-      minWidth: 200,
-      flex: 1,
-      valueGetter: (_value, row: UserInfoDto) =>
-        row.mfaMethods?.map(mfaMethodLabel).join(", ") || "Disabled",
-      renderCell: (params) => (
-        <MfaMethodsDisplay methods={params.row.mfaMethods} />
-      ),
-    },
     {
       field: "email",
       headerName: "Email",
@@ -104,6 +91,23 @@ export const UserTable: React.FC<UserTableProps> = ({
         }
         return (row as UserInfoDto).emailConfirmed;
       },
+    },
+    {
+      field: "mfaEnabled",
+      headerName: "MFA",
+      type: "boolean",
+      width: 80,
+      valueGetter: (_value, row: UserInfoDto) =>
+        (row.mfaMethods?.length ?? 0) > 0,
+      renderCell: (params) => (
+        <Checkbox
+          checked={params.value === true}
+          size="small"
+          disabled
+          inputProps={{ "aria-label": "MFA enabled" }}
+          sx={{ padding: 0 }}
+        />
+      ),
     },
   ];
 
