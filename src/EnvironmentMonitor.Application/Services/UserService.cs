@@ -159,11 +159,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task ChangePassword(ChangePasswordModel model)
         {
-            var userId = _currentUser.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new UnauthorizedAccessException("User not authenticated");
-            }
+            var userId = _currentUser.GetCurrentUserId();
 
             await _userAuthService.ChangePassword(userId, model);
         }
@@ -246,11 +242,7 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task DeleteOwnUser()
         {
-            var userId = _currentUser.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new UnauthorizedAccessException("User not authenticated");
-            }
+            var userId = _currentUser.GetCurrentUserId();
 
             await _userAuthService.DeleteUser(userId);
             await _userAuthService.Logout();
@@ -323,85 +315,16 @@ namespace EnvironmentMonitor.Application.Services
 
         public List<string> Roles => _currentUser.Roles.ToList();
 
-        #region Multi factor authentication
-
-        public async Task<MfaStatusDto> GetMfaStatus()
-        {
-            var status = await _userAuthService.GetMfaStatus(GetCurrentUserId());
-            return ToDto(status);
-        }
-
-        public async Task<MfaSetupDto> StartMfaSetup(MfaSetupRequest request)
-        {
-            var result = await _userAuthService.StartMfaSetup(GetCurrentUserId(), request.Method);
-            return new MfaSetupDto
-            {
-                Method = result.Method,
-                SharedKey = result.SharedKey,
-                AuthenticatorUri = result.AuthenticatorUri,
-                CodeSent = result.CodeSent
-            };
-        }
-
-        public async Task<MfaStatusDto> ConfirmMfaSetup(MfaConfirmRequest request)
-        {
-            var status = await _userAuthService.ConfirmMfaSetup(GetCurrentUserId(), new MfaConfirmModel
-            {
-                Method = request.Method,
-                Code = request.Code
-            });
-            return ToDto(status);
-        }
-
-        public async Task<MfaStatusDto> DisableMfaMethod(MfaDisableRequest request)
-        {
-            var status = await _userAuthService.DisableMfaMethod(GetCurrentUserId(), new MfaDisableModel
-            {
-                Method = request.Method,
-                Code = request.Code
-            });
-            return ToDto(status);
-        }
-
-        public async Task<MfaChallengeDto> GetPendingMfaChallenge()
-        {
-            var challenge = await _userAuthService.GetPendingMfaChallenge();
-            return new MfaChallengeDto
-            {
-                ChallengePending = challenge.ChallengePending,
-                AvailableMethods = challenge.AvailableMethods,
-                LoginProvider = challenge.LoginProvider,
-                MaskedEmail = challenge.MaskedEmail
-            };
-        }
-
-        public async Task SendPendingMfaEmailCode()
-        {
-            await _userAuthService.SendPendingMfaEmailCode();
-        }
-
-        public async Task<LoginResultDto> CompleteTwoFactorLogin(MfaLoginRequest request)
-        {
-            var challenge = await _userAuthService.GetPendingMfaChallenge();
-            var result = await _userAuthService.CompleteTwoFactorLogin(new MfaLoginModel
-            {
-                Method = request.Method,
-                Code = request.Code,
-                Persistent = request.Persistent
-            });
-
-            _userCookieService.WriteAuthSuccessCookie(string.IsNullOrEmpty(challenge.LoginProvider) ? "Local" : challenge.LoginProvider);
-            return new LoginResultDto { Success = result.Success, Message = "Login successful!" };
-        }
+        #region Email confirmation
 
         public async Task<bool> IsEmailConfirmed()
         {
-            return await _userAuthService.IsEmailConfirmed(GetCurrentUserId());
+            return await _userAuthService.IsEmailConfirmed(_currentUser.GetCurrentUserId());
         }
 
         public async Task SendEmailConfirmationCode()
         {
-            var userId = GetCurrentUserId();
+            var userId = _currentUser.GetCurrentUserId();
             if (await _userAuthService.IsEmailConfirmed(userId))
             {
                 throw new InvalidOperationException("Email address is already confirmed.");
@@ -416,23 +339,8 @@ namespace EnvironmentMonitor.Application.Services
 
         public async Task<bool> ConfirmEmailWithCode(ConfirmEmailCodeRequest request)
         {
-            return await _userAuthService.ConfirmEmailWithCode(GetCurrentUserId(), request.Code);
+            return await _userAuthService.ConfirmEmailWithCode(_currentUser.GetCurrentUserId(), request.Code);
         }
-
-        private string GetCurrentUserId()
-        {
-            var userId = _currentUser.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new UnauthorizedAccessException("User not authenticated");
-            }
-            return userId;
-        }
-
-        private static MfaStatusDto ToDto(MfaStatusModel model) => new MfaStatusDto
-        {
-            EnabledMethods = model.EnabledMethods
-        };
 
         #endregion
     }

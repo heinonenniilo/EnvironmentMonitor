@@ -31,6 +31,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<AuthenticationController> _logger;
         private readonly IUserService _userService;
+        private readonly IUserMfaService _userMfaService;
         private readonly GitHubSettings _githubSettings;
 
 
@@ -41,11 +42,13 @@ namespace EnvironmentMonitor.WebApi.Controllers
             ILogger<AuthenticationController> logger,
             SignInManager<ApplicationUser> signInManager,
             IUserService userService,
+            IUserMfaService userMfaService,
             GitHubSettings githubSettings)
         {
             _logger = logger;
             _signInManager = signInManager;
             _userService = userService;
+            _userMfaService = userMfaService;
             _githubSettings = githubSettings;
         }
 
@@ -178,7 +181,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 EmailConfirmed = await _userService.IsEmailConfirmed(),
                 AuthenticationProvider = authProvider,
                 UpnExternal = upn,
-                Mfa = await _userService.GetMfaStatus()
+                Mfa = await _userMfaService.GetMfaStatus()
             });
         }
 
@@ -330,7 +333,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize]
         public async Task<ActionResult<MfaStatusDto>> GetMfaStatus()
         {
-            return Ok(await _userService.GetMfaStatus());
+            return Ok(await _userMfaService.GetMfaStatus());
         }
 
         /// <summary>
@@ -341,7 +344,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize]
         public async Task<ActionResult<MfaSetupDto>> StartMfaSetup([FromBody] MfaSetupRequest request)
         {
-            return Ok(await _userService.StartMfaSetup(request));
+            return Ok(await _userMfaService.StartMfaSetup(request));
         }
 
         /// <summary>
@@ -351,7 +354,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize]
         public async Task<ActionResult<MfaStatusDto>> ConfirmMfaSetup([FromBody] MfaConfirmRequest request)
         {
-            return Ok(await _userService.ConfirmMfaSetup(request));
+            return Ok(await _userMfaService.ConfirmMfaSetup(request));
         }
 
         /// <summary>
@@ -361,7 +364,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [Authorize]
         public async Task<ActionResult<MfaStatusDto>> DisableMfaMethod([FromBody] MfaDisableRequest request)
         {
-            return Ok(await _userService.DisableMfaMethod(request));
+            return Ok(await _userMfaService.DisableMfaMethod(request));
         }
 
         /// <summary>
@@ -370,7 +373,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpGet("mfa/challenge")]
         public async Task<ActionResult<MfaChallengeDto>> GetMfaChallenge()
         {
-            return Ok(await _userService.GetPendingMfaChallenge());
+            return Ok(await _userMfaService.GetPendingMfaChallenge());
         }
 
         /// <summary>
@@ -379,7 +382,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpPost("mfa/challenge/send-email-code")]
         public async Task<IActionResult> SendMfaChallengeEmailCode()
         {
-            await _userService.SendPendingMfaEmailCode();
+            await _userMfaService.SendPendingMfaEmailCode();
             return Ok(new { Message = "Verification code sent." });
         }
 
@@ -389,7 +392,7 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpPost("mfa/login")]
         public async Task<ActionResult<LoginResultDto>> CompleteMfaLogin([FromBody] MfaLoginRequest request)
         {
-            return Ok(await _userService.CompleteTwoFactorLogin(request));
+            return Ok(await _userMfaService.CompleteTwoFactorLogin(request));
         }
 
         #endregion
