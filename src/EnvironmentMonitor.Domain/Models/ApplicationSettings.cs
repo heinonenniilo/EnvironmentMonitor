@@ -16,5 +16,10 @@ namespace EnvironmentMonitor.Domain.Models
         /// Example: ["FLE Standard Time", "Europe/Helsinki"] for Windows/Linux compatibility.
         /// </summary>
         public string[] TimeZones { get; set; } = ["FLE Standard Time", "Europe/Helsinki"];
+
+        /// <summary>
+        /// Issuer name shown in authenticator apps. Falls back to ApplicationConstants.MfaIssuer when empty.
+        /// </summary>
+        public string? MfaIssuer { get; set; }
     }
 }

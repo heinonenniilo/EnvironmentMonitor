@@ -12,6 +12,7 @@ import { Google, Microsoft, GitHub } from "@mui/icons-material";
 import { useApiHook } from "../../hooks/apiHook";
 import { useNavigate } from "react-router";
 import { routes } from "../../utilities/routes";
+import { clearLoginPersistence, rememberLoginPersistence } from "../../utilities/mfaUtils";
 
 export interface LoginPageProps {
   onLoggedIn: () => void;
@@ -42,10 +43,14 @@ const LoginPage: React.FC<LoginPageProps> = ({
       setIsLoading(true);
       const res = await apiHook.userHook.logIn(userId, password, rememberMe);
       setIsLoading(false);
-      if (res) {
+      if (res.requiresTwoFactor) {
+        rememberLoginPersistence(rememberMe);
+        navigate(routes.mfaLogin);
+      } else if (res.success) {
+        clearLoginPersistence();
         onLoggedIn();
       } else {
-        setError("Login failed.");
+        setError(res.message || "Login failed.");
       }
     } catch (err: any) {
       setIsLoading(false);

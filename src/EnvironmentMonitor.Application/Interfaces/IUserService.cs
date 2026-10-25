@@ -12,7 +12,7 @@ namespace EnvironmentMonitor.Application.Interfaces
 {
     public interface IUserService
     {
-        public Task Login(LoginModel model);
+        public Task<LoginResultDto> Login(LoginModel model);
         public Task<ExternalLoginResult> ExternalLogin(ExternalLoginModel model);
         public Task RegisterUser(RegisterUserModel model);
         public Task<bool> ConfirmEmail(string userId, string token);
@@ -38,5 +38,10 @@ namespace EnvironmentMonitor.Application.Interfaces
         AuthInfoCookie? GetAuthInfo();
         void ClearAuthInfo();
         List<string> Roles { get; }
+
+        // Email confirmation with a code for the authenticated user
+        Task<bool> IsEmailConfirmed();
+        Task SendEmailConfirmationCode();
+        Task<bool> ConfirmEmailWithCode(ConfirmEmailCodeRequest request);
     }
 }

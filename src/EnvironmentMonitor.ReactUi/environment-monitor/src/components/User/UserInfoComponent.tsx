@@ -20,6 +20,7 @@ import { ChangePasswordComponent } from "./ChangePasswordComponent";
 import { Collapsible } from "../../framework/CollabsibleComponent";
 import { RoleNames } from "../../enums/roleNames";
 import { stringSort } from "../../utilities/stringUtils";
+import { MfaSettings } from "./MfaSettings";
 
 export interface UserInfoComponentProps {
   user: User;
@@ -203,6 +204,10 @@ export const UserInfoComponent: React.FC<UserInfoComponentProps> = ({
             </Box>
           </Collapsible>
         )}
+
+      <Collapsible title="Multi-factor Authentication" isOpen={true}>
+        <MfaSettings status={user.mfa} emailConfirmed={user.emailConfirmed} />
+      </Collapsible>
 
       {canChangePassword && (
         <Collapsible title="Change Password" isOpen={false}>

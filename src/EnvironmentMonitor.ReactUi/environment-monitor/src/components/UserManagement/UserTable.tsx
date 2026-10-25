@@ -92,6 +92,23 @@ export const UserTable: React.FC<UserTableProps> = ({
         return (row as UserInfoDto).emailConfirmed;
       },
     },
+    {
+      field: "mfaEnabled",
+      headerName: "MFA",
+      type: "boolean",
+      width: 80,
+      valueGetter: (_value, row: UserInfoDto) =>
+        (row.mfaMethods?.length ?? 0) > 0,
+      renderCell: (params) => (
+        <Checkbox
+          checked={params.value === true}
+          size="small"
+          disabled
+          inputProps={{ "aria-label": "MFA enabled" }}
+          sx={{ padding: 0 }}
+        />
+      ),
+    },
   ];
 
   return (
@@ -112,6 +129,7 @@ export const UserTable: React.FC<UserTableProps> = ({
         pageSizeOptions={[10, 25, 50, 100]}
         disableRowSelectionOnClick
         getRowId={(row) => row.id}
+        getRowHeight={() => "auto"}
         autoHeight
         sx={{
           "& .MuiDataGrid-cell": {

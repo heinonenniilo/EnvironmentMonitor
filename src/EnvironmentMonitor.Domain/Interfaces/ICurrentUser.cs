@@ -13,5 +13,15 @@ namespace EnvironmentMonitor.Domain.Interfaces
         public List<Claim> Claims { get; }
 
         public List<string> Roles { get; }
+
+        public string GetCurrentUserId()
+        {
+            var userId = Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new UnauthorizedAccessException("User not authenticated");
+            }
+            return userId;
+        }
     }
 }

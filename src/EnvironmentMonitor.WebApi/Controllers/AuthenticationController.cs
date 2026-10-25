@@ -31,20 +31,24 @@ namespace EnvironmentMonitor.WebApi.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<AuthenticationController> _logger;
         private readonly IUserService _userService;
+        private readonly IUserMfaService _userMfaService;
         private readonly GitHubSettings _githubSettings;
 
 
         private const string LoginInfoRoute = "/login/info";
+        private const string MfaChallengeRoute = "/login/mfa";
 
         public AuthenticationController(
             ILogger<AuthenticationController> logger,
             SignInManager<ApplicationUser> signInManager,
             IUserService userService,
+            IUserMfaService userMfaService,
             GitHubSettings githubSettings)
         {
             _logger = logger;
             _signInManager = signInManager;
             _userService = userService;
+            _userMfaService = userMfaService;
             _githubSettings = githubSettings;
         }
 
@@ -134,15 +138,15 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginModel request)
+        public async Task<ActionResult<LoginResultDto>> Login([FromBody] LoginModel request)
         {
-            await _userService.Login(new Domain.Models.LoginModel()
+            var result = await _userService.Login(new Domain.Models.LoginModel()
             {
                 UserName = request.UserName,
                 Password = request.Password,
                 Persistent = request.Persistent
             });
-            return Ok(new { Message = "Login successful!" });
+            return Ok(result);
         }
 
         [HttpPost("logout")]
@@ -154,14 +158,14 @@ namespace EnvironmentMonitor.WebApi.Controllers
         }
 
         [HttpGet("info")]
-        public ActionResult<UserDto?> UserInfo()
+        public async Task<ActionResult<UserDto?>> UserInfo()
         {
             if (User == null || User.Identity == null || !User.Identity.IsAuthenticated)
             {
                 return Ok(null);
             }
             var roles = User.Claims.Where(x => x.Type == ClaimTypes.Role).Select(x => x.Value);
-            
+
             // Check for external login provider claim
             var externalProviderClaim = User.Claims.FirstOrDefault(c => c.Type == ApplicationConstants.ExternalLoginProviderClaim);
             string? authProvider = externalProviderClaim?.Value;
@@ -174,8 +178,10 @@ namespace EnvironmentMonitor.WebApi.Controllers
                 Email = User.FindFirstValue(ClaimTypes.Email),
                 Id = User.FindFirstValue(ClaimTypes.NameIdentifier),
                 Roles = roles.ToList(),
+                EmailConfirmed = await _userService.IsEmailConfirmed(),
                 AuthenticationProvider = authProvider,
-                UpnExternal = upn
+                UpnExternal = upn,
+                Mfa = await _userMfaService.GetMfaStatus()
             });
         }
 
@@ -200,17 +206,24 @@ namespace EnvironmentMonitor.WebApi.Controllers
             {
                 Persistent = persistent
             });
-            if (!result.Success)
-            {
-                _logger.LogWarning($"External login failed at {provider}-callback with error code: {result.ErrorCode}");
-                return Redirect(LoginInfoRoute);
-            }
             var returnUrlToSet = returnUrl ?? "/";
 
             if (!Url.IsLocalUrl(returnUrlToSet))
             {
                 _logger.LogWarning($"Non local return URL observed: {returnUrlToSet}");
                 returnUrlToSet = "/";
+            }
+
+            if (result.RequiresTwoFactor)
+            {
+                _logger.LogInformation($"Two factor authentication required after {provider} login.");
+                return Redirect($"{MfaChallengeRoute}?returnUrl={Uri.EscapeDataString(returnUrlToSet)}&persistent={persistent}");
+            }
+
+            if (!result.Success)
+            {
+                _logger.LogWarning($"External login failed at {provider}-callback with error code: {result.ErrorCode}");
+                return Redirect(LoginInfoRoute);
             }
             return Redirect(returnUrlToSet);
         }
@@ -283,5 +296,105 @@ namespace EnvironmentMonitor.WebApi.Controllers
             _userService.ClearAuthInfo();
             return Ok(new { Message = "Auth info cleared" });
         }
+
+        #region Multi factor authentication
+
+        /// <summary>
+        /// Sends an email confirmation code to the authenticated user's email address.
+        /// Mainly for users created through an external login, whose email is not confirmed.
+        /// </summary>
+        [HttpPost("email/send-confirmation-code")]
+        [Authorize]
+        public async Task<IActionResult> SendEmailConfirmationCode()
+        {
+            await _userService.SendEmailConfirmationCode();
+            return Ok(new { Message = "Confirmation code sent." });
+        }
+
+        /// <summary>
+        /// Confirms the authenticated user's email address with a code sent by send-confirmation-code.
+        /// </summary>
+        [HttpPost("email/confirm-code")]
+        [Authorize]
+        public async Task<IActionResult> ConfirmEmailWithCode([FromBody] ConfirmEmailCodeRequest request)
+        {
+            var result = await _userService.ConfirmEmailWithCode(request);
+            if (!result)
+            {
+                return BadRequest(new { Message = "The provided code is invalid or has expired." });
+            }
+            return Ok(new { Message = "Email confirmed.", EmailConfirmed = true });
+        }
+
+        /// <summary>
+        /// Returns the MFA methods the authenticated user has enabled.
+        /// </summary>
+        [HttpGet("mfa")]
+        [Authorize]
+        public async Task<ActionResult<MfaStatusDto>> GetMfaStatus()
+        {
+            return Ok(await _userMfaService.GetMfaStatus());
+        }
+
+        /// <summary>
+        /// Starts the setup of an MFA method. For the authenticator app the shared key and the
+        /// otpauth uri (for the QR code) are returned, for email a code is sent to the user's email address.
+        /// </summary>
+        [HttpPost("mfa/setup")]
+        [Authorize]
+        public async Task<ActionResult<MfaSetupDto>> StartMfaSetup([FromBody] MfaSetupRequest request)
+        {
+            return Ok(await _userMfaService.StartMfaSetup(request));
+        }
+
+        /// <summary>
+        /// Confirms and enables an MFA method with a code from the authenticator app or from email.
+        /// </summary>
+        [HttpPost("mfa/confirm")]
+        [Authorize]
+        public async Task<ActionResult<MfaStatusDto>> ConfirmMfaSetup([FromBody] MfaConfirmRequest request)
+        {
+            return Ok(await _userMfaService.ConfirmMfaSetup(request));
+        }
+
+        /// <summary>
+        /// Disables a single MFA method. A code can optionally be supplied and is verified when present.
+        /// </summary>
+        [HttpPost("mfa/disable")]
+        [Authorize]
+        public async Task<ActionResult<MfaStatusDto>> DisableMfaMethod([FromBody] MfaDisableRequest request)
+        {
+            return Ok(await _userMfaService.DisableMfaMethod(request));
+        }
+
+        /// <summary>
+        /// Returns the pending two factor challenge for a user who has passed the first login step.
+        /// </summary>
+        [HttpGet("mfa/challenge")]
+        public async Task<ActionResult<MfaChallengeDto>> GetMfaChallenge()
+        {
+            return Ok(await _userMfaService.GetPendingMfaChallenge());
+        }
+
+        /// <summary>
+        /// Sends (or re-sends) the email code for a pending two factor challenge.
+        /// </summary>
+        [HttpPost("mfa/challenge/send-email-code")]
+        public async Task<IActionResult> SendMfaChallengeEmailCode()
+        {
+            await _userMfaService.SendPendingMfaEmailCode();
+            return Ok(new { Message = "Verification code sent." });
+        }
+
+        /// <summary>
+        /// Completes the login by verifying a code from the selected MFA method.
+        /// </summary>
+        [HttpPost("mfa/login")]
+        public async Task<ActionResult<LoginResultDto>> CompleteMfaLogin([FromBody] MfaLoginRequest request)
+        {
+            return Ok(await _userMfaService.CompleteTwoFactorLogin(request));
+        }
+
+        #endregion
     }
 }

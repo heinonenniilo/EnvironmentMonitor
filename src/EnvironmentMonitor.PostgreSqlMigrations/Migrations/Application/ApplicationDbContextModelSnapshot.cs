@@ -255,6 +255,59 @@ namespace EnvironmentMonitor.PostgreSqlMigrations.Migrations.Application
                     b.ToTable("AspNetRoles", "application");
                 });
 
+            modelBuilder.Entity("EnvironmentMonitor.Infrastructure.Identity.UserMfaMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ConfirmedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("Created")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("CreatedUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("LOCALTIMESTAMP");
+
+                    b.Property<DateTime?>("DisabledUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Method")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("Updated")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedById")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<DateTime?>("UpdatedUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UpdatedById");
+
+                    b.HasIndex("UserId", "Method")
+                        .IsUnique();
+
+                    b.ToTable("UserMfaMethods", "application");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -373,6 +426,24 @@ namespace EnvironmentMonitor.PostgreSqlMigrations.Migrations.Application
                     b.Navigation("UpdatedBy");
                 });
 
+            modelBuilder.Entity("EnvironmentMonitor.Infrastructure.Identity.UserMfaMethod", b =>
+                {
+                    b.HasOne("EnvironmentMonitor.Infrastructure.Identity.ApplicationUser", "UpdatedBy")
+                        .WithMany()
+                        .HasForeignKey("UpdatedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("EnvironmentMonitor.Infrastructure.Identity.ApplicationUser", "User")
+                        .WithMany("MfaMethods")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UpdatedBy");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("EnvironmentMonitor.Infrastructure.Identity.ApplicationUserRole", null)
@@ -418,6 +489,11 @@ namespace EnvironmentMonitor.PostgreSqlMigrations.Migrations.Application
             modelBuilder.Entity("EnvironmentMonitor.Domain.Entities.ApiSecret", b =>
                 {
                     b.Navigation("Claims");
+                });
+
+            modelBuilder.Entity("EnvironmentMonitor.Infrastructure.Identity.ApplicationUser", b =>
+                {
+                    b.Navigation("MfaMethods");
                 });
 #pragma warning restore 612, 618
         }

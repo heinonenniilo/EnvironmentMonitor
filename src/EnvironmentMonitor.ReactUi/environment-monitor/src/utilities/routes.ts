@@ -2,6 +2,7 @@ export const routes = {
   main: "/",
   home: "/home",
   login: "/login",
+  mfaLogin: "/login/mfa",
   loginInfo: "/login/info",
   register: "/register",
   emailConfirmation: "/email-confirmation",

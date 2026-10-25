@@ -16,6 +16,8 @@ namespace EnvironmentMonitor.Domain.Enums
         [Description("Confirm Email")]
         ConfirmUserEmail = 2,
         [Description("User Password Reset")]
-        UserPasswordReset = 3
+        UserPasswordReset = 3,
+        [Description("Multi factor authentication code")]
+        MfaCode = 4
     }
 }
