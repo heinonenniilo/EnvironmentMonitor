@@ -9,27 +9,28 @@ namespace EnvironmentMonitor.Domain.Models
         public string ClientId { get; set; } = "";
         public bool UseTls { get; set; } = true;
         public bool UseWebSockets { get; set; } = false;
-        public string BaseTopic { get; set; } = "environmentmonitor";
+        public string BaseTopic { get; set; } = "environment";
 
         public bool IsConfigured => !string.IsNullOrWhiteSpace(Host);
 
-        public string DevicesTopicRoot => $"{BaseTopic.TrimEnd('/')}/devices";
-        public string MeasurementsSubscriptionTopic => $"{DevicesTopicRoot}/+/measurements";
-        public string GetMeasurementsTopic(string deviceIdentifier) => $"{DevicesTopicRoot}/{deviceIdentifier}/measurements";
-        public string GetCommandsTopic(string deviceIdentifier) => $"{DevicesTopicRoot}/{deviceIdentifier}/commands";
+        private string TopicRoot => BaseTopic.TrimEnd('/');
+        public string MeasurementsTopicRoot => $"{TopicRoot}/measurements";
+        public string CommandsTopicRoot => $"{TopicRoot}/commands";
+        public string MeasurementsSubscriptionTopic => $"{MeasurementsTopicRoot}/+";
+        public string GetMeasurementsTopic(string deviceIdentifier) => $"{MeasurementsTopicRoot}/{deviceIdentifier}";
+        public string GetCommandsTopic(string deviceIdentifier) => $"{CommandsTopicRoot}/{deviceIdentifier}";
 
         /// <summary>
-        /// Parses device identifier from a measurement topic ({BaseTopic}/devices/{deviceIdentifier}/measurements).
+        /// Parses device identifier from a measurement topic ({BaseTopic}/measurements/{deviceIdentifier}).
         /// </summary>
         public string? GetDeviceIdentifierFromMeasurementTopic(string topic)
         {
-            var prefix = $"{DevicesTopicRoot}/";
-            const string suffix = "/measurements";
-            if (!topic.StartsWith(prefix, StringComparison.Ordinal) || !topic.EndsWith(suffix, StringComparison.Ordinal))
+            var prefix = $"{MeasurementsTopicRoot}/";
+            if (!topic.StartsWith(prefix, StringComparison.Ordinal))
             {
                 return null;
             }
-            var identifier = topic.Substring(prefix.Length, topic.Length - prefix.Length - suffix.Length);
+            var identifier = topic.Substring(prefix.Length);
             return string.IsNullOrWhiteSpace(identifier) || identifier.Contains('/') ? null : identifier;
         }
     }
