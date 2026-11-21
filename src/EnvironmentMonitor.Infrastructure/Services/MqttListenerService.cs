@@ -1,19 +1,17 @@
-using EnvironmentMonitor.Application.DTOs;
-using EnvironmentMonitor.Application.Interfaces;
-using EnvironmentMonitor.Domain.Enums;
-using EnvironmentMonitor.Infrastructure.Services;
+using EnvironmentMonitor.Domain.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MQTTnet;
-using System.Text.Json;
 
-namespace EnvironmentMonitor.Worker.Services
+namespace EnvironmentMonitor.Infrastructure.Services
 {
     /// <summary>
-    /// Subscribes to device measurement topics and stores received measurements.
+    /// Subscribes to device measurement topics and forwards received messages to <see cref="IMqttMeasurementHandler"/>.
     /// </summary>
     public sealed class MqttListenerService : BackgroundService
     {
         private static readonly TimeSpan ReconnectInterval = TimeSpan.FromSeconds(10);
-        private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
         private readonly MqttClientService _mqttClientService;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -82,35 +80,9 @@ namespace EnvironmentMonitor.Worker.Services
             try
             {
                 var payload = e.ApplicationMessage.ConvertPayloadToString();
-                var measurements = JsonSerializer.Deserialize<SaveMeasurementsDto>(payload, SerializerOptions);
-                if (measurements == null)
-                {
-                    _logger.LogWarning($"Empty MQTT measurement payload from device '{deviceIdentifier}'. Ignoring.");
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(measurements.DeviceId))
-                {
-                    measurements.DeviceId = deviceIdentifier;
-                }
-                else if (!string.Equals(measurements.DeviceId, deviceIdentifier, StringComparison.Ordinal))
-                {
-                    _logger.LogWarning($"MQTT payload device id '{measurements.DeviceId}' does not match topic device '{deviceIdentifier}'. Message rejected.");
-                    return;
-                }
-
-                var enqueuedTime = DateTime.UtcNow;
-                measurements.EnqueuedUtc = enqueuedTime;
-                foreach (var measurement in measurements.Measurements)
-                {
-                    measurement.TimestampUtc = enqueuedTime;
-                }
-                measurements.Source = CommunicationChannels.Mqtt;
-
-                _logger.LogInformation($"Received {measurements.Measurements.Count} measurements through MQTT from device '{deviceIdentifier}'");
                 using var scope = _scopeFactory.CreateScope();
-                var measurementService = scope.ServiceProvider.GetRequiredService<IMeasurementService>();
-                await measurementService.AddMeasurements(measurements);
+                var handler = scope.ServiceProvider.GetRequiredService<IMqttMeasurementHandler>();
+                await handler.HandleMeasurementMessage(deviceIdentifier, payload);
             }
             catch (Exception ex)
             {

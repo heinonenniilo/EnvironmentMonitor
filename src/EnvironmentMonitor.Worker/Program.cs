@@ -1,6 +1,7 @@
 using EnvironmentMonitor.Application.Extensions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Infrastructure.Extensions;
+using EnvironmentMonitor.Infrastructure.Services;
 using EnvironmentMonitor.Worker;
 using EnvironmentMonitor.Worker.Jobs;
 using EnvironmentMonitor.Worker.Services;
