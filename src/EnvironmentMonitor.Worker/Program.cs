@@ -19,6 +19,12 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 // Add Application services
 builder.Services.AddApplicationServices(builder.Configuration);
 
+// Add MQTT services (listener + publisher) if MqttSettings are defined
+if (builder.Services.AddMqttServices(builder.Configuration))
+{
+    builder.Services.AddHostedService<MqttListenerService>();
+}
+
 // Add Hangfire services (includes server for job processing)
 builder.Services.AddHangfireServices(builder.Configuration, addServer: true);
 
