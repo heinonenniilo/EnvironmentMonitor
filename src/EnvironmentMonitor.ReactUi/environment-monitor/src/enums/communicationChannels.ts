@@ -3,6 +3,7 @@ export enum CommunicationChannels {
   RestApi = 1,
   Ilmatieteenlaitos = 2,
   Sync = 3,
+  Mqtt = 4,
 }
 
 export const getCommunicationChannelDisplayName = (
@@ -17,6 +18,8 @@ export const getCommunicationChannelDisplayName = (
       return "Ilmatieteenlaitos API";
     case CommunicationChannels.Sync:
       return "Sync";
+    case CommunicationChannels.Mqtt:
+      return "Mqtt";
     default:
       return "Unknown";
   }

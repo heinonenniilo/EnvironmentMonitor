@@ -122,6 +122,12 @@ namespace EnvironmentMonitor.PostgreSqlMigrations.Migrations.Measurement
                             Id = 3,
                             Description = "Sync",
                             Name = "Sync"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Description = "Mqtt",
+                            Name = "Mqtt"
                         });
                 });
 

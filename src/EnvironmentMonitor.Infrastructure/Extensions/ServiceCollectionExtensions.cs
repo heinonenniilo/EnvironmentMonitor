@@ -263,6 +263,38 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
                 $"Unsupported database provider '{databaseProvider}'. Use '{DatabaseSettings.SqlServer}' or '{DatabaseSettings.PostgreSql}'.");
         }
 
+        /// <summary>
+        /// Registers MQTT client services if MqttSettings are defined.
+        /// </summary>
+        /// <returns>True if MQTT is configured and services were registered.</returns>
+        public static bool AddMqttServices(
+            this IServiceCollection services,
+            IConfiguration configuration,
+            string? clientIdSuffix = null)
+        {
+            var mqttSettings = new MqttSettings();
+            configuration.GetSection(nameof(MqttSettings)).Bind(mqttSettings);
+            if (!mqttSettings.IsConfigured)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(mqttSettings.ClientId))
+            {
+                mqttSettings.ClientId = Guid.NewGuid().ToString();
+            }
+            else if (!string.IsNullOrEmpty(clientIdSuffix))
+            {
+                mqttSettings.ClientId = $"{mqttSettings.ClientId}-{clientIdSuffix}";
+            }
+
+            services.AddSingleton(mqttSettings);
+            services.AddSingleton<MqttClientService>();
+            services.AddSingleton<IMqttMessageService>(provider => provider.GetRequiredService<MqttClientService>());
+
+            return true;
+        }
+
         public static IServiceCollection AddHangfireServices(
             this IServiceCollection services,
             IConfiguration configuration,

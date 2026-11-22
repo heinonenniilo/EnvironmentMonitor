@@ -1,6 +1,7 @@
 using EnvironmentMonitor.Application.Extensions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Infrastructure.Extensions;
+using EnvironmentMonitor.Infrastructure.Services;
 using EnvironmentMonitor.Worker;
 using EnvironmentMonitor.Worker.Jobs;
 using EnvironmentMonitor.Worker.Services;
@@ -18,6 +19,12 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // Add Application services
 builder.Services.AddApplicationServices(builder.Configuration);
+
+// Add MQTT services (listener + publisher) if MqttSettings are defined
+if (builder.Services.AddMqttServices(builder.Configuration))
+{
+    builder.Services.AddHostedService<MqttListenerService>();
+}
 
 // Add Hangfire services (includes server for job processing)
 builder.Services.AddHangfireServices(builder.Configuration, addServer: true);

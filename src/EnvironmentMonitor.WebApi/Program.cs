@@ -41,6 +41,8 @@ applicationSettings.IsProduction = builder.Environment.IsProduction();
 
 builder.Services.AddInfrastructureServices(builder.Configuration, applicationSettings: applicationSettings);
 builder.Services.AddApplicationServices(builder.Configuration);
+// MQTT publishing only (listener runs in Worker)
+builder.Services.AddMqttServices(builder.Configuration, clientIdSuffix: "api");
 
 // Google Auth
 var googleClientId = builder.Configuration["Google:ClientId"];

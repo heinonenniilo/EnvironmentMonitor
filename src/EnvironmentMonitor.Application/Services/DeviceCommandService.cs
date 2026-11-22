@@ -26,6 +26,7 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDateService _dateService;
         private readonly IQueueClient _queueClient;
         private readonly IHubMessageService _messageService;
+        private readonly IMqttMessageService? _mqttMessageService;
         private readonly IHangfireJobService _hangfireJobService;
 
         private static readonly Dictionary<string, string> QueuedCommandJobParameters = new()
@@ -41,7 +42,8 @@ namespace EnvironmentMonitor.Application.Services
             IDateService dateService,
             IQueueClient queueClient,
             IHubMessageService messageService,
-            IHangfireJobService hangfireJobService)
+            IHangfireJobService hangfireJobService,
+            IMqttMessageService? mqttMessageService = null)
         {
             _logger = logger;
             _userService = userService;
@@ -51,6 +53,7 @@ namespace EnvironmentMonitor.Application.Services
             _queueClient = queueClient;
             _messageService = messageService;
             _hangfireJobService = hangfireJobService;
+            _mqttMessageService = mqttMessageService;
         }
 
         public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(Guid deviceIdentifier) => await GetQueuedCommands(new GetQueuedCommandsModel()
@@ -98,7 +101,7 @@ namespace EnvironmentMonitor.Application.Services
                 throw new InvalidOperationException($"Cannot reboot a virtual device ({device.Id})");
             }
             _logger.LogInformation($"Trying to reboot device with identifier '{identifier}'");
-            await _messageService.SendMessageToDevice(device.DeviceIdentifier, "REBOOT");
+            await SendMessageToDevice(device, "REBOOT");
             await _deviceRepository.AddEvent(device.Id, DeviceEventTypes.RebootCommand, "Rebooted by UI", true, null);
         }
 
@@ -179,11 +182,11 @@ namespace EnvironmentMonitor.Application.Services
                 return _mapper.Map<List<DeviceAttributeDto>>(attributes);
             }
 
-            if (device.CommunicationChannelId == (int)CommunicationChannels.IotHub)
+            if (device.CommunicationChannelId == (int)CommunicationChannels.IotHub || device.CommunicationChannelId == (int)CommunicationChannels.Mqtt)
             {
                 var message = $"MOTIONCONTROLSTATUS:{(int)status}";
                 _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
-                await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+                await SendMessageToDevice(device, message);
             }
             await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.MotionControlStatus, ((int)status).ToString(), false);
             await _deviceRepository.AddEvent(device.Id, DeviceEventTypes.SetMotionControlStatus, $"Motion control status set to: {(int)status} ({status.ToString()})", true, null);
@@ -268,11 +271,11 @@ namespace EnvironmentMonitor.Application.Services
                 return _mapper.Map<List<DeviceAttributeDto>>(attributes);
             }
 
-            if (device.CommunicationChannelId == (int)CommunicationChannels.IotHub)
+            if (device.CommunicationChannelId == (int)CommunicationChannels.IotHub || device.CommunicationChannelId == (int)CommunicationChannels.Mqtt)
             {
                 var message = $"MOTIONCONTROLDELAY: {delayMs}";
                 _logger.LogInformation($"Sending message: '{message}' to device: {device.Id}");
-                await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
+                await SendMessageToDevice(device, message);
             }
 
             await _deviceRepository.UpdateDeviceAttribute(device.Id, (int)DeviceAttributeTypes.OnDelay, delayMs.ToString(), false);
@@ -728,6 +731,20 @@ namespace EnvironmentMonitor.Application.Services
             {
                 throw new ArgumentException($"Invalid triggering time: {target}. Current date: {compareDate}");
             }
+        }
+
+        private async Task SendMessageToDevice(Device device, string message)
+        {
+            if (device.CommunicationChannelId == (int)CommunicationChannels.Mqtt)
+            {
+                if (_mqttMessageService == null)
+                {
+                    throw new InvalidOperationException($"MQTT is not configured. Cannot send message to device ({device.Id})");
+                }
+                await _mqttMessageService.SendMessageToDevice(device.DeviceIdentifier, message);
+                return;
+            }
+            await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
         }
 
         private async Task<List<Guid>> ValidateDeviceMessageModel (MessageDeviceModel model)

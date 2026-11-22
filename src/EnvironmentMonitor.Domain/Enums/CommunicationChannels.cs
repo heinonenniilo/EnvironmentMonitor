@@ -16,6 +16,8 @@ namespace EnvironmentMonitor.Domain.Enums
         [Description("Ilmatieteenlaitos Open Api")]
         IlmatieteenLaitos = 2,
         [Description("Sync")]
-        Sync = 3
+        Sync = 3,
+        [Description("Mqtt")]
+        Mqtt = 4
     }
 }
