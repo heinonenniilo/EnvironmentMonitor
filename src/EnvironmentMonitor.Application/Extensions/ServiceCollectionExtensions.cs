@@ -1,4 +1,4 @@
-﻿using EnvironmentMonitor.Application.Interfaces;
+using EnvironmentMonitor.Application.Interfaces;
 using EnvironmentMonitor.Application.Services;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
@@ -28,7 +28,6 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<IPublicSensorService, PublicSensorService>();
             services.AddScoped<IMeasurementAnalyzeService, MeasurementAnalyzeService>();
             services.AddScoped<ISyncService, SyncService>();
-            services.AddScoped<IMqttMeasurementHandler, MqttMeasurementHandler>();
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             if (deviceSettings != null)
