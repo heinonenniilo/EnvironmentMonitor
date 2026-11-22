@@ -1,4 +1,4 @@
-﻿using Azure.Identity;
+using Azure.Identity;
 using Azure.Storage.Queues;
 using EnvironmentMonitor.Domain.Enums;
 using EnvironmentMonitor.Domain.Interfaces;
@@ -266,11 +266,13 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
         /// <summary>
         /// Registers MQTT client services if MqttSettings are defined.
         /// </summary>
+        /// <param name="keepConnectionAlive">When true, a hosted service keeps the connection open and reconnects automatically.</param>
         /// <returns>True if MQTT is configured and services were registered.</returns>
         public static bool AddMqttServices(
             this IServiceCollection services,
             IConfiguration configuration,
-            string? clientIdSuffix = null)
+            string? clientIdSuffix = null,
+            bool keepConnectionAlive = false)
         {
             var mqttSettings = new MqttSettings();
             configuration.GetSection(nameof(MqttSettings)).Bind(mqttSettings);
@@ -289,8 +291,12 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             }
 
             services.AddSingleton(mqttSettings);
-            services.AddSingleton<MqttClientService>();
-            services.AddSingleton<IMqttMessageService>(provider => provider.GetRequiredService<MqttClientService>());
+            services.AddSingleton<MqttConnection>();
+            services.AddSingleton<IMqttConnection>(provider => provider.GetRequiredService<MqttConnection>());
+            if (keepConnectionAlive)
+            {
+                services.AddHostedService<MqttConnectionKeeper>();
+            }
 
             return true;
         }

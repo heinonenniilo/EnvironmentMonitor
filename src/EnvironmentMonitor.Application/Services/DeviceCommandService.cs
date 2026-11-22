@@ -26,7 +26,8 @@ namespace EnvironmentMonitor.Application.Services
         private readonly IDateService _dateService;
         private readonly IQueueClient _queueClient;
         private readonly IHubMessageService _messageService;
-        private readonly IMqttMessageService? _mqttMessageService;
+        private readonly IMqttConnection? _mqttConnection;
+        private readonly MqttSettings? _mqttSettings;
         private readonly IHangfireJobService _hangfireJobService;
 
         private static readonly Dictionary<string, string> QueuedCommandJobParameters = new()
@@ -43,7 +44,8 @@ namespace EnvironmentMonitor.Application.Services
             IQueueClient queueClient,
             IHubMessageService messageService,
             IHangfireJobService hangfireJobService,
-            IMqttMessageService? mqttMessageService = null)
+            IMqttConnection? mqttConnection = null,
+            MqttSettings? mqttSettings = null)
         {
             _logger = logger;
             _userService = userService;
@@ -53,7 +55,8 @@ namespace EnvironmentMonitor.Application.Services
             _queueClient = queueClient;
             _messageService = messageService;
             _hangfireJobService = hangfireJobService;
-            _mqttMessageService = mqttMessageService;
+            _mqttConnection = mqttConnection;
+            _mqttSettings = mqttSettings;
         }
 
         public async Task<List<DeviceQueuedCommandDto>> GetQueuedCommands(Guid deviceIdentifier) => await GetQueuedCommands(new GetQueuedCommandsModel()
@@ -737,11 +740,11 @@ namespace EnvironmentMonitor.Application.Services
         {
             if (device.CommunicationChannelId == (int)CommunicationChannels.Mqtt)
             {
-                if (_mqttMessageService == null)
+                if (_mqttConnection == null || _mqttSettings == null)
                 {
                     throw new InvalidOperationException($"MQTT is not configured. Cannot send message to device ({device.Id})");
                 }
-                await _mqttMessageService.SendMessageToDevice(device.DeviceIdentifier, message);
+                await _mqttConnection.Publish(_mqttSettings.GetCommandsTopic(device.DeviceIdentifier), message);
                 return;
             }
             await _messageService.SendMessageToDevice(device.DeviceIdentifier, message);
