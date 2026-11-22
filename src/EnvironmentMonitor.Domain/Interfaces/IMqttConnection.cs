@@ -5,6 +5,11 @@ namespace EnvironmentMonitor.Domain.Interfaces
     /// </summary>
     public interface IMqttConnection
     {
+        /// <summary>
+        /// Connects to the broker if not already connected.
+        /// </summary>
+        Task EnsureConnectedAsync(CancellationToken cancellationToken = default);
+
         Task Publish(string topic, string payload, CancellationToken cancellationToken = default);
 
         /// <summary>

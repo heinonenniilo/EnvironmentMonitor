@@ -291,8 +291,7 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             }
 
             services.AddSingleton(mqttSettings);
-            services.AddSingleton<MqttConnection>();
-            services.AddSingleton<IMqttConnection>(provider => provider.GetRequiredService<MqttConnection>());
+            services.AddSingleton<IMqttConnection, MqttConnection>();
             if (keepConnectionAlive)
             {
                 services.AddHostedService<MqttConnectionKeeper>();

@@ -1,19 +1,20 @@
+using EnvironmentMonitor.Domain.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace EnvironmentMonitor.Infrastructure.Services
 {
     /// <summary>
-    /// Keeps the shared <see cref="MqttConnection"/> connected, reconnecting periodically if the connection drops.
+    /// Keeps the shared <see cref="IMqttConnection"/> connected, reconnecting periodically if the connection drops.
     /// </summary>
     internal sealed class MqttConnectionKeeper : BackgroundService
     {
         private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(10);
 
-        private readonly MqttConnection _connection;
+        private readonly IMqttConnection _connection;
         private readonly ILogger<MqttConnectionKeeper> _logger;
 
-        public MqttConnectionKeeper(MqttConnection connection, ILogger<MqttConnectionKeeper> logger)
+        public MqttConnectionKeeper(IMqttConnection connection, ILogger<MqttConnectionKeeper> logger)
         {
             _connection = connection;
             _logger = logger;

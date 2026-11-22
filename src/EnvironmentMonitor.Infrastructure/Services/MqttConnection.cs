@@ -61,7 +61,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
             return subscription;
         }
 
-        internal async Task EnsureConnectedAsync(CancellationToken cancellationToken)
+        public async Task EnsureConnectedAsync(CancellationToken cancellationToken = default)
         {
             if (_client.IsConnected)
             {
