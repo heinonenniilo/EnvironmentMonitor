@@ -49,9 +49,16 @@ Azure Function project which includes a function for listening to IoT hub. The f
 
 ### Adding migrations
 
-- Open Nuget manager console
-- Set ``EnvironmentMonitor.Migrations`` as startup project. Set ``EnvironmentMonitor.Infrastructure`` as default project.
-- Type ``Add-Migration {MigrationName} -context {Context}``. Context is either MeasurementDbContext or ApplicationDbContext, depending on where the changes were made.
+- Open CMD
+- Navigate to project root folder
+- Migrations should be generated for SQL Server and PostgreSQL separately. See the commands below. Context is either MeasurementDbContext or ApplicationDbContext, depending on where the changes were made.
+````
+$env:DatabaseSettings__Provider = "SqlServer"
+dotnet ef migrations add {MigrationName} --context {Context} --project src\EnvironmentMonitor.Infrastructure --startup-project src\EnvironmentMonitor.Migrations --output-dir Data\Migrations
+
+$env:DatabaseSettings__Provider = "PostgreSql"
+dotnet ef migrations add {MigrationName} --context {Context} --project src\EnvironmentMonitor.PostgreSqlMigrations --startup-project src\EnvironmentMonitor.Migrations --output-dir Migrations\Measurement
+````
 
 ### Running migrations
 
