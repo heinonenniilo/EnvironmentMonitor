@@ -291,7 +291,14 @@ namespace EnvironmentMonitor.Infrastructure.Extensions
             }
 
             services.AddSingleton(mqttSettings);
-            services.AddSingleton<IMqttConnection, MqttConnection>();
+            services.AddKeyedSingleton<IMqttConnection>(MqttSettings.DefaultConnectionKey, (sp, _) =>
+                new MqttConnection(mqttSettings, sp.GetRequiredService<ILogger<MqttConnection>>()));
+            if (mqttSettings.IsAdminConfigured)
+            {
+                var adminSettings = mqttSettings.CreateAdminSettings();
+                services.AddKeyedSingleton<IMqttConnection>(MqttSettings.AdminConnectionKey, (sp, _) =>
+                    new MqttConnection(adminSettings, sp.GetRequiredService<ILogger<MqttConnection>>()));
+            }
             if (keepConnectionAlive)
             {
                 services.AddHostedService<MqttConnectionKeeper>();

@@ -29,14 +29,17 @@ namespace EnvironmentMonitor.WebApi.Controllers
         private readonly IDeviceSensorService _deviceSensorService;
         private readonly IDeviceCommandService _deviceCommandService;
         private readonly FileUploadSettings _fileUploadSettings;
+        private readonly IMqttDeviceProvisioningService _mqttDeviceProvisioningService;
 
-        public DevicesController(IDeviceService deviceService, IDeviceSensorService deviceSensorService, IDeviceCommandService queuedCommandService, FileUploadSettings fileUploadSettings)
+        public DevicesController(IDeviceService deviceService, IDeviceSensorService deviceSensorService, IDeviceCommandService queuedCommandService, FileUploadSettings fileUploadSettings, IMqttDeviceProvisioningService mqttDeviceProvisioningService)
         {
             _deviceService = deviceService;
             _deviceSensorService = deviceSensorService;
             _deviceCommandService = queuedCommandService;
             _fileUploadSettings = fileUploadSettings;
+            _mqttDeviceProvisioningService = mqttDeviceProvisioningService;
         }
+
 
         [HttpPost("add-or-update")]
         [Authorize(Roles = "Admin")]
@@ -177,5 +180,21 @@ namespace EnvironmentMonitor.WebApi.Controllers
         [HttpPost("queued-commands/copy")]
         [Authorize(Roles = "Admin")]
         public async Task<DeviceQueuedCommandDto> CopyExecutedQueuedCommand([FromBody] CopyQueuedCommand model) => await _deviceCommandService.CopyExecutedQueuedCommand(model);
+
+        [HttpPost("{identifier}/mqtt")]
+        [Authorize(Roles = "Admin")]
+        public async Task RegisterMqttDevice([FromRoute] Guid identifier, [FromBody] RegisterMqttDeviceDto model, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(model.Password) || model.Password != model.PasswordConfirm)
+            {
+                throw new ArgumentException("Password is required and must match the confirmation");
+            }
+            await _mqttDeviceProvisioningService.RegisterDevice(identifier, model.Password, cancellationToken);
+        }
+
+        [HttpDelete("{identifier}/mqtt")]
+        [Authorize(Roles = "Admin")]
+        public async Task UnregisterMqttDevice([FromRoute] Guid identifier, CancellationToken cancellationToken)
+            => await _mqttDeviceProvisioningService.UnregisterDevice(identifier, cancellationToken);
     }
 }

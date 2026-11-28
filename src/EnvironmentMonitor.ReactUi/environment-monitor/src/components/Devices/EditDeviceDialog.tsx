@@ -19,6 +19,9 @@ import { useEffect, useState } from "react";
 import type { DeviceInfo } from "../../models/deviceInfo";
 import type { AddOrUpdateDeviceDto } from "../../models/addOrUpdateDeviceDto";
 import type { LocationModel } from "../../models/location";
+import { RoleNames } from "../../enums/roleNames";
+import { AuthorizedComponent } from "../../framework/AuthorizedComponent";
+import { DeviceMqttActions } from "./DeviceMqttActions";
 import {
   CommunicationChannels,
   getCommunicationChannelDisplayName,
@@ -38,6 +41,7 @@ export interface EditDeviceDialogProps {
   onClose: () => void;
   device?: DeviceInfo;
   locations?: LocationModel[];
+  enableMqttActions?: boolean;
   onSave: (model: AddOrUpdateDeviceDto) => void;
 }
 
@@ -210,6 +214,17 @@ export const EditDeviceDialog: React.FC<EditDeviceDialogProps> = (props) => {
                 ))}
             </Select>
           </FormControl>
+          {open &&
+            props.enableMqttActions &&
+            device?.communicationChannelId === CommunicationChannels.Mqtt && (
+              <AuthorizedComponent requiredRole={RoleNames.Admin}>
+                <DeviceMqttActions
+                  key={device.device.identifier}
+                  identifier={device.device.identifier}
+                  deviceIdentifier={device.deviceIdentifier}
+                />
+              </AuthorizedComponent>
+            )}
           <FormControlLabel
             control={
               <Checkbox

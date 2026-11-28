@@ -19,7 +19,7 @@ namespace EnvironmentMonitor.Worker.Services
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<MqttMeasurementsListener> _logger;
 
-        public MqttMeasurementsListener(IMqttConnection mqttConnection, MqttSettings settings, IServiceScopeFactory scopeFactory, ILogger<MqttMeasurementsListener> logger)
+        public MqttMeasurementsListener([FromKeyedServices(MqttSettings.DefaultConnectionKey)] IMqttConnection mqttConnection, MqttSettings settings, IServiceScopeFactory scopeFactory, ILogger<MqttMeasurementsListener> logger)
         {
             _mqttConnection = mqttConnection;
             _settings = settings;

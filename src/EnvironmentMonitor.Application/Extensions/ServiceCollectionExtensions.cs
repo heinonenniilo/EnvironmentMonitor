@@ -28,6 +28,7 @@ namespace EnvironmentMonitor.Application.Extensions
             services.AddScoped<IPublicSensorService, PublicSensorService>();
             services.AddScoped<IMeasurementAnalyzeService, MeasurementAnalyzeService>();
             services.AddScoped<ISyncService, SyncService>();
+            services.AddScoped<IMqttDeviceProvisioningService, MqttDeviceProvisioningService>();
             services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
             if (deviceSettings != null)

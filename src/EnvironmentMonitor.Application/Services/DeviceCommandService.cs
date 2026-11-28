@@ -8,6 +8,7 @@ using EnvironmentMonitor.Domain.Exceptions;
 using EnvironmentMonitor.Domain.Interfaces;
 using EnvironmentMonitor.Domain.Models;
 using EnvironmentMonitor.Domain.Models.GetModels;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -44,7 +45,7 @@ namespace EnvironmentMonitor.Application.Services
             IQueueClient queueClient,
             IHubMessageService messageService,
             IHangfireJobService hangfireJobService,
-            IMqttConnection? mqttConnection = null,
+            [FromKeyedServices(MqttSettings.DefaultConnectionKey)] IMqttConnection? mqttConnection = null,
             MqttSettings? mqttSettings = null)
         {
             _logger = logger;

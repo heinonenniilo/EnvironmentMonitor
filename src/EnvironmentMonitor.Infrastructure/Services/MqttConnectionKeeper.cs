@@ -1,4 +1,6 @@
 using EnvironmentMonitor.Domain.Interfaces;
+using EnvironmentMonitor.Domain.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -14,7 +16,7 @@ namespace EnvironmentMonitor.Infrastructure.Services
         private readonly IMqttConnection _connection;
         private readonly ILogger<MqttConnectionKeeper> _logger;
 
-        public MqttConnectionKeeper(IMqttConnection connection, ILogger<MqttConnectionKeeper> logger)
+        public MqttConnectionKeeper([FromKeyedServices(MqttSettings.DefaultConnectionKey)] IMqttConnection connection, ILogger<MqttConnectionKeeper> logger)
         {
             _connection = connection;
             _logger = logger;
