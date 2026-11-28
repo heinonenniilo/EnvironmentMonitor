@@ -13,18 +13,21 @@ namespace EnvironmentMonitor.Worker.Services
     public sealed class MqttMeasurementsListener : BackgroundService
     {
         private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
+        private static readonly TimeSpan SendAttributesDelay = TimeSpan.FromSeconds(10);
 
         private readonly IMqttConnection _mqttConnection;
         private readonly MqttSettings _settings;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<MqttMeasurementsListener> _logger;
+        private readonly bool _skipFirstMessageChecking;
 
-        public MqttMeasurementsListener([FromKeyedServices(MqttSettings.DefaultConnectionKey)] IMqttConnection mqttConnection, MqttSettings settings, IServiceScopeFactory scopeFactory, ILogger<MqttMeasurementsListener> logger)
+        public MqttMeasurementsListener([FromKeyedServices(MqttSettings.DefaultConnectionKey)] IMqttConnection mqttConnection, MqttSettings settings, IServiceScopeFactory scopeFactory, ILogger<MqttMeasurementsListener> logger, IConfiguration configuration)
         {
             _mqttConnection = mqttConnection;
             _settings = settings;
             _scopeFactory = scopeFactory;
             _logger = logger;
+            _skipFirstMessageChecking = configuration.GetValue<bool>("SkipFirstMessageChecking");
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -78,6 +81,25 @@ namespace EnvironmentMonitor.Worker.Services
             using var scope = _scopeFactory.CreateScope();
             var measurementService = scope.ServiceProvider.GetRequiredService<IMeasurementService>();
             await measurementService.AddMeasurements(measurements);
+
+            // Enqueued time is set on receive, so the first message age limit used by HubObserver always holds here.
+            if (measurements.FirstMessage && !_skipFirstMessageChecking)
+            {
+                try
+                {
+                    var deviceService = scope.ServiceProvider.GetRequiredService<IDeviceService>();
+                    var hangfireJobService = scope.ServiceProvider.GetRequiredService<IHangfireJobService>();
+                    var device = await deviceService.GetDevice(measurements.DeviceId, AccessLevels.Write);
+                    _logger.LogInformation($"First message detected for device {device.Identifier}, scheduling job to send attributes");
+                    hangfireJobService.Schedule<IDeviceCommandService>(
+                        service => service.SendAttributesToDevice(device.Identifier, "Sent stored attributes to device. Triggered from MQTT first message."),
+                        SendAttributesDelay);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Failed to send device attributes to device with id (string) {measurements.DeviceId}");
+                }
+            }
         }
     }
 }
