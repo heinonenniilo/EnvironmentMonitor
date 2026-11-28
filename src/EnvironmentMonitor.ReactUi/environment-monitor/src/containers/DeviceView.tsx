@@ -1296,6 +1296,7 @@ export const DeviceView: React.FC = () => {
         <EditDeviceDialog
           open={editDeviceDialogOpen}
           device={selectedDevice}
+          enableMqttActions
           onClose={() => setEditDeviceDialogOpen(false)}
           onSave={updateDevice}
         />

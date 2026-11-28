@@ -49,6 +49,7 @@ import type { ProblemDetails } from "../models/problemDetails";
 import type { UpdateVirtualSensorRowsDto } from "../models/updateVirtualSensorRows";
 import { useNotification } from "./useNotification";
 import type { GetDeviceInfosModel } from "../models/getDeviceInfosModel";
+import type { RegisterMqttDeviceDto } from "../models/registerMqttDeviceDto";
 
 interface ApiHook {
   userHook: userHook;
@@ -220,6 +221,11 @@ interface deviceHook {
   ) => Promise<DeviceStatusModel>;
   addDevice: (model: AddOrUpdateDeviceDto) => Promise<DeviceInfo>;
   updateDevice: (model: AddOrUpdateDeviceDto) => Promise<DeviceInfo>;
+  registerMqttDevice: (
+    identifier: string,
+    model: RegisterMqttDeviceDto,
+  ) => Promise<void>;
+  unregisterMqttDevice: (identifier: string) => Promise<void>;
   getDeviceMessage: (
     model: GetDeviceMessagesModel,
   ) => Promise<PaginatedResult<DeviceMessage>>;
@@ -299,6 +305,28 @@ const apiClient = axios.create({
     return qs.stringify(params, { arrayFormat: "repeat" }); // or "comma" if backend expects "1,2,3"
   },
 });
+
+const getMqttErrorMessage = (error: unknown): string => {
+  const fallback = "MQTT operation failed";
+  const response = axios.isAxiosError<ProblemDetails>(error)
+    ? error.response
+    : undefined;
+  const title = response?.data?.title?.trim();
+  const detail = response?.data?.detail?.trim();
+
+  switch (response?.status) {
+    case 400:
+      return title || detail || fallback;
+    case 403:
+      return "Not allowed";
+    case 409:
+      return "Device is already registered in MQTT. Unregister it first.";
+    case 500:
+      return fallback;
+    default:
+      return detail || title || fallback;
+  }
+};
 
 export const useApiHook = (): ApiHook => {
   const notification = useNotification();
@@ -659,6 +687,20 @@ export const useApiHook = (): ApiHook => {
       },
     },
     deviceHook: {
+      registerMqttDevice: async (identifier, model) => {
+        try {
+          await apiClient.post(`/api/devices/${identifier}/mqtt`, model);
+        } catch (error) {
+          throw new Error(getMqttErrorMessage(error));
+        }
+      },
+      unregisterMqttDevice: async (identifier) => {
+        try {
+          await apiClient.delete(`/api/devices/${identifier}/mqtt`);
+        } catch (error) {
+          throw new Error(getMqttErrorMessage(error));
+        }
+      },
       addDevice: async (model: AddOrUpdateDeviceDto) => {
         try {
           const res = await apiClient.post("/api/devices/add-or-update", model);
